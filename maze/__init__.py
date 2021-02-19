@@ -3,7 +3,7 @@ import os
 from hydra.core.global_hydra import GlobalHydra
 from omegaconf import OmegaConf
 
-__version__ = "0.0.1.dev0"
+__version__ = "0.0.1.dev1"
 
 # fixes this issue (https://github.com/pytorch/pytorch/issues/37377) when using conda
 os.environ['MKL_THREADING_LAYER'] = 'GNU'

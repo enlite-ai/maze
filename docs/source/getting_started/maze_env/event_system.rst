@@ -4,7 +4,7 @@ Adding Events and KPIs
 ======================
 
 The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze/tree/main/tutorials/tutorial_maze_env/part04_events>`_
+`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part04_events>`_
 
 .. code:: bash
 

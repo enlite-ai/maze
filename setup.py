@@ -18,7 +18,9 @@ def find_version(*filepath):
 
 setup(name="maze-rl",
       version=find_version("maze", "__init__.py"),
-      packages=find_namespace_packages(include=['maze.*']),
+      packages=find_namespace_packages(include=['maze', 'maze.*']),
+      include_package_data=True,
+
 
       # python 3.5: we run into conflicts with hydra 1.0.4
       # python 3.9: no ray distribution available

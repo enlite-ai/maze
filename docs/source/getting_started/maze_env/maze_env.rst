@@ -4,7 +4,7 @@ Implementing the MazeEnv
 ========================
 
 The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze/tree/main/tutorials/tutorial_maze_env/part03_maze_env>`_
+`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part03_maze_env>`_
 
 .. code:: bash
 

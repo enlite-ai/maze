@@ -8,7 +8,7 @@ with a :ref:`Maze trainer<maze_trainers>` implicitly supporting a Structured Env
 We will also design a policy network architecture matching the task at hand.
 
 The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze/tree/main/tutorials/tutorial_maze_env/part06_struct_env>`_
+`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env>`_
 
 .. code:: bash
 

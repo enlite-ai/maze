@@ -7,7 +7,7 @@ In this part of the tutorial we will retrain the environment with step-condition
 and benchmark it with the initial, unmasked version.
 
 The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze/tree/main/tutorials/tutorial_maze_env/part06_struct_env>`_
+`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env>`_
 
 .. code:: bash
 
