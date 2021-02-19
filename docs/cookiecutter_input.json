@@ -1,0 +1,6 @@
+{
+    "_template": "git@gitlab.enlite.ai:libs/template-python-ml.git",
+    "project_name": "Maze",
+    "project_slug": "maze",
+    "training_data_directory": "enliteai-loop"
+}

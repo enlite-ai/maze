@@ -1,0 +1,11 @@
+# @package runner
+type: "maze.train.trainers.common.actor_critic.actor_critic_runners.ACLocalRunner"
+
+# model class used for policy and critic updates
+trainer_class: maze.train.trainers.a2c.a2c_trainer.MultiStepA2C
+
+# Number of concurrently executed environments
+concurrency: 8
+
+# Path to initial state (can contain: policy weights, critic weights, optimizer state)
+initial_state_dict: ~

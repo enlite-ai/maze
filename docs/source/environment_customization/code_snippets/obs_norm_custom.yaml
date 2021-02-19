@@ -1,0 +1,30 @@
+# @package wrappers
+ObservationNormalizationWrapper:
+    # default behaviour
+    default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
+    default_strategy_config:
+        clip_range: [~, ~]
+        axis: ~
+    default_statistics: ~
+    statistics_dump: statistics.pkl
+    sampling_policy:
+        type: maze.core.agent.random_policy.RandomPolicy
+    # observation with key action_mask gets excluded from normalization
+    exclude: [action_mask]
+    manual_config:
+        # observation pixel_image uses manually specified normalization statistics
+        pixel_image:
+          strategy: maze.normalization_strategies.RangeZeroOneObservationNormalizationStrategy
+          strategy_config:
+            clip_range: [0, 1]
+            axis: ~
+          statistics:
+            min: 0
+            max: 255
+        # observation feature_vector estimates normalization statistics via sampling
+        feature_vector:
+          strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
+          strategy_config:
+            clip_range: [-3, 3]
+            # normalization statistics are computed along the first axis
+            axis: [0]

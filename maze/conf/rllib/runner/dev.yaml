@@ -1,0 +1,28 @@
+# @package runner
+
+type: "maze.rllib.maze_rllib_runner.MazeRLlibRunner"
+
+# Number of rollouts to collect normalization statistics at the beginning of the training.
+normalization_samples: 100
+
+# Where to save the env spaces configuration (output directory handled by hydra)
+spaces_config_dump_file: "spaces_config.pkl"
+
+tune_config:
+  # RLlib stopping criteria
+  stop:
+    training_iteration: 10
+
+  checkpoint_score_attr: 'episode_reward_mean'
+  checkpoint_freq: 1
+  keep_checkpoints_num: 3
+
+  verbose: 2
+
+ray_config:
+  # Whether to start ray in local model or not
+  local_mode: true
+  ignore_reinit_error: true
+
+# Specify the number of workers
+num_workers: 1

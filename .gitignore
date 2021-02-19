@@ -1,0 +1,14 @@
+logs
+!logs/.gitkeep
+build
+.idea/
+*.iml
+params
+tb_log*
+*~
+__pycache__/
+.pytest_cache
+.ipynb_checkpoints/
+/docs/build/
+/docs/source/reference_docs/generated/
+/maze.egg-info/

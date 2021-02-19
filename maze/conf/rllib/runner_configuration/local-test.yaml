@@ -1,0 +1,18 @@
+# @package runner
+
+# Number of rollouts to collect normalization statistics at the beginning of the training.
+normalization_samples: 10
+
+tune_config:
+  # RLlib stopping criteria
+  stop:
+    training_iteration: 1
+
+  checkpoint_score_attr: 'episode_reward_mean'
+  checkpoint_freq: 1
+  keep_checkpoints_num: 1
+
+  verbose: 2
+
+# Specify the number of workers
+num_workers: 1

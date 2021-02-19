@@ -1,0 +1,4 @@
+episode_id	env_time	order
+3a1b785a-99ab-4ea5-ad97-def07819ad94	3	<loop_envs.logistics.multi_echelon_inventory.env.customer_order.CustomerOrder object at 0x7f2c96f84450>
+5309deb9-359f-42bf-87ff-1a6bfd2af46a	3	<loop_envs.logistics.multi_echelon_inventory.env.customer_order.CustomerOrder object at 0x7f3fa4f534d0>
+2b0594e7-773b-4c3a-9eb6-98326146c078	3	<loop_envs.logistics.multi_echelon_inventory.env.customer_order.CustomerOrder object at 0x7f4afc99c6d0>

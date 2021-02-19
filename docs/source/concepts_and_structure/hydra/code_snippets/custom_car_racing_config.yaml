@@ -1,0 +1,5 @@
+# In your_project/conf/env/car_racing.yaml:
+
+# @package env
+type: maze.core.wrappers.maze_gym_env_wrapper.GymMazeEnv
+env: "CarRacing-v0"

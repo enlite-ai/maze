@@ -1,0 +1,39 @@
+# @package model
+type: maze.perception.models.template_model_composer.TemplateModelComposer
+
+distribution_mapper_config:
+    - action_space: gym.spaces.Box
+      distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
+
+model_builder:
+  type: maze.perception.builders.ConcatModelBuilder
+
+  observation_modality_mapping:
+    observation-rgb2gray-resize_img: image
+    observation: image
+
+  modality_config:
+    feature:
+      block_type: maze.perception.blocks.DenseBlock
+      block_params:
+        hidden_units: [100]
+        non_lin: torch.nn.Tanh
+    image:
+      block_type: maze.perception.blocks.StridedConvolutionDenseBlock
+      block_params:
+        hidden_channels: [ 8, 16, 32 ]
+        hidden_kernels: [ 8, 4, 4 ]
+        convolution_dimension: 2
+        hidden_strides: [ 4, 2, 2 ]
+        hidden_dilations: ~
+        hidden_padding: ~
+        padding_mode: ~
+        hidden_units: []
+        non_lin: torch.nn.SELU
+    hidden: {}
+    recurrence: {}
+
+policy:
+  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+
+critic: ~

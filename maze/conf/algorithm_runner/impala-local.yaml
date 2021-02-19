@@ -1,0 +1,5 @@
+# @package runner
+type: "maze.train.trainers.impala.impala_runners.ImpalaLocalRunner"
+
+# type of startmethod used for multiprocessing: 'forkserver', 'spawn', 'fork', 'dummy'
+start_method: forkserver

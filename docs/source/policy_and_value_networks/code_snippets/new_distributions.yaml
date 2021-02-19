@@ -1,0 +1,4 @@
+# @package model
+distribution_mapper_config:
+  - action_space: gym.spaces.Discrete
+    distribution: my_package.maze_extentions.distributions.CustomCategoricalProbabilityDistribution

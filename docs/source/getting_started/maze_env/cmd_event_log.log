@@ -1,0 +1,24 @@
+ step|path                                                                      |               value
+=====|==========================================================================|====================
+    1|main    DiscreteActionEvents  action                substep_0/order       |     [len:15, μ:0.5]
+    1|main    DiscreteActionEvents  action                substep_0/piece_idx   |    [len:15, μ:82.3]
+    1|main    DiscreteActionEvents  action                substep_0/rotation    |     [len:15, μ:0.7]
+    1|main    BaseEnvEvents         reward                median_step_count     |              15.000
+    1|main    BaseEnvEvents         reward                mean_step_count       |              15.000
+    1|main    BaseEnvEvents         reward                total_step_count      |              15.000
+    1|main    BaseEnvEvents         reward                total_episode_count   |               1.000
+    1|main    BaseEnvEvents         reward                episode_count         |               1.000
+    1|main    BaseEnvEvents         reward                std                   |               0.000
+    1|main    BaseEnvEvents         reward                mean                  |             -29.000
+    1|main    BaseEnvEvents         reward                min                   |             -29.000
+    1|main    BaseEnvEvents         reward                max                   |             -29.000
+    1|main    InventoryEvents       piece_replenished     mean_episode_total    |               3.000
+    1|main    InventoryEvents       pieces_in_inventory   step_max              |             200.000
+    1|main    InventoryEvents       pieces_in_inventory   step_mean             |             200.000
+    1|main    CuttingEvents         invalid_cut           mean_episode_total    |              14.000
+    1|main    InventoryEvents       piece_discarded       mean_episode_total    |               2.000
+    1|main    CuttingEvents         valid_cut             mean_episode_total    |               1.000
+    1|main    BaseEnvEvents         kpi                   max/raw_piece_usage_..|               0.000
+    1|main    BaseEnvEvents         kpi                   min/raw_piece_usage_..|               0.000
+    1|main    BaseEnvEvents         kpi                   std/raw_piece_usage_..|               0.000
+    1|main    BaseEnvEvents         kpi                   mean/raw_piece_usage..|               0.000

@@ -1,0 +1,127 @@
+# @package model
+
+# === Built-in options =============================================================================================
+
+# Number of hidden layers for fully connected net
+"fcnet_hiddens": [ 256, 256 ]
+
+# Nonlinearity for fully connected net (tanh, relu)
+"fcnet_activation": "tanh"
+
+# Filter config. List of [out_channels, kernel, stride] for each filter
+"conv_filters": ~
+
+# Nonlinearity for built-in convnet
+"conv_activation": "relu"
+
+# For DiagGaussian action distributions, make the second half of the model
+# outputs floating bias variables instead of state-dependent. This only
+# has an effect is using the default fully connected net.
+"free_log_std": false
+
+# Whether to skip the final linear layer used to resize the hidden layer
+# outputs to size `num_outputs`. If true, then the last hidden layer
+# should already match num_outputs.
+"no_final_linear": false
+
+# Whether layers should be shared for the value function.
+"vf_share_layers": true
+
+
+# == LSTM ==========================================================================================================
+
+# Whether to wrap the model with an LSTM.
+"use_lstm": false
+
+# Max seq len for training the LSTM, defaults to 20.
+"max_seq_len": 20
+
+# Size of the LSTM cell.
+"lstm_cell_size": 256
+
+# Whether to feed a_{t-1} to LSTM (one-hot encoded if discrete).
+"lstm_use_prev_action": false
+
+# Whether to feed a_{t-1}, r_{t-1} to LSTM.
+"lstm_use_prev_reward": false
+
+# Experimental (only works with `_use_trajectory_view_api`=true):
+# Whether the LSTM is time-major (TxBx..) or batch-major (BxTx..).
+"_time_major": false
+
+
+# == Attention Nets (experimental: torch-version is untested) ==
+# Whether to use a GTrXL ("Gru transformer XL"; attention net) as the
+# wrapper Model around the default Model.
+"use_attention": false
+
+# The number of transformer units within GTrXL.
+# A transformer unit in GTrXL consists of a) MultiHeadAttention module and
+# b) a position-wise MLP.
+"attention_num_transformer_units": 1
+
+# The input and output size of each transformer unit.
+"attention_dim": 64
+
+# The number of attention heads within the MultiHeadAttention units.
+"attention_num_heads": 1
+
+# The dim of a single head (within the MultiHeadAttention units).
+"attention_head_dim": 32
+
+# The memory sizes for inference and training.
+"attention_memory_inference": 50
+"attention_memory_training": 50
+
+# The output dim of the position-wise MLP.
+"attention_position_wise_mlp_dim": 32
+
+# The initial bias values for the 2 GRU gates within a transformer unit.
+"attention_init_gru_gate_bias": 2.0
+
+# == Atari ==
+# Which framestacking size to use for Atari envs.
+# "auto": Use a value of 4, but only if the env is an Atari env.
+# > 1: Use the trajectory view API in the default VisionNets to request the
+#      last n observations (single, grayscaled 84x84 image frames) as
+#      inputs. The time axis in the so provided observation tensors
+#      will come right after the batch axis (channels first format),
+#      e.g. BxTx84x84, where T=num_framestacks.
+# 0 or 1: No framestacking used.
+# Use the deprecated `framestack=True`, to disable the above behavor and to
+# enable legacy stacking behavior (w/o trajectory view API) instead.
+"num_framestacks": "auto"
+
+# Final resized frame dimension
+"dim": 84
+
+# (deprecated) Converts ATARI frame to 1 Channel Grayscale image
+"grayscale": false
+
+# (deprecated) Changes frame to range from [-1, 1] if true
+"zero_mean": true
+
+# === Options for custom models ====================================================================================
+
+# Name of a custom model to use
+"custom_model": ~
+
+# Extra options to pass to the custom classes. These will be available to
+# the Model's constructor in the model_config field. Also, they will be
+# attempted to be passed as **kwargs to ModelV2 models. For an example,
+# see rllib/models/[tf|torch]/attention_net.py.
+"custom_model_config": { }
+
+# Name of a custom action distribution to use.
+"custom_action_dist": ~
+
+# Custom preprocessors are deprecated. Please use a wrapper class around
+# your environment instead to preprocess observations.
+"custom_preprocessor": ~
+
+# Deprecated keys:
+# Use `lstm_use_prev_action` or `lstm_use_prev_reward` instead.
+"lstm_use_prev_action_reward": -1
+
+# Use `num_framestacks` (int) instead.
+"framestack": true

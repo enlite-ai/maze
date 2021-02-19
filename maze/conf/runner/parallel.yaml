@@ -1,0 +1,19 @@
+# @package _group_
+type: maze.core.rollout.parallel_rollout_runner.ParallelRolloutRunner
+
+# Number of processes to run the rollouts in concurrently
+n_processes: 5
+
+# Total number of episodes to run
+n_episodes: 50
+
+# Max steps per episode to perform
+max_episode_steps: 200
+
+# If true, trajectory data will be recorded and stored in `trajectory_data` directory
+record_trajectory: true
+
+# If true, event logs will be recorded and stored in `event_logs_directory
+record_event_logs: true
+
+# (Note that the default output directory is handled by Hydra)

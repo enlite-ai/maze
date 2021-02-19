@@ -1,0 +1,8 @@
+# @package wrappers
+PreProcessingWrapper:
+    pre_processor_mapping:
+        - observation: rgb_image
+          type: my_project.preprocessors.custom.CustomPreProcessor
+          keep_original: true
+          config:
+            num_flatten_dims: 2

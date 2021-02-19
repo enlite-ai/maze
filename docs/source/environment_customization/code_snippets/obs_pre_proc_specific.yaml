@@ -1,0 +1,12 @@
+# @package wrappers
+PreProcessingWrapper:
+    pre_processor_mapping:
+        - observation: rgb_image
+          type: maze.preprocessors.Rgb2GrayPreProcessor
+          keep_original: true
+          config:
+            num_flatten_dims: 2
+        - observation: categorical_feature
+          type: maze.preprocessors.OneHotPreProcessor
+          keep_original: false
+          config: {}

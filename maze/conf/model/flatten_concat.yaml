@@ -1,0 +1,18 @@
+# @package model
+type: maze.perception.models.custom_model_composer.CustomModelComposer
+
+distribution_mapper_config: {}
+
+policy:
+  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+  networks:
+    - type: maze.perception.models.built_in.flatten_concat.FlattenConcatPolicyNet
+      non_lin: torch.nn.Tanh
+      hidden_units: [256, 256]
+
+critic:
+  type: maze.perception.models.critics.StateCriticComposer
+  networks:
+    - type: maze.perception.models.built_in.flatten_concat.FlattenConcatStateValueNet
+      non_lin: torch.nn.Tanh
+      hidden_units: [256, 256]

@@ -1,0 +1,4 @@
+# @package policy
+type: maze.core.agent.random_policy.random_policy_from_config
+env_config: ${env}
+wrappers_config: ${wrappers}

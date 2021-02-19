@@ -1,0 +1,5 @@
+# @package _global_
+
+runner:
+  # No remote workers by default.
+  num_workers: 0

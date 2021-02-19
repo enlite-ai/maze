@@ -1,0 +1,46 @@
+# @package algorithm
+
+# number of epochs to train
+n_epochs: 0
+
+# number of updates per epoch
+epoch_length: 25
+
+# run evaluation in deterministic mode (argmax-policy)
+deterministic_eval: false
+
+# number of evaluation trials
+eval_repeats: 2
+
+# number of steps used for early stopping
+patience: 15
+
+# number of critic (value function) burn in epochs
+critic_burn_in_epochs: 0
+
+# Number of steps taken for each rollout
+n_rollout_steps: 100
+
+# learning rate
+lr: 0.0005
+
+# discounting factor
+gamma: 0.98
+
+# bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
+gae_lambda: 1.0
+
+# weight of policy loss
+policy_loss_coef: 1.0
+
+# weight of value loss
+value_loss_coef: 0.5
+
+# weight of entropy loss
+entropy_coef: 0.00025
+
+# The maximum allowed gradient norm during training
+max_grad_norm: 0.0
+
+# Either "cpu" or "cuda"
+device: cpu

@@ -1,0 +1,22 @@
+# @package model
+type: maze.perception.models.custom_model_composer.CustomModelComposer
+
+distribution_mapper_config: {}
+
+policy:
+  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+  networks:
+  - type: tutorials.tutorial_maze_env.part06_struct_env.models.actor.SelectionPolicyNet
+    non_lin: torch.nn.ReLU
+    with_mask: true
+  - type: tutorials.tutorial_maze_env.part06_struct_env.models.actor.CuttingPolicyNet
+    non_lin: torch.nn.ReLU
+    with_mask: true
+
+critic:
+  type: maze.perception.models.critics.StepStateCriticComposer
+  networks:
+    - type: tutorials.tutorial_maze_env.part06_struct_env.models.critic.SelectionValueNet
+      non_lin: torch.nn.ReLU
+    - type: tutorials.tutorial_maze_env.part06_struct_env.models.critic.CuttingValueNet
+      non_lin: torch.nn.ReLU

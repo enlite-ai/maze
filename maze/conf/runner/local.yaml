@@ -1,0 +1,10 @@
+# @package runner
+
+# Where to save the best model (output directory handled by hydra)
+state_dict_dump_file: "state_dict.pt"
+
+# Where to save the env spaces configuration (output directory handled by hydra)
+spaces_config_dump_file: "spaces_config.pkl"
+
+# Number of rollouts to collect normalization statistics at the beginning of the training.
+normalization_samples: 10000

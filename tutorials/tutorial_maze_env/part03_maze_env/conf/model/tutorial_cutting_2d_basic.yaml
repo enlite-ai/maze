@@ -1,0 +1,26 @@
+# @package model
+type: maze.perception.models.template_model_composer.TemplateModelComposer
+
+distribution_mapper_config: {}
+
+model_builder:
+  type: maze.perception.builders.ConcatModelBuilder
+
+  observation_modality_mapping:
+    inventory-flatten: feature
+    ordered_piece: feature
+
+  modality_config:
+    feature:
+      block_type: maze.perception.blocks.DenseBlock
+      block_params:
+        hidden_units: [32]
+        non_lin: torch.nn.SELU
+    hidden: {}
+    recurrence: {}
+
+policy:
+  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+
+critic:
+  type: maze.perception.models.critics.StateCriticComposer

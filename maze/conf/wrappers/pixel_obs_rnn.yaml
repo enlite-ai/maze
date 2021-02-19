@@ -1,0 +1,37 @@
+# @package wrappers
+PreProcessingWrapper:
+  pre_processor_mapping:
+    - observation: observation
+      type: maze.core.wrappers.observation_preprocessing.preprocessors.rgb2gray.Rgb2GrayPreProcessor
+      keep_original: false
+      config:
+        rgb_dim: -1
+    - observation: observation-rgb2gray
+      type: maze.core.wrappers.observation_preprocessing.preprocessors.resize_img.ResizeImgPreProcessor
+      keep_original: false
+      config:
+        target_size: [96, 96]
+        transpose: false
+    - observation: observation-rgb2gray-resize_img
+      type: maze.core.wrappers.observation_preprocessing.preprocessors.unsqueeze.UnSqueezePreProcessor
+      keep_original: false
+      config:
+        dim: -3
+ObservationStackWrapper:
+  stack_config:
+    - observation: observation-rgb2gray-resize_img-unsqueeze
+      keep_original: false
+      tag: ~
+      delta: False
+      stack_steps: 4
+ObservationNormalizationWrapper:
+  default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
+  default_strategy_config:
+    clip_range: [~, ~]
+    axis: ~
+  default_statistics: ~
+  statistics_dump: statistics.pkl
+  sampling_policy:
+    type: maze.core.agent.random_policy.RandomPolicy
+  exclude: ~
+  manual_config: ~

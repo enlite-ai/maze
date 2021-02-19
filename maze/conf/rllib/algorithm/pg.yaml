@@ -1,0 +1,18 @@
+# @package algorithm
+
+algorithm: 'PG'
+
+model_cls: maze.rllib.maze_rllib_models.maze_rllib_policy_model.MazeRLlibPolicyModel
+
+config:
+  # No remote workers by default.
+  "num_workers": ${runner.num_workers}
+
+  # Learning rate.
+  "lr": 0.0004
+
+  # This has to be set to true, since RLLib overloads the model config with some random values (even if a custom model
+  # is used. And these random values include traj_view_framestacks=0 (instead of the normal default: 'auto') which
+  # raises a value error if _use_trajectory_view_api is set to false.. Thus _use_trajectory_view_api has to be True for
+  # this algorithm.
+  "_use_trajectory_view_api": true

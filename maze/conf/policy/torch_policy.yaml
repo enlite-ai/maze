@@ -1,0 +1,16 @@
+# @package policy
+
+# Example config file for loading trained models.
+
+type: maze.core.agent.serialized_torch_policy.SerializedTorchPolicy
+
+# (1) Specify where the state dict and spaces config to load reside
+state_dict_file:  state_dict.pt
+spaces_dict_file: spaces_config.pkl
+
+# (2) If using observation normalization, you might want to check the wrappers config
+#     to make sure the correct statistics are loaded.
+
+model: ${model}
+
+device: cpu

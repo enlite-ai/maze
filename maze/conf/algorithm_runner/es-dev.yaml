@@ -1,0 +1,8 @@
+# @package runner
+type: "maze.train.trainers.es.ESDevRunner"
+
+# Fixed number of evaluation runs per epoch.
+n_eval_rollouts: 10
+
+# Number of float values in the deterministically generated pseudo-random table
+shared_noise_table_size: 100000000

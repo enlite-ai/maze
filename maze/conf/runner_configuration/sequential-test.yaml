@@ -1,0 +1,4 @@
+# @package _global_
+runner:
+  n_episodes: 1
+  max_episode_steps: 2

@@ -1,0 +1,15 @@
+timeline_plot_name: Timelines
+timeline_plot_figsize: [10, 6]
+timeline_plot_subplot_shape: [2, 2]
+timeline_plot_spec:              # Event name                                            Attrib.  Aggregate Post-process
+  Items in storage:              [ DistributionCenterEvents.goods_stored,                n_items, ~,        ~]
+  Items dispatched:              [ DistributionCenterEvents.goods_dispatched,            n_items, sum,      ~]
+  Items delivered:               [ DistributionCenterEvents.goods_dispatched,            n_items, sum,      ~]
+  Total ordered items delivered: [ DistributionCenterEvents.goods_delivered_to_customer, n_items, sum,      cumsum]
+
+kpi_plot_name: KPIs
+kpi_plot_figsize: [8, 4]
+kpi_plot_subplot_shape: [1, 2]
+kpi_plot_spec:                   # KPI name                   Plot limits
+  "KPI: Orders per step":        [ orders_fulfilled_per_step, [0, 1]]
+  "KPI: Goods stored per step":  [ goods_stored_per_step,     [0, 5]]

@@ -1,0 +1,1 @@
+$ maze-run runner=sequential runner.max_episode_steps=1000

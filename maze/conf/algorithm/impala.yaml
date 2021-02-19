@@ -1,0 +1,67 @@
+# @package algorithm
+
+# number of epochs to train
+n_epochs: 0
+
+# number of updates per epoch
+epoch_length: 25
+
+# run evaluation in deterministic mode (argmax-policy)
+deterministic_eval: false
+
+# number of evaluation trials
+eval_repeats: 2
+
+# number of evaluation envs
+eval_concurrency: 2
+
+# number of steps used for early stopping
+patience: 15
+
+# this factor multiplied by the actor_batch_size gives the size of the queue for
+# the agents output collected by the learner. Therefor if the all rollouts computed can be at most
+# (queue_out_of_sync_factor + num_agents/actor_batch_size) out of sync with learner policy
+queue_out_of_sync_factor: 1
+
+# number of rolloutstep of each epoch substep
+n_rollout_steps: 100
+
+# number of actors to combine to one batch
+actors_batch_size: 8
+
+# number of actors to be run
+num_actors: 8
+
+# learning rate
+lr: 0.0002
+
+# discount factor
+gamma: 0.98
+
+# coefficient of the policy used in the loss calculation
+policy_loss_coef: 1.0
+
+# coefficient of the value used in the loss calculation
+value_loss_coef: 0.5
+
+# coefficient of the entropy used in the loss calculation
+entropy_coef: 0.00025
+
+# max grad norm for gradient clipping, ignored if value==0
+max_grad_norm: 0
+
+# A scalar float32 tensor with the clipping threshold for importance weights
+# (rho) when calculating the baseline targets (vs). rho^bar in the paper. If None, no clipping is applied.
+vtrace_clip_rho_threshold: 1.0
+
+# A scalar float32 tensor with the clipping threshold on rho_s in
+# \rho_s \delta log \pi(a|x) (r + \gamma v_{s+1} - V(x_sfrom_importance_weights)). If None, no clipping is
+# applied.
+vtrace_clip_pg_rho_threshold: 1.0
+
+# the type of reward clipping to be used, options 'abs_one', 'soft_asymmetric', 'None'
+reward_clipping: "None"
+
+# Device of the learner (either cpu or cuda)
+# Note that the actors collecting rollouts are always run on CPU.
+device: "cpu"

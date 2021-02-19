@@ -1,0 +1,21 @@
+# @package _global_
+
+# defines environment to instantiate
+env:
+  type: maze.core.wrappers.maze_gym_env_wrapper.GymMazeEnv
+  env: "CartPole-v0"
+
+# defines wrappers to apply
+wrappers:
+  # Observation Normalization Wrapper
+  ObservationNormalizationWrapper:
+    default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
+    default_strategy_config:
+      clip_range: [~, ~]
+      axis: 0
+    default_statistics: ~
+    statistics_dump: statistics.pkl
+    sampling_policy:
+      type: maze.core.agent.random_policy.RandomPolicy
+    exclude: ~
+    manual_config: ~

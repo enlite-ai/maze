@@ -1,0 +1,6 @@
+# @package wrappers
+RandomResetWrapper:
+  min_skip_steps: 0
+  max_skip_steps: 100
+TimeLimitWrapper:
+  max_episode_steps: 1000

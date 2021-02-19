@@ -1,0 +1,58 @@
+ step|path                                                                        |               value
+=====|============================================================================|====================
+    1|train     MultiStepActorCritic..time_rollout          ······················|               1.091
+    1|train     MultiStepActorCritic..learning_rate         ······················|               0.000
+    1|train     MultiStepActorCritic..policy_loss           0                     |              -0.000
+    1|train     MultiStepActorCritic..policy_grad_norm      0                     |               0.001
+    1|train     MultiStepActorCritic..policy_entropy        0                     |               1.593
+    1|train     MultiStepActorCritic..policy_loss           1                     |              -0.000
+    1|train     MultiStepActorCritic..policy_grad_norm      1                     |               0.008
+    1|train     MultiStepActorCritic..policy_entropy        1                     |               0.295
+    1|train     MultiStepActorCritic..critic_value          0                     |              -0.199
+    1|train     MultiStepActorCritic..critic_value_loss     0                     |             116.708
+    1|train     MultiStepActorCritic..critic_grad_norm      0                     |               0.500
+    1|train     MultiStepActorCritic..time_update           ······················|               1.642
+    1|train     DiscreteActionEvents  action                substep_0/piece_idx   |  [len:4000, μ:54.8]
+    1|train     BaseEnvEvents         reward                median_step_count     |             200.000
+    1|train     BaseEnvEvents         reward                mean_step_count       |             200.000
+    1|train     BaseEnvEvents         reward                total_step_count      |            4000.000
+    1|train     BaseEnvEvents         reward                total_episode_count   |              20.000
+    1|train     BaseEnvEvents         reward                episode_count         |              20.000
+    1|train     BaseEnvEvents         reward                std                   |               1.465
+    1|train     BaseEnvEvents         reward                mean                  |             -71.950
+    1|train     BaseEnvEvents         reward                min                   |             -75.000
+    1|train     BaseEnvEvents         reward                max                   |             -70.000
+    1|train     DiscreteActionEvents  action                substep_1/order       |   [len:4000, μ:0.5]
+    1|train     DiscreteActionEvents  action                substep_1/rotation    |   [len:4000, μ:0.5]
+    1|train     InventoryEvents       piece_replenished     mean_episode_total    |              71.950
+    1|train     InventoryEvents       pieces_in_inventory   step_max              |             163.000
+    1|train     InventoryEvents       pieces_in_inventory   step_mean             |              69.946
+    1|train     CuttingEvents         valid_cut             mean_episode_total    |             200.000
+    1|train     BaseEnvEvents         kpi                   max/raw_piece_usage_..|               0.375
+    1|train     BaseEnvEvents         kpi                   min/raw_piece_usage_..|               0.350
+    1|train     BaseEnvEvents         kpi                   std/raw_piece_usage_..|               0.007
+    1|train     BaseEnvEvents         kpi                   mean/raw_piece_usage..|               0.360
+Time required for epoch: 19.43s
+Update epoch - 1
+ step|path                                                                        |               value
+=====|============================================================================|====================
+    2|eval      DiscreteActionEvents  action                substep_0/piece_idx   |   [len:800, μ:53.2]
+    2|eval      BaseEnvEvents         reward                median_step_count     |             200.000
+    2|eval      BaseEnvEvents         reward                mean_step_count       |             200.000
+    2|eval      BaseEnvEvents         reward                total_step_count      |            1600.000
+    2|eval      BaseEnvEvents         reward                total_episode_count   |               8.000
+    2|eval      BaseEnvEvents         reward                episode_count         |               4.000
+    2|eval      BaseEnvEvents         reward                std                   |               1.414
+    2|eval      BaseEnvEvents         reward                mean                  |             -71.000
+    2|eval      BaseEnvEvents         reward                min                   |             -73.000
+    2|eval      BaseEnvEvents         reward                max                   |             -69.000
+    2|eval      DiscreteActionEvents  action                substep_1/order       |    [len:800, μ:0.5]
+    2|eval      DiscreteActionEvents  action                substep_1/rotation    |    [len:800, μ:0.5]
+    2|eval      InventoryEvents       piece_replenished     mean_episode_total    |              71.000
+    2|eval      InventoryEvents       pieces_in_inventory   step_max              |             145.000
+    2|eval      InventoryEvents       pieces_in_inventory   step_mean             |              68.031
+    2|eval      CuttingEvents         valid_cut             mean_episode_total    |             200.000
+    2|eval      BaseEnvEvents         kpi                   max/raw_piece_usage_..|               0.365
+    2|eval      BaseEnvEvents         kpi                   min/raw_piece_usage_..|               0.345
+    2|eval      BaseEnvEvents         kpi                   std/raw_piece_usage_..|               0.007
+    2|eval      BaseEnvEvents         kpi                   mean/raw_piece_usage..|               0.355

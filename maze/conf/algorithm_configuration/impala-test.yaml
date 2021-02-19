@@ -1,0 +1,9 @@
+# @package _global_
+
+algorithm:
+  n_rollout_steps: 5
+  n_epochs: 1
+  eval_repeats: 1
+
+runner:
+  normalization_samples: 1

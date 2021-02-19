@@ -1,0 +1,3 @@
+# @package env
+type: maze.core.wrappers.maze_gym_env_wrapper.make_gym_maze_env
+name: "CartPole-v0"

@@ -1,0 +1,12 @@
+# @package algorithm
+
+config:
+  # Whether to use noisy network
+  "noisy": false
+
+  # control the initial value of noisy nets
+  "sigma0": 0.5
+
+  # Dense-layer setup for each the advantage branch and the value branch
+  # in a dueling architecture.
+  "hiddens": [ 256 ]

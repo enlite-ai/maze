@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 46.2 (44496) - http://www.bohemiancoding.com/sketch -->
+    <title>mail-icon</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Assets" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="mail-icon" fill-rule="nonzero" fill="#222222">
+            <path d="M6,7 C4.34375,7 3,8.34375 3,10 L3,22 C3,23.65625 4.34375,25 6,25 L26,25 C27.65625,25 29,23.65625 29,22 L29,10 C29,8.34375 27.65625,7 26,7 L6,7 Z M6,9 L26,9 C26.550781,9 27,9.449219 27,10 L27,10.5 L16,16.4375 L5,10.5 L5,10 C5,9.449219 5.449219,9 6,9 Z M5,10.78125 L11.53125,15.875 L5.125,22.4375 L12.9375,16.875 L16,18.84375 L19.0625,16.875 L26.875,22.4375 L20.46875,15.875 L27,10.78125 L27,22 C27,22.164063 26.945313,22.300781 26.875,22.4375 C26.710938,22.761719 26.390625,23 26,23 L6,23 C5.609375,23 5.289063,22.761719 5.125,22.4375 C5.054688,22.300781 5,22.164063 5,22 L5,10.78125 Z" id="Icon"></path>
+        </g>
+    </g>
+</svg>

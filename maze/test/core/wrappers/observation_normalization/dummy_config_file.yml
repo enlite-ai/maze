@@ -1,0 +1,19 @@
+observation_normalization_wrapper:
+  default_strategy: dummy_observation_normalization_strategy
+  default_strategy_config:
+    clip_range: [~, ~]
+    axis: 0
+  default_statistics: ~
+  statistics_dump: statistics.pkl
+  sampling_policy:
+    type: maze.core.agent.random_policy.RandomPolicy
+  exclude: ~
+  manual_config:
+    observation:
+      strategy: maze.test.core.wrappers.observation_normalization.normalization_strategies.dummy_observation_normalization_strategy.DummyObservationNormalizationStrategy
+      strategy_config:
+        clip_range: [0, 1]
+        axis: 0
+      statistics:
+          stat_1: [0, 0, 0, 0]
+          stat_2: [1, 1, 1, 1]

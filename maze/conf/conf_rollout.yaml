@@ -1,0 +1,21 @@
+# Default configuration for policy rollouts.
+
+defaults:
+  - runner: parallel
+  - env: gym_env
+  - wrappers: no_wrappers
+  - policy: random_policy
+  - model: flatten_concat
+  - configuration: ~
+
+  # Configuration specializations (mainly for test scenarios, to keep tests simple and fast)
+  - runner_configuration: ${defaults.0.runner}-${defaults.5.configuration}
+    optional: true
+  - env_configuration: ${defaults.1.env}-${defaults.5.configuration}
+    optional: true
+
+# Hydra is by default configured to create a fresh output directory for each run.
+# However, to ensure model states, normalization stats and else are loaded from expected
+# locations, we will change the dir back to the original working dir for the initialization
+# (and then change it back so that all later script output lands in the hydra output dir as expected)
+input_dir: ""

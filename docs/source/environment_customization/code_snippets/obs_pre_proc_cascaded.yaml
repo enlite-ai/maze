@@ -1,0 +1,19 @@
+# @package wrappers
+PreProcessingWrapper:
+  pre_processor_mapping:
+    - observation: rgb_image
+      type: maze.preprocessors.Rgb2GrayPreProcessor
+      keep_original: false
+      config:
+        rgb_dim: -1
+    - observation: rgb_image-rgb2gray
+      type: maze.preprocessors.ResizeImgPreProcessor
+      keep_original: false
+      config:
+        target_size: [96, 96]
+        transpose: false
+    - observation: rgb_image-rgb2gray-resize_img
+      type: maze.preprocessors.UnSqueezePreProcessor
+      keep_original: false
+      config:
+        dim: -3

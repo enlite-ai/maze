@@ -1,0 +1,62 @@
+# Default configuration for policy training.
+
+defaults:
+  - rllib/algorithm_common_config
+  - rllib/runner_common_config
+  - rllib/runner: local
+    optional: true
+  - env: gym_env
+  - wrappers: no_wrappers
+  - model: flatten_concat
+  - critic: ~
+  - rllib/algorithm: ppo
+    optional: true
+  - launcher: ~
+  - configuration: ~
+
+  # --- specializations ---
+  # runner
+  - rllib/runner: ${defaults.2.rllib/runner}
+  - rllib/runner_configuration: ${defaults.2.rllib/runner}-${defaults.9.configuration}
+    optional: true
+
+  # env
+  - env_configuration: ${defaults.3.env}-${defaults.9.configuration}
+    optional: true
+
+  # model
+  - model_configuration: ${defaults.5.model}-${defaults.9.configuration}
+    optional: true
+
+  # algorithm
+  - rllib/algorithm: ${defaults.7.rllib/algorithm}
+  - rllib/algorithm_model: ${defaults.7.rllib/algorithm}-${defaults.5.model}
+    optional: true
+  - rllib/algorithm_env: ${defaults.7.rllib/algorithm}-${defaults.3.env}
+    optional: true
+  - rllib/algorithm_configuration: ${defaults.7.rllib/algorithm}-${defaults.9.configuration}
+    optional: true
+
+  # Load sorted observation/action wrapper at the very end to ensure all observations and actions are sorted properly.
+  #   This is necessary, since Rllib flattens and unflattens dict spaces internally, and orders the dicts alphabetically
+  #   to ensure that the right array segments are mapped to right actions/observations.
+  - rllib/wrappers_common
+
+
+project:
+  name: ???
+
+
+# --- Hydra output directory specifications ---
+
+# Base directory where to output logs
+log_base_dir: outputs
+
+# Configuration for Hydra
+hydra:
+  # Local trainings
+  run:
+    dir: ${log_base_dir}/${group:env}-${group:model}-rllib_${group:rllib/algorithm}-${group:setup}-${group:rllib/runner}/${now:%Y-%m-%d_%H-%M-%S}
+  # Training launched through launchers (i.e. kubernetes-based)
+  sweep:
+    dir: ${log_base_dir}/${group:launcher}/${now:%Y-%m-%d_%H-%M-%S}

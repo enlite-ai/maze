@@ -1,0 +1,45 @@
+# @package model
+type: maze.perception.models.default_model_composer.DefaultModelComposer
+
+# specify distribution mapping
+# (here we use a default distribution mapping)
+distribution_mapper_config: {}
+
+# specifies the architecture of default models
+model_builder:
+  type: maze.perception.builders.ConcatModelBuilder
+
+  # specifies the modality type of each observation
+  observation_modality_mapping:
+    observation_inventory: feature
+    observation_screen: image
+
+  # specifies with which block to process a modality
+  modality_config:
+    # modality processing
+    feature:
+      block_type: maze.perception.blocks.DenseBlock
+      block_params:
+        hidden_units: [32, 32]
+        non_lin: torch.nn.ReLU
+    image:
+      block_type: maze.perception.blocks.VGGConvolutionDenseBlock
+      block_params:
+        hidden_channels: [8, 16, 32]
+        hidden_units: [32]
+        non_lin: torch.nn.ReLU
+    # preserved keys for the model builder
+    hidden:
+      block_type: maze.perception.blocks.DenseBlock
+      block_params:
+        hidden_units: [128]
+        non_lin: torch.nn.ReLU
+    recurrence: {}
+
+# select policy type
+policy:
+  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+
+# select critic type
+critic:
+  type: maze.perception.models.critics.StateCriticComposer

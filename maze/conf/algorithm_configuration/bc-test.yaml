@@ -1,0 +1,20 @@
+# @package _global_
+
+algorithm:
+  device: cpu
+  batch_size: 1
+  validation_percentage: 50
+  n_epochs: 1
+  eval_every_k_iterations: 1
+  n_eval_episodes: 2
+  max_episode_steps: 2
+  optimizer:
+    type: torch.optim.SGD
+    lr: 0.001
+
+runner:
+  normalization_samples: 1
+  dataset:
+    type: maze.train.trainers.imitation.in_memory_data_set.InMemoryImitationDataSet
+    trajectory_data_dir: trajectory_data
+

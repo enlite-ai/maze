@@ -1,0 +1,4 @@
+# @package wrappers
+my_project.wrappers.custom_wrapper.CustomObserverWrapper:
+  parameter_1: 0.5
+  parameter_2: 1000

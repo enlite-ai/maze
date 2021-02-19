@@ -1,0 +1,28 @@
+# @package algorithm
+
+# Number of epochs to train for
+n_epochs: 1000
+
+# Number of iterations after which to run evaluation (in addition to evaluations at the end of
+# each epoch, which are run automatically). If set to None, evaluations will run on epoch end only.
+eval_every_k_iterations: 500
+
+# Number of episodes to run during each evaluation rollout
+n_eval_episodes: 10
+
+# Optimizer used to update the policy
+optimizer:
+  type: torch.optim.Adam
+  lr: 0.001
+
+# Device to train on
+device: cuda
+
+# Batch size
+batch_size: 100
+
+# Number of workers to run evaluation in
+n_eval_workers: 4
+
+# Percentage of the data used for validation.
+validation_percentage: 20

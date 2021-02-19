@@ -1,0 +1,27 @@
+# @package algorithm
+
+# Minimum number of episode rollouts per training iteration (=epoch)
+n_rollouts_per_update: 10
+
+# Minimum number of cumulative env steps per training iteration (=epoch).
+# The training iteration is only finished, once the given number of episodes
+# AND the given number of steps has been reached. One of the two parameters
+# can be set to 0.
+n_timesteps_per_update: 0
+
+# The number of epochs to train before termination. Pass 0 to train indefinitely
+max_epochs: 0
+
+# Limit the episode rollouts to a maximum number of steps. Set to 0 to disable this option.
+max_steps: 0
+
+# The optimizer to use to update the policy based on the sampled gradient.
+optimizer:
+  type: maze.train.trainers.es.optimizers.adam.Adam
+  step_size: 0.01
+
+# L2 weight regularization coefficient.
+l2_penalty: 0.005
+
+# The scaling factor of the random noise applied during training.
+noise_stddev: 0.02

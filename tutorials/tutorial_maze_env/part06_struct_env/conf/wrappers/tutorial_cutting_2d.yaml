@@ -1,0 +1,32 @@
+# @package wrappers
+
+# limits the maximum number of time steps of an episode
+TimeLimitWrapper:
+  max_episode_steps: 180
+
+# flattens the dictionary observations to work with DenseLayers
+PreProcessingWrapper:
+    pre_processor_mapping:
+        - observation: inventory
+          type: maze.preprocessors.FlattenPreProcessor
+          keep_original: true
+          config:
+            num_flatten_dims: 2
+
+# normalize observations to range [0, 1]
+ObservationNormalizationWrapper:
+  default_strategy: maze.normalization_strategies.RangeZeroOneObservationNormalizationStrategy
+  sampling_policy:
+    type: maze.core.agent.random_policy.RandomPolicy
+  default_strategy_config:
+    clip_range: [~, ~]
+    axis: ~
+  default_statistics:
+    min: 0
+    max: 3
+  statistics_dump: statistics.pkl
+  exclude:
+    - inventory_mask
+    - cutting_mask
+    - inventory_size
+  manual_config: ~

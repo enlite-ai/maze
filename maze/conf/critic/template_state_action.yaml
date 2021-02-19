@@ -1,0 +1,8 @@
+# @package model
+
+model_builder:
+  observation_modality_mapping:
+    action: feature
+
+critic:
+  type: maze.perception.models.critics.StateActionCriticComposer

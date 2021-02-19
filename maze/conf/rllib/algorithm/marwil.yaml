@@ -1,0 +1,46 @@
+# @package algorithm
+
+algorithm: 'MARWIL'
+
+model_cls: maze.rllib.maze_rllib_models.maze_rllib_ac_model.MazeRLlibACModel
+
+config:
+  # You should override this to point to an offline dataset (see agent.py).
+  "input": "sampler"
+
+  # Use importance sampling estimators for reward
+  "input_evaluation": [ "is", "wis" ]
+
+  # Scaling of advantages in exponential terms.
+  # When beta is 0.0, MARWIL is reduced to imitation learning.
+  "beta": 1.0
+
+  # Balancing value estimation loss and policy optimization loss.
+  "vf_coeff": 1.0
+
+  # Whether to calculate cumulative rewards.
+  "postprocess_inputs": true
+
+  # Whether to rollout "complete_episodes" or "truncate_episodes".
+  "batch_mode": "complete_episodes"
+
+  # Learning rate for adam optimizer.
+  "lr": 1e-4
+
+  # Number of timesteps collected for each SGD round.
+  "train_batch_size": 2000
+
+  # Size of the replay buffer in batches (not timesteps!).
+  "replay_buffer_size": 1000
+
+  # Number of steps to read before learning starts.
+  "learning_starts": 0
+
+  # === Parallelism ===
+  "num_workers": ${runner.num_workers}
+
+  # This has to be set to true, since RLLib overloads the model config with some random values (even if a custom model
+  # is used. And these random values include traj_view_framestacks=0 (instead of the normal default: 'auto') which
+  # raises a value error if _use_trajectory_view_api is set to false.. Thus _use_trajectory_view_api has to be True for
+  # this algorithm.
+  "_use_trajectory_view_api": true

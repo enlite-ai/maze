@@ -1,0 +1,12 @@
+# @package wrappers
+ObservationNormalizationWrapper:
+  default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
+  default_strategy_config:
+    clip_range: [~, ~]
+    axis: [0]
+  default_statistics: ~
+  statistics_dump: statistics.pkl
+  sampling_policy:
+    type: maze.core.agent.random_policy.RandomPolicy
+  exclude: ~
+  manual_config: ~

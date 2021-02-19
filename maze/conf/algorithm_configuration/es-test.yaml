@@ -1,0 +1,8 @@
+# @package _global_
+algorithm:
+  max_epochs: 2
+  n_rollouts_per_update: 2
+
+runner:
+  normalization_samples: 1
+  shared_noise_table_size: 1000000

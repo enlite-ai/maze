@@ -1,0 +1,2 @@
+# @package policy
+type: maze.core.agent.heuristic_lunar_lander_policy.HeuristicLunarLanderPolicy

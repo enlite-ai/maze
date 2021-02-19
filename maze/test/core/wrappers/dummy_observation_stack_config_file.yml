@@ -1,0 +1,12 @@
+observation_stack_wrapper:
+  stack_config:
+    - observation: observation_0
+      keep_original: false
+      tag: ~
+      delta: false
+      stack_steps: 2
+    - observation: observation_1
+      keep_original: true
+      tag: stacked
+      delta: true
+      stack_steps: 2

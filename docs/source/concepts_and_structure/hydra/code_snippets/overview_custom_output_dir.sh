@@ -1,0 +1,1 @@
+$ maze-run hydra.run.dir=my_dir

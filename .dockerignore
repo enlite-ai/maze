@@ -1,0 +1,11 @@
+logs
+docker
+build
+kubernetes
+skaffold.yaml
+*~
+__pycache__/
+.ipynb_checkpoints/
+.idea/
+*.iml
+.git

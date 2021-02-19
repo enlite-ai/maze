@@ -1,0 +1,7 @@
+episode_id	env_time	name	value
+3a1b785a-99ab-4ea5-ad97-def07819ad94	6	orders_fulfilled_per_step	0.7142857142857143
+3a1b785a-99ab-4ea5-ad97-def07819ad94	6	goods_stored_per_step	4.857142857142857
+5309deb9-359f-42bf-87ff-1a6bfd2af46a	6	orders_fulfilled_per_step	0.7142857142857143
+5309deb9-359f-42bf-87ff-1a6bfd2af46a	6	goods_stored_per_step	4.857142857142857
+2b0594e7-773b-4c3a-9eb6-98326146c078	6	orders_fulfilled_per_step	0.7142857142857143
+2b0594e7-773b-4c3a-9eb6-98326146c078	6	goods_stored_per_step	4.857142857142857

@@ -1,0 +1,29 @@
+# @package model
+
+# specify the custom model composer by reference
+type: maze.perception.models.custom_model_composer.CustomModelComposer
+
+# Specify distribution mapping
+# (here we use a default distribution mapping)
+distribution_mapper_config: {}
+
+policy:
+  # first specify the policy type
+  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+  # specify the policy network(s) we would like to use, by reference
+  networks:
+  - type: docs.source.policy_and_value_networks.code_snippets.custom_cartpole_policy_net.CustomCarpolePolicyNet
+    # specify the parameters of our model
+    non_lin: torch.nn.ReLU
+    hidden_units: [16, 32]
+
+critic:
+  # first specify the critic type (here a state value critic)
+  type: maze.perception.models.critics.StateCriticComposer
+  # specify the critic network(s) we would like to use, by reference
+  networks:
+    - type: docs.source.policy_and_value_networks.code_snippets.custom_cartpole_critic_net.CustomCarpoleCriticNet
+      # specify the parameters of our model
+      non_lin: torch.nn.ReLU
+      hidden_units: [16, 32]
+

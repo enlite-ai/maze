@@ -1,0 +1,7 @@
+# @package env
+type: tutorials.tutorial_maze_env.part03_maze_env.env.maze_env.maze_env_factory
+
+# parametrizes the core environment
+max_pieces_in_inventory: 200
+raw_piece_size: [100, 100]
+static_demand: [30, 15]
