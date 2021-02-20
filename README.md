@@ -80,8 +80,10 @@ The [documentation](https://maze-rl.readthedocs.io/en/latest/index.html#document
   * [Collection and Visualizing Rollouts](https://maze-rl.readthedocs.io/en/latest/workflow/rollouts_trajectories_viewer.html)
   * [Imitation Learning and Fine-Tuning](https://maze-rl.readthedocs.io/en/latest/workflow/imitation_and_fine_tuning.html) 
 
-* *Policy and Value Networks* introduces you to the [Perception Module](), how to [customize action spaces
-  and the underlying action probability distributions]() and two styles of policy and value networks construction:
+* *Policy and Value Networks* introduces you to the 
+  [Perception Module](https://maze-rl.readthedocs.io/en/latest/policy_and_value_networks/perception_overview.html), 
+  how to [customize action spaces and the underlying action probability distributions](https://maze-rl.readthedocs.io/en/latest/policy_and_value_networks/distributions_and_action_heads.html) 
+  and two styles of policy and value networks construction:
   
   * [Template models](https://maze-rl.readthedocs.io/en/latest/policy_and_value_networks/perception_template_models.html) 
     are composed directly from an environment's observation and action space,
