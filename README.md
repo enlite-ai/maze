@@ -2,9 +2,12 @@
 
 # Applied Reinforcement Learning with Python
 
-MazeRL is a development framework for building practical Reinforcement Learning (RL) systems, addressing real-world
-decision problems. It supports the complete development life cycle of RL applications, ranging from simulation
+MazeRL is an application oriented Deep Reinforcement Learning (RL) framework, addressing real-world decision problems.
+Our vision is to cover the complete development life cycle of RL applications ranging from simulation 
 engineering up to agent development, training and deployment.
+
+*This is a preliminary, non-stable release of Maze. It is not yet complete and not all of our interfaces have settled
+yet. Hence, there might be some breaking changes on our way towards the first stable release.*
 
 ## Spotlight Features
 

@@ -56,14 +56,14 @@ Maze: Applied Reinforcement Learning with Python
    <embed>
    <div style="border:2px; border-style:solid; border-color:#afafb6; border-radius: 25px;
                margin: 1.5em; padding: 1.5em; line-height: 1.5; background-color: white;">
-      Maze is an applied Deep Reinforcement Learning (RL) platform with the goal to:
+      Maze is an application oriented Deep Reinforcement Learning (RL) framework with the vision to:
       <ul>
          <li style="margin-top: 10px;">
             Enable AI-based optimization for a wide range of industrial decision processes.</li>
          <li style="margin-top: 5px;">
             Make RL as a technology accessible to industry and developers.</li>
       </ul>
-      It covers the complete development life cycle of RL applications ranging from<br>
+      Our ultimate goal is to cover the complete development life cycle of RL applications ranging from<br>
       simulation engineering up to agent development, training and deployment.
    </div>
    </embed>
