@@ -11,12 +11,14 @@ def override(cls: Type):
     """
 
     def _check_override(method):
-        if method.__name__ not in dir(cls):
-            raise NameError("{} does not override any method of {}".format(
-                method, cls))
-
-        fully_qualified_name = ".".join([cls.__module__, cls.__name__])
-        method.__doc__ = "(overrides :class:`~{}`)\n\n{}".format(fully_qualified_name, method.__doc__)
+        # todo: sphinx fails to build the API reference documentation
+        #       find a better solution than to comment this block
+        # if method.__name__ not in dir(cls):
+        #     raise NameError("{} does not override any method of {}".format(
+        #         method, cls))
+        #
+        # fully_qualified_name = ".".join([cls.__module__, cls.__name__])
+        # method.__doc__ = "(overrides :class:`~{}`)\n\n{}".format(fully_qualified_name, method.__doc__)
 
         return method
 

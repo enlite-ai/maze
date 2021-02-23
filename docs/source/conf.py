@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'Maze'
-copyright = '2020, EnliteAI GmbH'
+copyright = '2021, EnliteAI GmbH'
 author = 'enliteAI GmbH'
 
 
@@ -154,3 +154,24 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
     'python': ('https://python.readthedocs.io/en/latest', None)
 }
+
+autodoc_mock_imports = [
+    "scipy",
+    "numpy",
+    "pandas",
+    "yaml",
+    "cloudpickle",
+
+    "torch",
+    "tensorboard",
+    "ray",
+
+    "gym",
+    "omegaconf",
+    "hydra",
+
+    "networkx",
+    "matplotlib",
+    "seaborn",
+    "tqdm",
+]
