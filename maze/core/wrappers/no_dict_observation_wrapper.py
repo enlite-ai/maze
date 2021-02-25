@@ -21,7 +21,7 @@ class NoDictObservationWrapper(ObservationWrapper[Union[EnvType, StructuredEnvSp
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def observation_space(self) -> gym.Space:
+    def observation_space(self) -> gym.spaces.Space:
         """The currently active gym observation space.
         """
         return self.env.observation_space.spaces[self.observation_key]

@@ -73,6 +73,6 @@ class ActionConversionCandidatesInterface(ActionConversionInterface):
             probabilities=action.probabilities
         )
 
-    def space(self) -> spaces.space.Space:
+    def space(self) -> spaces.Space:
         """Return the space defined by the underlying action conversion interface."""
         return self.action_conversion.space()

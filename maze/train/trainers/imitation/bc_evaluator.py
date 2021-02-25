@@ -11,7 +11,7 @@ from maze.train.trainers.common.model_selection.model_selection_base import Mode
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.imitation_evaluator import ImitationEvaluator
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
-from torch.utils.data import DataLoader
+from torch.utils.data.dataloader import DataLoader
 
 
 class BCEvaluator(ImitationEvaluator):

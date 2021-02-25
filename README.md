@@ -41,8 +41,12 @@ Below we list a few selected Maze features.
       # optionally install RLLib if you want to use it in combination with Maze
       pip install ray[rllib] tensorflow  
     
-  We recommend Python 3.7. [Read more about other options](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html) like the installation of the latest 
+  [Read more about other options](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html) like the installation of the latest 
   development version.  
+
+  :zap:  We encourage you to start with **Python 3.7**, as many popular environments like Atari or Box2D can not easily 
+  be installed in newer Python environments. Maze itself supports newer Python versions, but for Python 3.9 you might have to
+  [install additional binary dependencies manually](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html)
 
 * To see Maze in action check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
 

@@ -21,7 +21,7 @@ class NoDictActionWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesMixin]
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def action_space(self) -> gym.Space:
+    def action_space(self) -> gym.spaces.Space:
         """The currently active gym action space.
         """
         return self.env.action_space.spaces[self.action_key]

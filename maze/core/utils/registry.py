@@ -233,7 +233,7 @@ class Registry(Generic[BaseType]):
         The implementation expects exactly one matching class per module. A ValueError is returned otherwise. If the
         module name is not valid, a ModuleNotFoundError is triggered.
 
-        :param module_name: Absolute module path (e.g. ``maze_envs.logistics.content_based_replenishment.env.maze_env``)
+        :param module_name: Absolute module path (e.g. ``maze_envs.logistics.property_based_replenishment.env.maze_env``)
         :return: The one and only class from the given module that derives from base_type.
         """
         matches = []

@@ -29,14 +29,14 @@ class NoDictSpacesWrapper(Wrapper[Union[EnvType, StructuredEnvSpacesMixin]]):
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def observation_space(self) -> gym.Space:
+    def observation_space(self) -> gym.spaces.Space:
         """The currently active gym observation space.
         """
         return self.env.observation_space.spaces[self.observation_key]
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def action_space(self) -> gym.Space:
+    def action_space(self) -> gym.spaces.Space:
         """The currently active gym action space.
         """
         return self.env.action_space.spaces[self.action_key]
