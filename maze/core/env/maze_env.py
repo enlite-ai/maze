@@ -165,13 +165,13 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.Space]:
+    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
         """Policy action spaces as dict."""
         return self._action_spaces
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.Space]:
+    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
         """Policy observation spaces as dict."""
         return self._observation_spaces
 

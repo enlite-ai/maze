@@ -25,7 +25,7 @@ setup(name="maze-rl",
       # python 3.5: we run into conflicts with hydra 1.0.4
       # python 3.9: no ray distribution available
       # gym[box2d] and atari-py included in ray[rllib] is not compatible with python 3.8
-      python_requires=">=3.6,<3.8",
+      python_requires=">=3.6",
 
       classifiers=[
           # How mature is this project? Common values are
@@ -53,8 +53,10 @@ setup(name="maze-rl",
           "tensorboard",
           "pyyaml",
           "requests",
+          "pillow",
           "hydra-core >= 1.0.4",
-          "gym[box2d]",
+          "gym[box2d]; python_version < '3.8'",
+          "gym; python_version >= '3.8'",
           "pandas",
           "networkx",
           "matplotlib",

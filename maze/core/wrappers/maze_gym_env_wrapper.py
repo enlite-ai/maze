@@ -97,7 +97,7 @@ class GymObservationConversion(ObservationConversionInterface):
         return observation["observation"]
 
     @override(ObservationConversionInterface)
-    def space(self) -> gym.Space:
+    def space(self) -> gym.spaces.Space:
         """Returns respective gym observation space.
         """
         if not self._original_space_is_dict:

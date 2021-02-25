@@ -142,9 +142,10 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
         for sub_step_key in self.observation_spaces_dict:
             sub_space_dict = self.observation_spaces_dict[sub_step_key].spaces
             for observation in sub_space_dict:
-                norm_strategy = self._normalization_strategies[observation]
-                if observation not in statistics:
-                    statistics[observation] = norm_strategy.get_statistics()
+                if observation not in self.exclude:
+                    norm_strategy = self._normalization_strategies[observation]
+                    if observation not in statistics:
+                        statistics[observation] = norm_strategy.get_statistics()
         return statistics
 
     def estimate_statistics(self) -> None:
@@ -161,6 +162,11 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
 
             # iterate observation of sub steps
             for obs_key in sub_space.spaces:
+
+                # no need to estimate stats
+                if obs_key in self.exclude:
+                    continue
+                # stats already set
                 if obs_key in has_statistics:
                     continue
 
@@ -168,7 +174,7 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
                 collected_obs = self._collected_observation[obs_key]
 
                 # estimate and set statistics if no manual stats are specified
-                if not self._has_manual_config_key(obs_key, "statistics") and obs_key not in self.exclude:
+                if not self._has_manual_config_key(obs_key, "statistics"):
                     stats = strategy.estimate_stats(collected_obs)
                     strategy.set_statistics(stats)
 
@@ -215,6 +221,9 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
             # iterate keys of dict observation space
             for obs_key in sub_space.spaces.keys():
 
+                if obs_key in self.exclude:
+                    continue
+
                 # start out with default values
                 normalization_strategy = self.default_strategy
                 strategy_config = copy.copy(self.default_strategy_config)
@@ -237,7 +246,7 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
                 strategy = strategy_cls(observation_space=sub_space[obs_key], **strategy_config)
 
                 # update the observation space accordingly
-                if statistics is not None:
+                if statistics is not None and obs_key not in self.exclude:
                     strategy.set_statistics(statistics)
                     self.observation_spaces_dict[sub_step_key].spaces[obs_key] = strategy.normalized_space()
 

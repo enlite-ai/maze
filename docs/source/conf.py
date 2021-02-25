@@ -94,15 +94,15 @@ html_css_files = [
 ]
 
 nitpick_ignore = [
-    ('py:class', 'gym.core.Env'),
-    ('py:class', 'gym.spaces.space.Space'),
-    ('py:class', 'gym.spaces.dict.Dict'),
-    ('py:class', 'gym.spaces.box.Box'),
-    ('py:class', 'gym.spaces.multi_discrete.MultiDiscrete'),
-    ('py:class', 'gym.spaces.multi_binary.MultiBinary'),
-    ('py:class', 'gym.spaces.discrete.Discrete'),
-    ('py:class', 'pandas.core.frame.DataFrame'),
-    ('py:class', 'omegaconf.dictconfig.DictConfig'),
+    ('py:class', 'gym.Env'),
+    ('py:class', 'gym.spaces.Space'),
+    ('py:class', 'gym.spaces.Dict'),
+    ('py:class', 'gym.spaces.Box'),
+    ('py:class', 'gym.spaces.MultiDiscrete'),
+    ('py:class', 'gym.spaces.MultiBinary'),
+    ('py:class', 'gym.spaces.Discrete'),
+    ('py:class', 'pandas.DataFrame'),
+    ('py:class', 'omegaconf.DictConfig'),
     ('py:class', 'multiprocessing.context.BaseContext.Queue'),
     ('py:class', 'numpy.random.mtrand.RandomState'),
 
@@ -111,6 +111,7 @@ nitpick_ignore = [
     ('py:class', 'Generator[maze.core.events.event_record.EventRecord, None, None]'),
 
     # probably this type definition is too complex for sphinx to process
+    ('py:class', 'callable'),
     ('py:class', 'Tuple[Union[str, int], ...]'),
     ('py:class', 'Union[str, Callable, None]'),
     ('py:class', 'Union[None, float, numpy.ndarray, Any]'),
@@ -124,8 +125,9 @@ nitpick_ignore = [
 
     # torch can't be resolved
     ('py:class', 'torch.Tensor'),
+    ('py:class', 'torch.Generator'),
     ('py:class', 'torch.dtype'),
-    ('py:class', 'torch.nn.modules.module.Module'),
+    ('py:class', 'torch.nn.Module'),
     ('py:class', 'torch.optim.optimizer.Optimizer'),
     ('py:class', 'torch.utils.data.dataloader.DataLoader'),
     ('py:class', 'torch.utils.data.dataset.Subset'),

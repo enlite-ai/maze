@@ -3,7 +3,7 @@
 Maze RLlib Runner
 =================
 
-The RLlib Runner allows to use RLlib Trainers in combination with Maze models and environments.
+The RLlib Runner allows you to use RLlib Trainers in combination with Maze models and environments.
 `Ray-RLlib <https://docs.ray.io/en/master/rllib.html>`_ is one of the most popular RL frameworks
 (algorithm collections) within the scientific community but also when it comes to practical relevance.
 It already comprises an extensive and tuned collection of various different RL training

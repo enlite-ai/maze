@@ -3,7 +3,8 @@
 A First Example
 ===============
 
-This example shows how to train and rollout a policy for the CartPole environment with A2C.
+This example shows how to train and rollout a policy for the
+`CartPole <https://gym.openai.com/envs/CartPole-v1/>`_ environment with A2C.
 It also gives a small glimpse into the Maze framework.
 
 Training and Rollouts
@@ -11,38 +12,40 @@ Training and Rollouts
 
 To :ref:`train a policy <training>` with the synchronous advantage actor-critic (:ref:`A2C <maze_trainers-a2c>`), run:
 
-.. code:: bash
+.. code:: console
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c algorithm.n_epochs=5
 
-All outputs of the training run including model weights will be stored in :code:`outputs/<exp-dir>`.
+All training outputs including model weights will be stored in
+:code:`outputs/<exp-dir>/<time-stamp>`
+(for example :code:`outputs/gym_env-flatten_concat-a2c-None-local/2021-02-23_23-09-25/`).
 
 To :ref:`perform rollouts <rollouts>` for evaluating the trained policy, run:
 
-.. code:: bash
+.. code:: console
 
-    maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>
+    $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp>
 
 This performs 50 rollouts and prints the resulting performance statistics to the command line:
 
-.. code:: bash
+.. code:: console
 
-     step|path                                                                |             value
-    =====|====================================================================|==================
-        1|rollout_stats  DiscreteActionEvents  action    substep_0/action     | [len:7900, μ:0.5]
-        1|rollout_stats  BaseEnvEvents         reward    median_step_count    |           157.500
-        1|rollout_stats  BaseEnvEvents         reward    mean_step_count      |           158.000
-        1|rollout_stats  BaseEnvEvents         reward    total_step_count     |          7900.000
-        1|rollout_stats  BaseEnvEvents         reward    total_episode_count  |            50.000
-        1|rollout_stats  BaseEnvEvents         reward    episode_count        |            50.000
-        1|rollout_stats  BaseEnvEvents         reward    std                  |            31.843
-        1|rollout_stats  BaseEnvEvents         reward    mean                 |           158.000
-        1|rollout_stats  BaseEnvEvents         reward    min                  |            83.000
-        1|rollout_stats  BaseEnvEvents         reward    max                  |           200.000
+     step|path                                                              |             value
+    =====|==================================================================|==================
+        1|rollout_stats  DiscreteActionEvents  action  substep_0/action     | [len:7900, μ:0.5]
+        1|rollout_stats  BaseEnvEvents         reward  median_step_count    |           157.500
+        1|rollout_stats  BaseEnvEvents         reward  mean_step_count      |           158.000
+        1|rollout_stats  BaseEnvEvents         reward  total_step_count     |          7900.000
+        1|rollout_stats  BaseEnvEvents         reward  total_episode_count  |            50.000
+        1|rollout_stats  BaseEnvEvents         reward  episode_count        |            50.000
+        1|rollout_stats  BaseEnvEvents         reward  std                  |            31.843
+        1|rollout_stats  BaseEnvEvents         reward  mean                 |           158.000
+        1|rollout_stats  BaseEnvEvents         reward  min                  |            83.000
+        1|rollout_stats  BaseEnvEvents         reward  max                  |           200.000
 
 To see the policy directly in action you can also perform sequential rollouts with rendering:
 
-.. code:: bash
+.. code:: console
 
    maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir> \
    runner=sequential runner.render=true
@@ -57,7 +60,7 @@ Tensorboard
 
 To :ref:`watch the training progress with Tensorboard <logging>` start it by running:
 
-.. code:: bash
+.. code:: console
 
     tensorboard --logdir outputs/
 

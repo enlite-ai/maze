@@ -11,7 +11,7 @@
 .. |github_mark| image:: logos/GitHub-Mark-64px.png
     :class: inline-figure
     :width: 20
-    :target: https://github.com/enlite-ai/maze/issues
+    :target: https://github.com/enlite-ai/maze/discussions
 
 .. |stackoverflow| image:: logos/stackoverflow.svg
     :class: inline-figure

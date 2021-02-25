@@ -280,12 +280,12 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
         return self._actor_dones
 
     @property
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.Space]:
+    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
         """Return the action space of one of the distributed envs."""
         return self._action_spaces_dict
 
     @property
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.Space]:
+    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
         """Return the observation space of one of the distributed envs."""
         return self._observation_spaces_dict
 
