@@ -1,6 +1,7 @@
 import random
 
 import numpy as np
+import torch
 
 
 def set_random_states(seed: int):
@@ -10,3 +11,5 @@ def set_random_states(seed: int):
     """
     np.random.seed(seed)
     random.seed(seed)
+    torch.manual_seed(seed)
+
