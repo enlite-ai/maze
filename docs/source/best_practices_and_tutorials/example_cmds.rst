@@ -25,7 +25,7 @@ Train a policy with with an actor-critic trainer such as A2C:
 .. code-block:: console
 
     maze-run -cn conf_train env.name=CartPole-v1 algorithm=a2c \
-    model=vector_obs critic=default_state
+    model=vector_obs critic=template_state
 
 Run a rollout of a policy, trained with the command above:
 

@@ -161,7 +161,7 @@ It is basically a standard PPO training run initialized with the imitation learn
 
 .. code-block:: console
 
-    maze-run -cn conf_train env.name=LunarLander-v2 model=vector_obs critic=default_state wrappers=vector_obs \
+    maze-run -cn conf_train env.name=LunarLander-v2 model=vector_obs critic=template_state wrappers=vector_obs \
     algorithm=ppo runner.eval_repeats=100 runner.critic_burn_in_epochs=10 \
     input_dir=outputs/<imitation-learning-experiment>
 

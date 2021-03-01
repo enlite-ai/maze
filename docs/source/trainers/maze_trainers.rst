@@ -62,7 +62,7 @@ In International conference on machine learning (pp. 1928-1937).
 
 .. code-block:: console
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=default_state
+    maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.a2c.a2c_algorithm_config.A2CAlgorithmConfig`
 
@@ -107,7 +107,7 @@ arXiv preprint arXiv:1707.06347.
 
 .. code-block:: console
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=default_state
+    maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.ppo.ppo_algorithm_config.PPOAlgorithmConfig`
 
@@ -153,7 +153,7 @@ arXiv preprint arXiv:1802.01561.
 
 .. code-block:: console
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=default_state
+    maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.impala.impala_algorithm_config.ImpalaAlgorithmConfig`
 
