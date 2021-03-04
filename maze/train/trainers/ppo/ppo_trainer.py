@@ -43,19 +43,19 @@ class MultiStepPPO(MultiStepActorCritic):
         """
 
         # collect observations
-        obs, rews, dones, actions = self._rollout()
+        record = self._rollout()
 
         # convert observations to tensors
-        obs_t = convert_to_torch(obs, device=self.algorithm_config.device, cast=None, in_place=False)
+        obs_t = convert_to_torch(record.observations, device=self.algorithm_config.device, cast=None, in_place=False)
 
         # compute action log-probabilities of actions taken (aka old action log probs)
         with torch.no_grad():
-            action_log_probs_old, _ = self._action_log_probs_and_dists(obs_t, actions)
+            action_log_probs_old, _ = self._action_log_probs_and_dists(obs_t, record.actions)
             # manually empty GPU cache
             torch.cuda.empty_cache()
 
         # flatten items for batch processing
-        actions = self._flatten_sub_step_items(actions)
+        actions = self._flatten_sub_step_items(record.actions)
         obs_t = self._flatten_sub_step_items(obs_t)
         action_log_probs_old = self._flatten_sub_step_items(action_log_probs_old)
 
@@ -68,7 +68,10 @@ class MultiStepPPO(MultiStepActorCritic):
             # compute bootstrapped returns
             with torch.no_grad():
                 returns, _, detached_values = self.model.critic.bootstrap_returns(
-                    observations=obs_t, rews=rews, dones=dones,
+                    observations=obs_t,
+                    # Use rewards and dones from the last sub-step only
+                    rews=record.rewards[self.sub_step_keys[-1]],
+                    dones=record.dones[self.sub_step_keys[-1]],
                     gamma=self.algorithm_config.gamma,
                     gae_lambda=self.algorithm_config.gae_lambda)
                 # manually empty GPU cache
