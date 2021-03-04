@@ -124,11 +124,10 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
                  env_factories: List[Callable[[], StructuredEnv]],
                  logging_prefix: Optional[str] = None,
                  start_method: str = None):
-        super().__init__(num_envs=len(env_factories))
+        super().__init__(n_envs=len(env_factories))
 
         self.waiting = False
         self.closed = False
-        n_envs = len(env_factories)
 
         if start_method is None:
             # Fork is not a thread safe method (see issue #217)
@@ -138,7 +137,7 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
             start_method = 'forkserver' if forkserver_available else 'spawn'
         ctx = multiprocessing.get_context(start_method)
 
-        self.remotes, self.work_remotes = zip(*[ctx.Pipe(duplex=True) for _ in range(n_envs)])
+        self.remotes, self.work_remotes = zip(*[ctx.Pipe(duplex=True) for _ in range(self.n_envs)])
         self.processes = []
         for work_remote, remote, env_fn in zip(self.work_remotes, self.remotes, env_factories):
             args = (work_remote, remote, CloudpickleWrapper(env_fn))
