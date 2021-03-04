@@ -25,10 +25,11 @@ class DistributedEnvRolloutGenerator:
                                       batch_shape=[self.env.n_envs])
 
             for step_key in self.step_keys:
-                record.observations[step_key] = observations
+                # Record copy of the observation (as by default, the policy converts and handles it in place)
+                record.observations[step_key] = observations.copy()
 
                 # Sample action and take the step
-                actions = policy.compute_action(observations, policy_id=step_key, maze_state=None)
+                actions = policy.compute_action(observations, policy_id=step_key, maze_state=None, deterministic=False)
                 observations, rewards, dones, infos = self.env.step(unstack_numpy_list_dict(actions))
 
                 record.actions[step_key] = actions
