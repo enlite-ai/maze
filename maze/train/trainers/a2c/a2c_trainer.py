@@ -43,18 +43,22 @@ class MultiStepA2C(MultiStepActorCritic):
         """
 
         # collect observations
-        obs, rews, dones, actions = self._rollout()
+        record = self._rollout()
 
         # convert observations to tensors
-        obs_t = convert_to_torch(obs, device=self.algorithm_config.device, cast=None, in_place=False)
+        obs_t = convert_to_torch(record.observations, device=self.algorithm_config.device, cast=None, in_place=False)
 
         # compute bootstrapped returns
         returns, values, detached_values = \
-            self.model.critic.bootstrap_returns(obs_t, rews, dones, gamma=self.algorithm_config.gamma,
+            self.model.critic.bootstrap_returns(obs_t,
+                                                # Use rewards and dones from the last sub-step only
+                                                record.rewards[self.sub_step_keys[-1]],
+                                                record.dones[self.sub_step_keys[-1]],
+                                                gamma=self.algorithm_config.gamma,
                                                 gae_lambda=self.algorithm_config.gae_lambda)
 
         # compute action log-probabilities of actions taken
-        action_log_probs, step_action_dist = self._action_log_probs_and_dists(obs_t, actions)
+        action_log_probs, step_action_dist = self._action_log_probs_and_dists(obs_t, record.actions)
 
         # compute entropies
         entropies = [action_dist.entropy().mean() for action_dist in step_action_dist.values()]

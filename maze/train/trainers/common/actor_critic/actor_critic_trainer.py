@@ -18,6 +18,8 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
+from maze.core.rollout.rollout_generator import DistributedEnvRolloutGenerator
+from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
@@ -67,8 +69,8 @@ class MultiStepActorCritic(Trainer, ABC):
         self.num_env_sub_steps = len(self.model.policy.networks)
         self.sub_step_keys = list(self.model.policy.networks.keys())
 
-        # initialize observation stack
-        self.prev_obs_1 = None
+        # initialize rollout generator
+        self.rollout_generator = DistributedEnvRolloutGenerator(env=self.env)
 
         # initialize optimizer
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.algorithm_config.lr)
@@ -267,70 +269,17 @@ class MultiStepActorCritic(Trainer, ABC):
         # perform optimizer step
         self.optimizer.step()
 
-    def _rollout(self) -> Tuple[Dict[Union[str, int], Dict[str, np.ndarray]],
-                                np.array,
-                                np.array,
-                                Dict[Union[str, int], Dict[str, np.array]]]:
+    def _rollout(self) -> SpacesStepRecord:
         """Perform rollout of current policy on distributed structured env env.
         """
         start_time = time.time()
 
-        # reset environments if first rollout
-        if self.prev_obs_1 is None:
-            self.prev_obs_1 = self.env.reset()
-
-        # shared lists
-        rewards, dones = [], []
-
-        # step specific lists
-        step_observations = defaultdict(list)
-        step_actions_taken = defaultdict(list)
-
-        for i in range(self.algorithm_config.n_rollout_steps):
-            # set initial observation
-            obs = self.prev_obs_1
-
-            # sample step actions
-            assert self.num_env_sub_steps > 0
-            reward, done, info = None, None, None
-            for step_id in self.sub_step_keys:
-                # keep observation
-                step_observations[step_id].append(obs.copy())
-
-                # sample action
-                sampled_action = self.model.policy.compute_action(obs, policy_id=step_id, deterministic=False)
-
-                # take env step
-                actions_dict_list = self._compile_actions_dict_list(sampled_action)
-                obs, reward, done, info = self.env.step(actions_dict_list)
-
-                # keep action taken
-                step_actions_taken[step_id].append(sampled_action)
-
-            # update previous observation
-            self.prev_obs_1 = obs
-
-            # book keeping
-            rewards.append(reward)
-            dones.append(done)
-
-        observations = dict()
-        for step_id, step_obs in step_observations.items():
-            observations[step_id] = stack_numpy_dict_list(step_obs, expand=True)
-        rewards = np.vstack(rewards)
-        dones = np.vstack(dones)
-        actions_taken = dict()
-        for step_id in self.sub_step_keys:
-            action_dict = dict()
-            for key in self.step_action_keys[step_id]:
-                action_dict[key] = np.stack([step_actions_taken[step_id][s][key]
-                                             for s in range(self.algorithm_config.n_rollout_steps)])
-            actions_taken[step_id] = action_dict
-
+        step_records = self.rollout_generator.rollout(self.model.policy, n_steps=self.algorithm_config.n_rollout_steps)
+        stacked_record = SpacesStepRecord.stack_records(step_records)
         # log time required for rollout
         self.ac_events.time_rollout(value=time.time() - start_time)
 
-        return observations, rewards, dones, actions_taken
+        return stacked_record
 
     def _append_train_stats(self,
                             policy_train_stats: List[Dict[str, List[float]]],
