@@ -13,8 +13,8 @@ class BaseDistributedEnv(BaseEnv, ABC):
     :param: num_envs: the number of distributed environments.
     """
 
-    def __init__(self, num_envs: int):
-        self.num_envs = num_envs
+    def __init__(self, n_envs: int):
+        self.n_envs = n_envs
 
     @abstractmethod
     def step(self, actions: Iterable[Any]
@@ -45,7 +45,7 @@ class BaseDistributedEnv(BaseEnv, ABC):
         :return: (list) the implied list of indices.
         """
         if indices is None:
-            indices = range(self.num_envs)
+            indices = range(self.n_envs)
         elif isinstance(indices, int):
             indices = [indices]
         return indices

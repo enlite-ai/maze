@@ -64,15 +64,7 @@ def build_dummy_structured_env() -> DummyStructuredEnvironment:
 
     :return: Instance of a DummyStructuredEnvironment
     """
-    observation_conversion = ObservationConversion()
-
-    maze_env = DummyEnvironment(
-        core_env=DummyCoreEnvironment(observation_conversion.space()),
-        action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
-    )
-
-    return DummyStructuredEnvironment(maze_env=maze_env)
+    return DummyStructuredEnvironment(maze_env=build_dummy_maze_env())
 
 
 def all_classes_of_module(module) -> List[Type]:

@@ -27,12 +27,9 @@ class DummyStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structure
 
     def __init__(self, env_factories: List[Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]]],
                  logging_prefix: Optional[str] = None):
+        super().__init__(n_envs=len(env_factories))
+
         self.envs = [LogStatsWrapper.wrap(env_fn()) for env_fn in env_factories]
-        self.num_envs: int = len(self.envs)
-
-        # call super constructor
-        BaseDistributedEnv.__init__(self, self.num_envs)
-
         self.obs_aggregator = DictObservationAggregator()
 
         self._actor_dones: Optional[np.ndarray] = None

@@ -62,7 +62,7 @@ class MultiStepPPO(MultiStepActorCritic):
         # iterate ppo optimization epochs
         critic_train_stats = [defaultdict(list) for _ in range(self.model.critic.num_critics)]
         policy_train_stats = [defaultdict(list) for _ in range(self.num_env_sub_steps)]
-        n_samples = self.env.num_envs * self.algorithm_config.n_rollout_steps
+        n_samples = self.env.n_envs * self.algorithm_config.n_rollout_steps
         for k in range(self.algorithm_config.n_optimization_epochs):
 
             # compute bootstrapped returns
