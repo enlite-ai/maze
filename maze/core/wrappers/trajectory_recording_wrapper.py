@@ -17,8 +17,8 @@ from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.keyboard_controlled_trajectory_viewer import KeyboardControlledTrajectoryViewer
-from maze.core.trajectory_recorder.episode_record import EpisodeRecord
-from maze.core.trajectory_recorder.step_record import StepRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.state_step_record import StateStepRecord
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.wrapper import Wrapper
 
@@ -50,7 +50,7 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
         # BaseEnv is a subset of gym.Env
         super().__init__(env)
 
-        self.episode_record: Optional[EpisodeRecord] = None
+        self.episode_record: Optional[TrajectoryRecord] = None
 
         self.last_env_time: Optional[int] = None
         self.last_maze_state: Optional[MazeStateType] = None
@@ -78,8 +78,8 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
             step_event_log = StepEventLog(self.last_env_time, events=event_collection)
 
             # Record trajectory data
-            step_record = StepRecord(self.last_maze_state, maze_action, step_event_log, reward, done, info,
-                                     self.last_serializable_components)
+            step_record = StateStepRecord(self.last_maze_state, maze_action, step_event_log, reward, done, info,
+                                          self.last_serializable_components)
             self.episode_record.step_records.append(step_record)
 
             # Collect state and components for the next step
@@ -151,7 +151,7 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
         env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else None
         event_collection = EventCollection(self.env.get_step_events() if isinstance(self.env, EventEnvMixin) else [])
         step_event_log = StepEventLog(env_time, events=event_collection)
-        final_step_record = StepRecord(
+        final_step_record = StateStepRecord(
             maze_state=self.last_maze_state,
             maze_action=None,
             step_event_log=step_event_log,
@@ -164,7 +164,7 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
         # Write out the current episode
         TrajectoryWriterRegistry.record_trajectory_data(self.episode_record)
 
-    def _build_episode_record(self) -> EpisodeRecord:
+    def _build_episode_record(self) -> TrajectoryRecord:
         """Build a new episode record with episode ID from the env (if provided) or generated one (if not provided)."""
         if isinstance(self.env, RecordableEnvMixin):
             episode_id = self.env.get_episode_id()
@@ -173,7 +173,7 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
             episode_id = str(uuid.uuid4())
             renderer = None
 
-        return EpisodeRecord(episode_id, renderer)
+        return TrajectoryRecord(episode_id, renderer)
 
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool)\

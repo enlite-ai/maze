@@ -6,8 +6,8 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.trajectory_recorder.episode_record import EpisodeRecord
-from maze.core.trajectory_recorder.step_record import StepRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.state_step_record import StateStepRecord
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.core.wrappers.wrapper import ObservationWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -45,10 +45,10 @@ class _MockObservationStackWrapper(ObservationWrapper):
 
 def _mock_episode_record(step_count: int):
     """Produce an episode record with maze_states and maze_actions corresponding to the step no."""
-    episode_record = EpisodeRecord("test")
+    episode_record = TrajectoryRecord("test")
 
     for i in range(step_count):
-        episode_record.step_records.append(StepRecord(
+        episode_record.step_records.append(StateStepRecord(
             maze_state=i,
             maze_action=i if i < step_count - 1 else None,  # maze_action is not available in the last step
             step_event_log=StepEventLog(i),

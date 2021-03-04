@@ -17,7 +17,7 @@ from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_stats.log_stats import LogStatsWriter, LogStats
 from maze.core.log_stats.log_stats import register_log_stats_writer
-from maze.core.trajectory_recorder.episode_record import EpisodeRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
 from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
@@ -111,7 +111,7 @@ def test_supports_trajectory_recording_wrapper():
         def __init__(self):
             self.step_count = 0
 
-        def write(self, episode_record: EpisodeRecord):
+        def write(self, episode_record: TrajectoryRecord):
             """Count recorded steps"""
             self.step_count += len(episode_record.step_records)
             assert episode_record.renderer is not None
