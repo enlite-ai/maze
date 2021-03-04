@@ -12,12 +12,13 @@ from maze.core.env.observation_conversion import ObservationType
 from maze.core.utils.config_utils import make_env
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
+from maze.train.utils.train_utils import stack_numpy_dict_list
 
 
 class RandomPolicy(Policy):
     """Implements a random structured policy.
 
-    :param action_spaces_dict: The action_spaces dict from the env
+    :param action_spaces_dict: The action_spaces dict of the env (will sample from it)
     """
 
     def __init__(self, action_spaces_dict: Dict[Union[str, int], spaces.Space]):
@@ -31,15 +32,7 @@ class RandomPolicy(Policy):
     @override(Policy)
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType],
                        policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
-        """
-        Query a policy that corresponds to the given ID for action.
-
-        :param observation: Current observation of the environment
-        :param maze_state: Current state of the environment (will always be None as `needs_state()` returns False)
-        :param policy_id: ID of the policy to query (does not have to be provided if policies dict contain only 1 policy
-        :param deterministic: Specify if the action should be computed deterministically
-        :return: Next action to take
-        """
+        """Sample random action from the given action space."""
         return self.action_spaces_dict[policy_id].sample()
 
     @override(Policy)
@@ -47,8 +40,26 @@ class RandomPolicy(Policy):
                                       num_candidates: int, maze_state: Optional[MazeStateType] = None,
                                       policy_id: Union[str, int] = None, deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
-        """implementation of :class:`~maze.core.agent.policy.Policy` interface
-        """
+        """Random policy does not provide top action candidates."""
+
+
+class DistributedRandomPolicy(RandomPolicy):
+    """Implements random structured policy with the ability to sample multiple actions simultaneously.
+
+    Mimics behavior of a Torch policy in batched distributed environment scenarios,
+    when actions are sampled for all environments at once. (Useful mostly for testing purposes.)
+
+    :param action_spaces_dict: The action_spaces dict of the env (will sample from it)
+    :param concurrency: How many actions to sample at once. Should correspond to concurrency of the distributed env.
+    """
+    def __init__(self, action_spaces_dict: Dict[Union[str, int], spaces.Space], concurrency: int):
+        super().__init__(action_spaces_dict)
+        self.concurrency = concurrency
+
+    def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType],
+                       policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+        """Sample multiple actions together."""
+        return stack_numpy_dict_list([self.action_spaces_dict[policy_id].sample() for _ in range(self.concurrency)])
 
 
 def random_policy_from_config(env_config: DictConfig, wrappers_config: DictConfig) -> RandomPolicy:
