@@ -1,7 +1,7 @@
 """Displaying trajectory data as interactive plots in Jupyter Notebooks."""
 
 from maze.core.rendering.renderer_args import RendererArg, IntRangeArg
-from maze.core.trajectory_recorder.episode_record import EpisodeRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
 
 
 class NotebookTrajectoryViewer:
@@ -14,7 +14,7 @@ class NotebookTrajectoryViewer:
     :param episode_record: Trajectory data to render.
     """
 
-    def __init__(self, episode_record: EpisodeRecord):
+    def __init__(self, episode_record: TrajectoryRecord):
         self.episode_record = episode_record
         self.renderer = episode_record.renderer
 
