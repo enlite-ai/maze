@@ -3,7 +3,7 @@
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
-from maze.core.trajectory_recorder.episode_record import EpisodeRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
 from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
@@ -19,7 +19,7 @@ def test_matches_episode_ids_with_event_logs():
             self.episode_ids = []
             self.step_counts = []
 
-        def write(self, episode_record: EpisodeRecord):
+        def write(self, episode_record: TrajectoryRecord):
             self.episode_ids.append(episode_record.episode_id)
             self.step_counts.append(len(episode_record.step_records) - 1)  # Subtract the final state!
 

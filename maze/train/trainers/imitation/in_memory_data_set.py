@@ -10,7 +10,7 @@ from torch.utils.data.dataset import Dataset, Subset
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.trajectory_recorder.episode_record import EpisodeRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
 from maze.core.wrappers.trajectory_recording_wrapper import RawMazeAction, RawState
 
 
@@ -66,7 +66,7 @@ class InMemoryImitationDataSet(Dataset):
 
         for file_path in file_paths:
             with open(str(file_path), "rb") as in_f:
-                episode_record: EpisodeRecord = pickle.load(in_f)
+                episode_record: TrajectoryRecord = pickle.load(in_f)
             observations, actions = self.load_episode_record(self.env, episode_record)
             self._store_episode_data(observations, actions)
 
@@ -88,7 +88,7 @@ class InMemoryImitationDataSet(Dataset):
         return file_paths
 
     @staticmethod
-    def load_episode_record(env: StructuredEnv, episode_record: EpisodeRecord) -> \
+    def load_episode_record(env: StructuredEnv, episode_record: TrajectoryRecord) -> \
             Tuple[List[Dict[Union[int, str], Any]], List[Dict[Union[int, str], Any]]]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 

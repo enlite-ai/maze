@@ -3,10 +3,10 @@
 from typing import List, Optional
 
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recorder.step_record import StepRecord
+from maze.core.trajectory_recorder.state_step_record import StateStepRecord
 
 
-class EpisodeRecord:
+class TrajectoryRecord:
     """Records and keeps trajectory record data for a complete episode.
 
     :param episode_id: ID of the episode. Can be used to link trajectory data from event logs and other sources.
@@ -17,5 +17,5 @@ class EpisodeRecord:
 
     def __init__(self, episode_id: str, renderer: Optional[Renderer] = None):
         self.episode_id = episode_id
-        self.step_records: List[StepRecord] = []
+        self.step_records: List[StateStepRecord] = []
         self.renderer = renderer

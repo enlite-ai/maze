@@ -9,7 +9,7 @@ from typing import Callable, List, Union
 
 from tqdm import tqdm
 
-from maze.core.trajectory_recorder.episode_record import EpisodeRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
 from maze.train.trainers.imitation.in_memory_data_set import InMemoryImitationDataSet
 
 ActionTuple = namedtuple("ActionTuple", "observations actions")
@@ -31,7 +31,7 @@ class DataLoadWorker:
             env = env_factory()
             for trajectory_file_path in trajectory_file_paths:
                 with open(str(trajectory_file_path), "rb") as in_f:
-                    episode_record: EpisodeRecord = pickle.load(in_f)
+                    episode_record: TrajectoryRecord = pickle.load(in_f)
                 observations, actions = InMemoryImitationDataSet.load_episode_record(env, episode_record)
                 reporting_queue.put(ActionTuple(observations, actions))
 
