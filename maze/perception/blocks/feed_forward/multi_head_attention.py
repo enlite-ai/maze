@@ -1,9 +1,4 @@
 """Implementation of attention blocks
-
-2d data: self attention with multi-head possible from pytorch
-         - build in is already the linear projection
-3d data: self attention needs to use 1d convolutions to project the data to the embedding dims
-
 """
 from typing import Union, List, Sequence, Dict, Optional
 
@@ -12,9 +7,10 @@ from torch import nn
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
-class SelfAttentionSeqBlock(PerceptionBlock):
+class AttentionSeqBlock(ShapeNormalizationBlock):
     """Implementation of a self-attention block as described by reference: https://arxiv.org/abs/1706.03762
 
     Within this block the torch nn.MuliheadAttention is used to model the self attention. This block can then be used
@@ -26,23 +22,21 @@ class SelfAttentionSeqBlock(PerceptionBlock):
     :param out_keys: Keys identifying the output tensors. First key is self-attention output, second optional key is
         attention map.
     :param in_shapes: List of input shapes.
-    :param embed_dim: Embedding dimension of the model (has to be equal to the last dimension of the input).
     :param num_heads: Parallel attention heads.
     :param dropout: A dropout layer on attn_output_weights.
-    :param add_input_to_output: Specifies weather the computed self attention is added to the input and returned.
     :param bias: Add bias as module parameter.
     """
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], embed_dim: int, num_heads: int,
+                 in_shapes: Union[Sequence[int], List[Sequence[int]]], num_heads: int,
                  dropout: Optional[float], add_input_to_output: bool, bias: bool):
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
-        assert len(self.in_keys) in (1, 2)
+        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3, 3],
+                         out_num_dims=[3])
+        assert len(self.in_keys) in (2, 3)
         assert len(self.out_keys) in (1, 2)
 
-        assert self.in_shapes[0][-1] == embed_dim, 'The last dimension of the input should be equal to the embedding ' \
-                                                   'dim'
         self.add_input_to_output = add_input_to_output
+        embed_dim = self.in_shapes[0][-1]
 
         self.preprocess = None
         self.postprocess = None
@@ -61,27 +55,29 @@ class SelfAttentionSeqBlock(PerceptionBlock):
                                                bias=bias)
         self.gamma = nn.Parameter(torch.zeros(1, dtype=torch.float32))
 
-    @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    @override(ShapeNormalizationBlock)
+    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
-        input_tensor = block_input[self.in_keys[0]]
-        attn_mask = block_input[self.in_keys[1]] if len(self.in_keys) > 1 else None
-        if self.preprocess is not None:
-            input_tensor = self.preprocess(input_tensor)
+        key_value = block_input[self.in_keys[0]]
+        query = block_input[self.in_keys[1]]
+        attn_mask = block_input[self.in_keys[2]] if len(self.in_keys) > 2 else None
 
-        out, attention = self.self_attn(input_tensor, input_tensor, input_tensor, need_weights=False,
+        if self.preprocess is not None:
+            key_value = self.preprocess(key_value)
+            query = self.preprocess(query)
+
+        out, attention = self.self_attn(query, key_value, key_value, need_weights=False,
                                         attn_mask=attn_mask)
 
         if self.postprocess is not None:
             out = self.postprocess(out)
-            input_tensor = self.postprocess(input_tensor)
-
-        # Scale self attention
-        out = self.gamma * out
+            query = self.postprocess(query)
 
         if self.add_input_to_output:
-            out = out + input_tensor
+            # Scale self attention
+            out = self.gamma * out
+            out = torch.add(out, query)
 
         out_dict = dict({self.out_keys[0]: out})
         # If two out keys are given, the second one is the attention
@@ -95,7 +91,6 @@ class SelfAttentionSeqBlock(PerceptionBlock):
         txt += f'\n\tembed_dim: {self.self_attn.embed_dim}'
         txt += f'\n\tdropout: {self.self_attn.dropout}'
         txt += f'\n\tbias: {self.self_attn.in_proj_bias is not None}'
-        txt += f'\n\tadd_input_to_output: {self.add_input_to_output}'
         txt += f'\n\tuse_attn_mask: {len(self.in_keys) > 1}'
         txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt
