@@ -10,7 +10,7 @@ from maze.perception.blocks.base import PerceptionBlock
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
-class AttentionSeqBlock(ShapeNormalizationBlock):
+class AttentionBlock(ShapeNormalizationBlock):
     """Implementation of a self-attention block as described by reference: https://arxiv.org/abs/1706.03762
 
     Within this block the torch nn.MuliheadAttention is used to model the self attention. This block can then be used
