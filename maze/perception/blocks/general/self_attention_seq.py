@@ -12,9 +12,10 @@ from torch import nn
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
-class SelfAttentionSeqBlock(PerceptionBlock):
+class SelfAttentionSeqBlock(ShapeNormalizationBlock):
     """Implementation of a self-attention block as described by reference: https://arxiv.org/abs/1706.03762
 
     Within this block the torch nn.MuliheadAttention is used to model the self attention. This block can then be used
@@ -36,7 +37,8 @@ class SelfAttentionSeqBlock(PerceptionBlock):
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], embed_dim: int, num_heads: int,
                  dropout: Optional[float], add_input_to_output: bool, bias: bool):
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
+        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3],
+                         out_num_dims=[3])
         assert len(self.in_keys) in (1, 2)
         assert len(self.out_keys) in (1, 2)
 
@@ -61,8 +63,8 @@ class SelfAttentionSeqBlock(PerceptionBlock):
                                                bias=bias)
         self.gamma = nn.Parameter(torch.zeros(1, dtype=torch.float32))
 
-    @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    @override(ShapeNormalizationBlock)
+    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         input_tensor = block_input[self.in_keys[0]]
