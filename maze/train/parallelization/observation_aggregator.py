@@ -38,4 +38,4 @@ class DictObservationAggregator(ObservationAggregator):
     def aggregate(self) -> Dict[str, np.array]:
         """Stack list of dictionary observations per key along axis=0.
         """
-        return stack_numpy_dict_list(self.observations, expand=True)
+        return stack_numpy_dict_list(self.observations)

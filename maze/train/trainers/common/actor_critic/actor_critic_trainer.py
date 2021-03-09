@@ -2,7 +2,6 @@
 import sys
 import time
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from typing import List, Union, Dict, Tuple, Optional
 
 import numpy as np
@@ -28,7 +27,7 @@ from maze.train.trainers.common.actor_critic.actor_critic_events import MultiSte
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
-from maze.train.utils.train_utils import stack_numpy_dict_list, compute_gradient_norm
+from maze.train.utils.train_utils import compute_gradient_norm
 from maze.utils.bcolors import BColors
 
 
