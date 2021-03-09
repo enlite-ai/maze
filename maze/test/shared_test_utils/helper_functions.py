@@ -2,8 +2,15 @@
 import inspect
 from typing import Tuple, Any, Dict, Type, List
 
+from torch import nn
+
+from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
+from maze.core.env.maze_env import MazeEnv
+from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet
+from maze.perception.models.custom_model_composer import CustomModelComposer
+from maze.perception.models.policies import ProbabilisticPolicyComposer
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
@@ -75,3 +82,28 @@ def all_classes_of_module(module) -> List[Type]:
     """
     name_class_tuples = inspect.getmembers(module, inspect.isclass)
     return [t[1] for t in name_class_tuples]
+
+
+def flatten_concat_probabilistic_policy_for_env(env: MazeEnv):
+    """Build a probabilistic policy using a small flatten-concat network for a given env.
+
+    Note: Supports structured envs with integer step keys.
+
+    :param env: Env to build a policy for.
+    """
+    n_sub_steps = len(env.observation_spaces_dict.keys())
+
+    composer = CustomModelComposer(
+        action_spaces_dict=env.action_spaces_dict,
+        observation_spaces_dict=env.observation_spaces_dict,
+        distribution_mapper_config={},
+        policy=dict(
+            _target_=ProbabilisticPolicyComposer,
+            networks=[dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps
+        ),
+        critic=None
+    )
+    return TorchPolicy(
+        networks=composer.policy.networks,
+        distribution_mapper=composer.distribution_mapper,
+        device="cpu")
