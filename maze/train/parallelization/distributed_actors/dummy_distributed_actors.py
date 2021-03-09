@@ -76,8 +76,14 @@ class DummyDistributedActors(BaseDistributedActors):
                 if record.stats is not None:
                     self.epoch_stats.receive(record.stats)
 
-            stacked_records.append(SpacesStepRecord.stack_records(records))
+            stacked_records.append(records)
             self.current_actor_idx = self.current_actor_idx + 1 if self.current_actor_idx < len(self.actors) - 1 else 0
 
+        # Stack in concurrency (= number of actors) dimension
+        conc_stacked_records = [SpacesStepRecord.stack_records(list(recs)) for recs in list(zip(*stacked_records))]
+
+        # Stack in time dimension to a single stacked record
+        time_stacked_records = SpacesStepRecord.stack_records(conc_stacked_records)
+
         dequeue_time = time.time() - start_wait_time
-        return SpacesStepRecord.stack_records(stacked_records).to_torch(device=self.policy.device), 0, 0, dequeue_time
+        return time_stacked_records.to_torch(device=self.policy.device), 0, 0, dequeue_time
