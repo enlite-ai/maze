@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, TypeVar, Tuple, List
+from typing import Dict, Optional, TypeVar, Tuple, List, Union
 
 import numpy as np
 
@@ -15,8 +15,8 @@ StepKeyType = TypeVar('StepKeyType', str, int)
 class SpacesStepRecord:
     observations: Dict[StepKeyType, Dict[str, np.ndarray]]
     actions: Dict[StepKeyType, Dict[str, np.ndarray]]
-    rewards: Optional[Dict[StepKeyType, float]]
-    dones: Optional[Dict[StepKeyType, bool]]
+    rewards: Optional[Dict[StepKeyType, Union[float, np.ndarray]]]
+    dones: Optional[Dict[StepKeyType, Union[float, bool]]]
     infos: Optional[Dict[StepKeyType, Dict]] = None
 
     logits: Optional[Dict[StepKeyType, Dict[str, np.ndarray]]] = None
@@ -31,15 +31,23 @@ class SpacesStepRecord:
     def to_numpy(self):
         self.observations = convert_to_numpy(self.observations, cast=None, in_place=True)
         self.actions = convert_to_numpy(self.actions, cast=None, in_place=True)
+        self.rewards = convert_to_numpy(self.rewards, cast=None, in_place=True)
+        self.dones = convert_to_numpy(self.dones, cast=None, in_place=True)
+
         if self.logits is not None:
             self.logits = convert_to_numpy(self.logits, cast=None, in_place=True)
+
         return self
 
     def to_torch(self, device: str):
         self.observations = convert_to_torch(self.observations, device=device, cast=None, in_place=True)
         self.actions = convert_to_torch(self.actions, device=device, cast=None, in_place=True)
+        self.rewards = convert_to_torch(self.rewards, device=device, cast=None, in_place=True)
+        self.dones = convert_to_torch(self.dones, device=device, cast=None, in_place=True)
+
         if self.logits is not None:
             self.logits = convert_to_torch(self.logits, device=device, cast=None, in_place=True)
+
         return self
 
     @classmethod
