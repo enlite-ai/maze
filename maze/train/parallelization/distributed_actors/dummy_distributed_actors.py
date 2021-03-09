@@ -86,4 +86,4 @@ class DummyDistributedActors(BaseDistributedActors):
         time_stacked_records = SpacesStepRecord.stack_records(conc_stacked_records)
 
         dequeue_time = time.time() - start_wait_time
-        return time_stacked_records.to_torch(device=self.policy.device), 0, 0, dequeue_time
+        return time_stacked_records.to_torch(device=learner_device), 0, 0, dequeue_time
