@@ -18,7 +18,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.core.rollout.rollout_generator import DistributedEnvRolloutGenerator
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.perception.perception_utils import convert_to_torch
@@ -70,7 +70,7 @@ class MultiStepActorCritic(Trainer, ABC):
         self.sub_step_keys = list(self.model.policy.networks.keys())
 
         # initialize rollout generator
-        self.rollout_generator = DistributedEnvRolloutGenerator(env=self.env)
+        self.rollout_generator = RolloutGenerator(env=self.env)
 
         # initialize optimizer
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.algorithm_config.lr)

@@ -8,6 +8,8 @@ from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
+from maze.core.rollout.rollout_generator import RolloutGenerator
+from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.distributed_actors.actor import ActorAgent, ActorOutput
 from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
@@ -31,13 +33,12 @@ class DummyDistributedActors(BaseDistributedActors):
         self.broadcasting_container = BroadcastingContainer()
         self.current_actor_idx = 0
 
-        self.actors: List[ActorAgent] = []
-        self.policy_version_counters = []
+        self.actors: List[RolloutGenerator] = []
+        self.policy_version_counter = 0
 
         for ii in range(self.n_actors):
-            actor = ActorAgent(env_factory, policy, n_rollout_steps)
+            actor = RolloutGenerator(env=env_factory(), record_logits=True, record_stats=True)
             self.actors.append(actor)
-            self.policy_version_counters.append(0)
 
         if self.n_actors > self.batch_size:
             BColors.print_colored(
@@ -59,33 +60,24 @@ class DummyDistributedActors(BaseDistributedActors):
     def broadcast_updated_policy(self, state_dict: Dict) -> None:
         """Store the newest policy in the shared network object"""
         converted_state_dict = convert_to_torch(state_dict, in_place=False, cast=None, device=self.policy.device)
-        self.broadcasting_container.set_policy_state_dict(converted_state_dict)
+        self.policy.load_state_dict(converted_state_dict)
 
     @override(BaseDistributedActors)
-    def collect_outputs(self, learner_device: str) -> Tuple[ActorOutput, float, float, float]:
+    def collect_outputs(self, learner_device: str) -> Tuple[SpacesStepRecord, float, float, float]:
         """Run the rollouts and collect the outputs."""
-
-        actor_outputs = []
-
         start_wait_time = time.time()
+        stacked_records = []
 
-        while len(actor_outputs) < self.batch_size:
-
-            # Update the policy of the actor if a new version of the policy has been published by the learner
-            shared_policy_version_counter = self.broadcasting_container.policy_version()
-            if self.policy_version_counters[self.current_actor_idx] < shared_policy_version_counter:
-                self.actors[self.current_actor_idx].update_policy(self.broadcasting_container.policy_state_dict())
-                self.policy_version_counters[self.current_actor_idx] = shared_policy_version_counter
-
-            output = self.actors[self.current_actor_idx].rollout()
-            actor_outputs.append(ActorOutput(*output[:-1]))
-            self.current_actor_idx = self.current_actor_idx + 1 if self.current_actor_idx < len(self.actors) - 1 else 0
+        while len(stacked_records) < self.batch_size:
+            records = self.actors[self.current_actor_idx].rollout(policy=self.policy, n_steps=self.n_rollout_steps)
 
             # collect episode statistics
-            for stat in output.stats:
-                if stat is not None:
-                    self.epoch_stats.receive(stat)
+            for record in records:
+                if record.stats is not None:
+                    self.epoch_stats.receive(record.stats)
+
+            stacked_records.append(SpacesStepRecord.stack_records(records))
+            self.current_actor_idx = self.current_actor_idx + 1 if self.current_actor_idx < len(self.actors) - 1 else 0
 
         dequeue_time = time.time() - start_wait_time
-
-        return batch_outputs_time_major(actor_outputs=actor_outputs, learner_device=learner_device), 0, 0, dequeue_time
+        return SpacesStepRecord.stack_records(stacked_records).to_torch(device=self.policy.device), 0, 0, dequeue_time
