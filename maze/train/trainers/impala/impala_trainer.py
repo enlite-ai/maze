@@ -16,6 +16,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
+from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
 from maze.train.parallelization.distributed_actors.actor import ActorOutput
 from maze.train.parallelization.distributed_actors.distributed_actors import BaseDistributedActors
 from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
@@ -173,25 +174,24 @@ class MultiStepIMPALA(Trainer):
         self.load_state_dict(state_dict)
 
     @classmethod
-    def _shift_outputs(cls, actors_output: ActorOutput, learner_output: LearnerOutput) -> Tuple[ActorOutput,
-                                                                                                LearnerOutput]:
+    def _shift_outputs(cls, step_record: SpacesStepRecord, learner_output: LearnerOutput) -> Tuple[SpacesStepRecord,
+                                                                                                   LearnerOutput]:
         """Shift the output of the actors and agents by removing the last element
 
-        :param actors_output: the output of the actors already batched
+        :param step_record: the output of the actors already batched
         :param learner_output: the output of the leaner
 
         :return: The shifted actor and learner output
         """
-        new_agents_output = {}
-        for name in ['rewards', 'dones', 'infos']:
-            field = getattr(actors_output, name)
-            new_agents_output[name] = field[:-1]
-        for name in ['observations', 'actions_taken', 'actions_logits']:
-            field = getattr(actors_output, name)
-            new_agents_output[name] = field
+        for name in ['rewards', 'dones']:
+            field = getattr(step_record, name)
             for step_idx, value in field.items():
-                for key, val in field[step_idx].items():
-                    new_agents_output[name][step_idx][key] = val[:-1]
+                getattr(step_record, name)[step_idx] = value[:-1]
+        for name in ['observations', 'actions', 'logits']:
+            field = getattr(step_record, name)
+            for step_idx in field.keys():
+                for key, value in field[step_idx].items():
+                    getattr(step_record, name)[step_idx][key] = value[:-1]
 
         new_learner_output = {}
         for name in ['values', 'detached_values', 'actions_logits']:
@@ -204,7 +204,7 @@ class MultiStepIMPALA(Trainer):
                     for key, val in field[step_idx].items():
                         new_learner_output[name][step_idx][key] = val[:-1]
 
-        return ActorOutput(**new_agents_output), LearnerOutput(**new_learner_output)
+        return step_record, LearnerOutput(**new_learner_output)
 
     def _update(self, epoch_idx: int, epoch_step_idx: int) -> None:
         """Perform update. That is collect the actor trajectories, compute the learner action logits, compute the loss
@@ -252,20 +252,21 @@ class MultiStepIMPALA(Trainer):
 
         # Clip reward:
         if self.reward_clipping == 'abs_one':
-            clipped_rewards = record.rewards.clamp(-1, 1)
+            clipped_rewards = record.rewards[list(record.rewards.keys())[-1]].clamp(-1, 1)
         elif self.reward_clipping == 'soft_asymmetric':
-            squeezed = torch.tanh(record.rewards / 5.0)
-            clipped_rewards = torch.where(record.rewards < 0, 0.3 * squeezed, squeezed) * 5.
+            squeezed = torch.tanh(record.rewards[list(record.rewards.keys())[-1]] / 5.0)
+            clipped_rewards = torch.where(
+                record.rewards[list(record.rewards.keys())[-1]] < 0, 0.3 * squeezed, squeezed) * 5.
         else:
-            clipped_rewards = record.rewards
+            clipped_rewards = record.rewards[list(record.rewards.keys())[-1]]
         # START: Loss computation --------------------------------------------------------------------------------------
         vtrace_returns = impala_vtrace.from_logits(
-            behaviour_policy_logits=record.actions_logits,
+            behaviour_policy_logits=record.logits,
             target_policy_logits=learner_output.actions_logits,
-            actions=record.actions_taken,
+            actions=record.actions,
             action_spaces=self.learner.env.action_spaces_dict,
             distribution_mapper=self.model.policy.distribution_mapper,
-            discounts=(~record.dones).float() * self.gamma,
+            discounts=(~record.dones[list(record.dones.keys())[-1]]).float() * self.gamma,
             rewards=clipped_rewards,
             values=learner_output.detached_values,
             bootstrap_value=bootstrap_value,
