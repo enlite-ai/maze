@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
 
@@ -53,3 +54,21 @@ def test_record_stacking():
     assert np.all(stacked.rewards[0] == np.array([[1], [2], [3]]))
     assert np.all(stacked.dones[1] == np.array([[False], [False], [True]]))
     assert stacked.actions[1]["action"].shape == (3, 2)
+
+
+def test_record_conversion():
+    r = SpacesStepRecord(
+        observations={0: dict(x=np.array([10, 10]), y=np.array([10, 10])),
+                      1: dict(z=np.array([[11, 11], [11, 11]]))},
+        actions={0: dict(action=np.array([10])), 1: dict(action=np.array([11, 11]))},
+        rewards={0: 1, 1: 1},
+        dones={0: False, 1: False}
+    )
+
+    r.to_torch("cpu")
+
+    for step_key in [0, 1]:
+        for value in r.observations[step_key].values():
+            assert isinstance(value, torch.Tensor)
+        for value in r.actions[step_key].values():
+            assert isinstance(value, torch.Tensor)
