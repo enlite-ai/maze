@@ -51,7 +51,7 @@ class MultiStepA2C(MultiStepActorCritic):
         # compute bootstrapped returns
         returns, values, detached_values = \
             self.model.critic.bootstrap_returns(obs_t,
-                                                # Use rewards and dones from the last sub-step only
+                                                # TODO: Use all rewards and dones, not from the last sub-step only
                                                 record.rewards[self.sub_step_keys[-1]],
                                                 record.dones[self.sub_step_keys[-1]],
                                                 gamma=self.algorithm_config.gamma,
