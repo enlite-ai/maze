@@ -218,7 +218,7 @@ class MultiStepIMPALA(Trainer):
         #                                                                                 2 dim actor_batch_size..
         start_update_time = time.time()
 
-        actors_output, q_size_before, q_size_after, time_deq_actors = self.distributed_actors.collect_outputs(
+        record, q_size_before, q_size_after, time_deq_actors = self.distributed_actors.collect_outputs(
             self.learner.model.device)
         after_collection_time = time.time()
 
@@ -226,11 +226,11 @@ class MultiStepIMPALA(Trainer):
         self.impala_events.estimated_queue_sizes(after=q_size_after, before=q_size_before)
 
         # Compute learner rollout and return values (for one rollout - no batch dimensions in the tensors)
-        learner_output: LearnerOutput = self.learner.learner_rollout_on_agent_output(actors_output)
+        learner_output: LearnerOutput = self.learner.learner_rollout_on_agent_output(record)
         after_learner_rollout_time = time.time()
 
         # Test if Agents output is already in time major
-        for output_field in [actors_output.actions_logits, actors_output.actions_taken, actors_output.observations,
+        for output_field in [record.logits, record.actions, record.observations,
                              learner_output.actions_logits]:
             assert isinstance(output_field, dict) \
                    and set(output_field) == set(self.learner.sub_step_keys), "acton_output filed should be a list of " \
@@ -248,24 +248,24 @@ class MultiStepIMPALA(Trainer):
                            for step_key, step_values in learner_output.detached_values.items()}
 
         # Shift values:
-        actors_output, learner_output = self._shift_outputs(actors_output, learner_output)
+        record, learner_output = self._shift_outputs(record, learner_output)
 
         # Clip reward:
         if self.reward_clipping == 'abs_one':
-            clipped_rewards = actors_output.rewards.clamp(-1, 1)
+            clipped_rewards = record.rewards.clamp(-1, 1)
         elif self.reward_clipping == 'soft_asymmetric':
-            squeezed = torch.tanh(actors_output.rewards / 5.0)
-            clipped_rewards = torch.where(actors_output.rewards < 0, 0.3 * squeezed, squeezed) * 5.
+            squeezed = torch.tanh(record.rewards / 5.0)
+            clipped_rewards = torch.where(record.rewards < 0, 0.3 * squeezed, squeezed) * 5.
         else:
-            clipped_rewards = actors_output.rewards
+            clipped_rewards = record.rewards
         # START: Loss computation --------------------------------------------------------------------------------------
         vtrace_returns = impala_vtrace.from_logits(
-            behaviour_policy_logits=actors_output.actions_logits,
+            behaviour_policy_logits=record.actions_logits,
             target_policy_logits=learner_output.actions_logits,
-            actions=actors_output.actions_taken,
+            actions=record.actions_taken,
             action_spaces=self.learner.env.action_spaces_dict,
             distribution_mapper=self.model.policy.distribution_mapper,
-            discounts=(~actors_output.dones).float() * self.gamma,
+            discounts=(~record.dones).float() * self.gamma,
             rewards=clipped_rewards,
             values=learner_output.detached_values,
             bootstrap_value=bootstrap_value,
