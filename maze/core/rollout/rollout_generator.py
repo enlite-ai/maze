@@ -39,7 +39,7 @@ class RolloutGenerator:
         for _ in range(n_steps):
             record = SpacesStepRecord(observations={}, actions={}, rewards={}, dones={}, infos={},
                                       logits={} if self.record_logits else None,
-                                      batch_shape=[self.env.n_envs] if self.is_distributed else None,)
+                                      batch_shape=[self.env.n_envs] if self.is_distributed else None)
 
             for step_key in self.step_keys:
                 # Record copy of the observation (as by default, the policy converts and handles it in place)
@@ -47,10 +47,13 @@ class RolloutGenerator:
 
                 # Sample action and record logits if configured
                 if self.record_logits:
-                    action, logits = policy.compute_action_with_logits(observation, policy_id=step_key, deterministic=False)
+                    action, logits = policy.compute_action_with_logits(observation, policy_id=step_key,
+                                                                       deterministic=False)
                     record.logits[step_key] = logits
                 else:
-                    action = policy.compute_action(observation, policy_id=step_key, maze_state=None, deterministic=False)
+                    action = policy.compute_action(observation, policy_id=step_key, maze_state=None,
+                                                   deterministic=False)
+                record.actions[step_key] = action
 
                 # Unstack action in distributed env scenarios (the env should handle this in the future)
                 if self.is_distributed:
@@ -59,7 +62,6 @@ class RolloutGenerator:
                 # Take the step
                 observation, reward, done, info = self.env.step(action)
 
-                record.actions[step_key] = action
                 record.rewards[step_key] = reward
                 record.dones[step_key] = done
                 record.infos[step_key] = info

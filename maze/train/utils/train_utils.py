@@ -6,23 +6,20 @@ import numpy as np
 import torch
 
 
-def stack_numpy_dict_list(dict_list: List[Dict[str, np.ndarray]], expand: bool = False) -> Dict[str, np.ndarray]:
+def stack_numpy_dict_list(dict_list: List[Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
     """Stack list of dictionaries holding numpy arrays as values.
 
     :param dict_list: A list of identical dictionaries to be stacked, e.g. [{a: 1}, {a: 2}]
-    :param expand: If True the values are expended by one dimension at dimension zero.
     :return: The list entries as a stacked dictionary, e.g. {a : [1, 2]}
     """
     list_dict = defaultdict(list)
     for d in dict_list:
         for k, v in d.items():
-            if expand:
-                v = v[np.newaxis]
             list_dict[k].append(v)
 
     stacked_dict = dict()
     for k in list_dict.keys():
-        stacked_dict[k] = np.vstack(list_dict[k])
+        stacked_dict[k] = np.stack(list_dict[k])
 
     return stacked_dict
 

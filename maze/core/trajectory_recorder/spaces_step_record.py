@@ -61,15 +61,11 @@ class SpacesStepRecord:
 
         # Actions and observations are nested dict spaces => need to go one level down with stacking
         for step_key in records[0].observations.keys():
-            stacked_record.actions[step_key] = stack_numpy_dict_list([r.actions[step_key] for r in records],
-                                                                     expand=True)
-            stacked_record.observations[step_key] = stack_numpy_dict_list([r.observations[step_key] for r in records],
-                                                                          expand=True)
+            stacked_record.actions[step_key] = stack_numpy_dict_list([r.actions[step_key] for r in records])
+            stacked_record.observations[step_key] = stack_numpy_dict_list([r.observations[step_key] for r in records])
 
             if logits_present:
-                stacked_record.logits[step_key] = stack_numpy_dict_list(
-                    [r.logits[step_key] for r in records],
-                    expand=True)
+                stacked_record.logits[step_key] = stack_numpy_dict_list([r.logits[step_key] for r in records])
 
         stacked_record.batch_shape = [len(records)] + records[0].batch_shape if records[0].batch_shape \
             else [len(records)]
