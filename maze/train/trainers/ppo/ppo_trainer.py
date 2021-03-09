@@ -69,7 +69,7 @@ class MultiStepPPO(MultiStepActorCritic):
             with torch.no_grad():
                 returns, _, detached_values = self.model.critic.bootstrap_returns(
                     observations=obs_t,
-                    # Use rewards and dones from the last sub-step only
+                    # TODO: Use all rewards and dones, not from the last sub-step only
                     rews=record.rewards[self.sub_step_keys[-1]],
                     dones=record.dones[self.sub_step_keys[-1]],
                     gamma=self.algorithm_config.gamma,
