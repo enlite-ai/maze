@@ -51,8 +51,8 @@ def test_record_stacking():
 
     # Check a couple of other values
 
-    assert np.all(stacked.rewards[0] == np.array([[1], [2], [3]]))
-    assert np.all(stacked.dones[1] == np.array([[False], [False], [True]]))
+    assert np.all(stacked.rewards[0] == [1, 2, 3])
+    assert np.all(stacked.dones[1] == [False, False, True])
     assert stacked.actions[1]["action"].shape == (3, 2)
 
 
