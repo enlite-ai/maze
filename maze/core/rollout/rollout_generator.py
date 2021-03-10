@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, Optional, Any
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
@@ -6,6 +6,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recorder.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
 from maze.train.utils.train_utils import unstack_numpy_list_dict
@@ -29,11 +30,14 @@ class RolloutGenerator:
         self.step_keys = list(env.observation_spaces_dict.keys())  # Only synchronous environments are supported
         self.last_observation = None  # Keep last observations and do not reset envs between rollouts
 
-    def rollout(self, policy: Policy, n_steps: int) -> List[SpacesStepRecord]:
+        self.rollout_counter = 0  # For generating trajectory IDs if none are supplied
+
+    def rollout(self, policy: Policy, n_steps: int, trajectory_id: Optional[Any] = None) -> SpacesTrajectoryRecord:
         if self.record_logits:
             assert isinstance(policy, TorchPolicy), "to collect logits, the policy needs to be a Torch policy"
 
-        step_records = []
+        trajectory_record = SpacesTrajectoryRecord(trajectory_id if trajectory_id else self.rollout_counter)
+        self.rollout_counter += 1
 
         # Reset during the first rollout only
         observation = self.last_observation if self.last_observation else self.env.reset()
@@ -71,7 +75,7 @@ class RolloutGenerator:
             if self.record_stats:
                 record.stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
 
-            step_records.append(record)
+            trajectory_record.append(record)
 
             if not self.is_distributed and done:
                 if self.terminate_on_done:
@@ -79,4 +83,4 @@ class RolloutGenerator:
                 else:
                     self.env.reset()
 
-        return step_records
+        return trajectory_record

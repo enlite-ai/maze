@@ -11,12 +11,12 @@ def test_standard_rollout():
     env = build_dummy_structured_env()
     rollout_generator = RolloutGenerator(env=env)
     policy = RandomPolicy(env.action_spaces_dict)
-    records = rollout_generator.rollout(policy, n_steps=10)
+    trajectory = rollout_generator.rollout(policy, n_steps=10)
 
-    assert len(records) == 10
+    assert len(trajectory) == 10
 
     sub_step_keys = env.action_spaces_dict.keys()
-    for record in records:
+    for record in trajectory.step_records:
         assert sub_step_keys == record.actions.keys()
         assert sub_step_keys == record.observations.keys()
         assert sub_step_keys == record.rewards.keys()
@@ -32,12 +32,12 @@ def test_distributed_rollout():
     env = DummyStructuredDistributedEnv([build_dummy_structured_env] * concurrency)
     rollout_generator = RolloutGenerator(env=env)
     policy = DistributedRandomPolicy(env.action_spaces_dict, concurrency=concurrency)
-    records = rollout_generator.rollout(policy, n_steps=10)
+    trajectory = rollout_generator.rollout(policy, n_steps=10)
 
-    assert len(records) == 10
+    assert len(trajectory) == 10
 
     sub_step_keys = env.action_spaces_dict.keys()
-    for record in records:
+    for record in trajectory.step_records:
         assert sub_step_keys == record.actions.keys()
         assert sub_step_keys == record.observations.keys()
         assert sub_step_keys == record.rewards.keys()
@@ -54,12 +54,12 @@ def test_standard_rollout_with_logits_and_stats():
     env = build_dummy_structured_env()
     rollout_generator = RolloutGenerator(env=env, record_stats=True, record_logits=True)
     policy = flatten_concat_probabilistic_policy_for_env(env)  # We need a torch policy to be able to record logits
-    records = rollout_generator.rollout(policy, n_steps=10)
+    trajectory = rollout_generator.rollout(policy, n_steps=10)
 
-    assert len(records) == 10
+    assert len(trajectory) == 10
 
     sub_step_keys = env.action_spaces_dict.keys()
-    for record in records:
+    for record in trajectory.step_records:
         assert record.stats is not None
         assert sub_step_keys == record.logits.keys()
 
