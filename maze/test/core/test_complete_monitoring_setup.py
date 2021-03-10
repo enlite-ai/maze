@@ -20,7 +20,7 @@ def test_matches_episode_ids_with_event_logs():
             self.step_counts = []
 
         def write(self, episode_record: TrajectoryRecord):
-            self.episode_ids.append(episode_record.episode_id)
+            self.episode_ids.append(episode_record.trajectory_id)
             self.step_counts.append(len(episode_record.step_records) - 1)  # Subtract the final state!
 
     class TestLogEventsWriter(LogEventsWriter):

@@ -30,6 +30,6 @@ class TrajectoryWriterFile(TrajectoryWriter):
 
         :param episode_record: Episode trajectory data
         """
-        filename = episode_record.episode_id + ".pkl"
+        filename = episode_record.trajectory_id + ".pkl"
         with open(self.log_dir / filename, "wb") as out_f:
             pickle.dump(episode_record, out_f)

@@ -159,7 +159,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
     @override(RecordableEnvMixin)
     def get_episode_id(self) -> str:
         """Return the ID of current episode (the ID changes on env reset)."""
-        return self.core_env.context.episode_id
+        return self.core_env.context.trajectory_id
 
     @override(RecordableEnvMixin)
     def get_maze_action(self) -> MazeActionType:
