@@ -11,7 +11,6 @@ import torch
 from torch import nn
 
 from maze.core.annotations import override
-from maze.perception.blocks.base import PerceptionBlock
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
@@ -37,7 +36,11 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], embed_dim: int, num_heads: int,
                  dropout: Optional[float], add_input_to_output: bool, bias: bool):
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3],
+        in_num_dims = [3]
+        if isinstance(in_keys, list) and len(in_keys) > 1:
+            mask_dim = len(in_shapes[-1])
+            in_num_dims.append(mask_dim + 1)
+        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
                          out_num_dims=[3])
         assert len(self.in_keys) in (1, 2)
         assert len(self.out_keys) in (1, 2)
@@ -69,6 +72,10 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
 
         input_tensor = block_input[self.in_keys[0]]
         attn_mask = block_input[self.in_keys[1]] if len(self.in_keys) > 1 else None
+        if attn_mask is not None:
+            attn_mask = ~torch.eq(attn_mask, torch.tensor(1).to(attn_mask.device))
+            attn_mask[..., 0] = False
+
         if self.preprocess is not None:
             input_tensor = self.preprocess(input_tensor)
 
