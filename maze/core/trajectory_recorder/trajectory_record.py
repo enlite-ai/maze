@@ -58,9 +58,7 @@ class SpacesTrajectoryRecord(TrajectoryRecord[SpacesStepRecord]):
     def stack_trajectories(cls, trajectories: List['SpacesTrajectoryRecord']) -> 'SpacesTrajectoryRecord':
         assert len(set([len(t) for t in trajectories])) == 1, "all trajectories must have the same length"
 
-        stacked_trajectory = SpacesTrajectoryRecord(
-            id=np.stack([trajectory.id for trajectory in trajectories])
-        )
+        stacked_trajectory = SpacesTrajectoryRecord(id=np.stack([trajectory.id for trajectory in trajectories]))
         step_records_in_time = list(zip(*[t.step_records for t in trajectories]))
         stacked_trajectory.step_records = [SpacesStepRecord.stack_records(list(recs)) for recs in step_records_in_time]
         return stacked_trajectory
