@@ -2,7 +2,8 @@ from typing import Dict
 
 from maze.core.agent.random_policy import RandomPolicy, DistributedRandomPolicy
 from maze.core.rollout.rollout_generator import RolloutGenerator
-from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env
+from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
+from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, build_dummy_maze_env
 from maze.test.shared_test_utils.helper_functions import flatten_concat_probabilistic_policy_for_env
 from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
 
@@ -65,3 +66,19 @@ def test_standard_rollout_with_logits_and_stats():
 
         for step_key in sub_step_keys:
             assert record.logits[step_key].keys() == record.actions[step_key].keys()
+
+
+def test_terminates_on_done():
+    env = build_dummy_maze_env()
+    env = TimeLimitWrapper.wrap(env, max_episode_steps=5)
+    policy = RandomPolicy(env.action_spaces_dict)
+
+    # Normal operation (should reset the env automatically and continue rollout)
+    rollout_generator = RolloutGenerator(env=env)
+    trajectory = rollout_generator.rollout(policy, n_steps=10)
+    assert len(trajectory) == 10
+
+    # Terminate on done
+    rollout_generator = RolloutGenerator(env=env, terminate_on_done=True)
+    trajectory = rollout_generator.rollout(policy, n_steps=10)
+    assert len(trajectory) == 5
