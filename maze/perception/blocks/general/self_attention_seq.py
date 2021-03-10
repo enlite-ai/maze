@@ -61,6 +61,7 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
             self.preprocess = lambda x: x.transpose(1, 0)
             self.postprocess = lambda x: x.transpose(0, 1)
 
+        self.num_heads = num_heads
         self.self_attn = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads,
                                                dropout=dropout if dropout is not None else 0.0,
                                                bias=bias)
@@ -72,6 +73,9 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
 
         input_tensor = block_input[self.in_keys[0]]
         attn_mask = block_input[self.in_keys[1]] if len(self.in_keys) > 1 else None
+        if self.num_heads > 1:
+            attn_mask = attn_mask.repeat([self.num_heads, *[1 for _ in attn_mask.shape[1:]]])
+
         if attn_mask is not None:
             attn_mask = ~torch.eq(attn_mask, torch.tensor(1).to(attn_mask.device))
             attn_mask[..., 0] = False

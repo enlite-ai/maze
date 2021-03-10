@@ -74,6 +74,8 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         # check input tensor
         input_tensor = block_input[self.in_keys[0]]
         mask_tensor = block_input[self.in_keys[1]]
+        # Enusre that one value is always true for each batch to circumvent nan values
+        mask_tensor[..., 0] = 1.0
 
         # prepare mask tensor
         mask_tensor: torch.Tensor = ~torch.eq(mask_tensor, 0)
