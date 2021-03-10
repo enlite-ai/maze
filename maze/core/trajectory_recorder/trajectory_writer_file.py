@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union
 
 from maze.core.annotations import override
-from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
 
 
@@ -24,12 +24,12 @@ class TrajectoryWriterFile(TrajectoryWriter):
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
     @override(TrajectoryWriter)
-    def write(self, episode_record: TrajectoryRecord) -> None:
+    def write(self, episode_record: StateTrajectoryRecord) -> None:
         """
         Write episode trajectory data to a file using pickle.
 
         :param episode_record: Episode trajectory data
         """
-        filename = episode_record.trajectory_id + ".pkl"
+        filename = episode_record.id + ".pkl"
         with open(self.log_dir / filename, "wb") as out_f:
             pickle.dump(episode_record, out_f)

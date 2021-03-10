@@ -5,7 +5,7 @@ environments.
 
 from typing import List
 
-from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
 
 
@@ -28,7 +28,7 @@ class TrajectoryWriterRegistry:
         cls.writers.append(writer)
 
     @classmethod
-    def record_trajectory_data(cls, episode_record: TrajectoryRecord) -> None:
+    def record_trajectory_data(cls, episode_record: StateTrajectoryRecord) -> None:
         """
         Record trajectory data through all registered trajectory data writers.
 

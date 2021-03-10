@@ -3,7 +3,8 @@ from typing import List
 import numpy as np
 
 from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.state_step_record import StateStepRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
 
 
 def _mock_space_record(value: int):
@@ -16,7 +17,7 @@ def _mock_space_record(value: int):
 
 
 def _mock_trajectory_record(id: int, values: List[int]):
-    t = TrajectoryRecord(trajectory_id=id)
+    t = SpacesTrajectoryRecord(id=id)
     t.step_records = [_mock_space_record(val) for val in values]
     return t
 
@@ -27,7 +28,7 @@ def test_trajectory_stacking():
     t3 = _mock_trajectory_record(3, [31, 32, 33])
 
     # (1) Stack all trajectories into one, keeping the time dimension
-    stacked_trajectory = TrajectoryRecord.stack_trajectories([t1, t2, t3])
+    stacked_trajectory = SpacesTrajectoryRecord.stack_trajectories([t1, t2, t3])
 
     # Step records should be stacked, keeping the time dimension intact
     assert np.all(stacked_trajectory.step_records[0].observations[0]['observation'] == [11, 21, 31])
@@ -35,7 +36,7 @@ def test_trajectory_stacking():
     assert np.all(stacked_trajectory.step_records[2].observations[0]['observation'] == [13, 23, 33])
 
     # IDs should be stacked as well
-    assert np.all(stacked_trajectory.trajectory_id == [1, 2, 3])
+    assert np.all(stacked_trajectory.id == [1, 2, 3])
 
     # (2) Stack up the (already stacked) trajectory into one single stacked step record
     stacked_record = stacked_trajectory.stack()

@@ -2,7 +2,7 @@
 from typing import Dict, Any
 
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 
 
 class KeyboardControlledTrajectoryViewer:
@@ -24,7 +24,7 @@ class KeyboardControlledTrajectoryViewer:
     """
 
     def __init__(self,
-                 episode_record: TrajectoryRecord,
+                 episode_record: StateTrajectoryRecord,
                  renderer: Renderer,
                  initial_step_index: int = 0,
                  renderer_kwargs: Dict[str, Any] = None):
