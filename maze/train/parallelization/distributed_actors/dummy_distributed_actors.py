@@ -10,6 +10,7 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recorder.trajectory_record import SpacesTrajectoryRecord
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.distributed_actors.actor import ActorAgent, ActorOutput
 from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
@@ -66,24 +67,19 @@ class DummyDistributedActors(BaseDistributedActors):
     def collect_outputs(self, learner_device: str) -> Tuple[SpacesStepRecord, float, float, float]:
         """Run the rollouts and collect the outputs."""
         start_wait_time = time.time()
-        stacked_records = []
+        trajectories = []
 
-        while len(stacked_records) < self.batch_size:
-            records = self.actors[self.current_actor_idx].rollout(policy=self.policy, n_steps=self.n_rollout_steps)
+        while len(trajectories) < self.batch_size:
+            trajectory = self.actors[self.current_actor_idx].rollout(policy=self.policy, n_steps=self.n_rollout_steps)
 
             # collect episode statistics
-            for record in records:
+            for record in trajectory.step_records:
                 if record.stats is not None:
                     self.epoch_stats.receive(record.stats)
 
-            stacked_records.append(records)
+            trajectories.append(trajectory)
             self.current_actor_idx = self.current_actor_idx + 1 if self.current_actor_idx < len(self.actors) - 1 else 0
 
-        # Stack in concurrency (= number of actors) dimension
-        conc_stacked_records = [SpacesStepRecord.stack_records(list(recs)) for recs in list(zip(*stacked_records))]
-
-        # Stack in time dimension to a single stacked record
-        time_stacked_records = SpacesStepRecord.stack_records(conc_stacked_records)
-
+        stacked_record = SpacesTrajectoryRecord.stack_trajectories(trajectories).stack()
         dequeue_time = time.time() - start_wait_time
-        return time_stacked_records.to_torch(device=learner_device), 0, 0, dequeue_time
+        return stacked_record.to_torch(device=learner_device), 0, 0, dequeue_time

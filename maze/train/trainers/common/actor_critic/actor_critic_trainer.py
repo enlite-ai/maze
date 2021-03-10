@@ -269,16 +269,11 @@ class MultiStepActorCritic(Trainer, ABC):
         self.optimizer.step()
 
     def _rollout(self) -> SpacesStepRecord:
-        """Perform rollout of current policy on distributed structured env env.
-        """
+        """Perform rollout of current policy on distributed structured env and log the time it took."""
         start_time = time.time()
-
-        step_records = self.rollout_generator.rollout(self.model.policy, n_steps=self.algorithm_config.n_rollout_steps)
-        stacked_record = SpacesStepRecord.stack_records(step_records)
-        # log time required for rollout
+        trajectory = self.rollout_generator.rollout(self.model.policy, n_steps=self.algorithm_config.n_rollout_steps)
         self.ac_events.time_rollout(value=time.time() - start_time)
-
-        return stacked_record
+        return trajectory.stack()
 
     def _append_train_stats(self,
                             policy_train_stats: List[Dict[str, List[float]]],
