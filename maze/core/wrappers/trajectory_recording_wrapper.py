@@ -17,7 +17,7 @@ from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.keyboard_controlled_trajectory_viewer import KeyboardControlledTrajectoryViewer
-from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recorder.state_step_record import StateStepRecord
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.wrapper import Wrapper
@@ -50,7 +50,7 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
         # BaseEnv is a subset of gym.Env
         super().__init__(env)
 
-        self.episode_record: Optional[TrajectoryRecord] = None
+        self.episode_record: Optional[StateTrajectoryRecord] = None
 
         self.last_env_time: Optional[int] = None
         self.last_maze_state: Optional[MazeStateType] = None
@@ -164,7 +164,7 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
         # Write out the current episode
         TrajectoryWriterRegistry.record_trajectory_data(self.episode_record)
 
-    def _build_episode_record(self) -> TrajectoryRecord:
+    def _build_episode_record(self) -> StateTrajectoryRecord:
         """Build a new episode record with episode ID from the env (if provided) or generated one (if not provided)."""
         if isinstance(self.env, RecordableEnvMixin):
             episode_id = self.env.get_episode_id()
@@ -173,7 +173,7 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
             episode_id = str(uuid.uuid4())
             renderer = None
 
-        return TrajectoryRecord(episode_id, renderer)
+        return StateTrajectoryRecord(episode_id, renderer)
 
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool)\

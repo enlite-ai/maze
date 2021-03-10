@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 
 
 class TrajectoryWriter(ABC):
@@ -13,7 +13,7 @@ class TrajectoryWriter(ABC):
     """
 
     @abstractmethod
-    def write(self, episode_record: TrajectoryRecord) -> None:
+    def write(self, episode_record: StateTrajectoryRecord) -> None:
         """
         Write out provided episode data (into a file, DB etc.)
 

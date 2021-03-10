@@ -9,7 +9,7 @@ import numpy as np
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper, RawMazeAction, RawState
@@ -82,7 +82,7 @@ def test_records_maze_states_and_actions():
             self.step_count = 0
             self.episode_records = []
 
-        def write(self, episode_record: TrajectoryRecord):
+        def write(self, episode_record: StateTrajectoryRecord):
             """Count steps and episodes & check instance types"""
             self.episode_records.append(episode_record)
             self.episode_count += 1
@@ -146,7 +146,7 @@ def test_records_trajectory_for_generic_gym_envs():
             self.episode_count = 0
             self.step_count = 0
 
-        def write(self, episode_record: TrajectoryRecord):
+        def write(self, episode_record: StateTrajectoryRecord):
             """Count steps and episodes & check instance types"""
             self.episode_count += 1
             self.step_count += len(episode_record.step_records)
@@ -203,7 +203,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
             self.episode_count = 0
             self.step_count = 0
 
-        def write(self, episode_record: TrajectoryRecord):
+        def write(self, episode_record: StateTrajectoryRecord):
             """Count steps and episodes"""
             self.episode_count += 1
             self.step_count += len(episode_record.step_records)
