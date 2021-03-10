@@ -15,11 +15,13 @@ class RolloutGenerator:
     def __init__(self,
                  env: Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin],
                  record_logits: bool = False,
-                 record_stats: bool = False):
+                 record_stats: bool = False,
+                 terminate_on_done: bool = False):
         self.env = env
         self.is_distributed = isinstance(self.env, BaseDistributedEnv)
         self.record_logits = record_logits
         self.record_stats = record_stats
+        self.terminate_on_done = terminate_on_done
 
         if self.record_stats and not isinstance(self.env, LogStatsWrapper):
             self.env = LogStatsWrapper.wrap(self.env)
@@ -70,5 +72,11 @@ class RolloutGenerator:
                 record.stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
 
             step_records.append(record)
+
+            if not self.is_distributed and done:
+                if self.terminate_on_done:
+                    break
+                else:
+                    self.env.reset()
 
         return step_records
