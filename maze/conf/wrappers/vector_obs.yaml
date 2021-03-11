@@ -10,3 +10,4 @@ maze.core.wrappers.observation_normalization.observation_normalization_wrapper.O
     _target_: maze.core.agent.random_policy.RandomPolicy
   exclude: ~
   manual_config: ~
+maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper: {}

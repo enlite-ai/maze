@@ -12,14 +12,14 @@ from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
 import gym
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionConversionInterface
+from maze.core.env.action_conversion import ActionConversionInterface, ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.maze_state import MazeStateType
-from maze.core.env.observation_conversion import ObservationConversionInterface
+from maze.core.env.observation_conversion import ObservationConversionInterface, ObservationType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
@@ -81,7 +81,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.reward_original = None
 
     @override(BaseEnv)
-    def step(self, action: Any) -> Tuple[Any, float, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
 
         :param action: the action the agent wants to take.
@@ -114,7 +114,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return observation, reward, done, info
 
     @override(BaseEnv)
-    def reset(self) -> Any:
+    def reset(self) -> ObservationType:
         """Resets the environment and returns the initial observation.
 
         :return: the initial observation after resetting.

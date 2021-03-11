@@ -1,28 +1,23 @@
 """Generate basic statistics for any gym environment."""
 import uuid
 from typing import Callable, Optional
-from typing import TypeVar, Union, Any, Tuple, Dict, List
+from typing import TypeVar, Union, Any, Tuple, Dict
 
 import gym
-import numpy as np
-from gym import spaces
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
-from maze.core.env.maze_env import MazeEnv
-from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
-from maze.core.log_events.action_events import DiscreteActionEvents, ContinuousActionEvents, MultiBinaryActionEvents
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, \
-    LogStatsValue
+from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rendering.events_stats_renderer import EventStatsRenderer
 from maze.core.wrappers.wrapper import Wrapper
@@ -83,10 +78,6 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         # get identifier of current substep
         substep_id, _ = self.env.actor_id() if isinstance(self.env, StructuredEnv) else (None, None)
 
-        # prepare action visualizations
-        substep_name = f"substep_{substep_id}" if substep_id is not None else None
-        self.step_event_log.extend(self._compile_step_events_for_action_visualization(substep_name, action))
-
         # take core env step
         obs, rew, done, info = self.env.step(action)
 
@@ -97,12 +88,6 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
         #  - for other envs: Every step
         if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
-
-            # record original reward only after actual maze env step
-            if isinstance(self.env, MazeEnv):
-                self.step_event_log.append(EventRecord(BaseEnvEvents, BaseEnvEvents.reward_original,
-                                                       dict(value=self.env.reward_original)))
-
             self._record_events_and_stats()
 
         return obs, rew, done, info
@@ -124,64 +109,6 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         # log raw events and init new step log
         self.episode_event_log.step_event_logs.append(self.step_event_log)
         self.step_event_log = StepEventLog(self.last_env_time)
-
-    def _compile_step_events_for_action_visualization(self, substep_name: Optional[str], action: Dict) \
-            -> List[EventRecord]:
-        """ Fills step_events with EventRecords for outer dict space, based on type of sub-action space used.
-
-        The type of event that is recorded depends on the type of action space. For instance, discrete action spaces
-        are visualized differently from continuous action spaces. By convention, Maze only works with dict action
-        spaces.
-
-        :param substep_name: Name of the current substep or None if env is not structured.
-        :param action: The action taken by the agent.
-        """
-        assert isinstance(self.action_space, spaces.Dict), "The action space of your env has to be a dict action space."
-
-        action_events = []
-        for actor_name, actor_action_space in self.action_space.spaces.items():
-            # If actor_name is not in action, cycle loop
-            if actor_name not in action:
-                continue
-            # Check for discrete sub-action space
-            if isinstance(actor_action_space, spaces.Discrete):
-                # For some policies, the action is a np.ndarray, for others the action is an int. To support both cases,
-                # transform the actions to int (done via v.item() below)
-                actor_action = action[actor_name]
-                if isinstance(actor_action, np.ndarray):
-                    actor_action = actor_action.item()
-                action_events.append(EventRecord(DiscreteActionEvents, DiscreteActionEvents.action,
-                                                 dict(substep=substep_name,
-                                                      name=actor_name, value=actor_action,
-                                                      action_dim=actor_action_space.n)))
-
-            # Check for multi-discrete sub-action space
-            elif isinstance(actor_action_space, spaces.MultiDiscrete):
-                for sub_actor_idx, sub_action_space in enumerate(actor_action_space.nvec):
-                    # a multidiscrete action space consists of several discrete action spaces, so we can use
-                    # DiscreteActionEvents
-                    action_events.append(EventRecord(DiscreteActionEvents, DiscreteActionEvents.action,
-                                                     dict(substep=substep_name,
-                                                          name=f'actor_{actor_name}_{sub_actor_idx}',
-                                                          sub_action_space=action[actor_name][..., sub_actor_idx],
-                                                          action_dim=actor_action_space.nvec[sub_actor_idx])))
-
-            elif isinstance(actor_action_space, spaces.MultiBinary):
-                actor_action = action[actor_name]
-                assert isinstance(actor_action, np.ndarray)
-                action_events.append(EventRecord(MultiBinaryActionEvents, MultiBinaryActionEvents.action,
-                                                 dict(substep=substep_name,
-                                                      name=actor_name, value=actor_action,
-                                                      num_binary_actions=actor_action_space.n)))
-
-            # Check for box sub-action space
-            elif isinstance(actor_action_space, spaces.Box):
-                actor_action = action[actor_name]
-                action_events.append(EventRecord(ContinuousActionEvents, ContinuousActionEvents.action,
-                                                 dict(substep=substep_name,
-                                                      name=actor_name, value=actor_action)))
-
-        return action_events
 
     @override(BaseEnv)
     def reset(self) -> Any:
@@ -284,8 +211,9 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         episode_id = self.env.get_episode_id() if isinstance(self.env, RecordableEnvMixin) else str(uuid.uuid4())
         return EpisodeEventLog(episode_id)
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
