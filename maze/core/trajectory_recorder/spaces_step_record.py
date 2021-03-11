@@ -3,8 +3,11 @@ from typing import Dict, Optional, TypeVar, Tuple, List, Union
 
 import numpy as np
 
+from maze.core.env.maze_env import MazeEnv
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
+from maze.core.trajectory_recorder.state_step_record import StateStepRecord
+from maze.core.trajectory_recorder.raw_maze_state import RawState, RawMazeAction
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list
 
@@ -71,3 +74,14 @@ class SpacesStepRecord:
             else [len(records)]
 
         return stacked_record
+
+    @classmethod
+    def converted_from(cls, state_record: StateStepRecord, conversion_env: MazeEnv, first_step_in_episode: bool) \
+            -> 'SpacesStepRecord':
+        obs = state_record.maze_state.observation if isinstance(state_record.maze_state,
+                                                                        RawState) else state_record.maze_state
+        action = state_record.maze_action.action if isinstance(state_record.maze_action,
+                                                               RawMazeAction) else state_record.maze_action
+
+        obs, action = conversion_env.get_observation_and_action_dicts(obs, action, first_step_in_episode)
+        return SpacesStepRecord(observations=obs, actions=action, rewards=None, dones=None)

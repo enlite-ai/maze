@@ -1,19 +1,20 @@
 """An imitation dataset that loads all data to memory on initialization using multiple worker processes."""
-
+import logging
 import pickle
 import traceback
 from collections import namedtuple
 from multiprocessing import Queue, Process
 from pathlib import Path
-from typing import Callable, List, Union
+from typing import Callable, List, Union, Optional
 
 from tqdm import tqdm
 
 from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 from maze.train.trainers.imitation.in_memory_data_set import InMemoryImitationDataSet
 
-ActionTuple = namedtuple("ActionTuple", "observations actions")
 ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
+
+logger = logging.getLogger(__name__)
 
 
 class DataLoadWorker:
@@ -31,9 +32,9 @@ class DataLoadWorker:
             env = env_factory()
             for trajectory_file_path in trajectory_file_paths:
                 with open(str(trajectory_file_path), "rb") as in_f:
-                    episode_record: StateTrajectoryRecord = pickle.load(in_f)
-                observations, actions = InMemoryImitationDataSet.load_episode_record(env, episode_record)
-                reporting_queue.put(ActionTuple(observations, actions))
+                    trajectory: StateTrajectoryRecord = pickle.load(in_f)
+                step_records = InMemoryImitationDataSet.load_trajectory(trajectory, env)
+                reporting_queue.put(step_records)
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process
@@ -48,32 +49,27 @@ class ParallelLoadedImitationDataset(InMemoryImitationDataSet):
     This significantly speeds up data loading in cases where conversion of MazeStates and MazeActions into actions
     and observations is demanding.
 
-    :param trajectory_data_dir: See the parent class.
-    :param env_factory: See the parent class.
+    :param data_dir: See the parent class.
+    :param conversion_env_factory: See the parent class.
     :param n_workers: Number of worker processes to load data in.
     """
 
     def __init__(self,
-                 trajectory_data_dir: str,
-                 env_factory: Callable,
-                 n_workers: int):
+                 conversion_env_factory: Callable,
+                 n_workers: int,
+                 data_dir: Optional[Union[str, Path]] = None):
         self.n_workers = n_workers
+        super().__init__(conversion_env_factory, data_dir)
 
-        super().__init__(trajectory_data_dir, env_factory)
-
-    def _load_trajectory_data(self) -> None:
+    def load_data(self, data_dir: Union[str, Path]) -> None:
         """Load the trajectory data based on arguments provided on init."""
-        print(f"Started loading trajectory data...")
-
-        self.observations = []
-        self.actions = []
-
-        trajectory_file_paths = self.get_trajectory_files(self.trajectory_data_dir)
-        total_trajectories = len(trajectory_file_paths)
+        logger.info(f"Started loading trajectory data from: {data_dir}")
+        file_paths = self.get_trajectory_files(data_dir)
+        total_trajectories = len(file_paths)
 
         # Split trajectories across workers
         chunks = [[] for _ in range(self.n_workers)]
-        for i, trajectory in enumerate(trajectory_file_paths):
+        for i, trajectory in enumerate(file_paths):
             chunks[i % self.n_workers].append(trajectory)
 
         # Configure and launch the processes
@@ -85,7 +81,7 @@ class ParallelLoadedImitationDataset(InMemoryImitationDataSet):
 
             p = Process(
                 target=DataLoadWorker.run,
-                args=(self.env_factory, trajectories_chunk, self.reporting_queue),
+                args=(self.conversion_env_factory, trajectories_chunk, self.reporting_queue),
                 daemon=True
             )
             p.start()
@@ -102,10 +98,11 @@ class ParallelLoadedImitationDataset(InMemoryImitationDataSet):
                 raise RuntimeError(
                     "A worker encountered the following error:\n" + report.traceback) from report.exception
 
-            observations, actions = report
-            self._store_episode_data(observations, actions)
+            step_records = report
+            self._store_loaded_trajectory(step_records)
 
         for w in workers:
             w.join()
 
-        print(f"Loaded trajectory data for {len(self.actions)} steps in total.")
+        logger.info(f"Loaded trajectory data from: {data_dir}")
+        logger.info(f"Current length is {len(self)} steps in total.")
