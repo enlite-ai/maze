@@ -21,6 +21,28 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
     """
 
     @classmethod
+    def _masked_sum(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim=Union[int, Sequence[int]]) \
+            -> torch.Tensor:
+        """Compute sum of tensor along certain dimensions considering a given masking tensor.
+
+        :param input_tensor: The input tensor.
+        :param mask_tensor: The masking tensor.
+        :param dim: The dimension(s) along which to compute the mean.
+        :return: The masked mean tensor.
+        """
+        # expand dimensions of tensor if required
+        while mask_tensor.ndimension() < input_tensor.ndimension():
+            mask_tensor = mask_tensor.unsqueeze(-1)
+
+        # zero out masked values
+        zero_input_tensor = input_tensor * mask_tensor
+
+        # compute masked average
+        sum = torch.sum(zero_input_tensor, dim=dim)
+        return sum
+
+
+    @classmethod
     def _masked_mean(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim=Union[int, Sequence[int]]) \
             -> torch.Tensor:
         """Compute mean of tensor along certain dimensions considering a given masking tensor.
@@ -56,10 +78,12 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         assert all([in_shapes[0][idx] == in_shapes[1][idx] for idx in range(len(in_shapes[1]))])
 
         # select appropriate pooling function
-        if pooling_func is "mean":
+        if pooling_func == "mean":
             self.pooling_func = self._masked_mean
+        elif pooling_func == "sum":
+            self.pooling_func = self._masked_sum
         else:
-            raise ValueError(f"Pooling function {pooling_func} is not yet supported!")
+            raise ValueError(f"Pooling function ({pooling_func}, {type(pooling_func)}) is not yet supported!")
 
         self.pooling_dim = pooling_dim
 
@@ -87,5 +111,6 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
 
     def __repr__(self):
         txt = f"{self.__class__.__name__}"
+        txt += f'\n\tPooling func: {self.pooling_func}'
         txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt

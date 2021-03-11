@@ -42,8 +42,8 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
             in_num_dims.append(mask_dim + 1)
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
                          out_num_dims=[3])
-        assert len(self.in_keys) in (1, 2)
-        assert len(self.out_keys) in (1, 2)
+        assert len(self.in_keys) in (1, 2), f'but got {self.in_keys}'
+        assert len(self.out_keys) in (1, 2), f'but got {self.out_keys}'
 
         assert self.in_shapes[0][-1] == embed_dim, 'The last dimension of the input should be equal to the embedding ' \
                                                    'dim'
@@ -73,10 +73,10 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
 
         input_tensor = block_input[self.in_keys[0]]
         attn_mask = block_input[self.in_keys[1]] if len(self.in_keys) > 1 else None
-        if self.num_heads > 1:
-            attn_mask = attn_mask.repeat([self.num_heads, *[1 for _ in attn_mask.shape[1:]]])
 
         if attn_mask is not None:
+            if self.num_heads > 1:
+                attn_mask = attn_mask.repeat([self.num_heads, *[1 for _ in attn_mask.shape[1:]]])
             attn_mask = ~torch.eq(attn_mask, torch.tensor(1).to(attn_mask.device))
             attn_mask[..., 0] = False
 
