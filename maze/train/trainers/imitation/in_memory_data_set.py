@@ -1,17 +1,19 @@
 """Trajectory data set for imitation learning."""
-
+import logging
 import pickle
 from itertools import chain
 from pathlib import Path
-from typing import Callable, Tuple, List, Dict, Union, Any, Sequence
+from typing import Callable, Tuple, List, Dict, Union, Any, Sequence, Optional
 
 import torch
 from torch.utils.data.dataset import Dataset, Subset
 
-from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
-from maze.core.wrappers.trajectory_recording_wrapper import RawMazeAction, RawState
+from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recorder.state_step_record import StateStepRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord, TrajectoryRecord
+
+logger = logging.getLogger(__name__)
 
 
 class InMemoryImitationDataSet(Dataset):
@@ -19,121 +21,111 @@ class InMemoryImitationDataSet(Dataset):
 
     Loads all data on initialization and then keeps it in memory.
     
-    :param trajectory_data_dir: The directory where the trajectory data are stored. 
-    :param env_factory: Function for creating an environment for state and action
+    :param data_dir: The directory where the trajectory data are stored. 
+    :param conversion_env_factory: Function for creating an environment for state and action
             conversion. For Maze envs, the environment configuration (i.e. space interfaces,
             wrappers etc.) determines the format of the actions and observations that will be derived
             from the recorded MazeActions and MazeStates (e.g. multi-step observations/actions etc.).
     """
 
     def __init__(self,
-                 trajectory_data_dir: str,
-                 env_factory: Callable):
-        self.trajectory_data_dir = trajectory_data_dir
-        self.env_factory = env_factory
-        self.env = self.env_factory()
+                 conversion_env_factory: Callable,
+                 data_dir: Optional[Union[str, Path]] = None):
+        self.conversion_env_factory = conversion_env_factory
+        self.conversion_env = self.conversion_env_factory()
 
-        self.observations = []
-        self.actions = []
-        self.episode_references = []
+        self.step_records = []
+        self.trajectory_references = []
 
-        self._load_trajectory_data()
+        if data_dir is not None:
+            self.load_data(data_dir)
 
     def __len__(self) -> int:
         """Size of the dataset.
 
         :return: Number of records (i.e. recorded flat-env steps) available
         """
-        return len(self.observations)
+        return len(self.step_records)
 
-    def __getitem__(self, index: int) -> Tuple[Dict[Union[int, str], Any], Dict[Union[int, str], Any]]:
+    def __getitem__(self, index: int) -> SpacesStepRecord:
         """Get a record.
 
         :param index: Index of the record to get.
         :return: A tuple of (observation_dict, action_dict). Note that the dictionaries only have multiple entries
                  in structured scenarios.
         """
-        return self.observations[index], self.actions[index]
+        return self.step_records[index]
 
-    def _load_trajectory_data(self) -> None:
+    def append(self, trajectory: TrajectoryRecord):
+        spaces_records = self.load_trajectory(trajectory, self.conversion_env)
+        self._store_loaded_trajectory(spaces_records)
+        return self
+
+    def load_data(self, data_dir: Union[str, Path]) -> None:
         """Load the trajectory data based on arguments provided on init."""
-        print(f"Started loading trajectory data...")
-
-        self.observations = []
-        self.actions = []
-
-        file_paths = self.get_trajectory_files(self.trajectory_data_dir)
+        logger.info(f"Started loading trajectory data from: {data_dir}")
+        file_paths = self.get_trajectory_files(data_dir)
 
         for file_path in file_paths:
             with open(str(file_path), "rb") as in_f:
-                episode_record: StateTrajectoryRecord = pickle.load(in_f)
-            observations, actions = self.load_episode_record(self.env, episode_record)
-            self._store_episode_data(observations, actions)
+                trajectory: StateTrajectoryRecord = pickle.load(in_f)
+            self.append(trajectory)
 
-        print(f"Loaded trajectory data for {len(self.actions)} steps in total.")
+        logger.info(f"Loaded trajectory data from: {data_dir}")
+        logger.info(f"Current length is {len(self)} steps in total.")
 
     @staticmethod
-    def get_trajectory_files(trajectory_data_dir: str) -> List[Path]:
+    def get_trajectory_files(data_dir: Union[str, Path]) -> List[Path]:
         """List pickle files ("pkl" suffix, used for trajectory data storage by default) in the given directory.
 
-        :param trajectory_data_dir: Where to look for the trajectory records (= pickle files).
+        :param data_dir: Where to look for the trajectory records (= pickle files).
         :return: A list of available pkl files in the given directory.
         """
         file_paths = []
 
-        for file_path in Path(trajectory_data_dir).iterdir():
+        for file_path in Path(data_dir).iterdir():
             if file_path.is_file() and file_path.suffix == ".pkl":
                 file_paths.append(file_path)
 
         return file_paths
 
     @staticmethod
-    def load_episode_record(env: StructuredEnv, episode_record: StateTrajectoryRecord) -> \
-            Tuple[List[Dict[Union[int, str], Any]], List[Dict[Union[int, str], Any]]]:
+    def load_trajectory(trajectory: TrajectoryRecord, conversion_env: StructuredEnv) -> List[SpacesStepRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
         :param env: Env to use for conversion of MazeStates and MazeActions into observations and actions
-        :param episode_record: Episode record to load
+        :param trajectory: Episode record to load
         :return: Loaded observations and actions. I.e., a tuple (observation_list, action_list). Each of the
                  lists contains observation/action dictionaries, with keys corresponding to IDs of structured
                  sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
         """
-        observations = []
-        actions = []
+        step_records = []
 
-        for step_id, step_record in enumerate(episode_record.step_records):
+        for step_id, step_record in enumerate(trajectory.step_records):
             # Drop incomplete records (e.g. at the end of episode)
             if step_record.maze_state is None or step_record.maze_action is None:
                 continue
 
-            observation = step_record.maze_state.observation if isinstance(step_record.maze_state,
-                                                                           RawState) else step_record.maze_state
-            action = step_record.maze_action.action if isinstance(step_record.maze_action,
-                                                                  RawMazeAction) else step_record.maze_action
+            if isinstance(step_record, StateStepRecord):
+                step_record = SpacesStepRecord.converted_from(step_record, conversion_env=conversion_env,
+                                                              first_step_in_episode=step_id == 0)
 
-            if isinstance(env, MazeEnv):
-                observation, action = env.get_observation_and_action_dicts(observation, action, step_id == 0)
+            step_records.append(step_record)
 
-            observations.append(observation)
-            actions.append(action)
+        return step_records
 
-        return observations, actions
-
-    def _store_episode_data(self,
-                            observations: List[Dict[Union[int, str], Any]],
-                            actions: List[Dict[Union[int, str], Any]]) -> None:
+    def _store_loaded_trajectory(self, records: List[SpacesStepRecord]) -> None:
         """Stores the observations and actions, keeping a reference that they belong to the same episode.
 
         Keeping the reference is important in case we want to split the dataset later -- samples from
         one episode should end up in the same part (i.e., only training or only validation).
         """
         # Keep a record of which indices belong to the same episode
-        offset = len(self.observations)
-        self.episode_references.append(range(offset, offset + len(observations)))
+        offset = len(self)
+        self.trajectory_references.append(range(offset, offset + len(records)))
 
         # Store the data
-        self.observations.extend(observations)
-        self.actions.extend(actions)
+        self.step_records.extend(records)
 
     def random_split(self, lengths: Sequence[int], generator: torch.Generator = torch.default_generator) \
             -> List[Subset]:
@@ -155,7 +147,7 @@ class InMemoryImitationDataSet(Dataset):
             raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
 
         # Shuffle episode indexes, we will then draw them in the new order
-        shuffled_indices = torch.randperm(len(self.episode_references), generator=generator).tolist()
+        shuffled_indices = torch.randperm(len(self.trajectory_references), generator=generator).tolist()
 
         # Split episodes across subsets so that each subset has roughly the desired number of step samples
         next_shuffled_idx = 0
@@ -168,7 +160,7 @@ class InMemoryImitationDataSet(Dataset):
             # Continue adding episodes into the current subset until we would exceed the desired subset size
             while True:
                 next_ep_index = shuffled_indices[next_shuffled_idx]
-                next_ep_length = len(self.episode_references[next_ep_index])
+                next_ep_length = len(self.trajectory_references[next_ep_index])
 
                 if n_samples_in_subs + next_ep_length > desired_subs_len:
                     break
@@ -186,7 +178,7 @@ class InMemoryImitationDataSet(Dataset):
         # Get indices of individual samples of each episode and flatten them into a dataset subset
         data_subsets = []
         for subset in subsets:
-            sample_indices = list(map(lambda ep_idx: list(self.episode_references[ep_idx]), subset))
+            sample_indices = list(map(lambda ep_idx: list(self.trajectory_references[ep_idx]), subset))
             flat_indices = list(chain(*sample_indices))
             data_subsets.append(Subset(self, flat_indices))
 

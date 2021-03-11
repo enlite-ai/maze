@@ -12,7 +12,8 @@ from maze.core.rendering.renderer import Renderer
 from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
-from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper, RawMazeAction, RawState
+from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
+from maze.core.trajectory_recorder.raw_maze_state import RawState, RawMazeAction
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment

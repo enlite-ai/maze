@@ -16,25 +16,11 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.rendering.keyboard_controlled_trajectory_viewer import KeyboardControlledTrajectoryViewer
+from maze.core.trajectory_recorder.raw_maze_state import RawState, RawMazeAction
 from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recorder.state_step_record import StateStepRecord
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.wrapper import Wrapper
-
-
-class RawState:
-    """Wrapper class for raw observation -- recorded for envs that do not provide access to actual State object."""
-
-    def __init__(self, observation: Any):
-        self.observation = observation
-
-
-class RawMazeAction:
-    """Wrapper class for raw action -- recorded for envs that do not provide access to actual MazeAction object."""
-
-    def __init__(self, action: Any):
-        self.action = action
 
 
 class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
