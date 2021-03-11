@@ -6,11 +6,11 @@ from gym.envs.classic_control import CartPoleEnv
 from ray.rllib.models import MODEL_DEFAULTS
 from ray.tune.registry import RLLIB_MODEL, RLLIB_ACTION_DIST, _global_registry
 
-from maze.core.utils.registry import Registry
-from maze.runner import Runner
+from maze.core.utils.factory import Factory
 from maze.rllib.maze_rllib_action_distribution import MazeRLlibActionDistribution
 from maze.rllib.maze_rllib_models.maze_rllib_policy_model import MazeRLlibPolicyModel
 from maze.rllib.maze_rllib_runner import MazeRLlibRunner
+from maze.runner import Runner
 from maze.test.shared_test_utils.hydra_helper_functions import load_hydra_config, run_maze_from_str
 
 SPACE_CONFIG_DUMP_FILE = 'space_config_dump.pkl'
@@ -31,7 +31,7 @@ def test_init_cartpole_rllib_model():
 
     cfg = load_hydra_config('maze.conf', 'conf_rllib', hydra_overrides)
 
-    runner = Registry(base_type=MazeRLlibRunner).arg_to_obj(cfg.runner)
+    runner = Factory(base_type=MazeRLlibRunner).instantiate(cfg.runner)
     ray_config, rllib_config, tune_config = runner._init_from_cfg(cfg)
 
     assert isinstance(runner.env_factory(), CartPoleEnv)
@@ -57,7 +57,7 @@ def test_init_cartpole_maze_model():
 
     cfg = load_hydra_config('maze.conf', 'conf_rllib', hydra_overrides)
 
-    runner = Registry(base_type=MazeRLlibRunner).arg_to_obj(cfg.runner)
+    runner = Factory(base_type=MazeRLlibRunner).instantiate(cfg.runner)
     ray_config, rllib_config, tune_config = runner._init_from_cfg(cfg)
 
     assert isinstance(runner.env_factory(), CartPoleEnv)

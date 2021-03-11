@@ -1,7 +1,10 @@
 # @package runner
-type: "maze.train.trainers.imitation.ImitationRunner"
+_target_: maze.train.trainers.imitation.bc_runners.BCDevRunner
+
+# Number of "concurrent" evaluation envs
+eval_concurrency: 1
 
 # Specify the Dataset class used to load the trajectory data for training
 dataset:
-  type: maze.train.trainers.imitation.in_memory_data_set.InMemoryImitationDataSet
+  _target_: maze.train.trainers.imitation.in_memory_data_set.InMemoryImitationDataSet
   trajectory_data_dir: trajectory_data

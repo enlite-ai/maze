@@ -12,7 +12,7 @@ from maze.perception.blocks.output.linear import LinearOutputBlock
 from maze.perception.weight_init import make_module_init_normc
 
 
-class CustomCarpolePolicyNet(nn.Module):
+class CustomCartpolePolicyNet(nn.Module):
     """Simple feed forward policy network.
 
     :param obs_shapes: The shapes of all observations as a dict.

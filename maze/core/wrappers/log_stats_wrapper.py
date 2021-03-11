@@ -11,12 +11,13 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
-from maze.core.log_events.action_events import DiscreteActionEvents, ContinuousActionEvents
+from maze.core.log_events.action_events import DiscreteActionEvents, ContinuousActionEvents, MultiBinaryActionEvents
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_events.step_event_log import StepEventLog
@@ -96,6 +97,12 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
         #  - for other envs: Every step
         if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
+
+            # record original reward only after actual maze env step
+            if isinstance(self.env, MazeEnv):
+                self.step_event_log.append(EventRecord(BaseEnvEvents, BaseEnvEvents.reward_original,
+                                                       dict(value=self.env.reward_original)))
+
             self._record_events_and_stats()
 
         return obs, rew, done, info
@@ -156,8 +163,16 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
                     action_events.append(EventRecord(DiscreteActionEvents, DiscreteActionEvents.action,
                                                      dict(substep=substep_name,
                                                           name=f'actor_{actor_name}_{sub_actor_idx}',
-                                                          sub_action_space=action[actor_name][sub_actor_idx],
+                                                          sub_action_space=action[actor_name][..., sub_actor_idx],
                                                           action_dim=actor_action_space.nvec[sub_actor_idx])))
+
+            elif isinstance(actor_action_space, spaces.MultiBinary):
+                actor_action = action[actor_name]
+                assert isinstance(actor_action, np.ndarray)
+                action_events.append(EventRecord(MultiBinaryActionEvents, MultiBinaryActionEvents.action,
+                                                 dict(substep=substep_name,
+                                                      name=actor_name, value=actor_action,
+                                                      num_binary_actions=actor_action_space.n)))
 
             # Check for box sub-action space
             elif isinstance(actor_action_space, spaces.Box):

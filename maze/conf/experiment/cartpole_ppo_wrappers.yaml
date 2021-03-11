@@ -1,0 +1,10 @@
+# @package _global_
+
+# defaults to override
+defaults:
+  - override /algorithm: ppo
+  - override /wrappers: vector_obs
+
+# overrides
+algorithm:
+  lr: 0.0001

@@ -2,11 +2,12 @@
 from typing import Union, Dict
 
 import torch
+from omegaconf import DictConfig
+
 from maze.core.agent.torch_policy import TorchPolicy
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.space_config import SpacesConfig
-from omegaconf import DictConfig
 
 
 class SerializedTorchPolicy(TorchPolicy):
@@ -25,7 +26,7 @@ class SerializedTorchPolicy(TorchPolicy):
 
     def __init__(self, model: Union[DictConfig, Dict], state_dict_file: str, spaces_dict_file: str, device: str):
         spaces_config = SpacesConfig.load(spaces_dict_file)
-        model_composer = Registry(base_type=BaseModelComposer).arg_to_obj(
+        model_composer = Factory(base_type=BaseModelComposer).instantiate(
             model,
             action_spaces_dict=spaces_config.action_spaces_dict,
             observation_spaces_dict=spaces_config.observation_spaces_dict

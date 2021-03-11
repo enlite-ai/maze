@@ -1,12 +1,12 @@
 # @package model
-type: maze.perception.models.template_model_composer.TemplateModelComposer
+_target_: maze.perception.models.template_model_composer.TemplateModelComposer
 
 distribution_mapper_config:
     - action_space: gym.spaces.Box
       distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
 
 model_builder:
-  type: maze.perception.builders.ConcatModelBuilder
+  _target_: maze.perception.builders.ConcatModelBuilder
 
   observation_modality_mapping:
     observation: feature
@@ -16,15 +16,15 @@ model_builder:
       block_type: maze.perception.blocks.DenseBlock
       block_params:
         hidden_units: [128]
-        non_lin: torch.nn.ReLU
+        non_lin: torch.nn.Tanh
     hidden:
       block_type: maze.perception.blocks.DenseBlock
       block_params:
         hidden_units: [128]
-        non_lin: torch.nn.ReLU
+        non_lin: torch.nn.Tanh
     recurrence: {}
 
 policy:
-  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+  _target_: maze.perception.models.policies.ProbabilisticPolicyComposer
 
 critic: ~

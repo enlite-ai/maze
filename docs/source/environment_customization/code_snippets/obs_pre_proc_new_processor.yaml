@@ -1,8 +1,8 @@
 # @package wrappers
-PreProcessingWrapper:
+maze.core.wrappers.observation_preprocessing.preprocessing_wrapper.PreProcessingWrapper:
     pre_processor_mapping:
         - observation: rgb_image
-          type: my_project.preprocessors.custom.CustomPreProcessor
+          _target_: my_project.preprocessors.custom.CustomPreProcessor
           keep_original: true
           config:
             num_flatten_dims: 2

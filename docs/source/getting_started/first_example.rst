@@ -47,8 +47,8 @@ To see the policy directly in action you can also perform sequential rollouts wi
 
 .. code:: console
 
-   maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir> \
-   runner=sequential runner.render=true
+   $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp> \
+     runner=sequential runner.render=true
 
 
 .. image:: cartpole_img.png
@@ -79,36 +79,27 @@ an preserves it in the *TEXT* tab of Tensorboard along with the original trainin
 .. code:: YAML
 
     algorithm:
+      critic_burn_in_epochs: 0
+      deterministic_eval: false
       device: cpu
-      entropy_coef: 0.0
+      entropy_coef: 0.00025
+      epoch_length: 25
+      eval_repeats: 2
       gae_lambda: 1.0
       gamma: 0.98
       lr: 0.0005
       max_grad_norm: 0.0
-      n_rollout_steps: 20
+      n_epochs: 5
+      n_rollout_steps: 100
+      patience: 15
       policy_loss_coef: 1.0
       value_loss_coef: 0.5
     env:
-      env: CartPole-v0
-      type: maze.core.wrappers.maze_gym_env_wrapper.GymMazeEnv
+      _target_: maze.core.wrappers.maze_gym_env_wrapper.make_gym_maze_env
+      name: CartPole-v0
+    input_dir: ''
     log_base_dir: outputs
     model:
-      type: maze.perception.models.template_model_composer.TemplateModelComposer
-      distribution_mapper_config: {}
-      model_builder:
-        type: maze.perception.builders.ConcatModelBuilder
-        modality_config:
-          feature:
-            block_params:
-              hidden_units: [32, 32]
-              non_lin: torch.nn.SELU
-            block_type: dense
-          hidden: {}
-          recurrence: {}
-        observation_modality_mapping:
-          observation: feature
-      critics:
-        type: maze.perception.models.critics.StateCriticComposer
     ...
 
 You will also find PDFs showing the :ref:`inference graphs of the policy and critic networks <perception_module>`

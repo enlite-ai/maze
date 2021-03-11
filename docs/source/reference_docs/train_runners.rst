@@ -31,6 +31,11 @@ These are general interfaces, classes and utility functions for trainers and tra
     ~common.model_selection.model_selection_base.ModelSelectionBase
     ~common.model_selection.best_model_selection.BestModelSelection
 
+    ~common.evaluators.evaluator.Evaluator
+    ~common.evaluators.multi_evaluator.MultiEvaluator
+    ~common.evaluators.rollout_evaluator.RolloutEvaluator
+
+
 .. _trainers_ref:
 
 Trainers
@@ -111,14 +116,13 @@ Imitation Learning (IL) and Learning from Demonstrations (LfD)
     :template: classtemplate.rst
 
     ~imitation.imitation_events.ImitationEvents
-    ~imitation.imitation_evaluator.ImitationEvaluator
-    ~imitation.imitation_runners.ImitationRunner
     ~imitation.parallel_loaded_im_data_set.ParallelLoadedImitationDataset
     ~imitation.parallel_loaded_im_data_set.DataLoadWorker
     ~imitation.in_memory_data_set.InMemoryImitationDataSet
+    ~imitation.bc_runners.BCRunner
     ~imitation.bc_trainer.BCTrainer
     ~imitation.bc_algorithm_config.BCAlgorithmConfig
-    ~imitation.bc_evaluator.BCEvaluator
+    ~imitation.bc_validation_evaluator.BCValidationEvaluator
     ~imitation.bc_loss.BCLoss
 
 Utilities

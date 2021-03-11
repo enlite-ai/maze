@@ -1,5 +1,5 @@
 """Contains unit tests for examples."""
-from tutorials.examples.a2c_gym_cartpole_default_nets import main
+from examples.a2c_gym_cartpole_default_nets import main
 
 
 def test_a2c_gym_cartpole_ff():

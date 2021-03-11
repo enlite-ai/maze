@@ -1,9 +1,9 @@
 env:
   core_env:
   action_conversion:
-    - type: maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict.DictActionConversion
+    - _target_: maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict.DictActionConversion
   observation_conversion:
-    - type: maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict.ObservationConversion
+    - _target_: maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict.ObservationConversion
 wrappers:
   maze.test.core.wrappers.dummy_wrappers.dummy_wrapper_a.DummyWrapperA:
     arg_a: "a"

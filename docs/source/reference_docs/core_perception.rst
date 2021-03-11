@@ -77,6 +77,7 @@ These are basic neural network building blocks and interfaces:
     ~self_attention_seq.SelfAttentionSeqBlock
     ~slice.SliceBlock
     ~action_masking.ActionMaskingBlock
+    ~torch_model_block.TorchModelBlock
 
 **Joint:** these are build in joint building blocks combining multiple perception blocks:
 
@@ -150,6 +151,7 @@ There are **maze.perception.models.critics**
     :nosignatures:
     :template: classtemplate.rst
 
+    ~critic_composer_interface.CriticComposerInterface
     ~base_state_critic_composer.BaseStateCriticComposer
     ~shared_state_critic_composer.SharedStateCriticComposer
     ~step_state_critic_composer.StepStateCriticComposer

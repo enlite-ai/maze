@@ -7,7 +7,7 @@ from torch import nn
 from maze.core.agent.torch_state_critic import TorchStepStateCritic
 from maze.core.annotations import override
 from maze.core.utils.config_utils import list_to_dict
-from maze.core.utils.registry import CollectionOfConfigType, Registry
+from maze.core.utils.factory import CollectionOfConfigType, Factory
 from maze.perception.models.critics.base_state_critic_composer import BaseStateCriticComposer
 
 
@@ -27,10 +27,9 @@ class StepStateCriticComposer(BaseStateCriticComposer):
         super().__init__(observation_spaces_dict)
 
         # initialize critics
-        model_registry = Registry(base_type=nn.Module)
         networks = list_to_dict(networks)
-        self._critics = {key: model_registry.arg_to_obj(networks[key],
-                                                        obs_shapes=self._obs_shapes[key])
+        self._critics = {key: Factory(base_type=nn.Module).instantiate(networks[key],
+                                                                       obs_shapes=self._obs_shapes[key])
                          for key in networks.keys()}
 
     @property

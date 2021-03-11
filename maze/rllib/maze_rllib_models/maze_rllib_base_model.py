@@ -6,10 +6,8 @@ import gym.spaces as spaces
 import torch
 import torch.nn as nn
 
-import maze
 from maze.core.annotations import unused
-from maze.core.utils.registry import ConfigType, Registry
-from maze.perception.blocks.inference import InferenceBlock
+from maze.core.utils.factory import ConfigType, Factory
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.space_config import SpacesConfig
 from maze.perception.perception_utils import convert_to_torch
@@ -43,7 +41,7 @@ class MazeRLlibBaseModel(ABC):
         assert model_config.get('vf_share_layers') is False, 'vf_share_layer not implemented for maze models'
 
         # Initialize model composer
-        self.model_composer = Registry(base_type=BaseModelComposer, root_module=maze.perception).arg_to_obj(
+        self.model_composer = Factory(BaseModelComposer).instantiate(
             maze_model_composer_config,
             action_spaces_dict={0: action_space},
             observation_spaces_dict={0: observation_space})

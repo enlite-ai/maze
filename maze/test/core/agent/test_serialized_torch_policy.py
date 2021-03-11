@@ -14,13 +14,13 @@ def test_serialized_torch_policy():
     env = build_dummy_structured_env()
 
     model_config = {
-        "type": CustomModelComposer,
+        "_target_": CustomModelComposer,
         "distribution_mapper_config": {},
         "policy": {
-            "type": "maze.perception.models.policies.ProbabilisticPolicyComposer",
-            "networks": [{"type": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
+            "_target_": "maze.perception.models.policies.ProbabilisticPolicyComposer",
+            "networks": [{"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
                           "non_lin": "torch.nn.SELU"},
-                         {"type": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
+                         {"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
                           "non_lin": "torch.nn.SELU"}]
         },
         "critic": None

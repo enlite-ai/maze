@@ -2,5 +2,5 @@
 RandomResetWrapper:
   min_skip_steps: 0
   max_skip_steps: 100
-TimeLimitWrapper:
+maze.core.wrappers.time_limit_wrapper.TimeLimitWrapper:
   max_episode_steps: 1000

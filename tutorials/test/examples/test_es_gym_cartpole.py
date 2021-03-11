@@ -1,5 +1,5 @@
 """Contains unit tests for examples."""
-from tutorials.examples.es_gym_cartpole import main
+from examples.es_gym_cartpole import main
 
 
 def test_es_gym_cartpole():

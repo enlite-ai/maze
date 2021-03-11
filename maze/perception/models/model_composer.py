@@ -8,7 +8,7 @@ import gym
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchStateCritic
-from maze.core.utils.registry import ConfigType
+from maze.core.utils.factory import ConfigType
 from maze.core.utils.structured_env_utils import flat_structured_space
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.inference import InferenceGraph, InferenceBlock

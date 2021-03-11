@@ -77,6 +77,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # last observation, captured immediately after the observation_conversion mapping
         self.observation_original = None
 
+        # last reward, captured immediately after the reward aggregation
+        self.reward_original = None
+
     @override(BaseEnv)
     def step(self, action: Any) -> Tuple[Any, float, bool, Dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
@@ -99,6 +102,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         if self.core_env.reward_aggregator:
             reward = self.core_env.reward_aggregator.to_scalar_reward(reward)
 
+        # preserve original reward for logging
+        self.reward_original = reward
+
         # increment the environment step, which resets the event collection
         self.core_env.context.increment_env_step()
 
@@ -116,7 +122,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.core_env.context.reset_env_episode()
         maze_state = self.core_env.reset()
 
-        observation = self.observation_conversion.maze_to_space(maze_state)
+        self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
+        self.reward_original = None
+
         return observation
 
     @override(BaseEnv)

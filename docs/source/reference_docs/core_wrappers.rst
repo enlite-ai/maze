@@ -37,7 +37,7 @@ These are the wrapper interfaces, base classes and interfaces:
     ~wrapper.ObservationWrapper
     ~wrapper.ActionWrapper
     ~wrapper.RewardWrapper
-    ~wrapper_registry.WrapperRegistry
+    ~wrapper_factory.WrapperFactory
 
 Built-in Wrappers
 -----------------
@@ -99,6 +99,7 @@ Below you find the reference documentation for  environment wrappers.
 
     ~reward_scaling_wrapper.RewardScalingWrapper
     ~reward_clipping_wrapper.RewardClippingWrapper
+    ~return_normalization_reward_wrapper.ReturnNormalizationRewardWrapper
 
 .. _observation_pre_processing_reference:
 

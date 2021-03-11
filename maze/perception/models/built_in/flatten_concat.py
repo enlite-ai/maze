@@ -1,13 +1,15 @@
 """Contains a flatten and concatenation model applicable in most application scenarios."""
 from typing import Sequence, Dict, List
 
+from torch import nn
+
+from maze.perception.blocks import PerceptionBlock
 from maze.perception.blocks.feed_forward.dense import DenseBlock
 from maze.perception.blocks.general.concat import ConcatenationBlock
 from maze.perception.blocks.general.flatten import FlattenBlock
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.blocks.output.linear import LinearOutputBlock
 from maze.perception.weight_init import make_module_init_normc
-from torch import nn
 
 
 class FlattenConcatBaseNet(nn.Module):
@@ -26,7 +28,7 @@ class FlattenConcatBaseNet(nn.Module):
         self.hidden_units = hidden_units
         self.non_lin = non_lin
 
-        self.perception_dict = dict()
+        self.perception_dict: Dict[str, PerceptionBlock] = dict()
 
         # first, flatten all observations
         flat_keys = []
@@ -103,9 +105,9 @@ class FlattenConcatStateValueNet(FlattenConcatBaseNet):
         super().__init__(obs_shapes, hidden_units, non_lin)
 
         # build action head
-        self.perception_dict["value"] = LinearOutputBlock(in_keys="latent", out_keys="value",
-                                                          in_shapes=self.perception_dict["latent"].out_shapes(),
-                                                          output_units=1)
+        self.perception_dict["value"] = LinearOutputBlock(
+            in_keys="latent", out_keys="value", in_shapes=self.perception_dict["latent"].out_shapes(),
+            output_units=1)
 
         module_init = make_module_init_normc(std=0.01)
         self.perception_dict["value"].apply(module_init)
@@ -113,6 +115,40 @@ class FlattenConcatStateValueNet(FlattenConcatBaseNet):
         # compile inference model
         self.net = InferenceBlock(in_keys=list(obs_shapes.keys()),
                                   out_keys="value",
+                                  in_shapes=list(obs_shapes.values()),
+                                  perception_blocks=self.perception_dict)
+
+    def forward(self, x):
+        """ forward pass. """
+        return self.net(x)
+
+
+class FlattenConcatStateActionValueNet(FlattenConcatBaseNet):
+    """Flatten and concatenation state action value model.
+
+    :param obs_shapes: Dictionary mapping of observation names to shapes.
+    :param hidden_units: Dictionary mapping of action names to shapes.
+    :param non_lin: The non-linearity to apply.
+    """
+
+    def __init__(self,
+                 obs_shapes: Dict[str, Sequence[int]], output_shapes: Dict[str, Sequence[int]],
+                 hidden_units: List[int],
+                 non_lin: nn.Module):
+        super().__init__(obs_shapes, hidden_units, non_lin)
+
+        # build action head
+        module_init = make_module_init_normc(std=0.01)
+        for output_key, output_shape in output_shapes.items():
+            self.perception_dict[output_key] = LinearOutputBlock(in_keys="latent", out_keys=output_key,
+                                                                 in_shapes=self.perception_dict["latent"].out_shapes(),
+                                                                 output_units=output_shape[-1])
+
+            self.perception_dict[output_key].apply(module_init)
+
+        # compile inference model
+        self.net = InferenceBlock(in_keys=list(obs_shapes.keys()),
+                                  out_keys=list(output_shapes.keys()),
                                   in_shapes=list(obs_shapes.values()),
                                   perception_blocks=self.perception_dict)
 

@@ -44,7 +44,7 @@ class MultiStepActorCritic(Trainer, ABC):
     def __init__(self,
                  algorithm_config: Union[A2CAlgorithmConfig, PPOAlgorithmConfig],
                  env: Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
-                 eval_env: [BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Optional[Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
                  model: TorchActorCritic,
                  model_selection: Optional[BestModelSelection],
                  initial_state: Optional[str] = None):

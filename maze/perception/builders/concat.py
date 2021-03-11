@@ -4,11 +4,11 @@ from typing import Dict, Union, Any
 from gym import spaces
 
 from maze.core.annotations import override
+from maze.core.utils.factory import Factory
 from maze.perception.blocks import PerceptionBlock
 from maze.perception.blocks.general.concat import ConcatenationBlock
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.builders.base import BaseModelBuilder
-from maze.perception.perception_registry import PerceptionRegistry
 from maze.utils.bcolors import BColors
 
 
@@ -51,7 +51,7 @@ class ConcatModelBuilder(BaseModelBuilder):
         self.block_params = dict()
         for modality, config in self.modality_config.items():
             if config != {}:
-                self.obs_to_block[modality] = PerceptionRegistry.blocks[config["block_type"]]
+                self.obs_to_block[modality] = Factory(PerceptionBlock).class_type_from_name(config["block_type"])
                 self.block_params[modality] = config["block_params"]
 
     @override(BaseModelBuilder)

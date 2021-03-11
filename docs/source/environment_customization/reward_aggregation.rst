@@ -76,7 +76,7 @@ Besides that you only have to provide the reference path of the :code:`reward_ag
 .. code-block:: YAML
 
     reward_aggregator:
-        type: my_project.custom_reward.RawPieceUsageRewardAggregator
+        _target_: my_project.custom_reward.RawPieceUsageRewardAggregator
         reward_scale: 0.1
 
 Where to Go Next

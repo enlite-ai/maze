@@ -129,21 +129,24 @@ class GymRewardAggregator(RewardAggregatorInterface):
 
 
 class GymRenderer(Renderer):
-    """A Maze-compatible Gym renderer."""
+    """A Maze-style Gym renderer.
+
+    Note: Not yet compatible with Maze offline rendering tools (i.e., while gym envs can be rendered during a rollout,
+    they do not support offline rendering, such as in the Trajectory Viewer notebook).
+    """
 
     def __init__(self, env: gym.Env):
         self.env = env
-        BColors.print_colored(
-            "WARNING: The renderer of 'GymMazeEnv' is not yet compatible with the rest of our rendering tools",
-            color=BColors.WARNING)
 
     @override(Renderer)
     def render(self, maze_state: MazeStateType, maze_action: Optional[MazeActionType], events: StepEventLog, **kwargs) -> None:
         """Render the current state of the environment."""
+        assert self.env is not None, "'GymMazeEnv' renderer is not yet fully compatible with the Maze suite of " \
+                                     "rendering tools."
         self.env.render()
 
     def __getstate__(self) -> dict:
-        """Skip env when pickling this class (this renderer is not yet fully compatible with Maze rendering tools)"""
+        """Skip env when pickling this class (this renderer is not yet compatible with Maze offline rendering tools)"""
         obj_dict = copy(self.__dict__)
         obj_dict.pop("env", None)
         return obj_dict
@@ -250,7 +253,7 @@ class GymMazeEnv(MazeEnv, SimulatedEnvMixin):
         assert hasattr(env, "state"), "This default implementation of the clone_from() method works only for " \
                                       "gym envs exposing their state as 'env.state'"
 
-        env.maze_state = deepcopy(maze_state)
+        env.state = deepcopy(maze_state)
 
 
 def make_gym_maze_env(name: str) -> GymMazeEnv:

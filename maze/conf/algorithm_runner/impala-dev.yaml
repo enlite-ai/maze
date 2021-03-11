@@ -1,2 +1,2 @@
 # @package runner
-type: "maze.train.trainers.impala.impala_runners.ImpalaDevRunner"
+_target_: "maze.train.trainers.impala.impala_runners.ImpalaDevRunner"

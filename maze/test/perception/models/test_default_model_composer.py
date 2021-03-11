@@ -11,7 +11,6 @@ from maze.perception.models.template_model_composer import TemplateModelComposer
 from maze.perception.perception_utils import convert_to_torch, flat_structured_observations
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env
 
-
 policy_composer_type = 'maze.perception.models.policies.ProbabilisticPolicyComposer'
 
 
@@ -36,7 +35,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
                                                   "non_lin": "torch.nn.ReLU"}}
     modality_config["recurrence"] = {}
 
-    model_builder = {'type': 'maze.perception.builders.concat.ConcatModelBuilder',
+    model_builder = {'_target_': 'maze.perception.builders.concat.ConcatModelBuilder',
                      'modality_config': modality_config,
                      'observation_modality_mapping': obs_modalities}
 
@@ -45,8 +44,8 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
                                             observation_spaces_dict={0: observation_space},
                                             distribution_mapper_config={},
                                             model_builder=model_builder,
-                                            policy={'type': policy_composer_type},
-                                            critic={'type': critics_composer_type})
+                                            policy={'_target_': policy_composer_type},
+                                            critic={'_target_': critics_composer_type})
 
     # create model pdf
     default_builder.save_models()
@@ -111,7 +110,7 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
                                                   "non_lin": "torch.nn.ReLU"}}
     modality_config["recurrence"] = {}
 
-    model_builder = {'type': 'maze.perception.builders.concat.ConcatModelBuilder',
+    model_builder = {'_target_': 'maze.perception.builders.concat.ConcatModelBuilder',
                      'modality_config': modality_config,
                      'observation_modality_mapping': obs_modalities}
 
@@ -121,8 +120,8 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
         observation_spaces_dict=env.observation_spaces_dict,
         distribution_mapper_config={},
         model_builder=model_builder,
-        policy={'type': policy_composer_type},
-        critic={'type': critics_composer_type})
+        policy={'_target_': policy_composer_type},
+        critic={'_target_': critics_composer_type})
 
     # create model pdf
     default_builder.save_models()

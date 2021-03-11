@@ -8,10 +8,13 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.trajectory_recorder.episode_record import EpisodeRecord
 from maze.core.trajectory_recorder.step_record import StepRecord
+from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.core.wrappers.wrapper import ObservationWrapper
-from maze.train.trainers.imitation.in_memory_data_set import InMemoryImitationDataSet
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
+from maze.test.shared_test_utils.rollout_utils import run_rollout
+from maze.train.trainers.imitation.in_memory_data_set import InMemoryImitationDataSet
+from maze.train.trainers.imitation.parallel_loaded_im_data_set import ParallelLoadedImitationDataset
 
 
 class _MockObservationStackWrapper(ObservationWrapper):
@@ -29,8 +32,9 @@ class _MockObservationStackWrapper(ObservationWrapper):
         self.last_observation_value = observation_value
         return stacked_observation
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """If this is the first step in an episode, reset the observation stack."""
         if first_step_in_episode:
@@ -60,10 +64,10 @@ def _mock_episode_record(step_count: int):
 def _env_factory():
     return DummyEnvironment(
         core_env=DummyCoreEnvironment(gym.spaces.Discrete(10)),
-        action_conversion=[
-            "maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.double.DoubleActionConversion"],
-        observation_conversion=[
-            "maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double.DoubleObservationConversion"])
+        action_conversion=[{
+                               "_target_": "maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.double.DoubleActionConversion"}],
+        observation_conversion=[{
+                                    "_target_": "maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double.DoubleObservationConversion"}])
 
 
 def test_data_load():
@@ -164,3 +168,27 @@ def test_data_split():
     assert _extract_observation_values_from(train) == [0, 2, 4, 6, 8] * 2
     assert _extract_observation_values_from(test) == [0, 2, 4, 6, 8] * 1
     assert _extract_observation_values_from(valid) == [0, 2, 4, 6, 8] * 1
+
+
+def test_parallel_data_load():
+    """Test loading trajectories of multiple episodes in parallel into an in-memory dataset. (Each
+    data-loader process reads the files assigned to it.)"""
+    # Heuristics rollout
+    rollout_config = {
+        "configuration": "test",
+        "env": "gym_env",
+        "env.name": "CartPole-v0",
+        "policy": "random_policy",
+        "runner": "sequential",
+        "runner.n_episodes": 5,
+        "runner.max_episode_steps": 3
+    }
+    run_rollout(rollout_config)
+
+    dataset = ParallelLoadedImitationDataset(
+        trajectory_data_dir="trajectory_data",
+        env_factory=lambda: make_gym_maze_env("CartPole-v0"),
+        n_workers=2)
+
+    assert len(dataset.actions) == 5 * 3
+    assert len(dataset.observations) == 5 * 3

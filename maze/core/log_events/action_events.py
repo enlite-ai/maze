@@ -1,10 +1,26 @@
 """Events and plotting functions for discrete action spaces"""
 from abc import ABC
 
-from maze.core.log_events.log_create_figure_functions import create_categorical_plot, create_violin_distribution
+from maze.core.log_events.log_create_figure_functions import create_categorical_plot, create_violin_distribution, \
+    create_binary_plot
 from maze.core.log_stats.event_decorators import define_episode_stats, define_step_stats, define_epoch_stats, \
     define_stats_grouping, define_plot
 from maze.core.log_stats.reducer_functions import histogram
+
+
+class MultiBinaryActionEvents(ABC):
+    """
+    Event topic class with logging statistics based only on binary actions,
+    therefore applicable to any valid reinforcement learning environment.
+    """
+
+    @define_plot(create_figure_function=create_binary_plot, input_name=None)
+    @define_epoch_stats(histogram)
+    @define_episode_stats(histogram)
+    @define_step_stats(None)
+    @define_stats_grouping("substep", "name")
+    def action(self, substep: str, name: str, value: int, num_binary_actions: int):
+        """ action taken """
 
 
 class DiscreteActionEvents(ABC):

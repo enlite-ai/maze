@@ -27,14 +27,14 @@ COPY --chmod=400 environment.yml environment.yml
 COPY --chmod=400 setup.py setup.py
 COPY --chmod=400 maze/__init__.py maze/__init__.py
 
-RUN --mount=type=ssh conda env create -n env
+RUN conda env create -n env
 RUN echo "source activate env" > ~/.bashrc
 ENV PATH /opt/conda/envs/env/bin:$PATH
 
 # execute the Maze installation exactly as described in README.md
-RUN --mount=type=ssh pip install -e .[testing]
+RUN pip install -e .[testing]
 # install RLLib
-RUN --mount=type=ssh pip install ray[rllib] tensorflow
+RUN pip install ray[rllib] tensorflow
 
 FROM scratch as maze_core_code
 # Copy code

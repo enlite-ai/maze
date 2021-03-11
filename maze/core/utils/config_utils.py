@@ -1,18 +1,18 @@
 """Utility methods used throughout the code base"""
 import os
 from pathlib import Path
-from typing import Mapping, Union
+from typing import Mapping, Union, Sequence
 
 import hydra
-from hydra.core.hydra_config import HydraConfig
-import maze.core.wrappers as wrappers_module
 import yaml
+from hydra.core.hydra_config import HydraConfig
 from hydra.experimental import initialize_config_module, compose
+
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.utils.registry import Registry, ConfigType, CollectionOfConfigType
-from maze.core.wrappers.wrapper_registry import WrapperRegistry
+from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
+from maze.core.wrappers.wrapper_factory import WrapperFactory
 
 
 def read_config(path: Union[Path, str]) -> dict:
@@ -43,6 +43,11 @@ def list_to_dict(list_or_dict: Union[list, Mapping]) -> Mapping:
     return {i: s for i, s in enumerate(list_or_dict)}
 
 
+def int_range(stop: int) -> Sequence:
+    """Simple wrapper around builtin.range which can be used in Hydra yaml configs"""
+    return range(stop)
+
+
 class EnvFactory:
     """Helper class to instantiate an environment from configuration with the help of the Registry.
 
@@ -58,8 +63,8 @@ class EnvFactory:
         """environment factory
         :return: Newly created environment instance.
         """
-        env = Registry(base_type=StructuredEnv).arg_to_obj(self.env)
-        env = WrapperRegistry(root_module=wrappers_module).wrap_from_config(env, self.wrappers)
+        env = Factory(StructuredEnv).instantiate(self.env)
+        env = WrapperFactory.wrap_from_config(env, self.wrappers)
 
         return env
 

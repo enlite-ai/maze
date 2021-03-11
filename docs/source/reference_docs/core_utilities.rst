@@ -19,4 +19,7 @@ These are general interfaces, classes and utility functions:
     ~utils.config_utils.list_to_dict
     ~utils.config_utils.EnvFactory
     ~utils.config_utils.make_env_from_hydra
-    ~utils.registry.Registry
+    ~utils.factory.Factory
+    ~utils.factory.ConfigType
+    ~utils.factory.CollectionOfConfigType
+    ~utils.stats_utils.CumulativeMovingMeanStd

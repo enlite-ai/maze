@@ -1,6 +1,6 @@
 """ Test script CoreEnv """
-from tutorials.tutorial_maze_env.part01_core_env.env.core_env import Cutting2DCoreEnvironment
-from tutorials.tutorial_maze_env.part01_core_env.env.maze_action import Cutting2DMazeAction
+from tutorial_maze_env.part01_core_env.env.core_env import Cutting2DCoreEnvironment
+from tutorial_maze_env.part01_core_env.env.maze_action import Cutting2DMazeAction
 
 
 def main():

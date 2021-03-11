@@ -2,6 +2,8 @@
 from typing import Union, Dict, Tuple, Sequence, Optional
 
 from gym import spaces
+from omegaconf import DictConfig
+
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
@@ -10,7 +12,6 @@ from maze.core.env.observation_conversion import ObservationType
 from maze.core.utils.config_utils import make_env
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
-from omegaconf import DictConfig
 
 
 class RandomPolicy(Policy):

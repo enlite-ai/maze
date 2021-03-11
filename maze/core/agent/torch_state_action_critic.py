@@ -53,9 +53,9 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
         self.networks = new_networks
 
         self.num_policies = num_policies
-        self._only_discrete_spaces = only_discrete_spaces
+        self.only_discrete_spaces = only_discrete_spaces
         self._preprocessors = dict()
-        for step_key, only_discrete in self._only_discrete_spaces.items():
+        for step_key, only_discrete in self.only_discrete_spaces.items():
             if not only_discrete:
                 discrete_spaces_keys = list(filter(lambda key: isinstance(action_spaces_dict[step_key][key],
                                                                           spaces.Discrete),
@@ -130,7 +130,7 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
                               next_actions: Dict[Union[str, int], Dict[str, torch.Tensor]],
                               next_actions_logits: Dict[Union[str, int], Dict[str, torch.Tensor]],
                               next_actions_log_probs: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              alpha: torch.Tensor) \
+                              alpha: Dict[Union[str, int], torch.Tensor]) \
             -> Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]]:
         """Predict the target q value for the next step.  :math:`V (st) := E_{at∼π}[Q(st, at) − α log(π(at |st))]`.
 
@@ -138,7 +138,7 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
         :param next_actions: The next actions sampled from the policy.
         :param next_actions_logits: The logits of the next actions (only relevantt for the discrete case).
         :param next_actions_log_probs: The log probabilities of the actions.
-        :param alpha: The alpha, or entropy coefficient.
+        :param alpha: The alpha or entropy coefficient for each step.
 
         :return: A dict w.r.t. the step holding tensors representing the predicted next q value
         """
@@ -273,8 +273,9 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
         flattened_observations = flat_structured_observations(observations)
         flattened_actions = flat_structured_observations(actions)
 
-        step_id = list(self.networks.keys())[0]
-        if all(self._only_discrete_spaces.values()):
+        assert len(self.step_critic_keys) == 1
+        step_id = self.step_critic_keys[0]
+        if all(self.only_discrete_spaces.values()):
             out = self.compute_state_action_values_step(flattened_observations, step_id)
             # output shape List[Dict[str, (rollout_length, batch_dim)]]
             if gather_output:
@@ -293,7 +294,7 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
                               next_actions: Dict[Union[str, int], Dict[str, torch.Tensor]],
                               next_actions_logits: Dict[Union[str, int], Dict[str, torch.Tensor]],
                               next_actions_log_probs: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              alpha: torch.Tensor) \
+                              alpha: Dict[Union[str, int], torch.Tensor]) \
             -> Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]]:
         """implementation of
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
@@ -304,8 +305,11 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
         flattened_next_actions_logits = flat_structured_observations(next_actions_logits)
         flattened_next_action_log_probs = flat_structured_observations(next_actions_log_probs)
 
-        step_id = list(self.networks.keys())[0]
-        if all(self._only_discrete_spaces.values()):
+        assert len(self.step_critic_keys) == 1
+        step_id = self.step_critic_keys[0]
+        alpha = sum(alpha.values())
+
+        if all(self.only_discrete_spaces.values()):
             next_q_values = self.compute_state_action_values_step(flattened_next_observations,
                                                                   critic_id=(step_id, self.target_key))
             transpose_next_q_value = {k: [dic[k] for dic in next_q_values] for k in next_q_values[0]}
@@ -355,7 +359,7 @@ class TorchStepStateActionCritic(TorchStateActionCritic):
 
         q_values = dict()
         for step_id in observations.keys():
-            if self._only_discrete_spaces[step_id]:
+            if self.only_discrete_spaces[step_id]:
                 out = self.compute_state_action_values_step(observations[step_id], step_id)
                 # output shape List[Dict[str, (rollout_length, batch_dim)]]
                 if gather_output:
@@ -374,7 +378,7 @@ class TorchStepStateActionCritic(TorchStateActionCritic):
                               next_actions: Dict[Union[str, int], Dict[str, torch.Tensor]],
                               next_actions_logits: Dict[Union[str, int], Dict[str, torch.Tensor]],
                               next_actions_log_probs: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              alpha: torch.Tensor) -> Dict[
+                              alpha: Dict[Union[str, int], torch.Tensor]) -> Dict[
         Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]]:
         """implementation of
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
@@ -382,7 +386,7 @@ class TorchStepStateActionCritic(TorchStateActionCritic):
 
         next_q_values = dict()
         for step_id in next_observations.keys():
-            if self._only_discrete_spaces[step_id]:
+            if self.only_discrete_spaces[step_id]:
                 next_q_value = self.compute_state_action_values_step(next_observations[step_id],
                                                                      critic_id=(step_id, self.target_key))
                 transpose_next_q_value = {k: [dic[k] for dic in next_q_value] for k in next_q_value[0]}
@@ -394,16 +398,15 @@ class TorchStepStateActionCritic(TorchStateActionCritic):
                     next_action_log_probs = torch.log(next_action_probs + (next_action_probs == 0.0).float() * 1e-8)
                     # output shape of V(st) is (rollout_length, batch_dim)
 
-                    next_q_values[step_id][action_key] = torch.matmul(next_action_probs.unsqueeze(-2),
-                                                                      (
-                                                                                  tmp_q_value - alpha * next_action_log_probs).unsqueeze(
-                                                                          -1)).squeeze(-1).squeeze(-1)
+                    next_q_values[step_id][action_key] = torch.matmul(
+                        next_action_probs.unsqueeze(-2),
+                        (tmp_q_value - alpha[step_id] * next_action_log_probs).unsqueeze(-1)).squeeze(-1).squeeze(-1)
             else:
                 next_q_value = self.compute_state_action_value_step(next_observations[step_id],
                                                                     next_actions[step_id],
                                                                     (step_id, self.target_key))
                 # output shape of V(st) is (rollout_length, batch_size)
-                next_q_values[step_id] = torch.stack(next_q_value).min(dim=0).values - alpha * \
+                next_q_values[step_id] = torch.stack(next_q_value).min(dim=0).values - alpha[step_id] * \
                                          torch.stack(list(next_actions_log_probs[step_id].values())).mean(dim=0)
 
         return next_q_values

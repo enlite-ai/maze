@@ -6,7 +6,7 @@ from maze.core.wrappers.observation_preprocessing.preprocessing_wrapper import P
 config = {
     "pre_processor_mapping": [
         {"observation": "observation",
-         "type": "maze.preprocessors.Rgb2GrayPreProcessor",
+         "_target_": "maze.preprocessors.Rgb2GrayPreProcessor",
          "keep_original": False,
          "config": {"rgb_dim": -1}},
     ]

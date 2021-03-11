@@ -74,8 +74,8 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         observation_spaces_dict=envs.observation_spaces_dict,
         distribution_mapper_config={},
         model_builder=ConcatModelBuilder(modality_config, obs_modalities_mappings),
-        policy={'type': 'maze.perception.models.policies.ProbabilisticPolicyComposer'},
-        critic={'type': 'maze.perception.models.critics.StateCriticComposer'})
+        policy={'_target_': 'maze.perception.models.policies.ProbabilisticPolicyComposer'},
+        critic={'_target_': 'maze.perception.models.critics.StateCriticComposer'})
 
     algorithm_config = A2CAlgorithmConfig(
         n_epochs=n_epochs,

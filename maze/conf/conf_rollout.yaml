@@ -9,10 +9,8 @@ defaults:
   - configuration: ~
 
   # Configuration specializations (mainly for test scenarios, to keep tests simple and fast)
-  - runner_configuration: ${defaults.0.runner}-${defaults.5.configuration}
-    optional: true
-  - env_configuration: ${defaults.1.env}-${defaults.5.configuration}
-    optional: true
+  - optional runner_configuration: ${runner}-${configuration}
+  - optional env_configuration: ${env}-${configuration}
 
 # Hydra is by default configured to create a fresh output directory for each run.
 # However, to ensure model states, normalization stats and else are loaded from expected

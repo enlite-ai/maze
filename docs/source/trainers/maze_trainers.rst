@@ -204,7 +204,7 @@ ACM Computing Surveys (CSUR), 50(2), 1-35.
 
 :raw-html:`</details>`
 
-**Runner Parameters** | :class:`~maze.train.trainers.imitation.imitation_runners.ImitationRunner`
+**Runner Parameters** | :class:`~maze.train.trainers.imitation.bc_runners.BCRunner`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/bc-dev.yaml)</summary>`
 

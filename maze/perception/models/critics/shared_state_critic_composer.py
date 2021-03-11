@@ -6,7 +6,7 @@ from torch import nn
 
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.annotations import override
-from maze.core.utils.registry import Registry, ConfigType
+from maze.core.utils.factory import Factory, ConfigType
 from maze.core.utils.structured_env_utils import flat_structured_shapes
 from maze.perception.models.critics.base_state_critic_composer import BaseStateCriticComposer
 
@@ -31,8 +31,8 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
         obs_shapes_flat = flat_structured_shapes(self._obs_shapes)
 
         # initialize critic
-        model_registry = Registry(base_type=nn.Module)
-        self._critics = {0: model_registry.arg_to_obj(network, obs_shapes=obs_shapes_flat)}
+        model_registry = Factory(base_type=nn.Module)
+        self._critics = {0: model_registry.instantiate(network, obs_shapes=obs_shapes_flat)}
 
     @property
     @override(BaseStateCriticComposer)

@@ -3,15 +3,18 @@
 Hydra: Your Own Configuration Files
 ===================================
 
-We encourage you to add custom config files in your own project.
+We encourage you to add custom config or experiment files in your own project.
 These will make it easy for you to launch different versions
 of your environments and agents with different parameters.
 
 To be able to use custom configuration files, you first
 need to :ref:`create your config module and add it to the Hydra search path<hydra-custom-search_path>`.
-Then, you can either create just :ref:`your own config modules<hydra-custom-components>` (e.g.,
-when you just need to customize the environment config), or :ref:`create your own root config file
-if you have more custom needs<hydra-custom-root_config>`.
+Then, you can either
+
+- create :ref:`your own config modules<hydra-custom-components>`
+  (e.g., when you just need to customize the environment config),
+- create dedicated :ref:`experiment config files <hydra-custom-experiments>` based on the default (master) config,
+- or :ref:`create your own root config file<hydra-custom-root_config>` if you have more custom needs.
 
 .. _hydra-custom-search_path:
 
@@ -60,12 +63,39 @@ with configurations provided by Maze (e.g. use a custom ``env`` configuration
 while using a ``wrappers`` or ``models`` configuration provided by Maze).
 
 
+.. _hydra-custom-experiments:
+
+Step 2b: Experiment Config
+--------------------------
+
+Another convenient way to assemble and maintain different configurations of your experiments
+is `Hydra's built-in Experiment Configuration <https://hydra.cc/docs/next/patterns/configuring_experiments/>`_.
+
+It allows you to customize experiments by only specifying the changes to the default (master) configuration.
+You can for example change the trainer to PPO, the learning rate to 0.0001
+and additionally activate the
+`vector_obs <https://github.com/enlite-ai/maze/blob/main/maze/conf/wrappers/vector_obs.yaml/>`_ wrapper stack
+by providing the following experiment configuration:
+
+.. literalinclude:: ../../../../maze/conf/experiment/cartpole_ppo_wrappers.yaml
+  :language: YAML
+  :caption: conf/experiment/cartpole_ppo_wrappers.yaml
+
+To start the experiment from this experiment config file, run:
+
+.. code:: console
+
+   $ maze-run -cn conf_train +experiment=cartpole_ppo_wrappers
+
+For more details on experimenting we refer to the :ref:`experiment configuration docs <experimenting>`.
+
+
 .. _hydra-custom-root_config:
 
-Step 2b: Custom Root Config
+Step 2c: Custom Root Config
 ---------------------------
 
-If you need more customization, you will likely need to define your own root config.
+If you require even more customization, you will likely need to define your own root config.
 This is usually useful for custom projects, as it allows you to create custom
 defaults for the individual config groups.
 

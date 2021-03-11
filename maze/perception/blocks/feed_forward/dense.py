@@ -5,8 +5,8 @@ from typing import Union, List, Dict, Sequence
 import torch
 from torch import nn as nn
 
-from maze.core.utils.registry import Registry
 from maze.core.annotations import override
+from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
@@ -27,7 +27,7 @@ class DenseBlock(ShapeNormalizationBlock):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=2, out_num_dims=2)
         self.input_units = self.in_shapes[0][-1]
         self.hidden_units = hidden_units
-        self.non_lin = Registry(base_type=nn.Module).class_type_from_module_name(non_lin)
+        self.non_lin = Factory(base_type=nn.Module).class_type_from_name(non_lin)
         self.output_units = self.hidden_units[-1]
 
         # compile layer dictionary

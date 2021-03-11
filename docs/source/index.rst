@@ -82,7 +82,8 @@ Getting Started | |github| |
 
 - For installing Maze just follow the :ref:`installation instructions <installation>`.
 - To see Maze in action check out :ref:`a first example <first_example>`.
-- For a more applied introduction visit the :ref:`step by step tutorial <env_from_scratch>`.
+- :ref:`Try your own Gym env <tutorial_gym_env>` or visit our :ref:`Maze step-by-step tutorial <env_from_scratch>`.
+- Clone this `project template repo <https://github.com/enlite-ai/maze-cartpole>`_ to start your own Maze project.
 
 You can also find an extensive overview of Maze in the :ref:`table of contents <global_table_of_contents>`
 as well as the :ref:`API documentation <api_documentation>`.
@@ -128,6 +129,7 @@ but most importantly also provide code snippets and minimum working examples to 
    workflow/rollouts.rst
    workflow/rollouts_trajectories_viewer.rst
    workflow/imitation_and_fine_tuning.rst
+   workflow/experimenting.rst
 
 .. toctree::
    :maxdepth: -1
@@ -170,8 +172,8 @@ but most importantly also provide code snippets and minimum working examples to 
    :caption: Best Practices and Tutorials
 
    best_practices_and_tutorials/tricks_of_the_trade.rst
-   best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/integrating_gym_environment.rst
+   best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/maze_and_other_frameworks.rst
    best_practices_and_tutorials/example_cmds.rst
 

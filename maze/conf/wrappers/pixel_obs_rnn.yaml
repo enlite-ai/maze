@@ -1,19 +1,19 @@
 # @package wrappers
-PreProcessingWrapper:
+maze.core.wrappers.observation_preprocessing.preprocessing_wrapper.PreProcessingWrapper:
   pre_processor_mapping:
     - observation: observation
-      type: maze.core.wrappers.observation_preprocessing.preprocessors.rgb2gray.Rgb2GrayPreProcessor
+      _target_: maze.core.wrappers.observation_preprocessing.preprocessors.rgb2gray.Rgb2GrayPreProcessor
       keep_original: false
       config:
         rgb_dim: -1
     - observation: observation-rgb2gray
-      type: maze.core.wrappers.observation_preprocessing.preprocessors.resize_img.ResizeImgPreProcessor
+      _target_: maze.core.wrappers.observation_preprocessing.preprocessors.resize_img.ResizeImgPreProcessor
       keep_original: false
       config:
         target_size: [96, 96]
         transpose: false
     - observation: observation-rgb2gray-resize_img
-      type: maze.core.wrappers.observation_preprocessing.preprocessors.unsqueeze.UnSqueezePreProcessor
+      _target_: maze.core.wrappers.observation_preprocessing.preprocessors.unsqueeze.UnSqueezePreProcessor
       keep_original: false
       config:
         dim: -3
@@ -24,7 +24,7 @@ ObservationStackWrapper:
       tag: ~
       delta: False
       stack_steps: 4
-ObservationNormalizationWrapper:
+maze.core.wrappers.observation_normalization.observation_normalization_wrapper.ObservationNormalizationWrapper:
   default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
   default_strategy_config:
     clip_range: [~, ~]
@@ -32,6 +32,6 @@ ObservationNormalizationWrapper:
   default_statistics: ~
   statistics_dump: statistics.pkl
   sampling_policy:
-    type: maze.core.agent.random_policy.RandomPolicy
+    _target_: maze.core.agent.random_policy.RandomPolicy
   exclude: ~
   manual_config: ~

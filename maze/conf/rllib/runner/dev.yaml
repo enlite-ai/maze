@@ -1,6 +1,6 @@
 # @package runner
 
-type: "maze.rllib.maze_rllib_runner.MazeRLlibRunner"
+_target_: "maze.rllib.maze_rllib_runner.MazeRLlibRunner"
 
 # Number of rollouts to collect normalization statistics at the beginning of the training.
 normalization_samples: 100

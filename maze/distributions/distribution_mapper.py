@@ -4,8 +4,7 @@ from typing import Dict, Tuple, Any, Sequence
 import torch
 from gym import spaces
 
-from maze import distributions as distributions_module
-from maze.core.utils.registry import Registry, CollectionOfConfigType
+from maze.core.utils.factory import Factory, CollectionOfConfigType
 from maze.distributions.bernoulli import BernoulliProbabilityDistribution
 from maze.distributions.categorical import CategoricalProbabilityDistribution
 from maze.distributions.dict import DictProbabilityDistribution
@@ -24,13 +23,6 @@ class DistributionMapper:
     :param action_space: The dictionary action space.
     :param distribution_mapper_config: A Distribution mapper configuration (for details see the docs).
     """
-
-    # initialize the distribution registry
-    distribution_registry = Registry(base_type=TorchProbabilityDistribution,
-                                     root_module=distributions_module)
-
-    # initialize the action space registry
-    space_registry = Registry(base_type=spaces.Space, root_module=spaces)
 
     # default space to distribution mapping
     default_mapping: Dict[type(spaces.Space), type(TorchProbabilityDistribution)] = dict()
@@ -58,7 +50,8 @@ class DistributionMapper:
                    ("action_space" not in entry_dict and "action_head" in entry_dict)
 
             # get the distribution type
-            distribution_type = self.distribution_registry.class_type_from_module_name(entry_dict["distribution"])
+            distribution_type = Factory(TorchProbabilityDistribution).class_type_from_name(
+                entry_dict["distribution"])
 
             # get additional distribution arguments
             args = entry_dict["args"] if "args" in entry_dict else {}
@@ -67,7 +60,7 @@ class DistributionMapper:
                 self._action_head_to_distribution[entry_dict["action_head"]] = (distribution_type, args)
 
             elif "action_space" in entry_dict:
-                sub_action_space = self.space_registry.class_type_from_module_name(entry_dict["action_space"])
+                sub_action_space = Factory(spaces.Space).class_type_from_name(entry_dict["action_space"])
 
                 for action_head in self.action_space.spaces:
 
@@ -134,10 +127,10 @@ class DistributionMapper:
         for action_head, (dist_type, args) in self._action_head_to_distribution.items():
             default_dist = self.default_mapping[type(self.action_space[action_head])]
             txt += f'\n\t{action_head}'.ljust(max_length + 2) + ' -> ' \
-                   f'space: {self.action_space[action_head]}, ' \
-                   f'used-dist: {dist_type.__name__}, ' \
-                   f'shape: {self.required_logits_shape(action_head)}, ' \
-                   f'args: {args}'
+                                                                f'space: {self.action_space[action_head]}, ' \
+                                                                f'used-dist: {dist_type.__name__}, ' \
+                                                                f'shape: {self.required_logits_shape(action_head)}, ' \
+                                                                f'args: {args}'
             if default_dist != dist_type:
                 txt += f', [default-dist: {default_dist.__name__}]'
         return txt

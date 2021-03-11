@@ -1,5 +1,5 @@
 # @package wrappers
-ObservationNormalizationWrapper:
+maze.core.wrappers.observation_normalization.observation_normalization_wrapper.ObservationNormalizationWrapper:
   default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
   default_strategy_config:
     clip_range: [~, ~]
@@ -7,6 +7,6 @@ ObservationNormalizationWrapper:
   default_statistics: ~
   statistics_dump: statistics.pkl
   sampling_policy:
-    type: maze.core.agent.random_policy.RandomPolicy
+    _target_: maze.core.agent.random_policy.RandomPolicy
   exclude: ~
   manual_config: ~

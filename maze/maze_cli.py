@@ -3,7 +3,7 @@ import hydra
 import yaml
 from omegaconf import DictConfig, OmegaConf
 
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.runner import Runner
 
 
@@ -19,7 +19,7 @@ def maze_run(cfg: DictConfig) -> None:
     """
 
     print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
-    runner = Registry(base_type=Runner).arg_to_obj(cfg.runner)
+    runner = Factory(base_type=Runner).instantiate(cfg.runner)
     runner.run(cfg)
 
 

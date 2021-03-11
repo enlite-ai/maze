@@ -2,7 +2,7 @@
 
 # Example config file for loading trained models.
 
-type: maze.core.agent.serialized_torch_policy.SerializedTorchPolicy
+_target_: maze.core.agent.serialized_torch_policy.SerializedTorchPolicy
 
 # (1) Specify where the state dict and spaces config to load reside
 state_dict_file:  state_dict.pt

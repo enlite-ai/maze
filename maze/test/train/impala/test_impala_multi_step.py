@@ -88,6 +88,6 @@ def test_impala_multi_step_distributed():
                                             batch_size=algorithm_config.actors_batch_size,
                                             queue_out_of_sync_factor=algorithm_config.queue_out_of_sync_factor,
                                             start_method="forkserver")
-    with Timeout(seconds=12):
+    with Timeout(seconds=30):
         impala = _train_function(train_actors, algorithm_config)
     assert isinstance(impala, MultiStepIMPALA)

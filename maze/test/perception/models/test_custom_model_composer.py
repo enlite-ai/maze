@@ -18,12 +18,15 @@ def test_custom_model_composer():
     env = build_dummy_structured_env()
 
     policies = {
-        "type": "maze.perception.models.policies.ProbabilisticPolicyComposer",
-        "networks": [{"type": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
+        "_target_": "maze.perception.models.policies.ProbabilisticPolicyComposer",
+        "networks": [{"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
                       "non_lin": "torch.nn.SELU"},
-                     {"type": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
+                     {"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
                       "non_lin": "torch.nn.SELU"}]
     }
+
+    # check if model config is fine
+    CustomModelComposer.check_model_config({"policy": policies})
 
     # no critic
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
@@ -36,17 +39,20 @@ def test_custom_model_composer():
     assert composer.critic is None
 
     # shared critic
-    shard_critic = {
-        "type": "maze.perception.models.critics.SharedStateCriticComposer",
-        "networks": [{"type": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
+    shared_critic = {
+        "_target_": "maze.perception.models.critics.SharedStateCriticComposer",
+        "networks": [{"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
                       "non_lin": "torch.nn.SELU"}]
     }
+
+    # check if model config is fine
+    CustomModelComposer.check_model_config({"critic": shared_critic})
 
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=shard_critic)
+                                   critic=shared_critic)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchSharedStateCritic)
@@ -55,14 +61,17 @@ def test_custom_model_composer():
 
     # delta critic
     step_critic = {
-        "type": "maze.perception.models.critics.DeltaStateCriticComposer",
+        "_target_": "maze.perception.models.critics.DeltaStateCriticComposer",
         "networks": [
-            {"type": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
+            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
              "non_lin": "torch.nn.SELU"},
-            {"type": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
+            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
              "non_lin": "torch.nn.SELU"}
         ]
     }
+
+    # check if model config is fine
+    CustomModelComposer.check_model_config({"critic": step_critic})
 
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,
@@ -87,14 +96,17 @@ def test_custom_model_composer():
 
     # step critic
     step_critic = {
-        "type": "maze.perception.models.critics.StepStateCriticComposer",
+        "_target_": "maze.perception.models.critics.StepStateCriticComposer",
         "networks": [
-            {"type": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
+            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
              "non_lin": "torch.nn.SELU"},
-            {"type": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
+            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
              "non_lin": "torch.nn.SELU"}
         ]
     }
+
+    # check if model config is fine
+    CustomModelComposer.check_model_config({"critic": step_critic})
 
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,

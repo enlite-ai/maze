@@ -4,14 +4,15 @@ import logging
 import time
 from typing import Optional, Iterable, Generator, Tuple, Union, Dict
 
-import maze.train.trainers.es.optimizers as es_optimizers_module
 import numpy as np
 import torch
+from typing.io import BinaryIO
+
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, increment_log_step
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.es.distributed.es_distributed_rollouts import ESDistributedRollouts, ESRolloutResult
@@ -20,7 +21,6 @@ from maze.train.trainers.es.es_events import ESEvents
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_utils import get_flat_parameters
 from maze.train.trainers.es.optimizers.base_optimizer import Optimizer
-from typing.io import BinaryIO
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,6 @@ class ESTrainer(Trainer):
     :param shared_noise: The noise table, with the same content for every worker and the master.
     :param normalization_stats: Normalization statistics as calculated by the NormalizeObservationWrapper.
     """
-
-    optimizer_registry = Registry(base_type=Optimizer, root_module=es_optimizers_module)
 
     def __init__(self,
                  algorithm_config: ESAlgorithmConfig,
@@ -51,7 +49,7 @@ class ESTrainer(Trainer):
         self.normalization_stats = normalization_stats
 
         # setup the optimizer, now that the policy is available
-        self.optimizer = self.optimizer_registry.arg_to_obj(algorithm_config.optimizer)
+        self.optimizer = Factory(Optimizer).instantiate(algorithm_config.optimizer)
         self.optimizer.setup(self.policy)
 
         # prepare statistics collection

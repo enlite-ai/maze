@@ -1,12 +1,13 @@
 from typing import Dict, Sequence, Tuple, Union, Optional
 
 import numpy as np
+
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.utils.registry import Registry, ConfigType
+from maze.core.utils.factory import Factory, ConfigType
 from maze_envs.logistics.cutting_2d.env.maze_action import Cutting2DMazeAction
 from maze_envs.logistics.cutting_2d.space_interfaces.action_conversion.base import BaseActionConversion
 
@@ -20,7 +21,7 @@ class GreedyPolicy(Policy):
 
     def __init__(self, action_conversion: ConfigType):
         super().__init__()
-        self.action_conversion = Registry(base_type=BaseActionConversion).arg_to_obj(action_conversion)
+        self.action_conversion = Factory(base_type=BaseActionConversion).instantiate(action_conversion)
 
     def get_candidate_pieces(self, observation: Dict) -> Sequence[Cutting2DMazeAction]:
         """

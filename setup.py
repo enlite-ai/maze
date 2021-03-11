@@ -47,6 +47,8 @@ setup(name="maze-rl",
 
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
       ],
 
       install_requires=[
@@ -54,7 +56,7 @@ setup(name="maze-rl",
           "pyyaml",
           "requests",
           "pillow",
-          "hydra-core >= 1.0.4",
+          "hydra-core >= 1.1.0.dev4",
           "gym[box2d]; python_version < '3.8'",
           "gym; python_version >= '3.8'",
           "pandas",

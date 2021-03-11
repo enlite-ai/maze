@@ -1,5 +1,6 @@
 """ Contains helper functions for unit testing """
-from typing import Tuple, Any, Dict
+import inspect
+from typing import Tuple, Any, Dict, Type, List
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -72,3 +73,13 @@ def build_dummy_structured_env() -> DummyStructuredEnvironment:
     )
 
     return DummyStructuredEnvironment(maze_env=maze_env)
+
+
+def all_classes_of_module(module) -> List[Type]:
+    """Get all classes that are members of a module.
+
+    :param module: the Python module
+    :return a list of classes as Type objects
+    """
+    name_class_tuples = inspect.getmembers(module, inspect.isclass)
+    return [t[1] for t in name_class_tuples]

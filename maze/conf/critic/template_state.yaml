@@ -1,4 +1,4 @@
 # @package model
 
 critic:
-  type: maze.perception.models.critics.StateCriticComposer
+  _target_: maze.perception.models.critics.StateCriticComposer

@@ -11,7 +11,7 @@ from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
 from maze.utils.log_stats_utils import setup_logging
 
-from tutorials.examples.cartpole_custom_net import PolicyNet, ValueNet
+from examples.cartpole_custom_net import PolicyNet, ValueNet
 
 
 def main(n_epochs: int) -> None:
