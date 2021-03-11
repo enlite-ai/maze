@@ -4,9 +4,8 @@ from typing import Any, Dict, List, Tuple, Mapping
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.core.utils.structured_env_utils import flat_structured_space
-from maze.core.wrappers.observation_preprocessing import preprocessors as preprocessors_module
 from maze.core.wrappers.observation_preprocessing.preprocessors.base import PreProcessor
 from maze.core.wrappers.wrapper import ObservationWrapper
 
@@ -22,10 +21,6 @@ class PreProcessingWrapper(ObservationWrapper[StructuredEnv]):
     :param pre_processor_mapping: The pre-processing configuration.
            Example mappings can be found in our reference documentation.
     """
-
-    # Initialize the preprocessor registry
-    pre_processors_registry = Registry(base_type=PreProcessor,
-                                       root_module=preprocessors_module)
 
     def __init__(self, env: StructuredEnvSpacesMixin, pre_processor_mapping: List[Dict[str, Any]]):
         super().__init__(env)
@@ -74,8 +69,8 @@ class PreProcessingWrapper(ObservationWrapper[StructuredEnv]):
             obs_key = mapping["observation"]
             assert obs_key in observation_spaces, f"Observation {obs_key} not contained in observation space."
 
-            pre_processor_cls = self.pre_processors_registry.class_type_from_module_name(mapping["type"])
-            assert isinstance(mapping["config"], Mapping),\
+            pre_processor_cls = Factory(PreProcessor).class_type_from_name(mapping["_target_"])
+            assert isinstance(mapping["config"], Mapping), \
                 f"Make sure that the config for {pre_processor_cls.__name__} of observation {obs_key} is a dict!"
             processor = pre_processor_cls(observation_space=observation_spaces[obs_key], **mapping["config"])
 

@@ -14,7 +14,7 @@ from maze.train.trainers.es.es_trainer import ESTrainer
 from maze.train.trainers.es.optimizers.adam import Adam
 from maze.utils.log_stats_utils import setup_logging
 
-from tutorials.examples.cartpole_custom_net import PolicyNet
+from examples.cartpole_custom_net import PolicyNet
 
 
 def main(max_epochs) -> None:

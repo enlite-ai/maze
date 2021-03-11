@@ -1,14 +1,16 @@
 """Composer for state action (Q) critic networks."""
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from typing import Dict, Union
 
 from gym import spaces
 
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
+from maze.core.annotations import override
+from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.perception_utils import observation_spaces_to_in_shapes
 
 
-class BaseStateActionCriticComposer(ABC):
+class BaseStateActionCriticComposer(CriticComposerInterface):
     """Interface for state action (Q) critic network composers.
 
     :param observation_spaces_dict: Dict of sub-step id to observation space.
@@ -34,5 +36,6 @@ class BaseStateActionCriticComposer(ABC):
 
     @property
     @abstractmethod
+    @override(CriticComposerInterface)
     def critic(self) -> TorchStateActionCritic:
         """value networks"""

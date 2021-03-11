@@ -1,5 +1,5 @@
 # @package env
-type: tutorials.tutorial_maze_env.part06_struct_env.env.struct_env.struct_env_factory
+_target_: tutorial_maze_env.part06_struct_env.env.struct_env.struct_env_factory
 
 # parametrizes the core environment
 max_pieces_in_inventory: 50

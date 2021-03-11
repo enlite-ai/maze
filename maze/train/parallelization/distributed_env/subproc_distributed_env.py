@@ -59,7 +59,9 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 env.seed(data)
             elif cmd == 'reset':
                 observation = env.reset()
-                remote.send((observation, env.get_stats(LogStatsLevel.EPISODE).last_stats))
+                actor_done = env.is_actor_done()
+                actor_id = env.actor_id()
+                remote.send((observation, actor_done, actor_id, env.get_stats(LogStatsLevel.EPISODE).last_stats))
             elif cmd == 'close':
                 remote.close()
                 break
@@ -158,6 +160,10 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
         if logging_prefix is not None:
             self.epoch_stats.register_consumer(get_stats_logger(logging_prefix))
 
+        # keep track of the current actor IDs and dones exposed by the workers
+        self._actor_dones = None
+        self._actor_ids = None
+
     def step(self, actions: Iterable[Any]) -> \
             Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
@@ -173,7 +179,10 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
         for remote in self.remotes:
             remote.send(('reset', None))
         results = [remote.recv() for remote in self.remotes]
-        obs, episode_stats = zip(*results)
+        obs, actor_dones, actor_ids, episode_stats = zip(*results)
+
+        self._actor_dones = np.stack(actor_dones)
+        self._actor_ids = actor_ids
 
         # collect episode statistics
         for stat in episode_stats:

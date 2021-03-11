@@ -16,26 +16,18 @@ defaults:
 
   # --- specializations ---
   # runner
-  - rllib/runner: ${defaults.2.rllib/runner}
-  - rllib/runner_configuration: ${defaults.2.rllib/runner}-${defaults.9.configuration}
-    optional: true
+  - optional rllib/runner_configuration: ${rllib/runner}-${configuration}
 
   # env
-  - env_configuration: ${defaults.3.env}-${defaults.9.configuration}
-    optional: true
+  - optional env_configuration: ${env}-${configuration}
 
   # model
-  - model_configuration: ${defaults.5.model}-${defaults.9.configuration}
-    optional: true
+  - optional model_configuration: ${model}-${configuration}
 
   # algorithm
-  - rllib/algorithm: ${defaults.7.rllib/algorithm}
-  - rllib/algorithm_model: ${defaults.7.rllib/algorithm}-${defaults.5.model}
-    optional: true
-  - rllib/algorithm_env: ${defaults.7.rllib/algorithm}-${defaults.3.env}
-    optional: true
-  - rllib/algorithm_configuration: ${defaults.7.rllib/algorithm}-${defaults.9.configuration}
-    optional: true
+  - optional rllib/algorithm_model: ${rllib/algorithm}-${model}
+  - optional rllib/algorithm_env: ${rllib/algorithm}-${env}
+  - optional rllib/algorithm_configuration: ${rllib/algorithm}-${configuration}
 
   # Load sorted observation/action wrapper at the very end to ensure all observations and actions are sorted properly.
   #   This is necessary, since Rllib flattens and unflattens dict spaces internally, and orders the dicts alphabetically
@@ -56,7 +48,7 @@ log_base_dir: outputs
 hydra:
   # Local trainings
   run:
-    dir: ${log_base_dir}/${group:env}-${group:model}-rllib_${group:rllib/algorithm}-${group:setup}-${group:rllib/runner}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${log_base_dir}/${hydra:choices.env}-${hydra:choices.model}-rllib_${hydra:choices.rllib/algorithm}-${hydra:choices.rllib/runner}/${now:%Y-%m-%d_%H-%M-%S}
   # Training launched through launchers (i.e. kubernetes-based)
   sweep:
-    dir: ${log_base_dir}/${group:launcher}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${log_base_dir}/${hydra:choices.launcher}/${now:%Y-%m-%d_%H-%M-%S}

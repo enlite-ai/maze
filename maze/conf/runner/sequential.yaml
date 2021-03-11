@@ -1,5 +1,5 @@
 # @package _group_
-type: maze.core.rollout.sequential_rollout_runner.SequentialRolloutRunner
+_target_: maze.core.rollout.sequential_rollout_runner.SequentialRolloutRunner
 
 # Total number of episodes to run
 n_episodes: 50

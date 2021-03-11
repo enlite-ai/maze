@@ -30,7 +30,7 @@ class MultiStepPPO(MultiStepActorCritic):
     def __init__(self,
                  algorithm_config: PPOAlgorithmConfig,
                  env: Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
-                 eval_env: [BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Optional[Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
                  model: TorchActorCritic,
                  model_selection: Optional[BestModelSelection],
                  initial_state: Optional[str] = None):
@@ -51,6 +51,8 @@ class MultiStepPPO(MultiStepActorCritic):
         # compute action log-probabilities of actions taken (aka old action log probs)
         with torch.no_grad():
             action_log_probs_old, _ = self._action_log_probs_and_dists(obs_t, actions)
+            # manually empty GPU cache
+            torch.cuda.empty_cache()
 
         # flatten items for batch processing
         actions = self._flatten_sub_step_items(actions)
@@ -64,10 +66,13 @@ class MultiStepPPO(MultiStepActorCritic):
         for k in range(self.algorithm_config.n_optimization_epochs):
 
             # compute bootstrapped returns
-            returns, _, detached_values = self.model.critic.bootstrap_returns(
-                obs_t, rews, dones,
-                gamma=self.algorithm_config.gamma,
-                gae_lambda=self.algorithm_config.gae_lambda)
+            with torch.no_grad():
+                returns, _, detached_values = self.model.critic.bootstrap_returns(
+                    observations=obs_t, rews=rews, dones=dones,
+                    gamma=self.algorithm_config.gamma,
+                    gae_lambda=self.algorithm_config.gae_lambda)
+                # manually empty GPU cache
+                torch.cuda.empty_cache()
 
             # convert everything to batch dimension
             for step_id in self.sub_step_keys:
@@ -78,6 +83,8 @@ class MultiStepPPO(MultiStepActorCritic):
             indices = np.random.permutation(n_samples)
             n_batches = n_samples // self.algorithm_config.batch_size
             for i_batch in range(n_batches):
+                # manually empty GPU cache
+                torch.cuda.empty_cache()
 
                 # sample batch indices
                 i0 = i_batch * self.algorithm_config.batch_size

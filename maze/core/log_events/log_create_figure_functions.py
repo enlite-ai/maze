@@ -6,6 +6,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], List[float]]):
+    """ Checks the type of value and calls the correct plotting function accordingly.
+
+    :param value: Output of an reducer function
+    :return: plt.figure that contains a bar plot
+    """
+    fig = None
+    if isinstance(value[0], tuple):
+        # in this case, we have the discrete action events and need the relative bar plot for plotting
+        fig = create_multi_binary_relative_bar_plot(value)
+    else:
+        raise NotImplementedError('plotting for this data type not implemented yet')
+
+    return fig
+
+
 def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[float]]):
     """ Checks the type of value and calls the correct plotting function accordingly.
 
@@ -36,6 +52,28 @@ def create_histogram(value):
     return fig
 
 
+def create_multi_binary_relative_bar_plot(value: List[Tuple[np.ndarray, int]]):
+    """
+    Counts the categories in value and prepares a relative bar plot of these.
+
+    :param value: List of Tuples of (action, action_dim)
+    :return: plt.figure that contains a bar plot
+    """
+    # This plotting function can be used by several events. depending on whether
+    action_arrays = [action_dim_tuple[0] for action_dim_tuple in value]
+    action_dim = value[0][1]
+    # count the action categories
+    cat_counts = np.sum(action_arrays, axis=-2)
+    max_counts = len(action_arrays)
+
+    # make bar plot where the frequencies of the categories are divided by the sum of the frequencies
+    # in order to imitate a probability distribution
+    fig = plt.figure()
+    plt.bar(x=range(action_dim), height=cat_counts / max_counts)
+    plt.ylim([0, 1])
+    return fig
+
+
 def create_relative_bar_plot(value: List[Tuple[int, int]]):
     """
     Counts the categories in value and prepares a relative bar plot of these.
@@ -44,7 +82,7 @@ def create_relative_bar_plot(value: List[Tuple[int, int]]):
     :return: plt.figure that contains a bar plot
     """
     # This plotting function can be used by several events. depending on whether
-    categories = [action_dim_tuple[0] for action_dim_tuple in value]
+    categories = [int(action_dim_tuple[0]) for action_dim_tuple in value]
     action_dim = value[0][1]
     # count the action categories
     category_counts = Counter(categories)

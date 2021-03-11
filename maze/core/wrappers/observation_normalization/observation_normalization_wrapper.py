@@ -8,18 +8,17 @@ from typing import Any, Dict, Union, List, Optional
 
 import gym
 import numpy as np
+from omegaconf import DictConfig
+
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.utils.registry import Registry
-from maze.core.wrappers.observation_normalization import normalization_strategies as \
-    observation_normalization_strategies_module
+from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.normalization_strategies.base import \
     ObservationNormalizationStrategy, StructuredStatisticsType
 from maze.core.wrappers.wrapper import ObservationWrapper
-from omegaconf import DictConfig
 
 
 class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
@@ -41,9 +40,6 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
     :param exclude: List of observation keys to exclude from normalization.
     :param manual_config: Additional manual configuration options.
     """
-
-    normalization_strategy_registry = Registry(base_type=ObservationNormalizationStrategy,
-                                               root_module=observation_normalization_strategies_module)
 
     @classmethod
     def register_new_observation_normalization_strategy(cls, containing_submodule: Any):
@@ -78,11 +74,8 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
         self.statistics_dump = statistics_dump
         self.exclude = [] if exclude is None else exclude
         self.manual_config = manual_config
-        additional_kwargs = {'action_spaces_dict': env.action_spaces_dict}
-        if hasattr(env, 'action_conversion'):
-            additional_kwargs['action_conversion'] = env.action_conversion
         self.sampling_policy: Policy = \
-            Registry(Policy).arg_to_obj(sampling_policy, **additional_kwargs)
+            Factory(Policy).instantiate(sampling_policy, action_spaces_dict=env.action_spaces_dict)
 
         # initialize observation collection and statistics
         self._original_observation_spaces_dict = copy.deepcopy(env.observation_spaces_dict)
@@ -242,8 +235,11 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
                     strategy_config.update(manual_obs_config.get("strategy_config", dict()))
 
                 # build normalization strategy
-                strategy_cls = self.normalization_strategy_registry.class_type_from_module_name(normalization_strategy)
-                strategy = strategy_cls(observation_space=sub_space[obs_key], **strategy_config)
+                strategy = Factory(ObservationNormalizationStrategy).instantiate({
+                    "_target_": normalization_strategy,
+                    "observation_space": sub_space[obs_key],
+                    **strategy_config
+                })
 
                 # update the observation space accordingly
                 if statistics is not None and obs_key not in self.exclude:
@@ -289,6 +285,6 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
         :return: True if the manual config contains the selected key provided; else False
         """
         has_manual_config_key = self._has_manual_config(observation_key) and \
-            config_key in self.manual_config[observation_key]
+                                config_key in self.manual_config[observation_key]
 
         return has_manual_config_key

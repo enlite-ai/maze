@@ -1,5 +1,5 @@
 """ Test script CoreEnv """
-from tutorials.tutorial_maze_env.part03_maze_env.env.maze_env import maze_env_factory
+from tutorial_maze_env.part03_maze_env.env.maze_env import maze_env_factory
 
 
 def main():

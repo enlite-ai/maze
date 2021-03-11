@@ -1,5 +1,5 @@
 # @package wrappers
-ObservationNormalizationWrapper:
+maze.core.wrappers.observation_normalization.observation_normalization_wrapper.ObservationNormalizationWrapper:
     # default behaviour
     default_strategy: maze.normalization_strategies.RangeZeroOneObservationNormalizationStrategy
     default_strategy_config:
@@ -10,6 +10,6 @@ ObservationNormalizationWrapper:
         max: 255
     statistics_dump: statistics.pkl
     sampling_policy:
-        type: maze.core.agent.random_policy.RandomPolicy
+        _target_: maze.core.agent.random_policy.RandomPolicy
     exclude: ~
     manual_config: ~

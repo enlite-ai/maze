@@ -5,7 +5,6 @@ from itertools import chain
 from pathlib import Path
 from typing import Callable, Tuple, List, Dict, Union, Any, Sequence
 
-import hydra
 import torch
 from torch.utils.data.dataset import Dataset, Subset
 
@@ -30,7 +29,7 @@ class InMemoryImitationDataSet(Dataset):
     def __init__(self,
                  trajectory_data_dir: str,
                  env_factory: Callable):
-        self.trajectory_data_dir = hydra.utils.to_absolute_path(trajectory_data_dir)
+        self.trajectory_data_dir = trajectory_data_dir
         self.env_factory = env_factory
         self.env = self.env_factory()
 
@@ -122,7 +121,7 @@ class InMemoryImitationDataSet(Dataset):
 
     def _store_episode_data(self,
                             observations: List[Dict[Union[int, str], Any]],
-                            actions:List[Dict[Union[int, str], Any]]) -> None:
+                            actions: List[Dict[Union[int, str], Any]]) -> None:
         """Stores the observations and actions, keeping a reference that they belong to the same episode.
 
         Keeping the reference is important in case we want to split the dataset later -- samples from

@@ -8,7 +8,7 @@ from torch import nn
 from maze.core.agent.torch_state_action_critic import TorchStepStateActionCritic
 from maze.core.annotations import override
 from maze.core.utils.config_utils import list_to_dict
-from maze.core.utils.registry import CollectionOfConfigType, Registry
+from maze.core.utils.factory import CollectionOfConfigType, Factory
 from maze.perception.models.critics.base_state_action_critic_composer import BaseStateActionCriticComposer
 
 
@@ -39,18 +39,18 @@ class StepStateActionCriticComposer(BaseStateActionCriticComposer):
                     if isinstance(act_space, spaces.Discrete):
                         self._obs_shapes[step_key][act_key] = (act_space.n,)
                     else:
-                        self._obs_shapes[step_key][act_key] = act_space.sample().shape()
+                        self._obs_shapes[step_key][act_key] = act_space.sample().shape
                 critic_output_shapes[step_key]['q_value'] = (1,)
             else:
                 for act_key, act_space in dict_action_space.spaces.items():
                     critic_output_shapes[step_key][act_key + '_q_values'] = (act_space.n,)
 
         # initialize critics
-        model_registry = Registry(base_type=nn.Module)
+        model_registry = Factory(base_type=nn.Module)
         networks = list_to_dict(networks)
-        self._critics = {key: model_registry.arg_to_obj(networks[key],
-                                                        obs_shapes=self._obs_shapes[key],
-                                                        output_shapes=critic_output_shapes[key])
+        self._critics = {key: model_registry.instantiate(networks[key],
+                                                         obs_shapes=self._obs_shapes[key],
+                                                         output_shapes=critic_output_shapes[key])
                          for key in networks.keys()}
 
     @property

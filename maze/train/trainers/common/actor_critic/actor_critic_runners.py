@@ -3,18 +3,19 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Callable, Union
 
+from omegaconf import DictConfig
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
 from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import MultiStepActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
-from omegaconf import DictConfig
 
 
 @dataclass
@@ -39,7 +40,9 @@ class ACRunner(TrainingRunner):
         envs = self.create_distributed_env(self.env_factory, self.concurrency, logging_prefix="train")
 
         # initialize the env and enable statistics collection
-        eval_env = self.create_distributed_env(self.env_factory, self.concurrency, logging_prefix="eval")
+        eval_env = None
+        if cfg.algorithm.eval_repeats > 0:
+            eval_env = self.create_distributed_env(self.env_factory, self.concurrency, logging_prefix="eval")
 
         # initialize actor critic model
         model = TorchActorCritic(
@@ -51,7 +54,7 @@ class ACRunner(TrainingRunner):
         model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=model)
 
         # look up model class
-        trainer_class = Registry(base_type=MultiStepActorCritic).class_type_from_module_name(self.trainer_class)
+        trainer_class = Factory(base_type=MultiStepActorCritic).class_type_from_name(self.trainer_class)
 
         # initialize trainer (from input directory)
         trainer = trainer_class(algorithm_config=cfg.algorithm, env=envs, eval_env=eval_env, model=model,
@@ -96,5 +99,3 @@ class ACLocalRunner(ACRunner):
                                ) -> SubprocStructuredDistributedEnv:
         """create multi-process env distribution"""
         return SubprocStructuredDistributedEnv([env_factory for _ in range(concurrency)], logging_prefix=logging_prefix)
-
-

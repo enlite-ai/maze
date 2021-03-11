@@ -1,10 +1,10 @@
 # @package model
-type: maze.perception.models.template_model_composer.TemplateModelComposer
+_target_: maze.perception.models.template_model_composer.TemplateModelComposer
 
-distribution_mapper_config: {}
+distribution_mapper_config: []
 
 model_builder:
-  type: maze.perception.builders.ConcatModelBuilder
+  _target_: maze.perception.builders.ConcatModelBuilder
 
   observation_modality_mapping:
     inventory-flatten: feature
@@ -20,7 +20,7 @@ model_builder:
     recurrence: {}
 
 policy:
-  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+  _target_: maze.perception.models.policies.ProbabilisticPolicyComposer
 
 critic:
-  type: maze.perception.models.critics.StateCriticComposer
+  _target_: maze.perception.models.critics.StateCriticComposer

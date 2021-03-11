@@ -1,11 +1,11 @@
 preprocessing_wrapper:
   pre_processor_mapping:
     - observation: observation_0_feature_series
-      type: maze.test.core.wrappers.observation_preprocessing.preprocessors.dummy.DummyPreProcessor
+      _target_: maze.test.core.wrappers.observation_preprocessing.preprocessors.dummy.DummyPreProcessor
       keep_original: true
       config:
         num_flatten_dims: 2
     - observation: observation_1_categorical_feature
-      type: maze.core.wrappers.observation_preprocessing.preprocessors.one_hot.OneHotPreProcessor
+      _target_: maze.core.wrappers.observation_preprocessing.preprocessors.one_hot.OneHotPreProcessor
       keep_original: false
       config: {}

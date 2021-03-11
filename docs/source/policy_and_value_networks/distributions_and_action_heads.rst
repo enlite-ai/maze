@@ -22,7 +22,7 @@ The distribution module provides the following key features:
  - Supports a variety of different :ref:`action spaces and probability distributions <action_spaces_and_distributions>`
  - Supports customization of which probability distribution to use for which action space or head
  - Supports action masking in combination with the perception module
- - Allows to add and register new probability distributions whenever required
+ - Allows to add custom probability distributions whenever required
 
 .. _action_spaces_and_distributions:
 
@@ -97,6 +97,20 @@ The example above defines to use a **CustomCategoricalProbabilityDistribution** 
 When adding a new distribution you (1) have to implement the **ProbabilityDistribution** interface and
 (2) make sure that it is accessible within your python path.
 Besides that you only have to provide the reference path of the probability distribution you would like to use.
+
+Example 4: Plain Python Configuration
+-------------------------------------
+
+For completeness we also provide a code snippet in plain Python showing how to:
+
+ - Define a simple policy network.
+ - Instantiate a default DistributionMapper.
+ - Use the DistributionMapper to compute the required logits shapes for the Policy network.
+ - Compute action logits from a random observation.
+ - Instantiate the appropriate probability distribution and sample actions.
+
+.. literalinclude:: code_snippets/sampling_from_policy.py
+  :language: PYTHON
 
 The Bigger Picture
 ------------------

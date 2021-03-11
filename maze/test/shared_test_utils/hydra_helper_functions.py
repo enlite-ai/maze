@@ -10,7 +10,7 @@ from torch import nn
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.config_utils import make_env_from_hydra, EnvFactory
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.observation_normalization_utils import obtain_normalization_statistics
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
@@ -87,7 +87,7 @@ def check_env_and_model_instantiation(config_module: str, config: str, overrides
         return
 
     if 'model' in cfg:
-        model_composer = Registry(base_type=BaseModelComposer).arg_to_obj(
+        model_composer = Factory(BaseModelComposer).instantiate(
             cfg.model,
             action_spaces_dict=env.action_spaces_dict,
             observation_spaces_dict=env.observation_spaces_dict)

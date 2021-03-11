@@ -5,6 +5,9 @@ from collections import namedtuple
 from multiprocessing import Queue, Process
 from typing import Iterable, Tuple
 
+from omegaconf import DictConfig
+from tqdm import tqdm
+
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.log_events.episode_event_log import EpisodeEventLog
@@ -18,11 +21,9 @@ from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.rollout.rollout_runner import RolloutRunner
 from maze.core.trajectory_recorder.trajectory_writer_file import TrajectoryWriterFile
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
-from maze.core.utils.registry import ConfigType, CollectionOfConfigType
+from maze.core.utils.factory import ConfigType, CollectionOfConfigType
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
-from omegaconf import DictConfig
-from tqdm import tqdm
 
 EpisodeStatsReport = namedtuple("EpisodeStatsReport", "stats event_log")
 """Tuple for passing episode stats from workers to the main process."""
@@ -85,7 +86,7 @@ class ParallelRolloutWorker:
                                                           agent_config, input_directory)
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
-            RolloutRunner.run_interaction_maze(
+            RolloutRunner.run_interaction_loop(
                 env, agent, n_episodes,
                 episode_end_callback=lambda: reporting_queue.put(episode_recorder.get_last_episode_data())
             )

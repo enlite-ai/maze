@@ -10,8 +10,7 @@ the runs via CLI overrides.
 
 The Maze framework utilizes the `Hydra configuration framework`_. These pages aim to give
 you a quick overview of how Maze uses Hydra and what its capabilities are, so that
-you can get up to speed configuring Maze quickly without much prior Hydra knowledge.
-It also points to relevant parts of Hydra docs if you would like to go deeper.
+you can get up to speed quickly without prior Hydra knowledge:
 
 .. _`Hydra configuration framework`: https://hydra.cc/
 
@@ -22,6 +21,10 @@ It also points to relevant parts of Hydra docs if you would like to go deeper.
    hydra/custom_config.rst
    hydra/advanced.rst
 
-
-
-
+:ref:`Hydra: Overview<hydra-overview>` explains the core concepts of configuration
+assembly, overrides and Maze runners controlling the CLI jobs.
+:ref:`Hydra: Your Own Configuration Files<hydra-custom>` shows how to get started
+with your own configuration in your custom projects.
+:ref:`Hydra: Advanced Concepts<hydra-advanced>` explain other components and Hydra features
+that power Maze configuration under the hood, such as Maze factory, Hydra interpolations
+and specializations.

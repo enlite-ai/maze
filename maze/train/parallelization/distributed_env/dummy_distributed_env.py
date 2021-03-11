@@ -87,6 +87,9 @@ class DummyStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structure
             # send the episode statistics of the environment collected before the reset()
             self.epoch_stats.receive(env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
+        self._actor_ids = [env.actor_id() for env in self.envs]
+        self._actor_dones = np.hstack([env.is_actor_done() for env in self.envs])
+
         return self.obs_aggregator.aggregate()
 
     def seed(self, seed: int = None) -> None:

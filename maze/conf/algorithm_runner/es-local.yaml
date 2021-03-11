@@ -1,5 +1,5 @@
 # @package runner
-type: "maze.train.trainers.es.ESDevRunner"
+_target_: "maze.train.trainers.es.ESDevRunner"
 
 # Fixed number of evaluation runs per epoch.
 n_eval_rollouts: 10

@@ -8,7 +8,7 @@ from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.utils.registry import Registry, CollectionOfConfigType
+from maze.core.utils.factory import Factory, CollectionOfConfigType
 
 
 class DefaultPolicy(Policy):
@@ -18,7 +18,7 @@ class DefaultPolicy(Policy):
     """
 
     def __init__(self, policies: CollectionOfConfigType):
-        self.policies = Registry(FlatPolicy).arg_to_collection(policies)
+        self.policies = Factory(FlatPolicy).instantiate_collection(policies)
 
     @override(Policy)
     def needs_state(self) -> bool:

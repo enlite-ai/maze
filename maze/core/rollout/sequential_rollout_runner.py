@@ -8,7 +8,7 @@ from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.rollout.rollout_runner import RolloutRunner
 from maze.core.trajectory_recorder.trajectory_writer_file import TrajectoryWriterFile
 from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
-from maze.core.utils.registry import ConfigType, CollectionOfConfigType
+from maze.core.utils.factory import ConfigType, CollectionOfConfigType
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 
@@ -58,7 +58,7 @@ class SequentialRolloutRunner(RolloutRunner):
                 env = TrajectoryRecordingWrapper.wrap(env)
 
         self.n_episodes_done = 0
-        RolloutRunner.run_interaction_maze(env, agent, self.n_episodes, render=self.render,
+        RolloutRunner.run_interaction_loop(env, agent, self.n_episodes, render=self.render,
                                            episode_end_callback=lambda: self.update_progress())
         env.write_epoch_stats()
 

@@ -19,17 +19,15 @@ def test_multi_categorical_sample():
     dist = MultiCategoricalProbabilityDistribution(logits=logits, action_space=spaces.MultiDiscrete((3, 5)),
                                                    temperature=1.0)
     for multi_sample in [dist.sample(), dist.deterministic_sample()]:
-        for sample in multi_sample:
-            assert sample.numpy().ndim == 1
-            assert sample.numpy().shape == (100,)
+        assert multi_sample.numpy().ndim == 2
+        assert multi_sample.numpy().shape == (100, 2)
 
-    logits = torch.from_numpy(np.random.randn(100, 8, 8))
+    logits = torch.from_numpy(np.random.randn(100, 12, 8))
     dist = MultiCategoricalProbabilityDistribution(logits=logits, action_space=spaces.MultiDiscrete((3, 5)),
                                                    temperature=1.0)
     for multi_sample in [dist.sample(), dist.deterministic_sample()]:
-        for sample in multi_sample:
-            assert sample.numpy().ndim == 2
-            assert sample.numpy().shape == (100, 8)
+        assert multi_sample.numpy().ndim == 3
+        assert multi_sample.numpy().shape == (100, 12, 2)
 
 
 def test_multi_categorical_entropy():

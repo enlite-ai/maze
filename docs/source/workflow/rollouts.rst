@@ -79,7 +79,7 @@ These are the parameters for :code:`parallel` rollout runner:
 .. code-block:: yaml
 
     # @package _group_
-    type: maze.core.rollout.parallel_rollout_runner.ParallelRolloutRunner
+    _target_: maze.core.rollout.parallel_rollout_runner.ParallelRolloutRunner
 
     # Number of processes to run the rollouts in concurrently
     n_processes: 5
@@ -118,7 +118,7 @@ Environment and Policy Configuration
 
 Environment and policy are configured using the :code:`env`, resp. :code:`policy` Hydra
 packages. Rollout runners are environment- and agent-agnostic, and will attempt
-to instantiate the type specified in the config files using Maze Registry.
+to instantiate the type specified in the config files using Maze Factory.
 
 Environment is expected to conform to the :code:`StructuredEnv` interface and agent to
 the :code:`StructuredPolicy` interface.

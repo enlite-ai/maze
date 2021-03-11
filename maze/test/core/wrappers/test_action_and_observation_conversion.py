@@ -22,6 +22,9 @@ from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingW
 from maze.core.wrappers.wrapper import ObservationWrapper, ActionWrapper, RewardWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
+from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.double import DoubleActionConversion
+from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double import \
+    DoubleObservationConversion
 
 
 class _DummyObservationWrapper(ObservationWrapper):
@@ -51,10 +54,8 @@ class _DummyRewardWrapper(RewardWrapper):
 def _build_env():
     env = DummyEnvironment(
         core_env=DummyCoreEnvironment(gym.spaces.Discrete(10)),
-        action_conversion=[
-            "maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.double.DoubleActionConversion"],
-        observation_conversion=[
-            "maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double.DoubleObservationConversion"])
+        action_conversion=[{"_target_": DoubleActionConversion}],
+        observation_conversion=[{"_target_": DoubleObservationConversion}])
 
     env = _DummyActionWrapper.wrap(env)
     env = _DummyObservationWrapper.wrap(env)
@@ -82,7 +83,8 @@ def test_maze_state_and_action_conversion():
 
 def test_observation_only_conversion():
     env = _build_env()
-    obs_dict, act_dict = env.get_observation_and_action_dicts(maze_state=1, maze_action=None, first_step_in_episode=True)
+    obs_dict, act_dict = env.get_observation_and_action_dicts(maze_state=1, maze_action=None,
+                                                              first_step_in_episode=True)
 
     # No wrapper in the env stack is multi-step => all of them should support state-only conversion.
     # The expected output of action dict should be the same as when converting both maze_state and maze_action
@@ -93,7 +95,8 @@ def test_observation_only_conversion():
 
 def test_action_only_conversion():
     env = _build_env()
-    obs_dict, act_dict = env.get_observation_and_action_dicts(maze_state=None, maze_action=1, first_step_in_episode=True)
+    obs_dict, act_dict = env.get_observation_and_action_dicts(maze_state=None, maze_action=1,
+                                                              first_step_in_episode=True)
 
     # No wrapper in the env stack is multi-step => all of them should support maze_action-only conversion.
     # The expected output of observation dict should be the same as when converting both maze_state and maze_action

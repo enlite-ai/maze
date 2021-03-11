@@ -1,7 +1,7 @@
 """ Test script CoreEnv """
 from maze.utils.log_stats_utils import SimpleStatsLoggingSetup
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from tutorials.tutorial_maze_env.part05_reward.env.maze_env import maze_env_factory
+from tutorial_maze_env.part05_reward.env.maze_env import maze_env_factory
 
 
 def main():

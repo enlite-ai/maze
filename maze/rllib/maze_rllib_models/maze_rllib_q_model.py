@@ -8,7 +8,7 @@ from ray.rllib.agents.dqn.dqn_torch_model import DQNTorchModel
 from ray.rllib.utils.typing import TensorType
 
 from maze.core.annotations import override, unused
-from maze.core.utils.registry import ConfigType
+from maze.core.utils.factory import ConfigType
 from maze.rllib.maze_rllib_models.maze_rllib_base_model import MazeRLlibBaseModel
 
 

@@ -1,7 +1,7 @@
 import os
 import pickle
 import shutil
-from typing import Dict, Any
+from typing import Dict
 
 import torch
 from omegaconf import DictConfig
@@ -69,7 +69,7 @@ def check_stored_model_multiple_check_points(hydra_args: Dict[str, str]):
                 assert cfg.wrappers.ObservationNormalizationWrapper.statistics_dump in files
 
             # Since only one trial is started the statistics file should be deleted
-            assert cfg.wrappers.ObservationNormalizationWrapper.statistics_dump not in os.listdir('.')
+            assert cfg.wrappers["maze.core.wrappers.observation_normalization.observation_normalization_wrapper.ObservationNormalizationWrapper"].statistics_dump not in os.listdir('.')
 
             for idx, checkpoint_dir in enumerate(dirs):
                 idx = int(checkpoint_dir.split('_')[-1])

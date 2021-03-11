@@ -3,7 +3,7 @@ from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
 
 
-class TutorialSearchPathPlugin(SearchPathPlugin):
+class MazeTutorialSearchPathPlugin(SearchPathPlugin):
     """Hydra plugin to register additional config packages in the search path.
 
     Be aware that hydra uses an unconventional way to import this object: ``imp.load_module``, which forces a reload

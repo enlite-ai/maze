@@ -10,17 +10,15 @@ from maze.core.agent.torch_state_action_critic import TorchSharedStateActionCrit
 from maze.core.agent.torch_state_critic import TorchStateCritic, \
     TorchSharedStateCritic, TorchStepStateCritic, TorchDeltaStateCritic
 from maze.core.annotations import override
-from maze.core.utils.registry import ConfigType, Registry
+from maze.core.utils.factory import ConfigType, Factory
 from maze.core.utils.structured_env_utils import flat_structured_space
 from maze.core.wrappers.observation_preprocessing.preprocessors.one_hot import OneHotPreProcessor
-from maze.perception import builders as builders_module
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.blocks.output.linear import LinearOutputBlock
 from maze.perception.builders.base import BaseModelBuilder
-from maze.perception.models import critics as critics_module
-from maze.perception.models import policies as policies_module
-from maze.perception.models.critics import BaseStateCriticComposer, SharedStateCriticComposer, \
+from maze.perception.models.critics import SharedStateCriticComposer, \
     DeltaStateCriticComposer, StepStateCriticComposer
+from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.models.critics.shared_state_action_critics_composer import SharedStateActionCriticComposer
 from maze.perception.models.critics.step_state_action_critic_composer import StepStateActionCriticComposer
 from maze.perception.models.model_composer import BaseModelComposer
@@ -42,22 +40,17 @@ class TemplateModelComposer(BaseModelComposer):
         E.g. {'type': maze.perception.models.critics.StateCriticComposer} specifies the single step state critic.
     """
 
-    # Initialize the preprocessor registry
-    model_builder_registry = Registry(base_type=BaseModelBuilder, root_module=builders_module)
-    critics_registry = Registry(base_type=BaseStateCriticComposer, root_module=critics_module)
-    policy_registry = Registry(base_type=BasePolicyComposer, root_module=policies_module)
-
     @classmethod
     def check_model_config(cls, model_config: ConfigType) -> None:
         """Asserts the provided model config for consistency.
         :param model_config: The model config to check.
         """
         if 'policy' in model_config:
-            assert 'type' in model_config['policy']
+            assert '_target_' in model_config['policy']
             assert 'networks' not in model_config['policy'], \
                 f"Template models do not expect explicit policy networks! Check the model config!"
         if 'critic' in model_config and model_config["critic"]:
-            assert 'type' in model_config['critic']
+            assert '_target_' in model_config['critic']
             assert 'networks' not in model_config['critic'], \
                 f"Template models do not expect explicit critic networks! Check the model config!"
 
@@ -71,11 +64,11 @@ class TemplateModelComposer(BaseModelComposer):
 
         super().__init__(action_spaces_dict, observation_spaces_dict, distribution_mapper_config)
 
-        self._policy_type = self.critics_registry.class_type_from_module_name(policy['type']) \
+        self._policy_type = Factory(BasePolicyComposer).class_type_from_name(policy['_target_']) \
             if policy is not None else None
-        self._critic_type = self.critics_registry.class_type_from_module_name(critic['type']) \
+        self._critic_type = Factory(CriticComposerInterface).class_type_from_name(critic['_target_']) \
             if critic is not None else None
-        self.model_builder = self.model_builder_registry.arg_to_obj(model_builder)
+        self.model_builder = Factory(BaseModelBuilder).instantiate(model_builder)
 
         self.save_models()
 
@@ -307,7 +300,7 @@ class TemplateModelComposer(BaseModelComposer):
                 critics[sub_step_key] = self.template_q_value_net(observation_space=sub_step_space,
                                                                   action_space=self.action_spaces_dict[sub_step_key],
                                                                   only_discrete_spaces=only_discrete_spaces[
-                                                                     sub_step_key])
+                                                                      sub_step_key])
             return TorchStepStateActionCritic(networks=critics,
                                               num_policies=len(self.action_spaces_dict),
                                               device="cpu", only_discrete_spaces=only_discrete_spaces,

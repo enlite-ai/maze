@@ -3,8 +3,8 @@ from typing import Dict, List, Tuple
 
 import gym
 import numpy as np
-from tutorials.tutorial_maze_env.part06_struct_env.env.maze_env import maze_env_factory
-from tutorials.tutorial_maze_env.part06_struct_env.env.struct_env import StructuredCutting2DEnvironment
+from tutorial_maze_env.part06_struct_env.env.maze_env import maze_env_factory
+from tutorial_maze_env.part06_struct_env.env.struct_env import StructuredCutting2DEnvironment
 from maze.core.env.maze_env import MazeEnv
 
 

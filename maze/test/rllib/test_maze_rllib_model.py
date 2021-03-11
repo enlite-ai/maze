@@ -10,10 +10,8 @@ from ray.rllib.agents.dqn.dqn_torch_model import DQNTorchModel
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from torch import nn
 
-import maze
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
-from maze.perception.models.template_model_composer import TemplateModelComposer
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.perception_utils import convert_to_torch
 from maze.rllib.maze_rllib_action_distribution import MazeRLlibActionDistribution
@@ -35,10 +33,10 @@ def build_default_cartpole_model(gym_env: str, maze_rllib_model_cls: Union[type(
     action_space = env.action_space
 
     model_composer_config = dict()
-    model_composer_config['type'] = 'maze.perception.models.template_model_composer.TemplateModelComposer'
+    model_composer_config['_target_'] = 'maze.perception.models.template_model_composer.TemplateModelComposer'
     model_composer_config['distribution_mapper_config'] = {}
     model_composer_config['model_builder'] = {
-        'type': 'maze.perception.builders.ConcatModelBuilder',
+        '_target_': 'maze.perception.builders.ConcatModelBuilder',
         'observation_modality_mapping': {'observation': 'feature'},
         'modality_config': {
             'feature': {
@@ -52,8 +50,8 @@ def build_default_cartpole_model(gym_env: str, maze_rllib_model_cls: Union[type(
             'recurrence': {}
         }
     }
-    model_composer_config['policy'] = {'type': 'maze.perception.models.policies.ProbabilisticPolicyComposer'}
-    model_composer_config['critic'] = {'type': 'maze.perception.models.critics.StateCriticComposer'} \
+    model_composer_config['policy'] = {'_target_': 'maze.perception.models.policies.ProbabilisticPolicyComposer'}
+    model_composer_config['critic'] = {'_target_': 'maze.perception.models.critics.StateCriticComposer'} \
         if add_critic else None
 
     class WrappedObsSpace:
@@ -75,7 +73,7 @@ def build_default_cartpole_model(gym_env: str, maze_rllib_model_cls: Union[type(
                              else action_space, num_outputs, model_config, 'test_model',
                              model_composer_config, SPACE_CONFIG_DUMP_FILE, 'state_dict.pt')
     reset_seed()
-    maze_model_composer = Registry(base_type=BaseModelComposer, root_module=maze.perception).arg_to_obj(
+    maze_model_composer = Factory(base_type=BaseModelComposer).instantiate(
         model_composer_config,
         action_spaces_dict={0: action_space},
         observation_spaces_dict={0: observation_space})

@@ -11,7 +11,7 @@ from maze.perception.blocks.output.linear import LinearOutputBlock
 from maze.perception.weight_init import make_module_init_normc
 
 
-class CustomCarpoleCriticNet(nn.Module):
+class CustomCartpoleCriticNet(nn.Module):
     """Simple feed forward critic network.
 
     :param obs_shapes: The shapes of all observations as a dict.

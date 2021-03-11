@@ -1,5 +1,5 @@
 """ Test script CoreEnv """
-from tutorials.tutorial_maze_env.part06_struct_env.env.struct_env import struct_env_factory
+from tutorial_maze_env.part06_struct_env.env.struct_env import struct_env_factory
 
 
 def main():

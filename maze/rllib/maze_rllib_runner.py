@@ -9,13 +9,13 @@ from ray import tune
 from ray.rllib.models import ModelCatalog, MODEL_DEFAULTS
 
 from maze.core.annotations import override
-from maze.core.utils.registry import Registry
-from maze.runner import Runner
+from maze.core.utils.factory import Factory
 from maze.rllib.maze_rllib_action_distribution import MazeRLlibActionDistribution
 from maze.rllib.maze_rllib_callback_logging import MazeRLlibLoggingCallbacks
 from maze.rllib.maze_rllib_env import build_maze_rllib_env_factory
 from maze.rllib.maze_rllib_models.maze_rllib_base_model import MazeRLlibBaseModel
 from maze.rllib.maze_tune_callback_save_model import MazeRLlibSaveModelCallback
+from maze.runner import Runner
 
 
 @dataclass
@@ -79,7 +79,7 @@ class MazeRLlibRunner(Runner):
         using_rllib_model_composer = cfg.model.keys() == MODEL_DEFAULTS.keys()
         if not using_rllib_model_composer:
             # Get model class
-            model_cls = Registry(MazeRLlibBaseModel).class_type_from_module_name(cfg.algorithm.model_cls)
+            model_cls = Factory(MazeRLlibBaseModel).class_type_from_name(cfg.algorithm.model_cls)
             # Register maze model
             ModelCatalog.register_custom_model("maze_model", model_cls)
 

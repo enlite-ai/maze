@@ -1,4 +1,4 @@
-![Banner](docs/source/logos/main_logo.png)
+![Banner](https://github.com/enlite-ai/maze/raw/main/docs/source/logos/main_logo.png)
 
 # Applied Reinforcement Learning with Python
 
@@ -50,27 +50,32 @@ Below we list a few selected Maze features.
 
 * To see Maze in action check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
 
-* For a more applied introduction visit the [step by step tutorial](https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html).
+* [Try your own Gym env](https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/integrating_gym_environment.html)
+  or visit our [Maze step-by-step tutorial](https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html).
+
+* For a more applied introduction visit the .
 
 
 <table><tbody><tr>
     <td align="center"><a href="https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html">
-        <img src=".github/pip.png" alt="Pip" width="128px"><br>
+        <img src="https://github.com/enlite-ai/maze/raw/main/.github/pip.png" alt="Pip" width="128px"><br>
         <strong>Installation</strong>
     </a></td>
     <td align="center"><a href="https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html">
-        <img src=".github/start.png" alt="First Example" width="128px"><br>
+        <img src="https://github.com/enlite-ai/maze/raw/main/.github/start.png" alt="First Example" width="128px"><br>
         <strong>First Example</strong>
     </a></td>
     <td align="center"><a href="https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html">
-        <img src=".github/steps.png" alt="Tutorial" width="128px"><br>
+        <img src="https://github.com/enlite-ai/maze/raw/main/.github/steps.png" alt="Tutorial" width="128px"><br>
         <strong>Step by Step Tutorial</strong>
     </a></td>
     <td align="center"><a href="https://maze-rl.readthedocs.io/en/latest/">
-        <img src=".github/paper.png" alt="Documentation" width="128px"><br>
+        <img src="https://github.com/enlite-ai/maze/raw/main/.github/paper.png" alt="Documentation" width="128px"><br>
         <strong>Documentation</strong>
     </a></td>
 </tr></tbody></table>
+
+* Clone this [project template repo](https://github.com/enlite-ai/maze-cartpole>) to start your own Maze project.
 
 ## Learn more about Maze
 

@@ -3,13 +3,13 @@
 from collections import OrderedDict
 from typing import Union, List, Sequence, Dict
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn as nn
-import numpy as np
 
 from maze.core.annotations import override
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.perception.blocks.feed_forward.graph_conv import GraphAdjacencyMethods
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
@@ -179,7 +179,7 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
 
         # Create list of non-linearity's for each layer
         non_lins = non_lins if isinstance(non_lins, list) else [non_lins] * len(self.hidden_features)
-        self.non_lins: List[type(nn.Module)] = [Registry(base_type=nn.Module).class_type_from_module_name(non_lin)
+        self.non_lins: List[type(nn.Module)] = [Factory(base_type=nn.Module).class_type_from_name(non_lin)
                                                 for non_lin in non_lins]
 
         # Create list of dropout for each layer
@@ -263,8 +263,10 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         txt += "\n\t" + f"({self.input_features}->" + "->".join([f"{h} x {self.n_heads[idx]}"
                                                                  for idx, h in enumerate(self.hidden_features)]) \
                + f'->{self.output_features})'
-        txt += f'\n\talpha: ({self.attention_alpha})' if len(set(self.attention_alpha)) == 1 else f'({[aa for aa in self.attention_alpha]})'
+        txt += f'\n\talpha: ({self.attention_alpha})' if len(
+            set(self.attention_alpha)) == 1 else f'({[aa for aa in self.attention_alpha]})'
         txt += f'\n\tavg last head attentions: ' + str(self.avg_last_head_attentions)
-        txt += f'\n\tdropout:' + (f'{self.attention_dropout}' if len(set(self.attention_dropout)) > 1 else f'{self.attention_dropout[0]}')
+        txt += f'\n\tdropout:' + (
+            f'{self.attention_dropout}' if len(set(self.attention_dropout)) > 1 else f'{self.attention_dropout[0]}')
         txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt

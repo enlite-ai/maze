@@ -6,11 +6,11 @@ from typing import Tuple, Dict, Any, Union
 import torch
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
-from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger
+from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, increment_log_step
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.imitation.bc_loss import BCLoss
-from maze.train.trainers.imitation.imitation_evaluator import ImitationEvaluator
+from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 from maze.train.utils.train_utils import compute_gradient_norm
 from torch.optim.optimizer import Optimizer
@@ -46,7 +46,7 @@ class BCTrainer(Trainer):
     imitation_events: ImitationEvents = train_stats.create_event_topic(ImitationEvents)
     """Imitation-specific training events"""
 
-    def train(self, n_epochs: int, evaluator: ImitationEvaluator, eval_every_k_iterations: int = None) -> None:
+    def train(self, n_epochs: int, evaluator: Evaluator, eval_every_k_iterations: int = None) -> None:
         """Run training.
 
         :param n_epochs: How many epochs to train for
@@ -58,6 +58,8 @@ class BCTrainer(Trainer):
         for epoch in range(n_epochs):
             print(f"\n********** Epoch {epoch + 1} started **********")
             evaluator.evaluate(self.policy)
+            increment_log_step()
+
             for iteration, data in enumerate(self.data_loader, 0):
                 self._run_iteration(data)
 
@@ -66,9 +68,11 @@ class BCTrainer(Trainer):
                         iteration % eval_every_k_iterations == (eval_every_k_iterations - 1):
                     print(f"\n********** Epoch {epoch + 1}: Iteration {iteration + 1} **********")
                     evaluator.evaluate(self.policy)
+                    increment_log_step()
 
         print(f"\n********** Final evaluation **********")
         evaluator.evaluate(self.policy)
+        increment_log_step()
 
     def load_state_dict(self, state_dict: Dict) -> None:
         """Set the model and optimizer state.

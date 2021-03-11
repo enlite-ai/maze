@@ -11,19 +11,15 @@ defaults:
   - configuration: ~
 
   # Algorithm runner specialization
-  - algorithm_runner: ${defaults.3.algorithm}-${defaults.0.runner}
+  - algorithm_runner: ${algorithm}-${runner}
 
   # Launcher specializations for Kubernetes runs
-  - algorithm_launcher: ${defaults.3.algorithm}-${defaults.6.launcher}
-    optional: true
-  - runner_launcher: ${defaults.0.runner}-${defaults.6.launcher}
-    optional: true
+  - optional algorithm_launcher: ${algorithm}-${launcher}
+  - optional runner_launcher: ${runner}-${launcher}
 
   # Configuration specializations (mainly for test scenarios, to keep tests simple and fast)
-  - env_configuration: ${defaults.1.env}-${defaults.7.configuration}
-    optional: true
-  - algorithm_configuration: ${defaults.3.algorithm}-${defaults.7.configuration}
-    optional: true
+  - optional env_configuration: ${env}-${configuration}
+  - optional algorithm_configuration: ${algorithm}-${configuration}
 
 project:
   name: ???
@@ -43,7 +39,7 @@ input_dir: ""
 hydra:
   # Local trainings
   run:
-    dir: ${log_base_dir}/${group:env}-${group:model}-${group:algorithm}-${group:setup}-${group:runner}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${log_base_dir}/${hydra:choices.env}-${hydra:choices.model}-${hydra:choices.algorithm}-${hydra:choices.runner}/${now:%Y-%m-%d_%H-%M-%S}
   # Training launched through launchers (i.e. kubernetes-based)
   sweep:
-    dir: ${log_base_dir}/${group:launcher}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${log_base_dir}/${hydra:choices.launcher}/${now:%Y-%m-%d_%H-%M-%S}

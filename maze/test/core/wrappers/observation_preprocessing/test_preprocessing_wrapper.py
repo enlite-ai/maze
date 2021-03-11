@@ -17,11 +17,11 @@ def test_pre_processing_wrapper():
     config = {
         "pre_processor_mapping": [
             {"observation": "observation_0_feature_series",
-             "type": "maze.preprocessors.FlattenPreProcessor",
+             "_target_": "maze.preprocessors.FlattenPreProcessor",
              "keep_original": True,
              "config": {"num_flatten_dims": 2}},
             {"observation": "observation_1_categorical_feature",
-             "type": "maze.preprocessors.OneHotPreProcessor",
+             "_target_": "maze.preprocessors.OneHotPreProcessor",
              "keep_original": False,
              "config": {}}
         ]
@@ -98,12 +98,12 @@ def test_cascaded_preprocessing():
     config = {
         "pre_processor_mapping": [
             {"observation": "observation_0_image",
-             "type": "maze.core.wrappers.observation_preprocessing.preprocessors.rgb2gray.Rgb2GrayPreProcessor",
+             "_target_": "maze.core.wrappers.observation_preprocessing.preprocessors.rgb2gray.Rgb2GrayPreProcessor",
              "keep_original": False,
              "config": {"rgb_dim": -1}
              },
             {"observation": "observation_0_image-rgb2gray",
-             "type": "maze.core.wrappers.observation_preprocessing.preprocessors.resize_img.ResizeImgPreProcessor",
+             "_target_": "maze.core.wrappers.observation_preprocessing.preprocessors.resize_img.ResizeImgPreProcessor",
              "keep_original": False,
              "config": {"target_size": [16, 16], "transpose": False}
              }

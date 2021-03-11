@@ -11,7 +11,7 @@ from torch import nn as nn
 from torch.nn.parameter import Parameter
 
 from maze.core.annotations import override
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
@@ -229,7 +229,7 @@ class GraphConvBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
 
         # Create list of non-linearity's for each layer
         non_lins = non_lins if isinstance(non_lins, list) else [non_lins] * len(self.hidden_features)
-        self.non_lins: List[type(nn.Module)] = [Registry(base_type=nn.Module).class_type_from_module_name(non_lin)
+        self.non_lins: List[type(nn.Module)] = [Factory(base_type=nn.Module).class_type_from_name(non_lin)
                                                 for non_lin in non_lins]
         # Create list of biases for each layer
         self.bias: List[bool] = bias if isinstance(bias, list) else [bias] * len(self.hidden_features)

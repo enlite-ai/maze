@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional
 from omegaconf import DictConfig
 
 from maze.core.utils.config_utils import EnvFactory, SwitchWorkingDirectoryToInput
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.observation_normalization_utils import \
     obtain_normalization_statistics, make_normalized_env_factory
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
@@ -110,9 +110,9 @@ class TrainingRunner(Runner):
             normalization_env.dump_statistics()
 
         # init model composer
-        composer_type = Registry(base_type=BaseModelComposer).class_type_from_module_name(cfg.model['type'])
+        composer_type = Factory(base_type=BaseModelComposer).class_type_from_name(cfg.model['_target_'])
         composer_type.check_model_config(cfg.model)
-        self.model_composer = Registry(base_type=BaseModelComposer).arg_to_obj(
+        self.model_composer = Factory(base_type=BaseModelComposer).instantiate(
             cfg.model,
             action_spaces_dict=normalization_env.action_spaces_dict,
             observation_spaces_dict=normalization_env.observation_spaces_dict)

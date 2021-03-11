@@ -1,13 +1,13 @@
 # @package model
-type: maze.perception.models.default_model_composer.DefaultModelComposer
+_target_: maze.perception.models.default_model_composer.DefaultModelComposer
 
 # specify distribution mapping
 # (here we use a default distribution mapping)
-distribution_mapper_config: {}
+distribution_mapper_config: []
 
 # specifies the architecture of default models
 model_builder:
-  type: maze.perception.builders.ConcatModelBuilder
+  _target_: maze.perception.builders.ConcatModelBuilder
 
   # specifies the modality type of each observation
   observation_modality_mapping:
@@ -27,8 +27,8 @@ model_builder:
 
 # select policy type
 policy:
-  type: maze.perception.models.policies.ProbabilisticPolicyComposer
+  _target_: maze.perception.models.policies.ProbabilisticPolicyComposer
 
 # select critic type
 critic:
-  type: maze.perception.models.critics.StateCriticComposer
+  _target_: maze.perception.models.critics.StateCriticComposer

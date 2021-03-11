@@ -6,7 +6,7 @@ observation_normalization_wrapper:
   default_statistics: ~
   statistics_dump: statistics.pkl
   sampling_policy:
-    type: maze.core.agent.random_policy.RandomPolicy
+    _target_: maze.core.agent.random_policy.RandomPolicy
   exclude: ~
   manual_config:
     observation:
@@ -15,5 +15,5 @@ observation_normalization_wrapper:
         clip_range: [0, 1]
         axis: 0
       statistics:
-          stat_1: [0, 0, 0, 0]
-          stat_2: [1, 1, 1, 1]
+        stat_1: [0, 0, 0, 0]
+        stat_2: [1, 1, 1, 1]

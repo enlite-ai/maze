@@ -2,28 +2,26 @@
 Registry for wrapper classes.
 """
 
-from typing import Type, Union, Any, Iterable, TypeVar
+from typing import Union, TypeVar
 
 from maze.core.env.base_env import BaseEnv
-from maze.core.utils.registry import Registry, CollectionOfConfigType
+from maze.core.utils.factory import Factory, CollectionOfConfigType
 from maze.core.wrappers.wrapper import Wrapper
 
 T = TypeVar("T", bound=BaseEnv)
 
 
-class WrapperRegistry(Registry[Wrapper]):
+class WrapperFactory(Factory[Wrapper]):
     """
     Handles dynamic registration of Wrapper sub-classes.
     """
 
-    def __init__(self,
-                 root_module: Union[Any, Iterable[Any]] = (),
-                 base_type: Type[Wrapper] = Wrapper):
-        super().__init__(base_type=base_type,
-                         root_module=root_module)
+    def __init__(self):
+        super().__init__(base_type=Wrapper)
 
+    @classmethod
     def wrap_from_config(
-            self,
+            cls,
             env: T,
             wrapper_config: CollectionOfConfigType
     ) -> Union[Wrapper, T]:
@@ -37,7 +35,7 @@ class WrapperRegistry(Registry[Wrapper]):
 
         wrapped_env: Union[Wrapper, T] = env
         for wrapper_module in wrapper_config:
-            wrapped_env = self[wrapper_module].wrap(
+            wrapped_env = Factory(Wrapper).class_type_from_name(wrapper_module).wrap(
                 wrapped_env,
                 # Pass on additional arguments
                 **wrapper_config[wrapper_module]

@@ -6,7 +6,7 @@ from docs.source.policy_and_value_networks.code_snippets.custom_plain_cartpole_c
     CustomPlainCartpoleCriticNet
 from docs.source.policy_and_value_networks.code_snippets.custom_plain_cartpole_policy_net import \
     CustomPlainCartpolePolicyNet
-from maze.core.utils.registry import Registry
+from maze.core.utils.factory import Factory
 from maze.core.utils.structured_env_utils import flat_structured_space
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
@@ -30,7 +30,7 @@ def test_cartpole_policy_model():
     obs_shapes = observation_spaces_to_in_shapes(observation_spaces_dict)
 
     policy = CustomPlainCartpolePolicyNet(obs_shapes[0], action_logits_shapes[0],
-                                           hidden_layer_0=16, hidden_layer_1=32, use_bias=True)
+                                          hidden_layer_0=16, hidden_layer_1=32, use_bias=True)
 
     critic = CustomPlainCartpoleCriticNet(obs_shapes[0], hidden_layer_0=16, hidden_layer_1=32, use_bias=True)
 
@@ -43,11 +43,12 @@ def test_cartpole_policy_model():
     assert 'action' in actions
     assert 'value' in values
 
+
 def test_cartpole_model_composer():
     env = GymMazeEnv(env='CartPole-v0')
     path_to_model_config = code_snippets.__path__._path[0] + '/custom_plain_cartpole_net.yaml'
 
-    model_composer = Registry(base_type=BaseModelComposer).arg_to_obj(
+    model_composer = Factory(base_type=BaseModelComposer).instantiate(
         yaml.load(open(path_to_model_config, 'r')),
         action_spaces_dict=env.action_spaces_dict,
         observation_spaces_dict=env.observation_spaces_dict)

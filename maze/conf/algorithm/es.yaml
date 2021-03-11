@@ -17,7 +17,7 @@ max_steps: 0
 
 # The optimizer to use to update the policy based on the sampled gradient.
 optimizer:
-  type: maze.train.trainers.es.optimizers.adam.Adam
+  _target_: maze.train.trainers.es.optimizers.adam.Adam
   step_size: 0.01
 
 # L2 weight regularization coefficient.

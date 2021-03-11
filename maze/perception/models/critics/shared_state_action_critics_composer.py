@@ -6,7 +6,7 @@ from torch import nn
 
 from maze.core.agent.torch_state_action_critic import TorchSharedStateActionCritic
 from maze.core.annotations import override
-from maze.core.utils.registry import Registry, CollectionOfConfigType
+from maze.core.utils.factory import Factory, CollectionOfConfigType
 from maze.core.utils.structured_env_utils import flat_structured_shapes, flat_structured_space
 from maze.perception.models.critics.base_state_action_critic_composer import BaseStateActionCriticComposer
 
@@ -44,13 +44,13 @@ class SharedStateActionCriticComposer(BaseStateActionCriticComposer):
                 if isinstance(act_space, spaces.Discrete):
                     obs_shapes_flat[act_key] = (act_space.n,)
                 else:
-                    obs_shapes_flat[act_key] = act_space.sample().shape()
+                    obs_shapes_flat[act_key] = act_space.sample().shape
             critic_output_shapes['q_value'] = (1,)
 
         # initialize critic
-        model_registry = Registry(base_type=nn.Module)
-        self._critics = {0: model_registry.arg_to_obj(network, obs_shapes=obs_shapes_flat,
-                                                      output_shapes=critic_output_shapes)}
+        model_registry = Factory(base_type=nn.Module)
+        self._critics = {0: model_registry.instantiate(network, obs_shapes=obs_shapes_flat,
+                                                       output_shapes=critic_output_shapes)}
 
     @property
     @override(BaseStateActionCriticComposer)

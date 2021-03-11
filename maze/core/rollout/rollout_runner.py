@@ -2,16 +2,17 @@
 from abc import ABC, abstractmethod
 from typing import Callable
 
+from omegaconf import DictConfig
+
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.utils.config_utils import EnvFactory, SwitchWorkingDirectoryToInput
-from maze.core.utils.registry import Registry, ConfigType, CollectionOfConfigType
+from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.runner import Runner
-from omegaconf import DictConfig
 
 
 class RolloutRunner(Runner, ABC):
@@ -63,7 +64,7 @@ class RolloutRunner(Runner, ABC):
         matters (especially with parallel rollouts, where we do not want to carry the writers into child processes).
 
         :param env: Env config or object
-        :param wrappers: Wrappers config (see :class:`~maze.core.wrappers.wrapper_registry.WrapperRegistry`)
+        :param wrappers: Wrappers config (see :class:`~maze.core.wrappers.wrapper_factory.WrapperFactory`)
         :param agent: Agent config or object
         """
 
@@ -89,12 +90,12 @@ class RolloutRunner(Runner, ABC):
                 env = TimeLimitWrapper.wrap(env)
             env.set_max_episode_steps(max_episode_steps)
 
-            agent = Registry(base_type=Policy).arg_to_obj(agent_config, env=env)
+            agent = Factory(base_type=Policy).instantiate(agent_config)
 
         return env, agent
 
     @staticmethod
-    def run_interaction_maze(env: StructuredEnv, agent: Policy, n_episodes: int,
+    def run_interaction_loop(env: StructuredEnv, agent: Policy, n_episodes: int,
                              render: bool = False, episode_end_callback: Callable = None) -> None:
         """Helper function for running the agent-environment interaction loop for specified number of steps
         and episodes.

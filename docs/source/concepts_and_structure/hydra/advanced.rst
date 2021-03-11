@@ -3,8 +3,61 @@
 Hydra: Advanced Concepts
 ========================
 
-This page features a collection of more advanced Hydra features
-which are used throughout the framework.
+This page features a collection of more advanced Maze and Hydra features
+that are used across the framework and power the configuration under the hood:
+
+- :ref:`Factory<hydra-advanced-factory>`, which Maze uses to turn configuration
+  into instantiated objects, while allowing passing in already instantiated objects as well.
+- :ref:`Interpolation<hydra-advanced-interpolation>`, which allows you to reference
+  parts of configuration from elsewhere.
+- :ref:`Specializations<hydra-advanced-specializations>`, which allow you
+  to load additional configuration files based on particular combinations
+  of selected defaults.
+
+
+.. _hydra-advanced-factory:
+
+Maze Factory
+------------
+
+:class:`Factory<maze.core.utils.factory.Factory>` wraps around
+`Hydra's own instantiation functionality`_ and adds features like
+type hinting and checking, collections, configuration structure checks,
+and ability to take in already instantiated objects.
+
+.. _`Hydra's own instantiation functionality`: https://hydra.cc/docs/patterns/instantiate_objects/overview
+
+Using the factory, classes can accept
+:class:`ConfigType<maze.core.utils.factory.ConfigType>` (or collections thereof,
+:class:`CollectionOfConfigType<maze.core.utils.factory.CollectionOfConfigType>`),
+which stands for either an already instantiated object, or a dictionary
+with configuration, which the factory will then use to build the instance.
+
+Configuration dictionary consists of the ``_target_`` attribute, along with any
+arguments that the instantiated class takes, e.g. (here denoted in YAML, as you
+will find it in many places across the framework):
+
+.. literalinclude:: code_snippets/advanced_factory_dict.yaml
+  :language: yaml
+
+The factory then takes in the dictionary configuration (loaded from YAML
+using Hydra, or from anywhere else) and builds the object for you,
+checking that it is indeed of the expected type:
+
+.. literalinclude:: code_snippets/advanced_factory_example.py
+  :language: python
+
+You can also pass in additional keyword arguments that the factory will
+then pass on to the constructor together with anything from the configuration dictionary:
+
+.. literalinclude:: code_snippets/advanced_factory_example_kwargs.py
+  :language: python
+
+If you pass in an already instantiated object instead of a configuation dictionary,
+the ``instantiate`` method will only check that it is of the expected type
+and return it back. This allows components in Maze to be easily configurable
+both from YAML/dictionaries and by passing in already instantiated objects.
+
 
 .. _hydra-advanced-interpolation:
 

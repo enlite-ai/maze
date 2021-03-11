@@ -257,7 +257,7 @@ def test_propagates_exceptions_to_main_thread():
         def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
                            policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
             """Throw an error."""
-            raise RuntimeError("Something failed.")
+            raise RuntimeError("Test error.")
 
         def compute_top_action_candidates(self, observation: ObservationType,
                                           num_candidates: int, maze_state: Optional[MazeStateType] = None,

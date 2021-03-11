@@ -32,6 +32,15 @@ class BaseEnvEvents(ABC):
     def reward(self, value: float):
         """reward value for the current step"""
 
+    @define_epoch_stats(np.max, input_name="sum", output_name="max")
+    @define_epoch_stats(np.min, input_name="sum", output_name="min")
+    @define_epoch_stats(np.mean, input_name="sum", output_name="mean")
+    @define_epoch_stats(np.std, input_name="sum", output_name="std")
+    @define_episode_stats(np.sum, output_name="sum")
+    @define_step_stats(sum)
+    def reward_original(self, value: float):
+        """ Original reward before reward wrappers are applied. """
+
     @define_epoch_stats(np.mean, output_name="mean")
     @define_epoch_stats(np.std, output_name="std")
     @define_epoch_stats(np.min, output_name="min")

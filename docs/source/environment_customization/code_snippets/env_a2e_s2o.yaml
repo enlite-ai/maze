@@ -1,26 +1,26 @@
 # @package env
-type: maze_envs.logistics.cutting_2d.env.maze_env.Cutting2DEnvironment
+_target_: maze_envs.logistics.cutting_2d.env.maze_env.Cutting2DEnvironment
 
 # parametrizes the core environment (simulation)
 core_env:
   max_pieces_in_inventory: 1000
   raw_piece_size: [100, 100]
   demand_generator:
-    type: mixed_periodic
+    _target_: mixed_periodic
     n_raw_pieces: 3
     m_demanded_pieces: 10
     rotate: True
   # defines how rewards are computed
   reward_aggregator:
-    type: maze_envs.logistics.cutting_2d.reward.default.DefaultRewardAggregator
+    _target_: maze_envs.logistics.cutting_2d.reward.default.DefaultRewardAggregator
 
 # defines the conversion of actions to executions
 action_conversion
-  - type: maze_envs.logistics.cutting_2d.space_interfaces.action_conversion.dict.ActionConversion
+  - _target_: maze_envs.logistics.cutting_2d.space_interfaces.action_conversion.dict.ActionConversion
     max_pieces_in_inventory: 1000
 
 # defines the conversion of states to observations
 observation_conversion:
-  - type: maze_envs.logistics.cutting_2d.space_interfaces.observation_conversion.dict.ObservationConversion
+  - _target_: maze_envs.logistics.cutting_2d.space_interfaces.observation_conversion.dict.ObservationConversion
     max_pieces_in_inventory: 1000
     raw_piece_size: [100, 100]
