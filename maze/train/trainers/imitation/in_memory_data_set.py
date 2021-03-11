@@ -3,7 +3,7 @@ import logging
 import pickle
 from itertools import chain
 from pathlib import Path
-from typing import Callable, Tuple, List, Dict, Union, Any, Sequence, Optional
+from typing import Callable, Tuple, List, Dict, Union, Any, Sequence, Optional, Generator
 
 import torch
 from torch.utils.data.dataset import Dataset, Subset
@@ -30,15 +30,15 @@ class InMemoryImitationDataSet(Dataset):
 
     def __init__(self,
                  conversion_env_factory: Callable,
-                 data_dir: Optional[Union[str, Path]] = None):
+                 dir_or_file: Optional[Union[str, Path]] = None):
         self.conversion_env_factory = conversion_env_factory
         self.conversion_env = self.conversion_env_factory()
 
         self.step_records = []
         self.trajectory_references = []
 
-        if data_dir is not None:
-            self.load_data(data_dir)
+        if dir_or_file is not None:
+            self.load_data(dir_or_file)
 
     def __len__(self) -> int:
         """Size of the dataset.
@@ -47,35 +47,63 @@ class InMemoryImitationDataSet(Dataset):
         """
         return len(self.step_records)
 
-    def __getitem__(self, index: int) -> SpacesStepRecord:
+    def __getitem__(self, index: int) -> Tuple[Dict[Union[int, str], Any], Dict[Union[int, str], Any]]:
         """Get a record.
 
         :param index: Index of the record to get.
         :return: A tuple of (observation_dict, action_dict). Note that the dictionaries only have multiple entries
                  in structured scenarios.
         """
-        return self.step_records[index]
+        return self.step_records[index].observations, self.step_records[index].actions
 
     def append(self, trajectory: TrajectoryRecord):
-        spaces_records = self.load_trajectory(trajectory, self.conversion_env)
+        spaces_records = self.convert_trajectory(trajectory, self.conversion_env)
         self._store_loaded_trajectory(spaces_records)
         return self
 
-    def load_data(self, data_dir: Union[str, Path]) -> None:
+    def load_data(self, dir_or_file: Union[str, Path]) -> None:
         """Load the trajectory data based on arguments provided on init."""
-        logger.info(f"Started loading trajectory data from: {data_dir}")
-        file_paths = self.get_trajectory_files(data_dir)
+        logger.info(f"Started loading trajectory data from: {dir_or_file}")
 
-        for file_path in file_paths:
-            with open(str(file_path), "rb") as in_f:
-                trajectory: StateTrajectoryRecord = pickle.load(in_f)
+        for trajectory in self.deserialize_trajectories(dir_or_file):
             self.append(trajectory)
 
-        logger.info(f"Loaded trajectory data from: {data_dir}")
+        logger.info(f"Loaded trajectory data from: {dir_or_file}")
         logger.info(f"Current length is {len(self)} steps in total.")
 
     @staticmethod
-    def get_trajectory_files(data_dir: Union[str, Path]) -> List[Path]:
+    def deserialize_trajectories(dir_or_file: Union[str, Path]) -> Generator[StateTrajectoryRecord, None, None]:
+        dir_or_file = Path(dir_or_file)
+        if dir_or_file.is_dir():
+            file_paths = InMemoryImitationDataSet.list_trajectory_files(dir_or_file)
+        else:
+            file_paths = [dir_or_file]
+
+        for file_path in file_paths:
+            with open(str(file_path), "rb") as in_f:
+                record = pickle.load(in_f)
+
+            # Loading trajectory record directly
+            if isinstance(record, TrajectoryRecord):
+                yield record
+
+            # Loading a list of trajectory records
+            elif isinstance(record, List):
+                for item in record:
+                    assert isinstance(item, TrajectoryRecord)
+                    yield item
+
+            # Loading a dict of trajectory records
+            elif isinstance(record, Dict):
+                for item in record.values():
+                    assert isinstance(item, TrajectoryRecord)
+                    yield item
+
+            else:
+                raise RuntimeError("Unsupported data type, expected a TrajectoryRecord, or list or dict thereof")
+
+    @staticmethod
+    def list_trajectory_files(data_dir: Union[str, Path]) -> List[Path]:
         """List pickle files ("pkl" suffix, used for trajectory data storage by default) in the given directory.
 
         :param data_dir: Where to look for the trajectory records (= pickle files).
@@ -90,7 +118,7 @@ class InMemoryImitationDataSet(Dataset):
         return file_paths
 
     @staticmethod
-    def load_trajectory(trajectory: TrajectoryRecord, conversion_env: StructuredEnv) -> List[SpacesStepRecord]:
+    def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: StructuredEnv) -> List[SpacesStepRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
         :param env: Env to use for conversion of MazeStates and MazeActions into observations and actions
@@ -102,11 +130,13 @@ class InMemoryImitationDataSet(Dataset):
         step_records = []
 
         for step_id, step_record in enumerate(trajectory.step_records):
-            # Drop incomplete records (e.g. at the end of episode)
-            if step_record.maze_state is None or step_record.maze_action is None:
-                continue
 
+            # Process and convert in case we are dealing with state records (otherwise no conversion needed)
             if isinstance(step_record, StateStepRecord):
+                # Drop incomplete records (e.g. at the end of episode)
+                if step_record.maze_state is None or step_record.maze_action is None:
+                    continue
+                # Convert to spaces
                 step_record = SpacesStepRecord.converted_from(step_record, conversion_env=conversion_env,
                                                               first_step_in_episode=step_id == 0)
 
