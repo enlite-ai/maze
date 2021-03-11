@@ -14,23 +14,26 @@ Activating Observation Logging
 ------------------------------
 
 To activate observation logging you only have to add the
-:class:`~maze.core.wrappers.observation_logging_wrapper.ObservationLoggingWrapper`
+:class:`~maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper`
 to your environment wrapper stack in your yaml config:
 
 .. code:: YAML
 
     # @package wrappers
-    ObservationLoggingWrapper: {}
+    maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper:
+        observation_logging: true
+        action_logging: false
+        reward_logging: false
 
 If you are using plain Python you can start with the code snippet below.
 
 .. code:: PYTHON
 
     from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
-    from maze.core.wrappers.observation_logging_wrapper import ObservationLoggingWrapper
+    from maze.core.wrappers.monitoring_wrapper import MazeEnvMonitoringWrapper
 
     env = GymMazeEnv(env="CartPole-v0")
-    env = ObservationLoggingWrapper(env)
+    env = MazeEnvMonitoringWrapper.wrap(env, observation_logging=True, action_logging=False, reward_logging=False)
 
 For both cases observations will be logged and distribution plots will be added to Tensorboard.
 

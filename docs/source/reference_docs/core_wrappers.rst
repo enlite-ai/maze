@@ -54,7 +54,7 @@ Below you find the reference documentation for  environment wrappers.
     :template: classtemplate.rst
 
     ~log_stats_wrapper.LogStatsWrapper
-    ~observation_logging_wrapper.ObservationLoggingWrapper
+    ~monitoring_wrapper.MazeEnvMonitoringWrapper
     ~time_limit_wrapper.TimeLimitWrapper
     ~random_reset_wrapper.RandomResetWrapper
     ~sorted_spaces_wrapper.SortedSpacesWrapper
@@ -70,7 +70,6 @@ Below you find the reference documentation for  environment wrappers.
     :template: classtemplate.rst
 
     ~dict_observation_wrapper.DictObservationWrapper
-    ~observation_logging_wrapper.ObservationLoggingWrapper
     ~observation_stack_wrapper.ObservationStackWrapper
     ~no_dict_observation_wrapper.NoDictObservationWrapper
 

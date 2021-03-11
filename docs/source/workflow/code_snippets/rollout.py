@@ -14,4 +14,7 @@ sequential = SequentialRolloutRunner(
     record_trajectory=True,
     record_event_logs=True,
     render=True)
-sequential.run_with(env=env, wrappers={"ObservationLoggingWrapper": {}}, agent=agent)
+sequential.run_with(
+    env=env,
+    wrappers={"maze.core.wrappers.reward_scaling_wrapper.RewardScalingWrapper": {"scale": 0.1}},
+    agent=agent)
