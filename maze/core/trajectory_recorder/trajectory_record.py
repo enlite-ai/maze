@@ -62,3 +62,17 @@ class SpacesTrajectoryRecord(TrajectoryRecord[SpacesStepRecord]):
         step_records_in_time = list(zip(*[t.step_records for t in trajectories]))
         stacked_trajectory.step_records = [SpacesStepRecord.stack_records(list(recs)) for recs in step_records_in_time]
         return stacked_trajectory
+
+    def is_done(self):
+        return list(self.step_records[-1].dones.values())[-1] if len(self) > 0 else False
+
+    @property
+    def actions(self):
+        return [step_record.actions for step_record in self.step_records]
+
+    def total_reward(self):
+        total_reward = 0
+        for record in self.step_records:
+            for reward in record.rewards.values():
+                total_reward += reward
+        return total_reward
