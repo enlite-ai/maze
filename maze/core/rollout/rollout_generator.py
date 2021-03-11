@@ -57,7 +57,9 @@ class RolloutGenerator:
                                                                        deterministic=False)
                     record.logits[step_key] = logits
                 else:
-                    action = policy.compute_action(observation, policy_id=step_key, maze_state=None,
+                    # inject the MazeEnv state if desired by the policy
+                    maze_state = self.env.get_maze_state() if policy.needs_state() else None
+                    action = policy.compute_action(observation, policy_id=step_key, maze_state=maze_state,
                                                    deterministic=False)
                 record.actions[step_key] = action
 
