@@ -8,7 +8,7 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
 from maze.core.trajectory_recorder.state_step_record import StateStepRecord
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.core.wrappers.wrapper import ObservationWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -47,7 +47,7 @@ class _MockObservationStackWrapper(ObservationWrapper):
         return super().get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
 
 
-def _mock_episode_record(step_count: int):
+def _mock_state_trajectory_record(step_count: int):
     """Produce an episode record with maze_states and maze_actions corresponding to the step no."""
     episode_record = StateTrajectoryRecord("test")
 
@@ -65,6 +65,21 @@ def _mock_episode_record(step_count: int):
     return episode_record
 
 
+def _mock_spaces_trajectory_record(step_count: int):
+    """Produce an episode record with maze_states and maze_actions corresponding to the step no."""
+    episode_record = SpacesTrajectoryRecord("test")
+
+    for i in range(step_count):
+        episode_record.step_records.append(SpacesStepRecord(
+            observations={0: dict(observation=i)},
+            actions={0: dict(action=i)},
+            rewards={0: 0},
+            dones={0: i == step_count - 1}
+        ))
+
+    return episode_record
+
+
 def _env_factory():
     return DummyEnvironment(
         core_env=DummyCoreEnvironment(gym.spaces.Discrete(10)),
@@ -72,9 +87,27 @@ def _env_factory():
         observation_conversion=[DoubleObservationConversion()])
 
 
-def test_data_load():
+def test_state_record_load():
     dataset = InMemoryImitationDataSet(conversion_env_factory=_env_factory)
-    step_records = dataset.load_trajectory(_mock_episode_record(5), dataset.conversion_env)
+    step_records = dataset.convert_trajectory(_mock_spaces_trajectory_record(5), dataset.conversion_env)
+
+    # All steps should be loaded
+    assert len(step_records) == 5
+
+    # The original values should be kept (no conversion should take place)
+    expected = [0, 1, 2, 3, 4]
+
+    # Wrapping in the structured dict spaces
+    expected_structured_actions = list(map(lambda x: {0: {"action": x}}, expected))
+    expected_structured_observations = list(map(lambda x: {0: {"observation": x}}, expected))
+
+    assert [rec.actions for rec in step_records] == expected_structured_actions
+    assert [rec.observations for rec in step_records] == expected_structured_observations
+
+
+def test_spaces_record_load():
+    dataset = InMemoryImitationDataSet(conversion_env_factory=_env_factory)
+    step_records = dataset.convert_trajectory(_mock_state_trajectory_record(5), dataset.conversion_env)
 
     # Last step should be skipped, as no maze_action is available
     assert len(step_records) == 4
@@ -92,7 +125,7 @@ def test_data_load():
 
 def test_data_load_with_stateful_wrapper():
     dataset = InMemoryImitationDataSet(lambda: _MockObservationStackWrapper.wrap(_env_factory()))
-    step_records = dataset.load_trajectory(_mock_episode_record(4), dataset.conversion_env)
+    step_records = dataset.convert_trajectory(_mock_state_trajectory_record(4), dataset.conversion_env)
 
     expected_observations = [
         {0: {"observation": [None, 0]}},
@@ -103,15 +136,15 @@ def test_data_load_with_stateful_wrapper():
 
 
 def test_data_split():
-    def _extract_observation_values_from(records: List[SpacesStepRecord]):
-        """Extract observation values from array of imitation samples of step_records"""
-        return list(map(lambda record: record.observations[0]["observation"], records))
+    def _extract_observation_values_from(imitation_samples: List[Tuple[Dict, Dict]]):
+        """Extract observation values from array of imitation samples of (obs, act) tuples"""
+        return list(map(lambda sample: sample[0][0]["observation"], imitation_samples))
 
     dataset = InMemoryImitationDataSet(_env_factory)
 
     # Fill dataset with two episodes with 5 usable steps each
     for _ in range(2):
-        dataset.append(_mock_episode_record(6))
+        dataset.append(_mock_state_trajectory_record(6))
 
     assert dataset.trajectory_references[0] == range(0, 5)
     assert dataset.trajectory_references[1] == range(5, 10)
@@ -124,7 +157,7 @@ def test_data_split():
 
     # Add two more episodes with 5 usable steps each (now we have 4 in total)
     for _ in range(2):
-        dataset.append(_mock_episode_record(6))
+        dataset.append(_mock_state_trajectory_record(6))
 
     # 50:50 split
     train, valid = dataset.random_split([10, 10])
