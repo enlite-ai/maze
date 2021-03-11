@@ -47,7 +47,7 @@ class BCRunner(TrainingRunner):
         env = self.env_factory()
 
         with SwitchWorkingDirectoryToInput(cfg.input_dir):
-            dataset = Factory(base_type=Dataset).instantiate(self.dataset, env_factory=self.env_factory)
+            dataset = Factory(base_type=Dataset).instantiate(self.dataset, conversion_env_factory=self.env_factory)
 
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
