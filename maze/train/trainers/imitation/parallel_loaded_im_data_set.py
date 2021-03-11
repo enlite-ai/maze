@@ -30,11 +30,10 @@ class DataLoadWorker:
         """
         try:
             env = env_factory()
-            for trajectory_file_path in trajectory_file_paths:
-                with open(str(trajectory_file_path), "rb") as in_f:
-                    trajectory: StateTrajectoryRecord = pickle.load(in_f)
-                step_records = InMemoryImitationDataSet.load_trajectory(trajectory, env)
-                reporting_queue.put(step_records)
+            for file_path in trajectory_file_paths:
+                for trajectory in InMemoryImitationDataSet.deserialize_trajectories(file_path):
+                    step_records = InMemoryImitationDataSet.convert_trajectory(trajectory, env)
+                    reporting_queue.put(step_records)
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process
@@ -64,7 +63,7 @@ class ParallelLoadedImitationDataset(InMemoryImitationDataSet):
     def load_data(self, data_dir: Union[str, Path]) -> None:
         """Load the trajectory data based on arguments provided on init."""
         logger.info(f"Started loading trajectory data from: {data_dir}")
-        file_paths = self.get_trajectory_files(data_dir)
+        file_paths = self.list_trajectory_files(data_dir)
         total_trajectories = len(file_paths)
 
         # Split trajectories across workers
