@@ -50,9 +50,9 @@ These are the components of the event system:
     ~log_events_writer_tsv.LogEventsWriterTSV
     ~log_events_writer_tsv.EventRow
     ~log_events_utils.SimpleEventLoggingSetup
-    ~observation_events.ObservationEvents
-    ~action_events.DiscreteActionEvents
-    ~action_events.ContinuousActionEvents
+    ~monitoring_events.ObservationEvents
+    ~monitoring_events.ActionEvents
+    ~monitoring_events.RewardEvents
     ~log_create_figure_functions.create_categorical_plot
     ~log_create_figure_functions.create_histogram
     ~log_create_figure_functions.create_relative_bar_plot

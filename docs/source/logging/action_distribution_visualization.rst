@@ -18,7 +18,19 @@ However, most importantly it is a great debugging tool immediately revealing if:
   (e.g., initially sampling an action twice as often as the remaining ones).
 - the agents actually starts learning (i.e., the sampling distributions changes throughout the training epochs).
 
-Maze visualizes action sampling distributions on a per-epoch basis in the *IMAGES* tab of Tensorboard.
+To activate action logging you only have to add the
+:class:`~maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper`
+to your environment wrapper stack in your yaml config:
+
+.. code:: YAML
+
+    # @package wrappers
+    maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper:
+        observation_logging: false
+        action_logging: true
+        reward_logging: false
+
+Action sampling distributions are then visualized on a per-epoch basis in the *IMAGES* tab of Tensorboard.
 By using the slider above the images you can step through the training epochs and see how the sampling distribution
 evolves over time.
 
