@@ -177,6 +177,7 @@ but most importantly also provide code snippets and minimum working examples to 
    best_practices_and_tutorials/integrating_gym_environment.rst
    best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/maze_and_other_frameworks.rst
+   best_practices_and_tutorials/struct_env_examples/flat/intro.rst
    best_practices_and_tutorials/struct_env_examples/multistep/intro.rst
    best_practices_and_tutorials/struct_env_examples/multiagent/intro.rst
    best_practices_and_tutorials/struct_env_examples/hierarchical/intro.rst

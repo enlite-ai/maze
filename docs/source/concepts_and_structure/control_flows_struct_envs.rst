@@ -18,9 +18,11 @@ Maze addresses these problems by baking the concept of *actors* into its control
 
 An actor is defined as the combination of a specific policy and a specific agent. They are uniquely identified by the agent ID and the policy key. From a more abstract perspective an actor describes *which task should be done* (via the policy) for *which entity* (the agent). In the case of the vehicle routing problem an agent might correspond to a vehicle and a policy might correspond to a task like "pick an order" or "drive to point X". A :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` has exactly one active actor at any time. There can be an arbitrary number of actors. They can be created and destroyed dynamically by the environment, by respectively specifying their ID or marking them as *done*. Their lifecycles are thus flexible, they don't have to be available through the entirety of the environment's lifecycle.
 
-.. image:: struct_env_control_flow.png
-    :width: 60 %
+.. figure:: struct_env_control_flow.png
+    :width: 75 %
     :align: center
+
+    Overview of control flow with structured environments. Note that the line denoting the communication of the active actor ID is dashed because it is not returned by :meth:`~maze.core.env.maze_env.MazeEnv.step`, but instead queried via :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`.
 
 **Decoupling actions from steps**
 
@@ -71,9 +73,9 @@ Both approaches aim at increasing the temporal coherence of actions. Multi-stepp
 Where to Go Next
 ----------------
 
-Different specifications of structured environments allow various capabilities not possible with flat environments. We discuss them in a series of articles listed below. Links to examples are included either in those articles or here directly.
+Strutured environments are general enough to give rise to a number of different specifications with different capabilities. We cover those specifications in a series of articles listed below and provide links to implemented examples.
 
-- Flat environments, while instances of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`, do not utilize its actor mechanism and thus don't warrant an in-depth discussion. Example: :ref:`Stock cutting without multi-stepping.<env_from_scratch-problem>`.
+- :ref:`Flat environments with structured environments<struct_env_flat>`. Example: :ref:`Stock cutting without multi-stepping.<env_from_scratch-problem>`.
 - :ref:`Multi-stepping with structured environments<struct_env_multistep>`. Example: :ref:`Stock cutting with multi-stepping<flat_to_structured>`.
 - :ref:`Multi-agent RL with structure environments<struct_env_multiagent>`. Example: Vehicle routing problem, i.e. the coordination of a fleet of delivery vehicles with different targets [todo].
 - :ref:`Hierarchical RL with structured environments<struct_env_hierarchical>`. Example: Pick and place robots, i.e. a robotic arm picking and placing objects, in the process iterating over a sequence of sub-goals [todo - also: different example prob. better].
