@@ -61,6 +61,23 @@ To start the training run with this config file, run:
 You can find a more detail explanation on how experiments are embedded in the overall configuration system in our
 :ref:`Hydra experiment documentation <hydra-custom-experiments>`.
 
+Hyper Parameter Optimization
+----------------------------
+
+To perform a simple grid search over some hyper parameters you can use
+`Hydra's Sweeper <https://hydra.cc/docs/0.11/advanced/plugins#sweeper>`_
+which converts lists of command line arguments into distinct jobs.
+
+The example below shows how to launch the same experiment with three different learning rates.
+
+.. code:: console
+
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo \
+      algorithm.n_epochs=5 algorithm.lr=0.0001,0.0005,0.001 --multirun
+
+Per default Hydra uses the local (sequential) runner for processing jobs.
+However, there are also more `scalable options <https://hydra.cc/docs/next/plugins/joblib_launcher>`_ available.
+
 Where to Go Next
 ----------------
 
