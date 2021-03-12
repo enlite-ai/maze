@@ -36,9 +36,9 @@ The environment determines the active actor based on its internal state. The cur
 
 Every :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` is required to implement :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`, which returns the ID of the currently active actor. An environment with a single actor may return a dummy signature such as `(0, 0)`.
 
-**Policy-specific action conversion**
+**Policy-specific space conversion**
 
-Since different policies may benefit from or even require a different preprocessing of their actions and/or observations (especially, but not exclusively, action masking), Maze requires the specification of a corresponding :class:`ActionConversionInterface <maze.core.env.action_conversion.ActionConversionInterface>` and :class:`ObservationConversionInterface <maze.core.env.observation_conversion.ObservationConversionInterface>` class for each policy.
+Since different policies may benefit from or even require a different preprocessing of their actions and/or observations (especially, but not exclusively, for action masking), Maze requires the specification of a corresponding :class:`ActionConversionInterface <maze.core.env.action_conversion.ActionConversionInterface>` and :class:`ObservationConversionInterface <maze.core.env.observation_conversion.ObservationConversionInterface>` class for each policy. This permits to tailor corresponding action or observation to the mode of operation of the relevant policy.
 
 
 **Summary**
@@ -60,13 +60,11 @@ These capabilities allow to bypass the tree restrictions laid out at the outset.
 Maze Mechanisms in a Broader Context
 ------------------------------------
 
-Assumptions *1.* and *3.* are related to concepts well established in literature, namely `multi-agent learning <https://arxiv.org/abs/1911.10635>`_ and `hierarchical RL <https://arxiv.org/abs/1909.10618>`_, both of which are supported by Maze.
-The problem underlying *2.* is a lack of temporal coherency in the sequence of selected actions: if there is some necessary, recurring order of actions, we would like to identify it as quickly as possible. We provide two different mechanisms to tackle this:
+The assumptions stated above are related to concepts well established in RL literature: *1.* to `multi-agent learning <https://arxiv.org/abs/1911.10635>`, *2.* to `auto-regressive action distributions (ARAD) <https://docs.ray.io/en/master/rllib-models.html#autoregressive-action-distributions>`_ and *3.* to `hierarchical RL <https://arxiv.org/abs/1909.10618>`_. Multi-agent learning and hierarchical RL are supported by Maze.
 
-- `Auto-regressive action distributions (ARAD) <https://docs.ray.io/en/master/rllib-models.html#autoregressive-action-distributions>`_, used e.g. in DeepMind's `Grandmaster level in StarCraft II using multi-agent reinforcement learning <https://www.nature.com/articles/s41586-019-1724-z>`_. ARADs still execute one action per step, but condition it on the previous state and *action* instead of the state alone. This allows it to be more sensitive  towards such recurring patterns of actions.
-- *Multi-stepping*. This is a pattern that utilizes the actor mechanism to enact multiple sub-steps in their correct order and a single step without having to rely on autoregressive policies.
+The problem underlying *2.* is a lack of temporal coherency in the sequence of selected actions: if there is some necessary, recurring order of actions, we would like to identify it as quickly as possible. ARADs as used in in DeepMind's `Grandmaster level in StarCraft II using multi-agent reinforcement learning <https://www.nature.com/articles/s41586-019-1724-z>`_ are one way to tackle this. They still execute one action per step, but condition it on the previous state and *action* instead of the state alone. This allows it to be more sensitive towards such recurring patterns of actions. We do not explictily implement ARADs, but offer *multi-stepping* as an alternative. Multi-stepping is a pattern that utilizes the actor mechanism previously discussed to enact multiple sub-steps in their correct order and during a single step, without having to rely on autoregressive policies.
 
-Both approaches aim at increasing the temporal coherence of actions. Multi-stepping allows to incorporate domain knowledge and can be used to imitate ARAD, but depends on a fixed definition of substeps in an environment's step function. ARAD does not presuppose and cannot make use of any prior domain knowledge w.r.t. the desired step order and thus needs to learn it from data. When having to decide which one to use, we recommend multi-stepping if possible to exploit available domain knowledge.
+Both approaches aim at increasing the temporal coherence of actions. Multi-stepping allows to incorporate domain knowledge about the correct order of actions or tasks, but depends on the environment to incorporate this. ARAD policies do not presuppose (and cannot make use of) any such prior knowledge. They could be approximated within the available set of functionality however by extending observations by prior actions and forwarding those to the active actor.
 
 .. _control_flows_struct_envs_next:
 
