@@ -155,11 +155,11 @@ For more information on wrappers and customization, see :ref:`Wrappers<env_wrapp
 Structured Environments
 -----------------------
 
-This section provides an overview. See :ref:`Control Flows with Structured Environments<control_flows_struct_envs>`
+This section provides an high-level overview of structured environments. See :ref:`Control Flows with Structured Environments<control_flows_struct_envs>`
 for more details and examples.
 
 
-Loop uses the :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`
+Maze uses the :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`
 concept to model more complex settings, such as multi-step (auto-regressive),
 multi-agent or hierarchical settings.
 
