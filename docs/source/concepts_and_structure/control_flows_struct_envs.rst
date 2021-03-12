@@ -18,7 +18,7 @@ Maze addresses these problems by baking the concept of *actors* into its control
 
 An actor is defined as the combination of a specific policy and a specific agent. They are uniquely identified by the agent ID and the policy key. From a more abstract perspective an actor describes *which task should be done* (via the policy) for *which entity* (the agent). In the case of the vehicle routing problem an agent might correspond to a vehicle and a policy might correspond to a task like "pick an order" or "drive to point X". A :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` has exactly one active actor at any time. There can be an arbitrary number of actors. They can be created and destroyed dynamically by the environment, by respectively specifying their ID or marking them as *done*. Their lifecycles are thus flexible, they don't have to be available through the entirety of the environment's lifecycle.
 
-.. image:: struct_env/struct_env_control_flow.png
+.. image:: struct_env_control_flow.png
     :width: 60 %
     :align: center
 
@@ -34,11 +34,11 @@ A multi-agent scenario can be realized by defining the corresponding actor IDs u
 
 The environment determines the active actor based on its internal state. The current actor evaluates the observation provided by the environment and selects an appropriate action, i.e. every action is associated with a specific actor. This action updates the environment's state, after which the the environment reevaluates which actor should be active. Since it is left to the environment to decide when which actor should be active, it is possible to chain, combine and nest policies and therefore tasks in arbitrary manner.
 
-Every :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` is required to implement :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`, which returns the ID of the currently active actor. An environment with a single actor may return a dummy signature such as `(0, 0)`.
+Every :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` is required to implement :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`, which returns the ID of the currently active actor. An environment with a single actor may return a single-actor signature such as `(0, 0)`.
 
 **Policy-specific space conversion**
 
-Since different policies may benefit from or even require a different preprocessing of their actions and/or observations (especially, but not exclusively, for action masking), Maze requires the specification of a corresponding :class:`ActionConversionInterface <maze.core.env.action_conversion.ActionConversionInterface>` and :class:`ObservationConversionInterface <maze.core.env.observation_conversion.ObservationConversionInterface>` class for each policy. This permits to tailor corresponding action or observation to the mode of operation of the relevant policy.
+Since different policies may benefit from or even require a different preprocessing of their actions and/or observations (especially, but not exclusively, for action masking), Maze requires the specification of a corresponding :class:`ActionConversionInterface <maze.core.env.action_conversion.ActionConversionInterface>` and :class:`ObservationConversionInterface <maze.core.env.observation_conversion.ObservationConversionInterface>` class for each policy. This permits to tailor actions and/or observations to the mode of operation of the relevant policy.
 
 
 **Summary**
@@ -60,23 +60,21 @@ These capabilities allow to bypass the tree restrictions laid out at the outset.
 Maze Mechanisms in a Broader Context
 ------------------------------------
 
-The assumptions stated above are related to concepts well established in RL literature: *1.* to `multi-agent learning <https://arxiv.org/abs/1911.10635>`, *2.* to `auto-regressive action distributions (ARAD) <https://docs.ray.io/en/master/rllib-models.html#autoregressive-action-distributions>`_ and *3.* to `hierarchical RL <https://arxiv.org/abs/1909.10618>`_. Multi-agent learning and hierarchical RL are supported by Maze.
+The assumptions stated above are related to concepts well established in RL literature: *1.* to `multi-agent learning <https://arxiv.org/abs/1911.10635>`_, *2.* to `auto-regressive action distributions (ARAD) <https://docs.ray.io/en/master/rllib-models.html#autoregressive-action-distributions>`_ and *3.* to `hierarchical RL <https://arxiv.org/abs/1909.10618>`_. Multi-agent learning and hierarchical RL are supported by Maze.
 
-The problem underlying *2.* is a lack of temporal coherency in the sequence of selected actions: if there is some necessary, recurring order of actions, we would like to identify it as quickly as possible. ARADs as used in in DeepMind's `Grandmaster level in StarCraft II using multi-agent reinforcement learning <https://www.nature.com/articles/s41586-019-1724-z>`_ are one way to tackle this. They still execute one action per step, but condition it on the previous state and *action* instead of the state alone. This allows it to be more sensitive towards such recurring patterns of actions. We do not explictily implement ARADs, but offer *multi-stepping* as an alternative. Multi-stepping is a pattern that utilizes the actor mechanism previously discussed to enact multiple sub-steps in their correct order and during a single step, without having to rely on autoregressive policies.
+The problem motivating *2.* is a lack of temporal coherency in the sequence of selected actions: if there is some necessary, recurring order of actions, we would like to identify it as quickly as possible. ARADs as used in in DeepMind's `Grandmaster level in StarCraft II using multi-agent reinforcement learning <https://www.nature.com/articles/s41586-019-1724-z>`_ are one way to tackle this. They still execute one action per step, but condition it on the previous state and *action* instead of the state alone. This allows it to be more sensitive towards such recurring patterns of actions. We do not explictily implement ARADs, but offer *multi-stepping* as an alternative. Multi-stepping is a pattern that utilizes the actor mechanism as previously discussed to enact multiple actions in a single step in their correct order, without having to rely on learned autoregressive policies learning.
 
-Both approaches aim at increasing the temporal coherence of actions. Multi-stepping allows to incorporate domain knowledge about the correct order of actions or tasks, but depends on the environment to incorporate this. ARAD policies do not presuppose (and cannot make use of) any such prior knowledge. They could be approximated within the available set of functionality however by extending observations by prior actions and forwarding those to the active actor.
+Both approaches aim at increasing the temporal coherence of actions. Multi-stepping allows to incorporate domain knowledge about the correct order of actions or tasks, but depends on the environment to incorporate this. ARAD policies do not presuppose (and cannot make use of) any such prior knowledge. They could be approximated within MAZE with the available set of functionality however by extending observations by prior actions and forwarding those to the active actor. If relevant domain knowledge is available, we recommend to implement the multi-stepping though.
 
 .. _control_flows_struct_envs_next:
 
 Where to Go Next
 ----------------
 
-We provide a set of exemplary environments implementing :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` with different configurations:
+Different specifications of structured environments allow various capabilities not possible with flat environments. We discuss them in a series of articles listed below. Links to examples are included either in those articles or here directly.
 
-- A detailled walkthrough for a :ref:`flat environment<env_from_scratch-problem>` flat environment implementing the stock cutting problem.
-- A description of how to :ref:`transform this flat stock-cutting environment into a multi-step environment<flat_to_structured>` with improved learning efficiency.
-- A :ref:`structured auto-regressive environment<struct_env_autoregressive>` using a auto-regressive policy for temporally more coherent actions.
-- A :ref:`structured multi-agent environment<struct_env_multiagent>` for the coordination of a fleet of delivery vehicles utilizing a set of actors.
-- A :ref:`structured hierarchical environment<struct_env_hierarchical>` representing a robotic arm picking and placing object, iterating over a sequence of sub-goals.
-- A :ref:`structured environment with after-states<struct_env_afterstate>` [todo].
-- A :ref:`structured environments with evolutionary etrategies<struct_env_evolutionary>` [todo].
+- Flat environments, while instances of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`, do not utilize its actor mechanism and thus don't warrant an in-depth discussion. Example: :ref:`Stock cutting without multi-stepping.<env_from_scratch-problem>`.
+- :ref:`Multi-stepping with structured environments<struct_env_multistep>`. Example: :ref:`Stock cutting with multi-stepping<flat_to_structured>`.
+- :ref:`Multi-agent RL with structure environments<struct_env_multiagent>`. Example: Vehicle routing problem, i.e. the coordination of a fleet of delivery vehicles with different targets [todo].
+- :ref:`Hierarchical RL with structured environments<struct_env_hierarchical>`. Example: Pick and place robots, i.e. a robotic arm picking and placing objects, in the process iterating over a sequence of sub-goals [todo - also: different example prob. better].
+- :ref:`Arbitrary environments with evolutionary strategies<struct_env_evolutionary>` [todo].

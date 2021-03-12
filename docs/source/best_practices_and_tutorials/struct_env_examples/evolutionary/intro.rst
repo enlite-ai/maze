@@ -1,7 +1,7 @@
 .. _struct_env_evolutionary:
 
-Structured Environments with Evolutionary Strategies
-====================================================
+Arbitrary environments with evolutionary strategies
+===================================================
 
 The remainder of this tutorial is structured as follows:
 
