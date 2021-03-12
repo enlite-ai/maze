@@ -5,6 +5,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from maze.core.utils.factory import Factory
 from maze.runner import Runner
+from maze.utils.log_stats_utils import clear_global_state
 
 
 @hydra.main(config_path="conf", config_name="conf_rollout")
@@ -17,6 +18,7 @@ def maze_run(cfg: DictConfig) -> None:
 
     :param cfg: Hydra configuration for the rollout.
     """
+    clear_global_state()
 
     print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
     runner = Factory(base_type=Runner).instantiate(cfg.runner)
