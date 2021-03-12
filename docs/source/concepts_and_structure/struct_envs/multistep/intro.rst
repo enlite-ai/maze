@@ -1,7 +1,7 @@
 .. _struct_env_multistep:
 
-Multi-Stepping with Structured Environments
-===========================================
+Multi-Stepping
+==============
 
 .. note::
     Recommended reads prior to this article:
@@ -15,7 +15,7 @@ While it is not trivial to decide which items to pick for which orders and how t
 - utilizing the actor mechanism to instantiate more than one policy and
 - enabling to query policies on demand instead of receiving the policy output (i.e. the suggested action) as argument in :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
-In the case of the stock cutting problem the action two policies could be considered: "select" and "cut". The piece selection action might be provided to the environment at the beginning of each step, after which the cutting policy - conditioned on the current state with the already selected piece - can be queried to produce an appropriate cutting action.
+In the case of the stock cutting problem two policies could be considered: "select" and "cut". The piece selection action might be provided to the environment at the beginning of each step, after which the cutting policy - conditioned on the current state with the already selected piece - can be queried to produce an appropriate cutting action.
 
 An implementation of a multi-stepping environment for the `stock cutting problem <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_ can be found :ref:`here<flat_to_structured>`.
 
@@ -32,8 +32,11 @@ In general, the control flow for multi-stepping environments involve at least tw
 
 When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several policies and therefore several actors - more specifically, in a setup with *n* sub-steps (or actions per step) we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
 
-Multi-stepping is closely related to and can be seen as a type of :ref:`hierarchical RL<struct_env_hierarchical>`, in which each step encapsulates a hierarchy or sequence of tasks.
 
+Relation to Hierarchical RL
+---------------------------
+
+:ref:`Hierarchical RL (HRL) <struct_env_hierarchical>` describes a hierarchical formulation of reinforcement learning problems: tasks are broken down into (sequences of) subtasks, which are learned in a modular manner. Multi-stepping shares this property with HRL, since it also decomposes a task into a series of subtasks. It does not fit smoothly into the the latter's paradigm however due to the execution of multiple actions per step and the action sequence being fixed instead of learned.
 
 Relation to Auto-Regressive Action Distributions
 ------------------------------------------------
@@ -42,7 +45,7 @@ Multi-stepping is closely related to `auto-regressive action distributions (ARAD
 
 ARADs still execute one action per step, but condition it on the previous state and *action* instead of the state alone. This allows them to be more sensitive towards such recurring patterns of actions. Multi-stepping allows to incorporate domain knowledge about the correct order of actions or tasks without having to rely on learned autoregressive policies learning, but depends on the environment to incorporate it. ARAD policies do not presuppose (and cannot make use of) any such prior knowledge.
 
-While we do not explicitly implement ARADs, they could be approximated with the set of functionality exposed within Maze by extending observations by prior actions. If relevant domain knowledge is available, we recommend to implement the multi-stepping though.
+ARADs are not explicitly implemented in Maze, but can be approximated. This can be done by including prior actions in observations supplied to the agent, which should condition the used policy on those actions. If relevant domain knowledge is available, we recommend to implement the multi-stepping though.
 
 Where to Go Next
 ----------------
