@@ -3,21 +3,30 @@
 Multi-Agent RL with Structured Environments
 ===========================================
 
-`Multi-agent reinforcment learning (MARL) <https://arxiv.org/abs/1911.10635>`_ describes a setup in which more than several collaborating or competing agents act as individual entitites in an environment. This introduces the additional complexity of emergent effects between those agents. Some problems require to or at least benefit from deviating from a single-agent formulation, such as the `vehicle routing problem <https://en.wikipedia.org/wiki/Vehicle_routing_problem>`_, `(video) games like Starcraft <https://www.nature.com/articles/s41586-019-1724-z>`_, `traffic coordination<http://www.wiomax.com/team/xie/paper/ICAPS12.pdf>`_, `power systems and smart grids<https://ieeexplore.ieee.org/abstract/document/7855760>`_ and many others.
+.. note::
+    Recommended prior to this article:
+        - :ref:`Control Flows with Structured Environments<control_flows_struct_envs>`.
+        - :ref:`Flat Environments as a special case of structured environments<control_flows_struct_envs>`.
 
-Maze supports multi-agent learning out of the box. In order to make a :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` compatible with such a setup, it needs to keep track of the activities of each individual agent. While the order in which actions for the individual agents are enacted are left to the environment, it is required that at any point in time there is exactly one active actor (see :ref:`here<control_flows_struct_envs>` for more information on the distinction between actor and agent). It is easily possible, but not necessary, to include multiple policies in a multi-agent scenario.
+`Multi-agent reinforcment learning (MARL) <https://arxiv.org/abs/1911.10635>`_ describes a setup in which several collaborating or competing agents act as individual entitites in an environment. This introduces the additional complexity of emergent effects between those agents. Some problems require to or at least benefit from deviating from a single-agent formulation, such as the `vehicle routing problem <https://en.wikipedia.org/wiki/Vehicle_routing_problem>`_, `(video) games like Starcraft <https://www.nature.com/articles/s41586-019-1724-z>`_, `traffic coordination <http://www.wiomax.com/team/xie/paper/ICAPS12.pdf>`_, `power systems and smart grids <<https://ieeexplore.ieee.org/abstract/document/7855760>>`_ and many others.
 
-Information on the active actor and therefore agent is accessed via :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`. As long as the environment implements this method and the internal state of each agent correctly, there are no further prerequisites to be fulfilled for a multi-agent training.
+Maze supports multi-agent learning out of the box. In order to make a :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` compatible with such a setup, it needs to keep track of the activities of each agent internally. How this is done and the order in which sequence agents enacted their actions is entirely to the environment. As per customary for a structured environment, it is required to provide the ID of the active actor via :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id` (see :ref:`here<control_flows_struct_envs>` for more information on the distinction between actor and agent). There are no further prequisites to use multiple agents with an environment.
 
+It is easily possible, but not necessary, to include multiple policies in a multi-agent scenario. The control flow with multiple agents and a single policy can be summarized like this:
 
+.. figure:: control_flow.png
+    :width: 80 %
+    :align: center
 
-    Control flow within a multi-agent scenario. Note that we assume a single policy here. In this setup :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id` should return a tuple of the current actor ID and a constant policy key.
+    Control flow within a multi-agent scenario. Note that we assume a single policy here. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
-You'll notice that the actor entity coordinating policies and agents to compute an appropriate action.
-In comparing with the flat environment you'll notice that this flow differs in (a) that there are multiple agents, (b) that the agent is chosen according to the active actor ID specified by the environment and (c) that the environment's step function has to do keep track on the active agent/actor. The underlying pathways however are identical - within Maze' actor mechanism flat environments are merely a particular specification amongst many.
+| When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several agents and therefore several actors - more specifically, in a setup with *n* agents we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
+| The underlying pathways however are identical for all instances of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`. Within Maze' actor mechanism, multi-agent environments are merely a particular specification amongst many.
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+Where to Go Next
+----------------
 
-   test.rst
+- :ref:`Gym-style flat environments as a special case of structured environments<struct_env_multiagent>`.
+- :ref:`Multi-stepping applies the actor mechanism to enact several policies in a single step<struct_env_multistep>`.
+- :ref:`Hierarchical RL by chaining and nesting tasks via policies.<struct_env_hierarchical>`.
+- :ref:`Arbitrary environments with evolutionary strategies<struct_env_evolutionary>` [todo].
