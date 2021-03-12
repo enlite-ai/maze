@@ -181,7 +181,6 @@ but most importantly also provide code snippets and minimum working examples to 
    best_practices_and_tutorials/struct_env_examples/multistep/intro.rst
    best_practices_and_tutorials/struct_env_examples/multiagent/intro.rst
    best_practices_and_tutorials/struct_env_examples/hierarchical/intro.rst
-   best_practices_and_tutorials/struct_env_examples/evolutionary/intro.rst
    best_practices_and_tutorials/example_cmds.rst
 
 .. toctree::
