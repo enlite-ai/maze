@@ -18,6 +18,7 @@ def maze_run(cfg: DictConfig) -> None:
 
     :param cfg: Hydra configuration for the rollout.
     """
+    # required for Hydra --multirun (e.g., sweeper)
     clear_global_state()
 
     print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
