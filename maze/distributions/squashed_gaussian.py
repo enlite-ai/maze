@@ -1,6 +1,7 @@
 """Contains a squashed diagonal Gaussian distributions"""
 from typing import Sequence
 
+import numpy as np
 import gym
 import torch
 from torch.distributions import Normal, kl_divergence
@@ -27,6 +28,10 @@ class SquashedGaussianProbabilityDistribution(TorchProbabilityDistribution[Norma
         return required_shape
 
     def __init__(self, logits: torch.Tensor, action_space: gym.spaces.Box, temperature: float):
+
+        # make sure space bounds are set properly
+        assert np.all(action_space.low > -np.inf) and np.all(action_space.low < np.inf)
+
         # create low and high tensors for vectorized clamping
         self.low = convert_to_torch(action_space.low, device=logits.device, cast=logits.dtype, in_place=False)
         self.high = convert_to_torch(action_space.high, device=logits.device, cast=logits.dtype, in_place=False)
