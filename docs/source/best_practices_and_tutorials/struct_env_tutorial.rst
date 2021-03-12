@@ -22,7 +22,8 @@ In particular, we will see how to evolve the performance of an RL agent by going
     :width: 60 %
     :align: center
 
-Before diving into this tutorial we recommend to familiarize yourself with the basic
+Before diving into this tutorial we recommend to familiarize yourself with
+:ref:`Control Flows with Structured Environments <control_flows_struct_envs>` and the basic
 :ref:`Maze - step by step tutorial <env_from_scratch>`.
 
 The remainder of this tutorial is structured as follows:
