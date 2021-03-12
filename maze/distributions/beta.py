@@ -2,6 +2,7 @@
 import math
 from typing import Sequence
 
+import numpy as np
 import gym
 import torch
 from gym import spaces
@@ -29,6 +30,10 @@ class BetaProbabilityDistribution(TorchProbabilityDistribution[Beta]):
         return required_shape
 
     def __init__(self, logits: torch.Tensor, action_space: gym.spaces.Box, temperature: float):
+
+        # make sure space bounds are set properly
+        assert np.all(action_space.low > -np.inf) and np.all(action_space.low < np.inf)
+
         # prepare logits for distribution
         logits = torch.clamp(logits, math.log(EPSILON), -math.log(EPSILON))
         logits = torch.log(torch.exp(logits) + 1.0) + 1.0
