@@ -15,7 +15,12 @@ While it is not trivial to decide which items to pick for which orders and how t
 - utilizing the actor mechanism to instantiate more than one policy and
 - enabling to query policies on demand instead of receiving the policy output (i.e. the suggested action) as argument in :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
-In the case of the stock cutting problem the action two policies could be considered: "select" and "cut". The piece selection action might be provided to the environment at the beginning of each step, after which the cutting policy - conditioned on the current state with the already selected piece - can be queried to produce an appropriate cutting action. An implementation of a multi-stepping stock cutting environment can be found :ref:`here<flat_to_structured>`.
+In the case of the stock cutting problem the action two policies could be considered: "select" and "cut". The piece selection action might be provided to the environment at the beginning of each step, after which the cutting policy - conditioned on the current state with the already selected piece - can be queried to produce an appropriate cutting action.
+
+An implementation of a multi-stepping environment for the `stock cutting problem <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_ can be found :ref:`here<flat_to_structured>`.
+
+Control Flow
+------------
 
 In general, the control flow for multi-stepping environments involve at least two policies and one agent. It is easily possible, but not necessary, to include multiple agents in a multi-step scenario. The following image depicts a multi-step setup with one agent and an arbitrary number of sub-steps/policies.
 
@@ -25,8 +30,9 @@ In general, the control flow for multi-stepping environments involve at least tw
 
     Control flow within a multi-stepping scenario. Note that we assume a single agent here. The loop inside the environment component indicates that this sequence of activities can be repeated an arbitrary number of times. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
-| When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several policies and therefore several actors - more specifically, in a setup with *n* sub-steps (or actions per step) we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
-| The underlying pathways however are identical for all instances of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`. Within Maze' actor mechanism, multi-step environments are merely a particular specification amongst many.
+When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several policies and therefore several actors - more specifically, in a setup with *n* sub-steps (or actions per step) we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
+
+Multi-stepping is closely related to and can be seen as a type of :ref:`hierarchical RL<struct_env_hierarchical>`, in which each step encapsulates a hierarchy or sequence of tasks.
 
 
 Relation to Auto-Regressive Action Distributions
@@ -36,7 +42,7 @@ Multi-stepping is closely related to `auto-regressive action distributions (ARAD
 
 ARADs still execute one action per step, but condition it on the previous state and *action* instead of the state alone. This allows them to be more sensitive towards such recurring patterns of actions. Multi-stepping allows to incorporate domain knowledge about the correct order of actions or tasks without having to rely on learned autoregressive policies learning, but depends on the environment to incorporate it. ARAD policies do not presuppose (and cannot make use of) any such prior knowledge.
 
-While we do not explicitly implement ARADs, they could be approximated within MAZE with the available set of functionality by extending observations by prior actions and forwarding those to the active actor. If relevant domain knowledge is available, we recommend to implement the multi-stepping though.
+While we do not explicitly implement ARADs, they could be approximated with the set of functionality exposed within Maze by extending observations by prior actions. If relevant domain knowledge is available, we recommend to implement the multi-stepping though.
 
 Where to Go Next
 ----------------

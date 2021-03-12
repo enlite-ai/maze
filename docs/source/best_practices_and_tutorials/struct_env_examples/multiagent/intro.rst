@@ -12,6 +12,9 @@ Multi-Agent RL with Structured Environments
 
 Maze supports multi-agent learning out of the box. In order to make a :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` compatible with such a setup, it needs to keep track of the activities of each agent internally. How this is done and the order in which sequence agents enacted their actions is entirely to the environment. As per customary for a structured environment, it is required to provide the ID of the active actor via :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id` (see :ref:`here<control_flows_struct_envs>` for more information on the distinction between actor and agent). There are no further prequisites to use multiple agents with an environment.
 
+Control Flow
+------------
+
 It is easily possible, but not necessary, to include multiple policies in a multi-agent scenario. The control flow with multiple agents and a single policy can be summarized like this:
 
 .. figure:: control_flow.png
@@ -20,8 +23,7 @@ It is easily possible, but not necessary, to include multiple policies in a mult
 
     Control flow within a multi-agent scenario. Note that we assume a single policy here. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
-| When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several agents and therefore several actors - more specifically, in a setup with *n* agents we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
-| The underlying pathways however are identical for all instances of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`. Within Maze' actor mechanism, multi-agent environments are merely a particular specification amongst many.
+When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several agents and therefore several actors - more specifically, in a setup with *n* agents we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
 
 Where to Go Next
 ----------------

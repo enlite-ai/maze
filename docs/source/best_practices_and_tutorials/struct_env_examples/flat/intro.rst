@@ -9,6 +9,11 @@ Flat Environments
 
 All instantiable environments in Maze are subclasses of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`. Structured environments are discussed in :ref:`Control Flows with Structured Environments<control_flows_struct_envs>`, which we recommend to read prior to this article. *Flat* environments in our terminology are those utilizing a single actor and a single policy, i. e. a single actor, and conducting one action per step. Within Maze, flat environments are a special case of structured environments.
 
+An exemplary implementation of a flat environment for the `stock cutting problem <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_ can be found :ref:`here<env_from_scratch-problem>`.
+
+Control Flow
+------------
+
 Let's revisit a classic depiction of a RL control flow first:
 
 .. figure:: control_flow_simple.png
@@ -27,7 +32,7 @@ The figure above collapses the concepts of policy, agent and actor into a single
     More accurate control flow for a flat environment in Maze, showing how the actor mechanism integrates agent and policy. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
 A flat environment hence interacts with a single actor consisting of a single agent and a single policy. Due to the lack of other actors there is no need for the environment to ever update its active actor ID.
-The concept of actors is crucial to the flexibility of Maze, since it allows to arbitrarily scale up the number of agents, policies or both - which enables the application of RL to a wider range of use cases and exploit properties of the respective domains more efficiently.
+The concept of actors is crucial to the flexibility of Maze, since it allows to arbitrarily scale up the number of agents, policies or both. This enables the application of RL to a wider range of use cases and exploit properties of the respective domains more efficiently.
 
 Where to Go Next
 ----------------
