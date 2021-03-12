@@ -156,6 +156,7 @@ but most importantly also provide code snippets and minimum working examples to 
    concepts_and_structure/event_system.rst
    concepts_and_structure/hydra.rst
    concepts_and_structure/rendering.rst
+   concepts_and_structure/control_flows_struct_envs.rst
 
 .. toctree::
    :maxdepth: -1
@@ -172,13 +173,13 @@ but most importantly also provide code snippets and minimum working examples to 
    :caption: Best Practices and Tutorials
 
    best_practices_and_tutorials/tricks_of_the_trade.rst
+   best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/integrating_gym_environment.rst
    best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/maze_and_other_frameworks.rst
-   best_practices_and_tutorials/struct_env_examples/autoregressive/intro.rst
-   best_practices_and_tutorials/struct_env_examples/multi_agent/intro.rst
+   best_practices_and_tutorials/struct_env_examples/multistep/intro.rst
+   best_practices_and_tutorials/struct_env_examples/multiagent/intro.rst
    best_practices_and_tutorials/struct_env_examples/hierarchical/intro.rst
-   best_practices_and_tutorials/struct_env_examples/afterstate/intro.rst
    best_practices_and_tutorials/struct_env_examples/evolutionary/intro.rst
    best_practices_and_tutorials/example_cmds.rst
 

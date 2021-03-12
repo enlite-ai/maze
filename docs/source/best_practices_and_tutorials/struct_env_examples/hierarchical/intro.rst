@@ -1,7 +1,7 @@
 .. _struct_env_hierarchical:
 
-Structured Hierarchical Environments
-====================================
+Hierarchical RL with Structured Environments
+============================================
 
 The remainder of this tutorial is structured as follows:
 

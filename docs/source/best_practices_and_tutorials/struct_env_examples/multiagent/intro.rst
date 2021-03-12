@@ -1,7 +1,7 @@
 .. _struct_env_multiagent:
 
-Structured Multi-Agent Environments
-===================================
+Multi-Agent RL with Structured Environments
+===========================================
 
 The remainder of this tutorial is structured as follows:
 
