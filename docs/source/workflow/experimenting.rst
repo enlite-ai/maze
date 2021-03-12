@@ -75,6 +75,12 @@ The example below shows how to launch the same experiment with three different l
     $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo \
       algorithm.n_epochs=5 algorithm.lr=0.0001,0.0005,0.001 --multirun
 
+We then recommend to compare the different configurations with Tensorboard.
+
+.. code:: console
+
+    tensorboard --logdir outputs/
+
 Per default Hydra uses the local (sequential) runner for processing jobs.
 However, there are also more `scalable options <https://hydra.cc/docs/next/plugins/joblib_launcher>`_ available.
 
