@@ -2,7 +2,7 @@
 maze.core.wrappers.observation_normalization.observation_normalization_wrapper.ObservationNormalizationWrapper:
   default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
   default_strategy_config:
-    clip_range: [~, ~]
+    clip_range: [-3, 3]
     axis: [0]
   default_statistics: ~
   statistics_dump: statistics.pkl
@@ -10,3 +10,7 @@ maze.core.wrappers.observation_normalization.observation_normalization_wrapper.O
     _target_: maze.core.agent.random_policy.RandomPolicy
   exclude: ~
   manual_config: ~
+maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper:
+    observation_logging: true
+    action_logging: true
+    reward_logging: true

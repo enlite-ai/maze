@@ -9,7 +9,7 @@ ObservationStackWrapper:
 maze.core.wrappers.observation_normalization.observation_normalization_wrapper.ObservationNormalizationWrapper:
   default_strategy: maze.normalization_strategies.MeanZeroStdOneObservationNormalizationStrategy
   default_strategy_config:
-    clip_range: [~, ~]
+    clip_range: [-3, 3]
     axis: [0, 1]
   default_statistics: ~
   statistics_dump: statistics.pkl
