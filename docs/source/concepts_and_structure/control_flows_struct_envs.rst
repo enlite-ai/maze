@@ -3,10 +3,10 @@
 Control Flows with Structured Environments
 ==========================================
 
-The basic reinforcement learning formulation assumes a single actor in an environment, enacting one policy-suggested action per step to fulfill exactly one task. We refer to this as a *flat* environment. A classic example for this is the cartpole balancing problem, in which a single actor attempts to balance a cartpole as stably as possible. However, some problems incentivize or even require these assumptions to be violated:
+The basic reinforcement learning formulation assumes a single actor in an environment, enacting one policy-suggested action per step to fulfill exactly one task. We refer to this as a *flat* environment. A classic example for this is the cartpole balancing problem, in which a single actor attempts to fulfill the single task of balancing a cartpole. However, some problems incentivize or even require to generalize these assumptions:
 
  #. *Single actor*: Plenty of real-world scenarios motivate taking several actors into account. E.g.: `optimizing delivery with a fleet of vehicles <https://en.wikipedia.org/wiki/Vehicle_routing_problem>`_ involves emergent effects and interdependences between individual vehicles, such as that the availability and suitability of orders for any given vehicle depends on the proximity and activity of other vehicles. Treating them in isolation from each other is inefficient and detrimental to the learning process.
- #. *One action per step*: Some usecases, such as `cutting raw material according to customer specifications with as little waste as possible <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_, necessarily involve a well-defined sequence of actions. Stock-cutting involves (a) the selection of a piece of suitable size and (b) cutting it in an appropriate manner. We know that (a) is always followed by (b) and that the latter is a necessary precondition for the former. We can incorporate this information in our RL control loop to facilitate a faster learning process by enforcing that the environment should always execute two actions in a single step: First select, then cut.
+ #. *One action per step*: Some usecases, such as `cutting raw material according to customer specifications with as little waste as possible <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_, necessarily involve a well-defined sequence of actions. Stock-cutting involves (a) the selection of a piece of suitable size and (b) cutting it in an appropriate manner. We know that (a) is always followed by (b) and that the latter is a necessary precondition for the former. We can incorporate this information in our RL control loop to facilitate a faster learning process by enforcing that the environment should always execute two actions in a single step: First select, then cut. The sequential nature of such actions often lends itself to the application of action masking to increase learning efficiency.
  #. *Exactly one task*: Occasionally, the problem we want to solve cannot be neatly formulated as a single task, but consists of a hierarchy of tasks. This is exemplified by `pick and place robots <https://6river.com/what-is-a-pick-and-place-robot/>`_. They solve a complex task, which is reflected by the associated hierarchy of goals: The overall goal requires (a) reaching the target object, (b) grasping the target object, (c) moving target object to target location and (d) placing the target object safey in the target location. Solving this task cannot be reduced to a single goal.
 
 .. _control_flows_struct_envs_approach:
@@ -34,9 +34,9 @@ A multi-agent scenario can be realized by defining the corresponding actor IDs u
 
 **Selection of active actor**
 
-The environment determines the active actor based on its internal state. The current actor evaluates the observation provided by the environment and selects an appropriate action, i.e. every action is associated with a specific actor. This action updates the environment's state, after which the the environment reevaluates which actor should be active. Since it is left to the environment to decide when which actor should be active, it is possible to chain, combine and nest policies and therefore tasks in arbitrary manner.
+The environment determines the active actor based on its internal state. The current actor evaluates the observation provided by the environment and selects an appropriate action, i.e. every action is associated with a specific actor. This action updates the environment's state, after which the environment reevaluates which actor should be active. Since it is left to the environment to decide when which actor should be active, it is possible to chain, combine and nest policies and therefore tasks in arbitrary manner.
 
-Every :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` is required to implement :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`, which returns the ID of the currently active actor. An environment with a single actor may return a single-actor signature such as `(0, 0)`. At any time there has to be exactly one active actor ID.
+Every :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` is required to implement :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`, which returns the ID of the currently active actor. An environment with a single actor, e. g. a flat Gym environment, may return a single-actor signature such as `(0, 0)`. At any time there has to be exactly one active actor ID.
 
 **Policy-specific space conversion**
 
@@ -53,7 +53,7 @@ The actor concept and the mechanisms supporting it are thus capable of
 - preprocessing actions and observations w.r.t. the currently used actor/policy;
 - querying actions from policies on demand, not just after a step has been completed.
 
-These capabilities allow to bypass the tree restrictions laid out at the outset.
+These capabilities allow to bypass the three restrictions laid out at the outset.
 
 .. _control_flows_struct_envs_next:
 
@@ -66,6 +66,5 @@ Strutured environments are general enough to give rise to a number of different 
 - :ref:`Multi-stepping with structured environments<struct_env_multistep>`. Example: :ref:`Stock cutting with multi-stepping<flat_to_structured>`.
 - :ref:`Multi-agent RL with structure environments<struct_env_multiagent>`. Example: Vehicle routing problem, i.e. the coordination of a fleet of delivery vehicles with different targets [todo].
 - :ref:`Hierarchical RL with structured environments<struct_env_hierarchical>`. Example: Pick and place robots, i.e. a robotic arm picking and placing objects, in the process iterating over a sequence of sub-goals [todo - also: different example prob. better].
-- :ref:`Arbitrary environments with evolutionary strategies<struct_env_evolutionary>` [todo].
 
 Note that multi-stepping, multi-agent and hiearchical learning are orthogonal to each other and can be used in any combination.

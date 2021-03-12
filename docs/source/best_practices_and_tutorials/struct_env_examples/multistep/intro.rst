@@ -44,4 +44,3 @@ Where to Go Next
 - :ref:`Gym-style flat environments as a special case of structured environments<struct_env_multiagent>`.
 - :ref:`Multi-agent RL by using multiple actors with different agents<struct_env_multiagent>`.
 - :ref:`Hierarchical RL by chaining and nesting tasks via policies.<struct_env_hierarchical>`.
-- :ref:`Arbitrary environments with evolutionary strategies<struct_env_evolutionary>` [todo].
