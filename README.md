@@ -53,9 +53,6 @@ Below we list a few selected Maze features.
 * [Try your own Gym env](https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/integrating_gym_environment.html)
   or visit our [Maze step-by-step tutorial](https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html).
 
-* For a more applied introduction visit the .
-
-
 <table><tbody><tr>
     <td align="center"><a href="https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html">
         <img src="https://github.com/enlite-ai/maze/raw/main/.github/pip.png" alt="Pip" width="128px"><br>

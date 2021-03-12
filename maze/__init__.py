@@ -1,7 +1,5 @@
 """ MazeRL init """
 import os
-from hydra.core.global_hydra import GlobalHydra
-from omegaconf import OmegaConf
 from maze.utils.bcolors import BColors
 
 __version__ = "0.1.0"
