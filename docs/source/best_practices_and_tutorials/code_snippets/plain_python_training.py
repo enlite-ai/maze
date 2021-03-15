@@ -1,5 +1,8 @@
 """ Rollout of a policy in plain Python. """
+from typing import Dict, Sequence
+
 import gym
+import torch
 import torch.nn as nn
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
@@ -10,6 +13,7 @@ from maze.perception.blocks.general.torch_model_block import TorchModelBlock
 from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
+from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.utils.log_stats_utils import setup_logging
 
 
@@ -31,168 +35,163 @@ def cartpole_env_factory():
     return maze_env
 
 
-# Instantiate one environment. This will be used for convenient access to observation
-# and action spaces.
-env = cartpole_env_factory()
-observation_space = env.observation_space
-action_space = env.action_space
-
 # Model Setup
 # ===========
-
-# Model Wrapping
+# Policy Network
 # --------------
 class CartpolePolicyNet(nn.Module):
     """ Simple linear policy net for demonstration purposes. """
-    def __init__(self, in_features, out_features):
+    def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logit_shapes: Dict[str, Sequence[int]]):
         super().__init__()
-        self.dense = nn.Sequential(nn.Linear(in_features=in_features,
-                                             out_features=out_features))
+        self.net = nn.Sequential(
+            nn.Linear(in_features=obs_shapes['observation'][0],
+                      out_features=action_logit_shapes['action'][0])
+        )
 
-    def forward(self, x):
-        """ Forward method """
-        return self.dense(x)
+    def forward(self, x_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+        # Since x_dict has to be a dictionary in Maze, we extract the input for the network. Note that the key
+        # 'observation' can be anything user-specified. It has to fit the vocabulary of the action spaces
+        # though, so the defaults for simple environments are 'observation' and 'action'.
+        x = x_dict['observation']
 
+        # Do the forward pass.
+        logits = self.net(x)
 
-# Wrapped Policy Model:
-class WrappedCartpolePolicyNet(nn.Module):
-    """ Wrapper for a model that transforms it into a Maze-compatible one. """
-    def __init__(self, obs_shapes, action_logit_shapes):
-        super().__init__()
-        self.policy_network = CartpolePolicyNet(in_features=obs_shapes[0],
-                                                out_features=action_logit_shapes[0])
+        # Since the return value has to be a dict again, put the forward pass result into a dict with the
+        # correct key.
+        logits_dict = {'action': logits}
 
-    def forward(self, x_dict):
-        logits_dict = {'action': self.policy_network.forward(x_dict['observation'])}
         return logits_dict
 
 
+# Value Network
+# -------------
 class CartpoleValueNet(nn.Module):
     """ Simple linear value net for demonstration purposes. """
-    def __init__(self, in_features):
+    def __init__(self, obs_shapes: Dict[str, Sequence[int]]):
         super().__init__()
-        self.dense = nn.Sequential(nn.Linear(in_features=in_features, out_features=1))
+        self.value_net = nn.Sequential(nn.Linear(in_features=obs_shapes['observation'][0], out_features=1))
 
-    def forward(self, x):
-        """ Forward method """
-        return self.dense(x)
-
-
-# Wrapped Value Model:
-class WrappedCartpoleValueNet(nn.Module):
-    """ Wrapper for a model that transforms it into a Maze-compatible one. """
-    def __init__(self, obs_shapes):
-        super().__init__()
-        self.value_net = CartpoleValueNet(in_features=obs_shapes[0])
-
-    def forward(self, x_dict):
+    def forward(self, x_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """ Forward method. """
-        value_dict = {'value': self.value_net.forward(x_dict['observation'])}
+        # The same as for the policy can be said about the value net. Inputs and outputs have to be dicts.
+        x = x_dict['observation']
+
+        value = self.value_net(x)
+
+        value_dict = {'value': value}
         return value_dict
 
 
-# Policy Setup
-# ------------
+def train():
+    # Instantiate one environment. This will be used for convenient access to observation
+    # and action spaces.
+    env = cartpole_env_factory()
+    observation_space = env.observation_space
+    action_space = env.action_space
 
-# Policy Network
-# ^^^^^^^^^^^^^^
-# Instantiate policy with the correct shapes of observation and action spaces.
-policy_net = WrappedCartpolePolicyNet(
-    obs_shapes=observation_space.spaces['observation'].shape,
-    action_logit_shapes=(action_space.spaces['action'].n,))
+    # Policy Setup
+    # ------------
 
-maze_wrapped_policy_net = TorchModelBlock(
-    in_keys='observation', out_keys='action',
-    in_shapes=observation_space.spaces['observation'].shape, in_num_dims=[2],
-    out_num_dims=2, net=policy_net)
+    # Policy Network
+    # ^^^^^^^^^^^^^^
+    # Instantiate policy with the correct shapes of observation and action spaces.
+    policy_net = CartpolePolicyNet(
+        obs_shapes={'observation': observation_space.spaces['observation'].shape},
+        action_logit_shapes={'action': (action_space.spaces['action'].n,)})
 
-policy_networks = {0: maze_wrapped_policy_net}
+    maze_wrapped_policy_net = TorchModelBlock(
+        in_keys='observation', out_keys='action',
+        in_shapes=observation_space.spaces['observation'].shape, in_num_dims=[2],
+        out_num_dims=2, net=policy_net)
 
-# Policy Distribution
-# ^^^^^^^^^^^^^^^^^^^
-distribution_mapper = DistributionMapper(
-    action_space=action_space,
-    distribution_mapper_config={})
+    policy_networks = {0: maze_wrapped_policy_net}
 
-# Optionally, you can specify a different distribution with the distribution_mapper_config argument. Using a
-# Categorical distribution for a discrete action space would be done via
-distribution_mapper = DistributionMapper(
-    action_space=action_space,
-    distribution_mapper_config=[{
-        "action_space": gym.spaces.Discrete,
-        "distribution": "maze.distributions.categorical.CategoricalProbabilityDistribution"}])
+    # Policy Distribution
+    # ^^^^^^^^^^^^^^^^^^^
+    distribution_mapper = DistributionMapper(
+        action_space=action_space,
+        distribution_mapper_config={})
 
-# Instantiating the Policy
-# ^^^^^^^^^^^^^^^^^^^^^^^^
-torch_policy = TorchPolicy(networks=policy_networks,
-                           distribution_mapper=distribution_mapper,
-                           device='cpu')
+    # Optionally, you can specify a different distribution with the distribution_mapper_config argument. Using a
+    # Categorical distribution for a discrete action space would be done via
+    distribution_mapper = DistributionMapper(
+        action_space=action_space,
+        distribution_mapper_config=[{
+            "action_space": gym.spaces.Discrete,
+            "distribution": "maze.distributions.categorical.CategoricalProbabilityDistribution"}])
+
+    # Instantiating the Policy
+    # ^^^^^^^^^^^^^^^^^^^^^^^^
+    torch_policy = TorchPolicy(networks=policy_networks,
+                               distribution_mapper=distribution_mapper,
+                               device='cpu')
+
+    # Value Function Setup
+    # --------------------
+
+    # Value Network
+    # ^^^^^^^^^^^^^
+    value_net = CartpoleValueNet(obs_shapes={'observation': observation_space.spaces['observation'].shape})
+
+    maze_wrapped_value_net = TorchModelBlock(
+        in_keys='observation', out_keys='value',
+        in_shapes=observation_space.spaces['observation'].shape, in_num_dims=[2],
+        out_num_dims=2, net=value_net)
+
+    value_networks = {0: maze_wrapped_value_net}
+
+    # Instantiate the Value Function
+    # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    torch_critic = TorchSharedStateCritic(networks=value_networks, num_policies=1, device='cpu')
+
+    # Initializing the ActorCritic Model.
+    # -----------------------------------
+    actor_critic_model = TorchActorCritic(policy=torch_policy, critic=torch_critic, device='cpu')
+
+    # Instantiating the Trainer
+    # =========================
+    algorithm_config = A2CAlgorithmConfig(
+        n_epochs=5,
+        epoch_length=25,
+        deterministic_eval=False,
+        eval_repeats=2,
+        patience=15,
+        critic_burn_in_epochs=0,
+        n_rollout_steps=100,
+        lr=0.0005,
+        gamma=0.98,
+        gae_lambda=1.0,
+        policy_loss_coef=1.0,
+        value_loss_coef=0.5,
+        entropy_coef=0.00025,
+        max_grad_norm=0.0,
+        device='cpu')
+
+    # Distributed Environments
+    # ------------------------
+    # In order to use the distributed trainers, the previously created env factory is supplied to one of Maze's
+    # distribution classes:
+    train_envs = DummyStructuredDistributedEnv(
+        [cartpole_env_factory for _ in range(2)], logging_prefix="train")
+    eval_envs = DummyStructuredDistributedEnv(
+        [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
+
+    # initialize best model selection todo: document in rst file
+    model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)
+
+    a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
+                               model=actor_critic_model, model_selection=model_selection)
+
+    # Train the Agent
+    # ===============
+    # Before starting the training, we will enable logging by calling
+    log_dir = '.'
+    setup_logging(job_config=None, log_dir=log_dir)
+
+    # Now, we can train the agent.
+    a2c_trainer.train()
 
 
-# Value Function Setup
-# --------------------
-
-# Value Network
-# ^^^^^^^^^^^^^
-value_net = WrappedCartpoleValueNet(obs_shapes=observation_space.spaces['observation'].shape)
-
-maze_wrapped_value_net = TorchModelBlock(
-    in_keys='observation', out_keys='value',
-    in_shapes=observation_space.spaces['observation'].shape, in_num_dims=[2],
-    out_num_dims=2, net=value_net)
-
-value_networks = {0: maze_wrapped_value_net}
-
-# Instantiate the Value Function
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-torch_critic = TorchSharedStateCritic(networks=value_networks, num_policies=1, device='cpu')
-
-
-# Initializing the ActorCritic Model.
-# -----------------------------------
-actor_critic_model = TorchActorCritic(policy=torch_policy, critic=torch_critic, device='cpu')
-
-# Instantiating the Trainer
-# =========================
-algorithm_config = A2CAlgorithmConfig(
-    n_epochs=5,
-    epoch_length=25,
-    deterministic_eval=False,
-    eval_repeats=2,
-    patience=15,
-    critic_burn_in_epochs=0,
-    n_rollout_steps=100,
-    lr=0.0005,
-    gamma=0.98,
-    gae_lambda=1.0,
-    policy_loss_coef=1.0,
-    value_loss_coef=0.5,
-    entropy_coef=0.00025,
-    max_grad_norm=0.0,
-    device='cpu')
-
-
-# Distributed Environments
-# ------------------------
-# In order to use the distributed trainers, the previously created env factory is supplied to one of Maze's
-# distribution classes:
-train_envs = DummyStructuredDistributedEnv(
-    [cartpole_env_factory for _ in range(2)], logging_prefix="train")
-eval_envs = DummyStructuredDistributedEnv(
-    [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
-
-
-a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
-                           model=actor_critic_model, model_selection=None)
-
-# Train the Agent
-# ===============
-# Before starting the training, we will enable logging by calling
-log_dir = '.'
-setup_logging(job_config=None, log_dir=log_dir)
-
-# Now, we can train the agent.
-a2c_trainer.train()
-
-# To get an out-of sample estimate of our performance, evaluate on the evaluation envs:
-a2c_trainer.evaluate(deterministic=False, repeats=1)
+if __name__ == '__main__':
+    train()
