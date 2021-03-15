@@ -75,4 +75,5 @@ setup(name="maze-rl",
               "pytest-redis"
           ]
       },
-      entry_points={"console_scripts": ["maze-run=maze.maze_cli:maze_run"]})
+      entry_points={"console_scripts": ["maze-run=maze.maze_cli:maze_run",
+                                        "maze-hyper-opt=maze.maze_hyper_opt:maze_hyper_opt"]})

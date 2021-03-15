@@ -61,8 +61,8 @@ To start the training run with this config file, run:
 You can find a more detail explanation on how experiments are embedded in the overall configuration system in our
 :ref:`Hydra experiment documentation <hydra-custom-experiments>`.
 
-Hyper Parameter Optimization
-----------------------------
+Hyper Parameter Grid Search
+---------------------------
 
 To perform a simple grid search over some hyper parameters you can use
 `Hydra's Sweeper <https://hydra.cc/docs/0.11/advanced/plugins#sweeper>`_
@@ -83,6 +83,49 @@ We then recommend to compare the different configurations with Tensorboard.
 
 Per default Hydra uses the local (sequential) runner for processing jobs.
 However, there are also more `scalable options <https://hydra.cc/docs/next/plugins/joblib_launcher>`_ available.
+
+For setting up a scalable grid search setup we recommend to create an experiments file for configuration.
+As a starting point Maze already contains a simple local grid search setting which you can use as a starting point.
+
+.. literalinclude:: ../../../maze/conf/experiment/grid_search.yaml
+  :language: YAML
+  :caption: conf/experiment/grid_search.yaml
+
+To perform the same grid search as above with multiple parallel workers, run:
+
+.. code:: console
+
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo \
+      algorithm.n_epochs=5 algorithm.lr=0.0001,0.0005,0.001 +experiment=grid_search --multirun
+
+
+Hyper Parameter Optimization
+----------------------------
+
+Maze also support hyper parameter optimization beyond vanilla grid search via
+`Nevergrad <https://hydra.cc/docs/plugins/nevergrad_sweeper>`_ (in case you have enough resources available).
+
+First make sure that all `requirements <https://hydra.cc/docs/plugins/nevergrad_sweeper#installation>`_
+are properly installed.
+
+Next, you can continue with the experiment template below and adopt it to your needs
+(for details on how to define parameters we refer to the
+`Hydra docs <https://hydra.cc/docs/plugins/nevergrad_sweeper#defining-the-parameters>`_) and this
+`example <https://github.com/facebookresearch/hydra/blob/master/plugins/hydra_nevergrad_sweeper/example/config.yaml>`_.
+
+.. literalinclude:: ../../../maze/conf/experiment/nevergrad.yaml
+  :language: YAML
+  :caption: conf/experiment/nevergrad.yaml
+
+.. code:: console
+
+    $ maze-hyper-opt -cn conf_train env.name=Pendulum-v0 algorithm=ppo \
+      algorithm.n_epochs=5 +experiment=nevergrad --multirun
+
+.. note::
+
+    We now have to start the experiment with :code:`maze-hyper-opt` as Nevergrad requires the reward as a return value
+    to steer hyper parameter optimization.
 
 Where to Go Next
 ----------------
