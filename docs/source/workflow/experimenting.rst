@@ -120,13 +120,8 @@ To start a hyper parameter optimization, run:
 
 .. code:: console
 
-    $ maze-hyper-opt -cn conf_train env.name=Pendulum-v0 algorithm=ppo \
+    $ maze-run -cn conf_train env.name=Pendulum-v0 algorithm=ppo \
       algorithm.n_epochs=5 +experiment=nevergrad --multirun
-
-.. note::
-
-    We now have to start the experiment with :code:`maze-hyper-opt` as Nevergrad requires the reward as a return value
-    of :code:`@hydra.main` to steer hyper parameter optimization.
 
 Where to Go Next
 ----------------

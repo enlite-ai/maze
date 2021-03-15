@@ -55,6 +55,9 @@ def clear_global_state():
     LogEventsWriterRegistry.writers = []  # clear writers
     TrajectoryWriterRegistry.writers = []  # clear writers
 
+    for writer in GlobalLogState.global_log_stats_writers:
+        writer.close()
+
     GlobalLogState.global_step = 1
     GlobalLogState.hook_on_log_step = []
     GlobalLogState.global_log_stats_writers = []
