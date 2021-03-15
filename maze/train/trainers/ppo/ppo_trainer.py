@@ -58,6 +58,7 @@ class MultiStepPPO(MultiStepActorCritic):
         actions = self._flatten_sub_step_items(actions)
         obs_t = self._flatten_sub_step_items(obs_t)
         action_log_probs_old = self._flatten_sub_step_items(action_log_probs_old)
+        action_log_probs_old = convert_to_torch(action_log_probs_old, device='cpu', cast=None, in_place=False)
 
         # iterate ppo optimization epochs
         critic_train_stats = [defaultdict(list) for _ in range(self.model.critic.num_critics)]
@@ -139,7 +140,7 @@ class MultiStepPPO(MultiStepActorCritic):
 
                         # get relevant log probs
                         log_probs = action_log_probs[step_id][key]
-                        old_log_probs = action_log_probs_old[step_id][key][batch_idxs]
+                        old_log_probs = action_log_probs_old[step_id][key][batch_idxs].to(self.algorithm_config.device)
 
                         # prepare advantages
                         action_advantages = advantages[step_id].detach()
