@@ -177,6 +177,7 @@ but most importantly also provide code snippets and minimum working examples to 
    best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/maze_and_other_frameworks.rst
    best_practices_and_tutorials/example_cmds.rst
+   best_practices_and_tutorials/plain_python_training_example.rst
 
 .. toctree::
    :maxdepth: -1
