@@ -37,15 +37,6 @@ env = cartpole_env_factory()
 observation_space = env.observation_space
 action_space = env.action_space
 
-# Distributed Environments
-# ------------------------
-# The factory can now be supplied to one of Maze's distribution classes:
-train_envs = DummyStructuredDistributedEnv(
-    [cartpole_env_factory for _ in range(2)], logging_prefix="train")
-eval_envs = DummyStructuredDistributedEnv(
-    [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
-
-
 # Model Setup
 # ===========
 
@@ -54,7 +45,7 @@ eval_envs = DummyStructuredDistributedEnv(
 class CartpolePolicyNet(nn.Module):
     """ Simple linear policy net for demonstration purposes. """
     def __init__(self, in_features, out_features):
-        super(CartpolePolicyNet, self).__init__()
+        super().__init__()
         self.dense = nn.Sequential(nn.Linear(in_features=in_features,
                                              out_features=out_features))
 
@@ -67,7 +58,7 @@ class CartpolePolicyNet(nn.Module):
 class WrappedCartpolePolicyNet(nn.Module):
     """ Wrapper for a model that transforms it into a Maze-compatible one. """
     def __init__(self, obs_shapes, action_logit_shapes):
-        super(WrappedCartpolePolicyNet, self).__init__()
+        super().__init__()
         self.policy_network = CartpolePolicyNet(in_features=obs_shapes[0],
                                                 out_features=action_logit_shapes[0])
 
@@ -79,7 +70,7 @@ class WrappedCartpolePolicyNet(nn.Module):
 class CartpoleValueNet(nn.Module):
     """ Simple linear value net for demonstration purposes. """
     def __init__(self, in_features):
-        super(CartpoleValueNet, self).__init__()
+        super().__init__()
         self.dense = nn.Sequential(nn.Linear(in_features=in_features, out_features=1))
 
     def forward(self, x):
@@ -91,7 +82,7 @@ class CartpoleValueNet(nn.Module):
 class WrappedCartpoleValueNet(nn.Module):
     """ Wrapper for a model that transforms it into a Maze-compatible one. """
     def __init__(self, obs_shapes):
-        super(WrappedCartpoleValueNet, self).__init__()
+        super().__init__()
         self.value_net = CartpoleValueNet(in_features=obs_shapes[0])
 
     def forward(self, x_dict):
@@ -179,6 +170,17 @@ algorithm_config = A2CAlgorithmConfig(
     entropy_coef=0.00025,
     max_grad_norm=0.0,
     device='cpu')
+
+
+# Distributed Environments
+# ------------------------
+# In order to use the distributed trainers, the previously created env factory is supplied to one of Maze's
+# distribution classes:
+train_envs = DummyStructuredDistributedEnv(
+    [cartpole_env_factory for _ in range(2)], logging_prefix="train")
+eval_envs = DummyStructuredDistributedEnv(
+    [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
+
 
 a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
                            model=actor_critic_model, model_selection=None)
