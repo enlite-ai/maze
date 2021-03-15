@@ -2,10 +2,7 @@
 
 Plain Python Training Example
 =============================
-We will demonstrate how to do a manual RL training loop with Maze in plain Python, i.e., without any Hydra calls.
-This example serves to demonstrate how to transform your own custom RL loop to Maze. Let's assume you want to train an
-A2C agent for the Cartpole environment and let's also assume that you have already spent much time in creating your own
-networks for this environment, i.e., you want to use your own networks but want to transition to Maze.
+Here, we will demonstrate how to train an A2C agent with Maze in plain Python, i.e., without any Hydra calls.
 
 Environment Setup
 -----------------
@@ -42,80 +39,59 @@ We instantiate one environment. This will be used for convenient access to obser
 
 Model Setup
 -----------
-Now that the environment setup is done, let us define the policy and value networks that will be used. We will not
-re-use the networks that were introduced in
-:ref:`Example 3: Custom Networks with (plain PyTorch) Python <custom_example_3>`
-as they already adhere to the Maze model interface. Here, we would like to show how to transform any models that
-you already have to the necessary Maze interface.
+Now that the environment setup is done, let us develop the policy and value networks that will be used. We will
+pay special attention to emphasize the format required by Maze. When creating your own models,
+it is important to know two things:
 
-Assume that you have created the following policy and
-value networks for the cartpole environment:
+#. Maze works with dictionaries throughout, which means that arguments for the constructor and the input and return values of the forward  method are dicts with user-defined keys.
+#. Policy networks and value network constructors have required arguments: for policy nets, these are `obs_shapes` and `action_logit_dicts`, for value nets, this is `obs_shapes`.
+
+The required format is explained in more detail :ref:`here <custom_models_signature>`. With this in mind, let us
+create a simple linear mapping network with the required constraints:
 
 .. code-block:: python
 
     class CartpolePolicyNet(nn.Module):
-        """ Simple linear policy net for demonstration purposes """
-        def __init__(self, in_features, out_features):
-            super(CartpolePolicyNet, self).__init__()
-            self.dense = nn.Sequential(
-                nn.Linear(in_features=in_features, out_features=out_features))
+        """ Simple linear policy net for demonstration purposes. """
+        def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logit_shapes: Dict[str, Sequence[int]]):
+            super().__init__()
+            self.net = nn.Sequential(
+                nn.Linear(in_features=obs_shapes['observation'][0],
+                          out_features=action_logit_shapes['action'][0])
+            )
 
-        def forward(self, x):
-            """ Forward method """
-            return self.dense(x)
+        def forward(self, x_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+            # Since x_dict has to be a dictionary in Maze, we extract the input for the network.
+            x = x_dict['observation']
 
+            # Do the forward pass.
+            logits = self.net(x)
 
-and
+            # Since the return value has to be a dict again, put the forward pass result into a dict with the
+            # correct key.
+            logits_dict = {'action': logits}
 
-.. code-block:: python
-
-    class CartpoleValueNet(nn.Module):
-        """ Simple linear value net for demonstration purposes """
-        def __init__(self, in_features):
-            super(CartpoleValueNet, self).__init__()
-            self.dense = nn.Sequential(nn.Linear(in_features=in_features, out_features=1))
-
-        def forward(self, x):
-            """ Forward method """
-            return self.dense(x)
-
-The first step will be to transform these models into a form that Maze can understand. It is important to know that Maze
-works with dictionaries, which means that parameter and return values of the forward method are dicts with
-user-defined keys. Another requirement are the parameters for the model initialization, as is explained
-:ref:`here <custom_models_signature>`
-: required arguments for the
-policy nets are the arguments `obs_shapes` and `action_logit_dicts`. The value net is required to have the
-argument `obs_shapes`.
-A transformation of the present networks to networks with the required form can be easily achieved by
-wrapping the models:
-
-.. code-block:: python
-
-    class WrappedCartpolePolicyNet(nn.Module):
-        """ Wrapper for a model that transforms the network into a Maze. compatible one. """
-        def __init__(self, obs_shapes, action_logit_shapes):
-            super(WrappedCartpolePolicyNet, self).__init__()
-            self.policy_network = CartpolePolicyNet(in_features=obs_shapes[0], out_features=action_logit_shapes[0])
-
-        def forward(self, x_dict):
-            logits_dict = {'action': self.policy_network.forward(x_dict['observation'])}
             return logits_dict
 
 and
 
 .. code-block:: python
 
-    class WrappedCartpoleValueNet(nn.Module):
-        """ Wrapper for a model that transforms the network into a Maze. compatible one. """
-        def __init__(self, obs_shapes):
-            super(WrappedCartpoleValueNet, self).__init__()
-            self.value_net = CartpoleValueNet(in_features=obs_shapes[0])
+    class CartpoleValueNet(nn.Module):
+        """ Simple linear value net for demonstration purposes. """
+        def __init__(self, obs_shapes: Dict[str, Sequence[int]]):
+            super().__init__()
+            self.value_net = nn.Sequential(nn.Linear(in_features=obs_shapes['observation'][0], out_features=1))
 
-        def forward(self, x_dict):
+        def forward(self, x_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
             """ Forward method. """
-            value_dict = {'value': self.value_net.forward(x_dict['observation'])}
-            return value_dict
+            # The same as for the policy can be said about the value net. Inputs and outputs have to be dicts.
+            x = x_dict['observation']
 
+            value = self.value_net(x)
+
+            value_dict = {'value': value}
+            return value_dict
 
 **Policy Setup**
 
@@ -268,7 +244,16 @@ distribution classes:
     eval_envs = DummyStructuredDistributedEnv(
         [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
 
-With this, the trainer can be instantiated:
+For this example, we want to save the parameters of the best model in terms of mean achieved reward. This is done
+with the
+:class:`BestModelSelection <maze.train.trainers.common.model_selection.best_model_selection.BestModelSelection>` class,
+an instance of which will be provided to the trainer.
+
+.. code-block:: python
+
+    model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)
+
+We can now instantiate an A2C trainer:
 
 .. code-block:: python
 
