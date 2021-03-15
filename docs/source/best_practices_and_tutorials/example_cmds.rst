@@ -1,6 +1,10 @@
 Rollout and Training Examples
 =============================
 
+.. _hydra_commands:
+Hydra Command Examples
+----------------------
+
 Run a rollout to test an environment with random action sampling:
 
 .. code-block:: console
@@ -33,3 +37,22 @@ Run a rollout of a policy, trained with the command above:
 
     maze-run -cn conf_rollout env.name=CartPole-v1 model=vector_obs \
     policy=torch_policy input_dir=outputs/<experiment-dir>
+
+.. _end_to_end_python:
+
+End-to-End Plain Python Training and Rollout Example
+----------------------------------------------------
+We will demonstrate how to do a manual RL training loop with Maze in plain Python, i.e., without any Hydra calls.
+This example serves to demonstrate how to transform an own custom RL loop to Maze. Let's assume you want to train an
+agent for the Cartpole environment.
+
+Training
+^^^^^^^^
+
+
+Rollout
+^^^^^^^
+auch nix da
+
+
+
