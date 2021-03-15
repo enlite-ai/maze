@@ -83,7 +83,7 @@ class CartpoleValueNet(nn.Module):
         return value_dict
 
 
-def train():
+def train(n_epochs):
     # Instantiate one environment. This will be used for convenient access to observation
     # and action spaces.
     env = cartpole_env_factory()
@@ -152,7 +152,7 @@ def train():
     # Instantiating the Trainer
     # =========================
     algorithm_config = A2CAlgorithmConfig(
-        n_epochs=5,
+        n_epochs=n_epochs,
         epoch_length=25,
         deterministic_eval=False,
         eval_repeats=2,
@@ -192,6 +192,8 @@ def train():
     # Now, we can train the agent.
     a2c_trainer.train()
 
+    return 0
+
 
 if __name__ == '__main__':
-    train()
+    train(n_epochs=5)
