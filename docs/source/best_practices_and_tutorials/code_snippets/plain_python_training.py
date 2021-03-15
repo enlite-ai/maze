@@ -49,9 +49,7 @@ class CartpolePolicyNet(nn.Module):
         )
 
     def forward(self, x_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        # Since x_dict has to be a dictionary in Maze, we extract the input for the network. Note that the key
-        # 'observation' can be anything user-specified. It has to fit the vocabulary of the action spaces
-        # though, so the defaults for simple environments are 'observation' and 'action'.
+        # Since x_dict has to be a dictionary in Maze, we extract the input for the network.
         x = x_dict['observation']
 
         # Do the forward pass.
@@ -177,7 +175,7 @@ def train(n_epochs):
     eval_envs = DummyStructuredDistributedEnv(
         [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
 
-    # initialize best model selection todo: document in rst file
+    # Initialize best model selection.
     model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)
 
     a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
