@@ -180,8 +180,9 @@ Instantiate a policy with the correct shapes of observation and action spaces.
         action_logit_shapes=(action_space.spaces['action'].n,))
 
 
-We can use one of Mazes capabilities, the shape normalization
-with these models by wrapping them with the TorchModelBlock # todo: link to API reference
+We can use one of Mazes capabilities, shape normalization
+(see :class:`ShapeNormalizationBlock <maze.perception.blocks.shape_normalization.ShapeNormalizationBlock>`),
+with these models by wrapping them with the TorchModelBlock.
 
 .. code-block:: python
 
