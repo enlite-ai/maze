@@ -1,0 +1,13 @@
+# @package _global_
+
+# defaults to override
+defaults:
+  - override /runner: dev
+  - override /hydra/launcher: ray
+
+# specify grid search setup
+hydra:
+  launcher:
+    ray:
+      init:
+        num_cpus: 4

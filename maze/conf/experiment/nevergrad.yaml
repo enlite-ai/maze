@@ -1,0 +1,31 @@
+# @package _global_
+
+# defaults to override
+defaults:
+  - override /hydra/sweeper: nevergrad
+  - override /hydra/launcher: ray
+  - override /runner: dev
+
+# overrides
+hydra:
+  sweeper:
+    optim:
+      # name of the nevergrad optimizer to use
+      # OnePlusOne is good at low budget, but may converge early
+      optimizer: OnePlusOne
+      # total number of function evaluations to perform
+      budget: 100
+      # number of parallel workers for performing function evaluations
+      num_workers: 4
+      # we want to maximize reward
+      maximize: true
+
+    # default parametrization of the search space
+    parametrization:
+      # a linearly-distributed scalar
+      algorithm.lr:
+        lower: 0.00001
+        upper: 0.001
+      algorithm.entropy_coef:
+        lower: 0.0000025
+        upper: 0.025
