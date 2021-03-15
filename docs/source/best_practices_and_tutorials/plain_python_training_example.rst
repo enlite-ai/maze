@@ -2,7 +2,7 @@
 
 Plain Python Training Example
 =============================
-Here, we will demonstrate how to train an A2C agent with Maze in plain Python, i.e., without any Hydra calls.
+Here, we will demonstrate how to train an A2C agent with Maze in plain Python.
 
 Environment Setup
 -----------------
