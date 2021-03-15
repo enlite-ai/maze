@@ -56,7 +56,7 @@ Environment Factory
 """""""""""""""""""
 We will first prepare our environment for use with Maze. In order to use Maze's parallelization capabilities, it
 is necessary to define a factory function that returns a MazeEnv of your environment. This is easily done for
-gym environments:
+Gym environments:
 
 .. code-block:: python
 
@@ -71,8 +71,8 @@ gym environments:
 
         return maze_env
 
-# If you have your own environment you must transform it into a MazeEnv yourself, as is shown in #todo link
-# and have your factory return that.
+If you have your own environment you must transform it into a MazeEnv yourself, as is shown
+:ref:`here <env_from_scratch-maze_env>`, and have your factory return that.
 
 Distributed Environments
 """"""""""""""""""""""""
