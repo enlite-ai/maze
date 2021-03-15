@@ -332,6 +332,10 @@ class LogStatsWriter(ABC):
         :return None
         """
 
+    def close(self) -> None:
+        """Close writer and clean up.
+        """
+
 
 class GlobalLogState:
     """Internal class that encapsulates the global state of the logging system."""

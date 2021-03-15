@@ -16,7 +16,7 @@ hydra:
       # total number of function evaluations to perform
       budget: 100
       # number of parallel workers for performing function evaluations
-      num_workers: 4
+      num_workers: 6
       # we want to maximize reward
       maximize: true
 

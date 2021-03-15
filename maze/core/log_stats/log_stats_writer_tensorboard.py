@@ -6,6 +6,7 @@ from typing import Callable, Union, List, Optional
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 
+from maze.core.annotations import override
 from maze.core.log_stats.log_stats import LogStatsWriter, LogStats, GlobalLogState
 
 
@@ -33,6 +34,7 @@ class LogStatsWriterTensorboard(LogStatsWriter):
         # this relies on knowing the variable name in my_module
         logging.getLogger().addFilter(_IgnoreTensorboardCheckNaN())
 
+    @override(LogStatsWriter)
     def write(self, path: str, step: int, stats: LogStats) -> None:
         """LogStatsWriter.write implementation"""
 
@@ -88,6 +90,11 @@ class LogStatsWriterTensorboard(LogStatsWriter):
         self.this_step_tags = set()
 
         self.summary_writer.flush()
+
+    @override(LogStatsWriter)
+    def close(self) -> None:
+        """LogStatsWriter.write implementation"""
+        self.summary_writer.close()
 
     @staticmethod
     def _event_to_tag(event: Callable, name: str, groups: Optional[List[Union[int, str]]]) -> str:
