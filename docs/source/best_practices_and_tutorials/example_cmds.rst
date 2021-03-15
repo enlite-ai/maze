@@ -74,26 +74,37 @@ Gym environments:
 If you have your own environment you must transform it into a MazeEnv yourself, as is shown
 :ref:`here <env_from_scratch-maze_env>`, and have your factory return that.
 
-Distributed Environments
-""""""""""""""""""""""""
-# The factory can now be supplied to one of Maze's distribution classes:
+We instantiate one environment. This will be used for convenient access to observation and action spaces later.
 
 .. code-block:: python
 
-    train_envs = DummyStructuredDistributedEnv([cartpole_env_factory for _ in range(2)], logging_prefix="train")
-    eval_envs = DummyStructuredDistributedEnv([cartpole_env_factory for _ in range(2)], logging_prefix="eval")
+    env = cartpole_env_factory()
+    observation_space = env.observation_space
+    action_space = env.action_space
+
+Distributed Environments
+""""""""""""""""""""""""
+The factory can now be supplied to one of Maze's distribution classes:
+
+.. code-block:: python
+
+    train_envs = DummyStructuredDistributedEnv(
+        [cartpole_env_factory for _ in range(2)], logging_prefix="train")
+    eval_envs = DummyStructuredDistributedEnv(
+        [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
 
 Model Setup
 ^^^^^^^^^^^
 Now that the environment setup is done, let us define the policy and value networks that will be used. We will not
-re-use the networks that were introduced in # todo: link to custom-models section
-as they already adhere to the maze model interface. Here, we would like to show how to transform any models that
+re-use the networks that were introduced in
+:ref:`Example 3: Custom Networks with (plain PyTorch) Python <custom_example_3>`
+as they already adhere to the Maze model interface. Here, we would like to show how to transform any models that
 you already have to the necessary Maze interface.
 
 Model Wrapping
 """"""""""""""
 
-Let us first get the models in the correct format. Assume that you have created the following policy and
+Assume that you have created the following policy and
 value networks for the cartpole environment:
 
 .. code-block:: python
@@ -102,7 +113,8 @@ value networks for the cartpole environment:
         """ Simple linear policy net for demonstration purposes """
         def __init__(self, in_features, out_features):
             super(CartpolePolicyNet, self).__init__()
-            self.dense = nn.Sequential(nn.Linear(in_features=in_features, out_features=out_features))
+            self.dense = nn.Sequential(
+                nn.Linear(in_features=in_features, out_features=out_features))
 
         def forward(self, x):
             """ Forward method """
@@ -125,9 +137,12 @@ and
 
 The first step will be to transform these models into a form that Maze can understand. It is important to know that Maze
 works with dictionaries, which means that parameter and return values of the forward method are dicts with
-user-defined keys. Another requirement are the parameters for the model initialization: mandatory arguments for the
-policy nets are the arguments `obs_shapes` and `action_logit_dicts` and the value net has to have an `obs_shapes`
-parameter. A transformation of the present networks to networks with the required form can be easily achieved by
+user-defined keys. Another requirement are the parameters for the model initialization, as is explained
+:ref:`here <custom_models_signature>`
+: required arguments for the
+policy nets are the arguments `obs_shapes` and `action_logit_dicts`. The value net is required to have the
+argument `obs_shapes`.
+A transformation of the present networks to networks with the required form can be easily achieved by
 wrapping the models:
 
 .. code-block:: python
@@ -163,25 +178,18 @@ Policy Setup
 For a policy, we need a parametrization for the policy (provided by the policy network) and a probability distribution
 we can sample from. We will subsequently define and instantiate each of these.
 
-Instantiate one environment. This will be used for convenient access to observation and action spaces.
-
-.. code-block:: python
-
-    env = cartpole_env_factory()
-    observation_space = env.observation_space
-    action_space = env.action_space
-
 Policy Network
 """"""""""""""
 Instantiate a policy with the correct shapes of observation and action spaces.
 
 .. code-block:: python
 
-    policy_net = WrappedCartpolePolicyNet(obs_shapes=observation_space.spaces['observation'].shape,
-                                          action_logit_shapes=(action_space.spaces['action'].n,))
+    policy_net = WrappedCartpolePolicyNet(
+        obs_shapes=observation_space.spaces['observation'].shape,
+        action_logit_shapes=(action_space.spaces['action'].n,))
 
 
-We can use one of Mazes capabilities, the shape normalization #todo link
+We can use one of Mazes capabilities, the shape normalization
 with these models by wrapping them with the TorchModelBlock # todo: link to API reference
 
 .. code-block:: python
@@ -192,7 +200,7 @@ with these models by wrapping them with the TorchModelBlock # todo: link to API 
         out_num_dims=2, net=policy_net)
 
 Since Maze offers the capability of supporting multiple actors, we need to map each policy_net to its corresponding
-actors ID. As we have only one policy, this is a trivial mapping:
+actor ID. As we have only one policy, this is a trivial mapping:
 
 .. code-block:: python
 
@@ -208,18 +216,21 @@ with the action space and you automatically get the proper distribution to use.
 
     distribution_mapper = DistributionMapper(action_space=action_space, distribution_mapper_config={})
 
-Optionally, you can specify a different distribution with the distribution_mapper_config argument. Using a
-Categorical distribution for a discrete action space would be done via
+Optionally, you can specify a different distribution with the `distribution_mapper_config` argument. Using a
+Categorical distribution for a discrete action space would be done with
 
 .. code-block:: python
 
-    distribution_mapper = DistributionMapper(action_space=action_space, distribution_mapper_config=[{ "action_space": gym.spaces.Discrete,
-        "distribution": "maze.distributions.categorical.CategoricalProbabilityDistribution"
-    }])
+    distribution_mapper = DistributionMapper(
+        action_space=action_space,
+        distribution_mapper_config=[{
+            "action_space": gym.spaces.Discrete,
+            "distribution": "maze.distributions.categorical.CategoricalProbabilityDistribution"}])
 
-Since the standard distribution taken by Maze for a discrete action space is a Categorical distribution anyway,
+Since the standard distribution taken by Maze for a discrete action space is a Categorical distribution anyway
+(as can be seen :ref:`here <action_spaces_and_distributions>`),
 both definitions of the distribution_mapper have the same result. For more information about the DistributionMapper,
-see # todo: link to distribution wrapper
+see :ref:`Action Spaces and Distributions <action_spaces_and_distributions_module>`.
 
 Instantiating the Policy
 """"""""""""""""""""""""
@@ -228,12 +239,14 @@ distribution. With these, we can instantiate a policy. This is done with the Tor
 
 .. code-block:: python
 
-    torch_policy = TorchPolicy(networks=policy_networks, distribution_mapper=distribution_mapper, device='cpu')
+    torch_policy = TorchPolicy(networks=policy_networks,
+                               distribution_mapper=distribution_mapper,
+                               device='cpu')
 
 
-Value Function Setup
-^^^^^^^^^^^^^^^^^^^^
-The setup of a value function is similar to the setup of a policy, the main difference being that
+Critic Setup
+^^^^^^^^^^^^
+The setup of a critic (or value function) is similar to the setup of a policy, the main difference being that
 we do not need a probability distribution.
 
 Value Network
@@ -249,11 +262,12 @@ Value Network
 
     value_networks = {0: maze_wrapped_value_net}
 
-Instantiate the Critic
-""""""""""""""""""""""
-This step is analogous to the instantiation of the policy above. In Maze, critics can have a
-different forms (see # todo link to critics).
-Here, we use a simple shared critic. Shared means that the same critic will be used for all steps and all actors.
+Instantiating the Critic
+""""""""""""""""""""""""
+This step is analogous to the instantiation of the policy above. In Maze, critics can have
+different forms (see :ref:`Value Functions (Critics) <critics_section>`).
+Here, we use a simple shared critic. Shared means that the same critic will be used for all sub-steps (in a multi-step
+setting) and all actors.
 Since we only have one actor in this example and are in a one-step setting, the TorchSharedStateCritic reduces to
 a vanilla StateCritic (aka a state-dependent value function).
 
@@ -265,7 +279,7 @@ a vanilla StateCritic (aka a state-dependent value function).
 Initializing the ActorCritic Model.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In Maze, policies and critics are encapsulated by an ActorCritic model. Details
-about this can be found in #todo link
+about this can be found in :ref:`Actor-Critics <actor_critics_section>`.
 We will use A2C to train the cartpole env. The correct ActorCritic model to use for A2C is the TorchActorCritic:
 
 .. code-block:: python
@@ -275,9 +289,10 @@ We will use A2C to train the cartpole env. The correct ActorCritic model to use 
 Instantiating the Trainer
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 The last steps will be the instantiations of the algorithm and corresponding trainer.
-We use A2C for this example. The algorithm_config for A2C can be found #todo link
+We use A2C for this example. The algorithm_config for A2C can be found :ref:`here <maze_trainers-a2c>`.
 The hyperparameters will be supplied to Maze with an algorithm-dependent AlgorithmConfig object. The one
-for A2C is A2CAlgorithmConfig. We will use the default parameters, which can be found # todo link
+for A2C is A2CAlgorithmConfig. We will use the default parameters, which can also be found
+:ref:`here <maze_trainers-a2c>`.
 
 .. code-block:: python
 
@@ -316,7 +331,7 @@ Now, we can train the agent.
 
     a2c_trainer.train()
 
-# To get an out-of sample estimate of our performance, evaluate on the evaluation envs:
+To get an out-of sample estimate of our performance, evaluate on the evaluation envs:
 
 .. code-block:: python
 

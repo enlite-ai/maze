@@ -36,6 +36,8 @@ In case of value-based methods, such as DQN,
 the **Q-policy** is defined via the state-action value function :math:`Q(s, a)`
 (e.g, by selecting the action with highest Q value: :math:`\mathrm{argmax}_a Q(s, a)`).
 
+.. _critics_section:
+
 Value Functions (Critics)
 -------------------------
 Maze so far supports two different kinds of critics.
@@ -65,6 +67,8 @@ The table below provides an overview of the different critics styles.
       - Each sub-step or actor gets its individual state-action critic.
     * - :class:`TorchSharedStateActionCritic <maze.core.agent.torch_state_action_critic.TorchSharedStateActionCritic>`
       - One state-action critic is shared across all sub-steps or actors.
+
+.. _actor_critics_section:
 
 Actor-Critics
 -------------

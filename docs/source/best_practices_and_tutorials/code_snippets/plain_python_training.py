@@ -31,6 +31,12 @@ def cartpole_env_factory():
     return maze_env
 
 
+# Instantiate one environment. This will be used for convenient access to observation
+# and action spaces.
+env = cartpole_env_factory()
+observation_space = env.observation_space
+action_space = env.action_space
+
 # Distributed Environments
 # ------------------------
 # The factory can now be supplied to one of Maze's distribution classes:
@@ -96,11 +102,6 @@ class WrappedCartpoleValueNet(nn.Module):
 
 # Policy Setup
 # ------------
-# Instantiate one environment. This will be used for convenient access to observation
-# and action spaces.
-env = cartpole_env_factory()
-observation_space = env.observation_space
-action_space = env.action_space
 
 # Policy Network
 # ^^^^^^^^^^^^^^
@@ -128,8 +129,7 @@ distribution_mapper = DistributionMapper(
     action_space=action_space,
     distribution_mapper_config=[{
         "action_space": gym.spaces.Discrete,
-        "distribution": "maze.distributions.categorical.CategoricalProbabilityDistribution"
-}])
+        "distribution": "maze.distributions.categorical.CategoricalProbabilityDistribution"}])
 
 # Instantiating the Policy
 # ^^^^^^^^^^^^^^^^^^^^^^^^

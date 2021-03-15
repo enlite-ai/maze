@@ -32,6 +32,8 @@ The custom model composer supports the following features:
 
 .. image:: perception_custom_model_composer.png
 
+.. _custom_models_signature:
+
 The Custom Models Signature
 ---------------------------
 
