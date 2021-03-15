@@ -1,7 +1,7 @@
 .. _end_to_end_python:
 
-End-to-End Plain Python Training Example
-========================================
+Plain Python Training Example
+=============================
 We will demonstrate how to do a manual RL training loop with Maze in plain Python, i.e., without any Hydra calls.
 This example serves to demonstrate how to transform your own custom RL loop to Maze. Let's assume you want to train an
 A2C agent for the Cartpole environment and let's also assume that you have already spent much time in creating your own
