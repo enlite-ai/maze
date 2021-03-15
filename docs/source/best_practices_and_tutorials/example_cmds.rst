@@ -2,6 +2,7 @@ Rollout and Training Examples
 =============================
 
 .. _hydra_commands:
+
 Hydra Command Examples
 ----------------------
 
@@ -43,9 +44,9 @@ Run a rollout of a policy, trained with the command above:
 End-to-End Plain Python Training Example
 ----------------------------------------
 We will demonstrate how to do a manual RL training loop with Maze in plain Python, i.e., without any Hydra calls.
-This example serves to demonstrate how to transform an own custom RL loop to Maze. Let's assume you want to train an
-agent for the Cartpole environment and let us also assume that you have already spent much time in creating your own
-networks for this environment, i.e., you want to use your networks and switch to Maze.
+This example serves to demonstrate how to transform your own custom RL loop to Maze. Let's assume you want to train an
+A2C agent for the Cartpole environment and let's also assume that you have already spent much time in creating your own
+networks for this environment, i.e., you want to use your own networks but want to transition to Maze.
 
 
 Environment Setup
@@ -53,7 +54,7 @@ Environment Setup
 
 Environment Factory
 """""""""""""""""""
-We will now prepare our environment for use with Maze. In order to use Maze's parallelization capabilities, it
+We will first prepare our environment for use with Maze. In order to use Maze's parallelization capabilities, it
 is necessary to define a factory function that returns a MazeEnv of your environment. This is easily done for
 gym environments:
 
@@ -322,9 +323,9 @@ Now, we can train the agent.
     a2c_trainer.evaluate(deterministic=False, repeats=1)
 
 
-Python Code
-^^^^^^^^^^^
-Here is the code without documentation for easy of copy-pasting:
+Full Python Code
+^^^^^^^^^^^^^^^^
+Here is the code without documentation for easier copy-pasting:
 
 .. literalinclude:: code_snippets/plain_python_training.py
   :language: PYTHON
