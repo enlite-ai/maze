@@ -82,16 +82,7 @@ We instantiate one environment. This will be used for convenient access to obser
     observation_space = env.observation_space
     action_space = env.action_space
 
-Distributed Environments
-""""""""""""""""""""""""
-The factory can now be supplied to one of Maze's distribution classes:
 
-.. code-block:: python
-
-    train_envs = DummyStructuredDistributedEnv(
-        [cartpole_env_factory for _ in range(2)], logging_prefix="train")
-    eval_envs = DummyStructuredDistributedEnv(
-        [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
 
 Model Setup
 ^^^^^^^^^^^
@@ -313,8 +304,23 @@ for A2C is A2CAlgorithmConfig. We will use the default parameters, which can als
         max_grad_norm=0.0,
         device='cpu')
 
-    a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
-                               model=actor_critic_model, model_selection=None)
+In order to use the distributed trainers, the previously created env factory is supplied to one of Maze's
+distribution classes:
+
+.. code-block:: python
+
+    train_envs = DummyStructuredDistributedEnv(
+        [cartpole_env_factory for _ in range(2)], logging_prefix="train")
+    eval_envs = DummyStructuredDistributedEnv(
+        [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
+
+With this, the trainer can be instantiated:
+
+.. code-block:: python
+
+    a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs,
+        algorithm_config=algorithm_config, model=actor_critic_model, model_selection=None)
+
 
 Train the Agent
 ^^^^^^^^^^^^^^^
