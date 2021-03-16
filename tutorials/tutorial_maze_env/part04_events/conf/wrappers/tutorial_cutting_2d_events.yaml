@@ -12,3 +12,9 @@ maze.core.wrappers.observation_preprocessing.preprocessing_wrapper.PreProcessing
       keep_original: false
       config:
         num_flatten_dims: 2
+
+# monitoring wrapper
+maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper:
+  observation_logging: false
+  action_logging: true
+  reward_logging: true
