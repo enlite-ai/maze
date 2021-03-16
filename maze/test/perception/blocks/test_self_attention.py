@@ -9,7 +9,7 @@ def test_self_attention_1d():
     in_dict = build_input_dict(dims=(2, 10))
 
     self_attn_block = SelfAttentionSeqBlock(in_keys='in_key', out_keys=['self_attention', 'attention'], in_shapes=(10,),
-                                            embed_dim=10, num_heads=10, dropout=0.0, bias=False,
+                                            num_heads=10, dropout=0.0, bias=False,
                                             add_input_to_output=True)
 
     out_dict = self_attn_block(in_dict)
@@ -23,7 +23,23 @@ def test_self_attention_sequential():
     in_dict = build_input_dict(dims=(2, 7, 10))
 
     self_attn_block = SelfAttentionSeqBlock(in_keys='in_key', out_keys='self_attention', in_shapes=(7, 10),
-                                            embed_dim=10, num_heads=10, dropout=0.0, bias=False,
+                                            num_heads=10, dropout=0.0, bias=False,
+                                            add_input_to_output=False)
+    str(self_attn_block)
+    out_dict = self_attn_block(in_dict)
+    assert self_attn_block.get_num_of_parameters() == 411
+    assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
+    assert out_dict[self_attn_block.out_keys[0]].shape == (2, 7, 10)
+
+
+def test_self_attention_sequential_masked():
+    """test_self_attention_sequential"""
+    in_dict = build_multi_input_dict(dims=[(2, 7, 10), (2, 7, 7)])
+    in_dict['in_key_1'] = in_dict['in_key_1'] != 0
+
+    self_attn_block = SelfAttentionSeqBlock(in_keys=['in_key_0', 'in_key_1'],
+                                            out_keys='self_attention', in_shapes=[(7, 10), (7, 7)],
+                                            num_heads=10, dropout=0.0, bias=False,
                                             add_input_to_output=False)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)

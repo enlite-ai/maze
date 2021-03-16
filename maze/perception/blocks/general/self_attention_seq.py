@@ -26,7 +26,6 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
     :param out_keys: Keys identifying the output tensors. First key is self-attention output, second optional key is
         attention map.
     :param in_shapes: List of input shapes.
-    :param embed_dim: Embedding dimension of the model (has to be equal to the last dimension of the input).
     :param num_heads: Parallel attention heads.
     :param dropout: A dropout layer on attn_output_weights.
     :param add_input_to_output: Specifies weather the computed self attention is added to the input and returned.
@@ -34,24 +33,35 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
     """
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], embed_dim: int, num_heads: int,
+                 in_shapes: Union[Sequence[int], List[Sequence[int]]], num_heads: int,
                  dropout: Optional[float], add_input_to_output: bool, bias: bool):
-        in_num_dims = [3]
-        if isinstance(in_keys, list) and len(in_keys) > 1:
-            mask_dim = len(in_shapes[-1])
-            in_num_dims.append(mask_dim + 1)
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
-                         out_num_dims=[3])
-        assert len(self.in_keys) in (1, 2), f'but got {self.in_keys}'
-        assert len(self.out_keys) in (1, 2), f'but got {self.out_keys}'
 
-        assert self.in_shapes[0][-1] == embed_dim, 'The last dimension of the input should be equal to the embedding ' \
-                                                   'dim'
+        in_keys = in_keys if isinstance(in_keys, List) else [in_keys]
+        out_keys = out_keys if isinstance(out_keys, List) else [out_keys]
+        in_shapes = in_shapes if isinstance(in_shapes, List) else [in_shapes]
+
+        assert isinstance(in_keys, str) or len(in_keys) in (1, 2), f'but got {in_keys}'
+        assert isinstance(out_keys, str) or len(out_keys) in (1, 2), f'but got {out_keys}'
+
+        assert len(in_shapes[0]) in (1, 2), 'Input shape has to be 1 or 2 dimensional (without batch)'
+
+        # Input dimensionality is inferred from the in_shapes since the block can be used with 1 or 2 dimensional data,
+        #   without the batch dimension. Additionally the mask dimension is also inferred if present.
+        in_num_dims = [len(in_shape) + 1 for in_shape in in_shapes]
+
+        # Output dimensionality is equal to the input dimensionality, while the dimensionality of the attention weights
+        #  is only added if the a second out_key is given.
+        out_num_dims = [in_num_dims[0]]
+        if isinstance(out_keys, list) and len(out_keys) > 1:
+            out_num_dims.append(out_num_dims[0])
+        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
+                         out_num_dims=out_num_dims)
+
+        embed_dim = self.in_shapes[0][-1]
         self.add_input_to_output = add_input_to_output
 
         self.preprocess = None
         self.postprocess = None
-        assert len(self.in_shapes[0]) in (1, 2), 'Input shape has to be 1 or 2 dimensional (without batch)'
         # Unsqueeze input if there is no sequential information, that if the data is only 1d
         if len(self.in_shapes[0]) == 1:
             self.preprocess = lambda x: torch.unsqueeze(x, 0)
@@ -71,19 +81,25 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
     def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
+        # Get the tensors from the block input
         input_tensor = block_input[self.in_keys[0]]
         attn_mask = block_input[self.in_keys[1]] if len(self.in_keys) > 1 else None
 
+        # If the attention mask is used, it has to have the shape (num_heads * batch_size, target sequence length,
+        #   source sequence length). Thus we have to repeat for the number of heads.
         if attn_mask is not None:
             if self.num_heads > 1:
                 attn_mask = attn_mask.repeat([self.num_heads, *[1 for _ in attn_mask.shape[1:]]])
+            # Furthermore we have to invert the mask in order to work with the torch.nn.MultiheadAttention
             attn_mask = ~torch.eq(attn_mask, torch.tensor(1).to(attn_mask.device))
+            # Finally the first value of the mask is set to true in oder to circumvent nan values, while still ensuring
+            #   fast processing of the block.
             attn_mask[..., 0] = False
 
         if self.preprocess is not None:
             input_tensor = self.preprocess(input_tensor)
 
-        out, attention = self.self_attn(input_tensor, input_tensor, input_tensor, need_weights=False,
+        out, attention = self.self_attn(input_tensor, input_tensor, input_tensor, need_weights=len(self.out_keys) == 2,
                                         attn_mask=attn_mask)
 
         if self.postprocess is not None:
