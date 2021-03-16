@@ -30,3 +30,9 @@ maze.core.wrappers.observation_normalization.observation_normalization_wrapper.O
     - cutting_mask
     - inventory_size
   manual_config: ~
+
+# monitoring wrapper
+maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper:
+  observation_logging: false
+  action_logging: true
+  reward_logging: true
