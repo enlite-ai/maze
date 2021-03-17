@@ -42,7 +42,7 @@ class MazeLocalLauncher(Launcher):
     The implementation is based on
     https://github.com/facebookresearch/hydra/blob/master/examples/plugins/example_launcher_plugin/hydra_plugins/example_launcher_plugin/example_launcher.py.
 
-    :param n_jobs: Maximum number of parallel jobs. if -1, all CPUs are used.
+    :param n_jobs: Maximum number of parallel jobs. If -1, all CPUs are used.
     """
 
     def __init__(self, n_jobs: int):

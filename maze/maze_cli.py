@@ -14,6 +14,43 @@ from maze.utils.log_stats_utils import clear_global_state
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
 
+def _run_job(cfg: DictConfig) -> None:
+    """Runs a regular maze job.
+
+    :param cfg: Hydra configuration for the rollout.
+    """
+    print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
+    runner = Factory(base_type=Runner).instantiate(cfg.runner)
+    runner.run(cfg)
+
+
+def _run_multirun_job(cfg: DictConfig) -> float:
+    """Runs a maze job which is part of a Hydra --multirun and returns the maximum mean reward of this run.
+
+    :param cfg: Hydra configuration for the rollout.
+    :return: The maximum mean reward achieved throughout the training run.
+    """
+    # required for Hydra --multirun (e.g., sweeper)
+    clear_global_state()
+
+    try:
+        _run_job(cfg)
+    # when optimizing hyper parameters a single exception
+    # in one job should not break the entire experiment
+    except:
+        return np.finfo(np.float32).min
+
+    # load tensorboard log and return maximum mean reward
+    # load tensorboard log
+    tf_summary_files = glob.glob("*events.out.tfevents*")
+    assert len(tf_summary_files) == 1, f"expected exactly 1 tensorflow summary file {tf_summary_files}"
+    events_df = tensorboard_to_pandas(tf_summary_files[0])
+
+    # compute maximum mean reward
+    max_mean_reward = np.max(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
+    return float(max_mean_reward)
+
+
 @hydra.main(config_path="conf", config_name="conf_rollout")
 def maze_run(cfg: DictConfig) -> Optional[float]:
     """
@@ -23,41 +60,21 @@ def maze_run(cfg: DictConfig) -> Optional[float]:
     the whole configuration object (cfg). Runners can perform various tasks such as rollouts, trainings etc.
 
     :param cfg: Hydra configuration for the rollout.
+    :return: In case of a multirun it returns the maximum mean reward (required for hyper parameter optimization).
+             For regular runs nothing is returned.
     """
-
-    # required for Hydra --multirun (e.g., sweeper)
-    clear_global_state()
-
-    def run_job() -> None:
-        print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
-        runner = Factory(base_type=Runner).instantiate(cfg.runner)
-        runner.run(cfg)
 
     # check if we are currently in a --multirun
     instance = HydraConfig.instance()
-    is_multi_run = False if instance.cfg.hydra.job.get("num") is None else True
+    is_multi_run = instance.cfg.hydra.job.get("num") is not None
 
     # regular single runs
     if not is_multi_run:
-        run_job()
-    # multi-runs (e.g., gird search, nevergrad, ...)
+        _run_job(cfg)
+    # multirun (e.g., gird search, nevergrad, ...)
     else:
-        try:
-            run_job()
-        # when optimizing hyper parameters a single exception
-        # in one job should not break the entire experiment
-        except:
-            return np.finfo(np.float32).min
-
-        # load tensorboard log and return maximum mean reward
-        # load tensorboard log
-        tf_summary_files = glob.glob("*events.out.tfevents*")
-        assert len(tf_summary_files) == 1, f"expected exactly 1 tensorflow summary file {tf_summary_files}"
-        events_df = tensorboard_to_pandas(tf_summary_files[0])
-
-        # compute maximum mean reward
-        max_mean_reward = np.max(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
-        return float(max_mean_reward)
+        max_mean_reward = _run_multirun_job(cfg)
+        return max_mean_reward
 
 
 if __name__ == "__main__":
