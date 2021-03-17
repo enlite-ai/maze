@@ -12,7 +12,7 @@ from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.core.wrappers.wrapper import ObservationWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
-from maze.test.shared_test_utils.run_maze_utils import run_maze
+from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 from maze.train.trainers.imitation.in_memory_data_set import InMemoryImitationDataSet
 from maze.train.trainers.imitation.parallel_loaded_im_data_set import ParallelLoadedImitationDataset
 
@@ -183,7 +183,7 @@ def test_parallel_data_load():
         "runner.n_episodes": 5,
         "runner.max_episode_steps": 3
     }
-    run_maze(rollout_config, config_module="maze.conf", config_name="conf_rollout")
+    run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
     dataset = ParallelLoadedImitationDataset(
         trajectory_data_dir="trajectory_data",
