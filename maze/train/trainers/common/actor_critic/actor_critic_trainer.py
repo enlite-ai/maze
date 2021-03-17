@@ -143,11 +143,13 @@ class MultiStepActorCritic(Trainer, ABC):
                 self._update()
                 self.ac_events.time_update(time.time() - update_start)
 
+            epoch_time = time.time() - start
+            self.ac_events.time_epoch(epoch_time)
+
             # increase step counter (which in turn triggers the log statistics writing)
             increment_log_step()
-            epoch_time = time.time() - start
+
             print("Time required for epoch: {:.2f}s".format(epoch_time))
-            self.ac_events.time_epoch(epoch_time)
 
     def evaluate(self, deterministic: bool, repeats: int) -> None:
         """Perform evaluation on eval env.
