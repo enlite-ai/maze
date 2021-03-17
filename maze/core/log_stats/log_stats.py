@@ -87,6 +87,10 @@ class LogStatsAggregator(LogStatsConsumer):
         self.last_stats_step: Optional[int] = None
         """step number of the last statistics calculation"""
 
+        self.cumulative_stats = dict()
+        """keep track of all cumulative stats, required e.g. for an epoch where the previous epoch did not finish any 
+        episode"""
+
         if level == LogStatsLevel.EPOCH:
             GlobalLogState.hook_on_log_step.append(self._hook_on_log_step)
 
@@ -203,14 +207,19 @@ class LogStatsAggregator(LogStatsConsumer):
 
         # second stage: execute reducers
         aggregated_stats = dict()
+
         for (event, output_name, group_tuple, cumulative, reduce_function), values in all_values.items():
             try:
                 stats_key = (event, output_name, group_tuple)
                 reduced_value = self._reduce(reduce_function, values, event)
 
                 # handle cumulative statistics: add value from previous run
-                if cumulative and self.last_stats and stats_key in self.last_stats:
-                    reduced_value += self.last_stats[stats_key]
+                if cumulative:
+                    if stats_key not in self.cumulative_stats:
+                        self.cumulative_stats[stats_key] = reduced_value
+                    else:
+                        self.cumulative_stats[stats_key] += reduced_value
+                    continue
 
                 aggregated_stats[stats_key] = reduced_value
             except AssertionError:
@@ -219,6 +228,8 @@ class LogStatsAggregator(LogStatsConsumer):
             except Exception as e:
                 # wrap the exception to make it easier to trace the event that caused the exception
                 raise ValueError(f"failed to reduce event {event}") from e
+
+        aggregated_stats.update(self.cumulative_stats)
 
         # send the statistics to the consumers
         for consumer in self.consumers:

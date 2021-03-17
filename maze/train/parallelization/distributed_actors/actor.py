@@ -77,11 +77,11 @@ class ActorAgent:
                     obs, in_place='try', device=self.policy.device, cast=None))
                 action, logits = self.policy.compute_action_with_logits(obs, step_key, deterministic=False)
                 obs, reward, done, info = self.env.step(action)
-                stats.append(self.env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
                 if done:
                     info['terminal_observation'] = obs
                     obs = self.env.reset()
+                    stats.append(self.env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
                 # keep action taken
                 step_actions_taken[step_key].append(convert_to_torch(
