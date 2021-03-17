@@ -2,12 +2,18 @@
 
 # defaults to override
 defaults:
-  - override /runner: dev
-  - override /hydra/launcher: ray
+  - override /runner: local
+  - override /hydra/launcher: local
 
-# specify grid search setup
+# set training runner concurrency
+runner:
+  concurrency: 2
+
+# set grid search concurrency
 hydra:
   launcher:
-    ray:
-      init:
-        num_cpus: 4
+    # maximum number of parallel grid search jobs
+    # if -1, this is set to the number of CPUs
+    n_jobs: 4
+
+# Hint: make sure that runner.concurrency * hydra.launcher.n_jobs <= CPUs

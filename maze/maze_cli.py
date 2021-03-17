@@ -1,5 +1,6 @@
 """Implements the Maze command line interface for running rollouts, trainings and else."""
 import glob
+import os
 from typing import Optional
 
 import hydra
@@ -25,29 +26,40 @@ def maze_run(cfg: DictConfig) -> Optional[float]:
     :param cfg: Hydra configuration for the rollout.
     """
 
-    # figure out if we are currently in a --multirun
-    instance = HydraConfig.instance()
-    is_multi_run = False if instance.cfg.hydra.job.get("num") is None else True
+    # required for Hydra --multirun (e.g., sweeper)
+    clear_global_state()
 
-    try:
-        # run job
+    def run_job() -> None:
         print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
         runner = Factory(base_type=Runner).instantiate(cfg.runner)
         runner.run(cfg)
-    except:
+
+    f = open('maze_cli.log', 'a+')
+    f.write(f'Entering maze_run in directory {os.getcwd()}\n')
+    f.close()
+
+    # check if we are currently in a --multirun
+    instance = HydraConfig.instance()
+    is_multi_run = False if instance.cfg.hydra.job.get("num") is None else True
+
+    # regular single runs
+    if not is_multi_run:
+        run_job()
+    # multi-runs (e.g., gird search, nevergrad, ...)
+    else:
+
+        try:
+            # run job
+            print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
+            runner = Factory(base_type=Runner).instantiate(cfg.runner)
+            runner.run(cfg)
+
         # when optimizing hyper parameters a single exception
         # in one job should not break the entire experiment
-        if is_multi_run:
+        except:
             return np.finfo(np.float32).min
-        # for standard jobs we re-raise the exception
-        else:
-            raise
-    finally:
-        # required for Hydra --multirun (e.g., sweeper)
-        clear_global_state()
 
-    # load tensorboard log and return maximum mean reward
-    if is_multi_run:
+        # load tensorboard log and return maximum mean reward
         # load tensorboard log
         tf_summary_files = glob.glob("*events.out.tfevents*")
         assert len(tf_summary_files) == 1, f"expected exactly 1 tensorflow summary file {tf_summary_files}"

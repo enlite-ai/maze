@@ -3,8 +3,12 @@
 # defaults to override
 defaults:
   - override /hydra/sweeper: nevergrad
-  - override /hydra/launcher: ray
-  - override /runner: dev
+  - override /hydra/launcher: local
+  - override /runner: local
+
+# set training runner concurrency
+runner:
+  concurrency: 2
 
 # overrides
 hydra:
@@ -16,7 +20,7 @@ hydra:
       # total number of function evaluations to perform
       budget: 100
       # number of parallel workers for performing function evaluations
-      num_workers: 6
+      num_workers: 4
       # we want to maximize reward
       maximize: true
 
@@ -29,3 +33,5 @@ hydra:
       algorithm.entropy_coef:
         lower: 0.0000025
         upper: 0.025
+
+# Hint: make sure that runner.concurrency * hydra.sweeper.optim.num_workers <= CPUs
