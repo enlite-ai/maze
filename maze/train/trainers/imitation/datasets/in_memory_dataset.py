@@ -1,6 +1,7 @@
 """Trajectory data set for imitation learning."""
 import logging
 import pickle
+from abc import ABC, abstractmethod
 from itertools import chain
 from pathlib import Path
 from typing import Callable, Tuple, List, Dict, Union, Any, Sequence, Optional, Generator
@@ -11,17 +12,17 @@ from torch.utils.data.dataset import Dataset, Subset
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
 from maze.core.trajectory_recorder.state_step_record import StateStepRecord
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord, TrajectoryRecord
+from maze.core.trajectory_recorder.trajectory_record import TrajectoryRecord
 
 logger = logging.getLogger(__name__)
 
 
-class InMemoryImitationDataSet(Dataset):
-    """Trajectory data set for imitation learning.
+class InMemoryDataset(Dataset, ABC):
+    """Base class of trajectory data set for imitation learning that keeps all loaded data in memory.
 
-    Loads all data on initialization and then keeps it in memory.
-    
-    :param data_dir: The directory where the trajectory data are stored. 
+    Provides the main functionality for parsing and appending records.
+
+    :param dir_or_file: Directory or file containing the trajectory data. If present, these data will be loaded on init.
     :param conversion_env_factory: Function for creating an environment for state and action
             conversion. For Maze envs, the environment configuration (i.e. space interfaces,
             wrappers etc.) determines the format of the actions and observations that will be derived
@@ -29,16 +30,28 @@ class InMemoryImitationDataSet(Dataset):
     """
 
     def __init__(self,
-                 conversion_env_factory: Callable,
-                 dir_or_file: Optional[Union[str, Path]] = None):
+                 dir_or_file: Optional[Union[str, Path]] = None,
+                 conversion_env_factory: Optional[Callable] = None):
         self.conversion_env_factory = conversion_env_factory
-        self.conversion_env = self.conversion_env_factory()
+        self.conversion_env = self.conversion_env_factory() if self.conversion_env_factory else None
 
         self.step_records = []
         self.trajectory_references = []
 
         if dir_or_file is not None:
             self.load_data(dir_or_file)
+
+    @abstractmethod
+    def load_data(self, dir_or_file: Union[str, Path]) -> None:
+        """Load the trajectory data from the given file or directory and append it to the dataset.
+
+        Should provide the main logic of how the data load is done to be efficient for the data at hand
+        (e.g. splitting it up into multiple parallel workers). Otherwise, this class already provides multiple
+        helper methods useful for loading (e.g. for deserializing different structured of trajectories
+        or converting maze states to raw observations).
+
+        :param dir_or_file: Directory or file to load the trajectory data from.
+        """
 
     def __len__(self) -> int:
         """Size of the dataset.
@@ -56,26 +69,33 @@ class InMemoryImitationDataSet(Dataset):
         """
         return self.step_records[index].observations, self.step_records[index].actions
 
-    def append(self, trajectory: TrajectoryRecord):
+    def append(self, trajectory: TrajectoryRecord) -> None:
+        """Append a new trajectory to the dataset.
+
+        :param trajectory: Trajectory to append.
+        """
         spaces_records = self.convert_trajectory(trajectory, self.conversion_env)
         self._store_loaded_trajectory(spaces_records)
-        return self
-
-    def load_data(self, dir_or_file: Union[str, Path]) -> None:
-        """Load the trajectory data based on arguments provided on init."""
-        logger.info(f"Started loading trajectory data from: {dir_or_file}")
-
-        for trajectory in self.deserialize_trajectories(dir_or_file):
-            self.append(trajectory)
-
-        logger.info(f"Loaded trajectory data from: {dir_or_file}")
-        logger.info(f"Current length is {len(self)} steps in total.")
 
     @staticmethod
-    def deserialize_trajectories(dir_or_file: Union[str, Path]) -> Generator[StateTrajectoryRecord, None, None]:
+    def deserialize_trajectories(dir_or_file: Union[str, Path]) -> Generator[TrajectoryRecord, None, None]:
+        """Deserialize all trajectories located in a particular directory or file.
+
+        If a file path is passed in, will attempt to load it. Supports pickled TrajectoryRecords, or lists or
+        dictionaries containing TrajectoryRecords as values.
+
+        If a directory is passed in, locates all pickle files (with `pkl` suffix) in this directory, then
+        attempts to load each of them (again supporting also lists and dictionaries of trajectory records.
+
+        Returns a generator that will yield the individual trajectory records, no matter in which form
+        (i.e., individual, list, or dict) they were loaded.
+
+        :param dir_or_file: Directory of file to load trajectory data from
+        :return: Generator yielding the individual trajectory records.
+        """
         dir_or_file = Path(dir_or_file)
         if dir_or_file.is_dir():
-            file_paths = InMemoryImitationDataSet.list_trajectory_files(dir_or_file)
+            file_paths = InMemoryDataset.list_trajectory_files(dir_or_file)
         else:
             file_paths = [dir_or_file]
 
@@ -118,11 +138,14 @@ class InMemoryImitationDataSet(Dataset):
         return file_paths
 
     @staticmethod
-    def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: StructuredEnv) -> List[SpacesStepRecord]:
+    def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: Optional[StructuredEnv]) \
+            -> List[SpacesStepRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
-        :param env: Env to use for conversion of MazeStates and MazeActions into observations and actions
         :param trajectory: Episode record to load
+        :param conversion_env: Env to use for conversion of MazeStates and MazeActions into observations and actions.
+                               Required only if state records are being loaded (i.e. conversion to raw actions and
+                               observations is needed).
         :return: Loaded observations and actions. I.e., a tuple (observation_list, action_list). Each of the
                  lists contains observation/action dictionaries, with keys corresponding to IDs of structured
                  sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
@@ -133,6 +156,9 @@ class InMemoryImitationDataSet(Dataset):
 
             # Process and convert in case we are dealing with state records (otherwise no conversion needed)
             if isinstance(step_record, StateStepRecord):
+                assert conversion_env is not None, "when conversion from Maze states is needed, conversion env " \
+                                                   "needs to be present."
+
                 # Drop incomplete records (e.g. at the end of episode)
                 if step_record.maze_state is None or step_record.maze_action is None:
                     continue
@@ -145,7 +171,7 @@ class InMemoryImitationDataSet(Dataset):
         return step_records
 
     def _store_loaded_trajectory(self, records: List[SpacesStepRecord]) -> None:
-        """Stores the observations and actions, keeping a reference that they belong to the same episode.
+        """Stores the step records, keeping a reference that they belong to the same episode.
 
         Keeping the reference is important in case we want to split the dataset later -- samples from
         one episode should end up in the same part (i.e., only training or only validation).

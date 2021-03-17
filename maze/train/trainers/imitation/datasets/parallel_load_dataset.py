@@ -1,6 +1,5 @@
 """An imitation dataset that loads all data to memory on initialization using multiple worker processes."""
 import logging
-import pickle
 import traceback
 from collections import namedtuple
 from multiprocessing import Queue, Process
@@ -9,40 +8,15 @@ from typing import Callable, List, Union, Optional
 
 from tqdm import tqdm
 
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
-from maze.train.trainers.imitation.in_memory_data_set import InMemoryImitationDataSet
+from maze.train.trainers.imitation.datasets.in_memory_dataset import InMemoryDataset
+from maze.train.trainers.imitation.datasets.sequential_load_dataset import SequentialLoadDataset
 
 ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
 
 logger = logging.getLogger(__name__)
 
 
-class DataLoadWorker:
-    """Data loading worker used to map states to actual observations."""
-
-    @staticmethod
-    def run(env_factory: Callable, trajectory_file_paths: List[Union[Path, str]], reporting_queue: Queue) -> None:
-        """Load trajectory data from the provided trajectory file paths. Report exceptions to the main process.
-
-        :param env_factory: Function for creating an environment for MazeState and MazeAction conversion.
-        :param trajectory_file_paths: Which trajectory data files should this worker load and process.
-        :param reporting_queue: Queue for reporting loaded data and exceptions back to the main process.
-        """
-        try:
-            env = env_factory()
-            for file_path in trajectory_file_paths:
-                for trajectory in InMemoryImitationDataSet.deserialize_trajectories(file_path):
-                    step_records = InMemoryImitationDataSet.convert_trajectory(trajectory, env)
-                    reporting_queue.put(step_records)
-
-        except Exception as exception:
-            # Ship exception along with a traceback to the main process
-            exception_report = ExceptionReport(exception, traceback.format_exc())
-            reporting_queue.put(exception_report)
-            raise
-
-
-class ParallelLoadedImitationDataset(InMemoryImitationDataSet):
+class ParallelLoadDataset(InMemoryDataset):
     """A version of the in-memory dataset that loads all data in parallel.
 
     This significantly speeds up data loading in cases where conversion of MazeStates and MazeActions into actions
@@ -54,11 +28,12 @@ class ParallelLoadedImitationDataset(InMemoryImitationDataSet):
     """
 
     def __init__(self,
-                 conversion_env_factory: Callable,
                  n_workers: int,
-                 data_dir: Optional[Union[str, Path]] = None):
+                 dir_or_file: Optional[Union[str, Path]] = None,
+                 conversion_env_factory: Optional[Callable] = None):
         self.n_workers = n_workers
-        super().__init__(conversion_env_factory, data_dir)
+        self.reporting_queue = None
+        super().__init__(dir_or_file, conversion_env_factory)
 
     def load_data(self, data_dir: Union[str, Path]) -> None:
         """Load the trajectory data based on arguments provided on init."""
@@ -105,3 +80,28 @@ class ParallelLoadedImitationDataset(InMemoryImitationDataSet):
 
         logger.info(f"Loaded trajectory data from: {data_dir}")
         logger.info(f"Current length is {len(self)} steps in total.")
+
+
+class DataLoadWorker:
+    """Data loading worker used to map states to actual observations."""
+
+    @staticmethod
+    def run(env_factory: Callable, trajectory_file_paths: List[Union[Path, str]], reporting_queue: Queue) -> None:
+        """Load trajectory data from the provided trajectory file paths. Report exceptions to the main process.
+
+        :param env_factory: Function for creating an environment for MazeState and MazeAction conversion.
+        :param trajectory_file_paths: Which trajectory data files should this worker load and process.
+        :param reporting_queue: Queue for reporting loaded data and exceptions back to the main process.
+        """
+        try:
+            env = env_factory()
+            for file_path in trajectory_file_paths:
+                for trajectory in SequentialLoadDataset.deserialize_trajectories(file_path):
+                    step_records = SequentialLoadDataset.convert_trajectory(trajectory, env)
+                    reporting_queue.put(step_records)
+
+        except Exception as exception:
+            # Ship exception along with a traceback to the main process
+            exception_report = ExceptionReport(exception, traceback.format_exc())
+            reporting_queue.put(exception_report)
+            raise
