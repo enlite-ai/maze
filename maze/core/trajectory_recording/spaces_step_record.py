@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, TypeVar, Tuple, List, Union
+from typing import Dict, Optional, TypeVar, List, Union
 
 import numpy as np
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
-from maze.core.trajectory_recorder.state_step_record import StateStepRecord
-from maze.core.trajectory_recorder.raw_maze_state import RawState, RawMazeAction
+from maze.core.trajectory_recording.state_step_record import StateStepRecord
+from maze.core.trajectory_recording.raw_maze_state import RawState, RawMazeAction
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list
 

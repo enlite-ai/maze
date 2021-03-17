@@ -5,8 +5,8 @@ from typing import List, Optional, Any, TypeVar, Generic
 import numpy as np
 
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recorder.state_step_record import StateStepRecord
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.state_step_record import StateStepRecord
 
 StepRecordType = TypeVar('StepRecordType', SpacesStepRecord, StateStepRecord)
 

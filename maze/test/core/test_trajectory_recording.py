@@ -9,11 +9,11 @@ import numpy as np
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
-from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
-from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
+from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.trajectory_writer import TrajectoryWriter
+from maze.core.trajectory_recording.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
-from maze.core.trajectory_recorder.raw_maze_state import RawState, RawMazeAction
+from maze.core.trajectory_recording.raw_maze_state import RawState, RawMazeAction
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment

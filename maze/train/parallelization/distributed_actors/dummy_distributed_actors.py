@@ -9,13 +9,11 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recorder.trajectory_record import SpacesTrajectoryRecord
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.distributed_actors.actor import ActorAgent, ActorOutput
 from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
 from maze.train.parallelization.distributed_actors.distributed_actors import BaseDistributedActors
-from maze.train.trainers.impala.impala_batching import batch_outputs_time_major
 from maze.utils.bcolors import BColors
 
 

@@ -18,7 +18,7 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv

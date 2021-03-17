@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union
 
 from maze.core.annotations import override
-from maze.train.trainers.imitation.datasets.in_memory_dataset import InMemoryDataset
+from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
 
 logger = logging.getLogger(__name__)
 

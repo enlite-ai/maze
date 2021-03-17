@@ -17,9 +17,9 @@ from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_stats.log_stats import LogStatsWriter, LogStats
 from maze.core.log_stats.log_stats import register_log_stats_writer
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
-from maze.core.trajectory_recorder.trajectory_writer import TrajectoryWriter
-from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
+from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.trajectory_writer import TrajectoryWriter
+from maze.core.trajectory_recording.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy

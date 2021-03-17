@@ -7,8 +7,8 @@ from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
 from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.log_stats.log_stats_writer_tensorboard import LogStatsWriterTensorboard
-from maze.core.trajectory_recorder.trajectory_writer_file import TrajectoryWriterFile
-from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
+from maze.core.trajectory_recording.trajectory_writer_file import TrajectoryWriterFile
+from maze.core.trajectory_recording.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 

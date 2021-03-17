@@ -6,9 +6,9 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recorder.state_step_record import StateStepRecord
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.state_step_record import StateStepRecord
+from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.core.wrappers.wrapper import ObservationWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -17,8 +17,8 @@ from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.do
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double import \
     DoubleObservationConversion
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
-from maze.train.trainers.imitation.datasets.sequential_load_dataset import SequentialLoadDataset
-from maze.train.trainers.imitation.datasets.parallel_load_dataset import ParallelLoadDataset
+from maze.core.trajectory_recording.datasets.sequential_load_dataset import SequentialLoadDataset
+from maze.core.trajectory_recording.datasets.parallel_load_dataset import ParallelLoadDataset
 
 
 class _MockObservationStackWrapper(ObservationWrapper):
