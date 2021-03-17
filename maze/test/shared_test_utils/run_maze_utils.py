@@ -9,15 +9,17 @@ from omegaconf import open_dict
 from maze.maze_cli import maze_run
 
 
-def run_rollout(hydra_overrides: Dict[str, str]):
+def run_maze(hydra_overrides: Dict[str, str], config_module: str, config_name: str):
     """Runs rollout with the given config overrides using maze_run.
 
-    :param hydra_overrides: Config overrides for hydra
+    :param hydra_overrides: Config overrides for hydra.
+    :param config_module: The config module.
+    :param config_name: The name of the default config.
     """
-    with initialize_config_module(config_module="maze.conf"):
+    with initialize_config_module(config_module=config_module):
         # Config is relative to a module
         # For the HydraConfig init below, we need the hydra key there as well (=> return_hydra_config=True)
-        cfg = compose(config_name="conf_rollout",
+        cfg = compose(config_name=config_name,
                       overrides=[key + "=" + str(val) for key, val in hydra_overrides.items()],
                       return_hydra_config=True)
 

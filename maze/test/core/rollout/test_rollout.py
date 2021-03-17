@@ -9,7 +9,7 @@ from maze.core.rollout.parallel_rollout_runner import ParallelRolloutRunner
 from maze.core.rollout.sequential_rollout_runner import SequentialRolloutRunner
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.observation_logging_wrapper import ObservationLoggingWrapper
-from maze.test.shared_test_utils.rollout_utils import run_rollout
+from maze.test.shared_test_utils.run_maze_utils import run_maze
 
 heuristic_rollouts = [
     {"runner": "sequential"},
@@ -25,7 +25,7 @@ heuristic_rollouts = [pytest.param({**heuristic_rollouts_defaults, **r}, id=r['r
 @pytest.mark.parametrize("hydra_overrides", heuristic_rollouts)
 def test_heuristic_rollouts(hydra_overrides: Dict[str, str]):
     """Runs rollout of a dummy policy on cartpole using the sequential and parallel runners."""
-    run_rollout(hydra_overrides)
+    run_maze(hydra_overrides, config_module="maze.conf", config_name="conf_rollout")
 
 
 def test_rollouts_from_python():
