@@ -8,8 +8,8 @@ from typing import Callable, List, Union, Optional
 
 from tqdm import tqdm
 
-from maze.train.trainers.imitation.datasets.in_memory_dataset import InMemoryDataset
-from maze.train.trainers.imitation.datasets.sequential_load_dataset import SequentialLoadDataset
+from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
+from maze.core.trajectory_recording.datasets.sequential_load_dataset import SequentialLoadDataset
 
 ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
 

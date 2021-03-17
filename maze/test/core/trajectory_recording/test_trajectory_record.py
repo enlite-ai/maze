@@ -2,9 +2,8 @@ from typing import List
 
 import numpy as np
 
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recorder.state_step_record import StateStepRecord
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 
 
 def _mock_space_record(value: int):

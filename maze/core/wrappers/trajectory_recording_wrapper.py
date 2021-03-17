@@ -16,10 +16,10 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.trajectory_recorder.raw_maze_state import RawState, RawMazeAction
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
-from maze.core.trajectory_recorder.state_step_record import StateStepRecord
-from maze.core.trajectory_recorder.trajectory_writer_registry import TrajectoryWriterRegistry
+from maze.core.trajectory_recording.raw_maze_state import RawState, RawMazeAction
+from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.state_step_record import StateStepRecord
+from maze.core.trajectory_recording.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.wrapper import Wrapper
 
 

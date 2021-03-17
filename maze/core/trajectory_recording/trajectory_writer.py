@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from maze.core.trajectory_recorder.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord
 
 
 class TrajectoryWriter(ABC):

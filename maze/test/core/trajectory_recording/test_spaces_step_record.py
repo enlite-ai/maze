@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 
 
 def test_record_stacking():

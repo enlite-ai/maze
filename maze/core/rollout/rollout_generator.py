@@ -1,12 +1,12 @@
-from typing import Union, List, Optional, Any
+from typing import Union, Optional, Any
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsLevel
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recorder.trajectory_record import SpacesTrajectoryRecord
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
 from maze.train.utils.train_utils import unstack_numpy_list_dict

@@ -16,8 +16,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.core.trajectory_recorder.spaces_step_record import SpacesStepRecord
-from maze.train.parallelization.distributed_actors.actor import ActorOutput
+from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 from maze.train.parallelization.distributed_actors.distributed_actors import BaseDistributedActors
 from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
