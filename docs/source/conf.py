@@ -148,6 +148,10 @@ nitpick_ignore = [
     ('py:class', 'WrapperType'),
     ('py:class', 'BaseType'),
 
+    # hydra data types
+    ('py:class', 'hydra.core.utils.JobReturn'),
+    ('py:class', 'hydra.core.config_loader.ConfigLoader'),
+    ('py:class', 'hydra.TaskFunction'),
 ]
 nitpicky = True
 

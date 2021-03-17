@@ -1,5 +1,6 @@
 """Custom Hydra launcher distributing the jobs in separate processes on the local machine."""
 import logging
+import multiprocessing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence, Optional
@@ -24,9 +25,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LauncherConfig:
     """Hardcoded launcher configuration, linking the hydra/launcher=local override to the MazeLocalLauncher class"""
-    _target_: str = (
-        "hydra_plugins.maze_local_launcher.MazeLocalLauncher"
-    )
+    _target_: str = "hydra_plugins.maze_local_launcher.MazeLocalLauncher"
+
+    # maximum number of concurrently running jobs. if -1, all CPUs are used
+    n_jobs: int = -1
 
 
 ConfigStore.instance().store(
@@ -39,12 +41,17 @@ class MazeLocalLauncher(Launcher):
 
     The implementation is based on
     https://github.com/facebookresearch/hydra/blob/master/examples/plugins/example_launcher_plugin/hydra_plugins/example_launcher_plugin/example_launcher.py.
+
+    :param n_jobs: Maximum number of parallel jobs. if -1, all CPUs are used.
     """
 
-    def __init__(self):
+    def __init__(self, n_jobs: int):
         self.config: Optional[DictConfig] = None
         self.config_loader: Optional[ConfigLoader] = None
         self.task_function: Optional[TaskFunction] = None
+
+        # determine number of parallel jobs
+        self._n_jobs = multiprocessing.cpu_count() if n_jobs == -1 else n_jobs
 
     def setup(self, config: DictConfig, config_loader: ConfigLoader, task_function: TaskFunction) -> None:
         """Implementation of Launcher.setup, called before the launch
@@ -75,10 +82,15 @@ class MazeLocalLauncher(Launcher):
         sweep_dir = self.config.hydra.sweep.dir
         Path(str(sweep_dir)).mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"Launching {len(job_overrides)} jobs on the kubernetes cluster")
-        workers = []
+        logger.info(f"Local Launcher is launching {len(job_overrides)} jobs locally")
+        logger.info(f"Launching jobs, sweep output dir : {sweep_dir}")
         for idx, overrides in enumerate(job_overrides):
-            idx = initial_job_idx + idx
+            logger.info("\t#{} : {}".format(idx, " ".join(filter_overrides(overrides))))
+
+        results = []
+        workers = []
+        for i, overrides in enumerate(job_overrides):
+            idx = initial_job_idx + i
             lst = " ".join(filter_overrides(overrides))
             logger.info(f"\t#{idx} : {lst}")
 
@@ -97,11 +109,18 @@ class MazeLocalLauncher(Launcher):
             p.start()
             workers.append(p)
 
-        for w in workers:
-            w.join()
+            # wait for current/last batch of workers
+            if ((i + 1) % self._n_jobs == 0) or ((i + 1) == len(job_overrides)):
+                for w in workers:
+                    w.join()
 
-            # forward exceptions from the workers
-            if w.exception():
-                raise w.exception()
+                    # forward exceptions from the workers
+                    if w.exception():
+                        raise w.exception()
 
-        return [p.result() for p in workers]
+                # book keeping
+                results.extend([p.result() for p in workers])
+                workers = []
+
+        assert len(results) == len(job_overrides)
+        return results

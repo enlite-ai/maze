@@ -64,7 +64,7 @@ You can find a more detail explanation on how experiments are embedded in the ov
 Hyper Parameter Grid Search
 ---------------------------
 
-To perform a simple grid search over some hyper parameters you can use
+To perform a simple grid search over selected hyper parameters you can use
 `Hydra's Sweeper <https://hydra.cc/docs/0.11/advanced/plugins#sweeper>`_
 which converts lists of command line arguments into distinct jobs.
 
@@ -82,10 +82,11 @@ We then recommend to compare the different configurations with Tensorboard.
     tensorboard --logdir outputs/
 
 Per default Hydra uses the local (sequential) runner for processing jobs.
-However, there are also more `scalable options <https://hydra.cc/docs/next/plugins/joblib_launcher>`_ available.
 
-For setting up a scalable grid search we recommend to create an experiments file for configuration.
-As a starting point Maze already contains a simple local grid search setting.
+For setting up a more scalable (local, parallel) grid search
+we recommend to create an experiments file for configuration.
+As a starting point Maze already contains a simple local grid search setting
+based in the built-in :class:`MazeLocalLauncher <hydra_plugins.maze_local_launcher.MazeLocalLauncher>`.
 
 .. literalinclude:: ../../../maze/conf/experiment/grid_search.yaml
   :language: YAML
@@ -98,6 +99,9 @@ To repeat the grid search from above, but this time with multiple parallel worke
     $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo \
       algorithm.n_epochs=5 algorithm.lr=0.0001,0.0005,0.001 +experiment=grid_search --multirun
 
+Besides the built-in :class:`MazeLocalLauncher <hydra_plugins.maze_local_launcher.MazeLocalLauncher>`,
+there are also more `scalable options <https://hydra.cc/docs/next/plugins/rq_launcher>`_ available with Hydra.
+
 
 Hyper Parameter Optimization
 ----------------------------
@@ -108,7 +112,7 @@ Maze also support hyper parameter optimization beyond vanilla grid search via
 First, make sure that all `requirements <https://hydra.cc/docs/plugins/nevergrad_sweeper#installation>`_ are installed.
 
 Next, you can continue with the experiment template below and adopt it to your needs
-(for details on how to define parameters we refer to the
+(for details on how to define the search space we refer to the
 `Hydra docs <https://hydra.cc/docs/plugins/nevergrad_sweeper#defining-the-parameters>`_ and this
 `example <https://github.com/facebookresearch/hydra/blob/master/plugins/hydra_nevergrad_sweeper/example/config.yaml>`_).
 

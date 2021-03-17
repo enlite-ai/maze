@@ -1,6 +1,6 @@
 """Provides a function to convert tensorboard logs to a pandas DataFrame.
-
-Implemented as shown in https://github.com/lanpa/tensorboard-dumper/blob/master/dump.py"""
+Implemented as shown in https://github.com/lanpa/tensorboard-dumper/blob/master/dump.py
+"""
 import struct
 
 import pandas as pd
@@ -19,7 +19,7 @@ def tensorboard_to_pandas(file_path: str) -> pd.DataFrame:
     """Convert the tensorboard log to a pandas DataFrame.
 
     :param file_path: The path of the tensorboard log file.
-    :return A Pandas DataFrame with the columns "tag", "step", "value" (the fist two are set as index)
+    :return: A Pandas DataFrame with the columns "tag", "step", "value" (the fist two are set as index)
     """
     with open(file_path, 'rb') as f:
         data = f.read()
