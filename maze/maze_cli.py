@@ -1,11 +1,10 @@
 """Implements the Maze command line interface for running rollouts, trainings and else."""
 import glob
-import os
 from typing import Optional
 
 import hydra
-import yaml
 import numpy as np
+import yaml
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
@@ -34,10 +33,6 @@ def maze_run(cfg: DictConfig) -> Optional[float]:
         runner = Factory(base_type=Runner).instantiate(cfg.runner)
         runner.run(cfg)
 
-    f = open('maze_cli.log', 'a+')
-    f.write(f'Entering maze_run in directory {os.getcwd()}\n')
-    f.close()
-
     # check if we are currently in a --multirun
     instance = HydraConfig.instance()
     is_multi_run = False if instance.cfg.hydra.job.get("num") is None else True
@@ -47,13 +42,8 @@ def maze_run(cfg: DictConfig) -> Optional[float]:
         run_job()
     # multi-runs (e.g., gird search, nevergrad, ...)
     else:
-
         try:
-            # run job
-            print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
-            runner = Factory(base_type=Runner).instantiate(cfg.runner)
-            runner.run(cfg)
-
+            run_job()
         # when optimizing hyper parameters a single exception
         # in one job should not break the entire experiment
         except:
