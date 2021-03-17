@@ -130,9 +130,13 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
 
         :return: the initial observation after resetting.
         """
+        # preserve action space
         self._action_space = self.env.action_space
+        # reset env
+        obs = self.env.reset()
+        # update env time
         self._last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
-        return self.env.reset()
+        return obs
 
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
