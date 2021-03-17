@@ -2,7 +2,7 @@ import pytest
 from hydra.experimental import initialize_config_module, compose
 
 from maze.maze_cli import maze_run
-from maze.test.shared_test_utils.run_maze_utils import run_maze
+from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 
 
 def run_behavioral_cloning(env: str, teacher_policy: str, bc_runner: str, bc_wrappers: str, bc_model: str):
@@ -15,7 +15,7 @@ def run_behavioral_cloning(env: str, teacher_policy: str, bc_runner: str, bc_wra
                           env=env,
                           policy=teacher_policy,
                           runner="sequential")
-    run_maze(rollout_config, config_module="maze.conf", config_name="conf_rollout")
+    run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
     # Behavioral cloning on top of the heuristic rollout trajectories
     train_config = dict(configuration="test", env=env, wrappers=bc_wrappers,

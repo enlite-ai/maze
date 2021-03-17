@@ -9,7 +9,7 @@ from omegaconf import open_dict
 from maze.maze_cli import maze_run
 
 
-def run_maze(hydra_overrides: Dict[str, str], config_module: str, config_name: str):
+def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_name: str):
     """Runs rollout with the given config overrides using maze_run.
 
     :param hydra_overrides: Config overrides for hydra.
