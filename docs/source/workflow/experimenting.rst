@@ -124,7 +124,7 @@ To start a hyper parameter optimization, run:
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=Pendulum-v0 algorithm=ppo \
+    $ maze-run -cn conf_train env.name=Pendulum-v0 \
       algorithm.n_epochs=5 +experiment=nevergrad --multirun
 
 Where to Go Next
