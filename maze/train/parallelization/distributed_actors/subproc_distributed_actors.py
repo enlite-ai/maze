@@ -13,9 +13,9 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.distributed_actors.actor import ActorOutput
 from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.utils.exception_report import ExceptionReport
@@ -88,7 +88,7 @@ class SubprocDistributedActors(DistributedActors):
         self.broadcasting_container.set_policy_state_dict(converted_state_dict)
 
     @override(DistributedActors)
-    def collect_outputs(self, learner_device: str) -> Tuple[ActorOutput, float, float, float]:
+    def collect_outputs(self, learner_device: str) -> Tuple[StructuredSpacesRecord, float, float, float]:
         """Collect actor outputs from the multiprocessing queue."""
         trajectories = []
 

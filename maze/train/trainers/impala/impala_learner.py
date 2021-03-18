@@ -10,7 +10,7 @@ from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.train.parallelization.distributed_actors.actor import ActorOutput
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 
 LearnerOutput = collections.namedtuple('LearnerOutput', 'values detached_values actions_logits')
@@ -37,7 +37,7 @@ class ImpalaLearner:
             assert isinstance(step_space, gym.spaces.Dict)
             self.step_action_keys[step_key] = list(step_space.spaces.keys())
 
-    def learner_rollout_on_agent_output(self, actors_output: ActorOutput) -> LearnerOutput:
+    def learner_rollout_on_agent_output(self, actors_output: StructuredSpacesRecord) -> LearnerOutput:
         """Compute the values and the action logits using the learners network parameters and the actors rollouts.
             Thus we never step through an env here.
 
