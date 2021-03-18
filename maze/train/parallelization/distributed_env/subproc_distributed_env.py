@@ -13,9 +13,9 @@ from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue, get_stats_logger
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.parallelization.distributed_env.distributed_env_utils import SinkHoleConsumer, disable_epoch_level_stats
-from maze.train.parallelization.observation_aggregator import DictObservationAggregator
+from maze.train.parallelization.distributed_env.distributed_env import StructuredDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env_utils import disable_epoch_level_stats
+from maze.train.utils.train_utils import stack_numpy_dict_list
 
 
 def _worker(remote, parent_remote, env_fn_wrapper):
@@ -90,8 +90,7 @@ class CloudpickleWrapper(object):
         self.var = cloudpickle.loads(obs)
 
 
-class SubprocStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv,
-                                      TimeEnvMixin):
+class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
     """
     Creates a multiprocess wrapper for multiple environments, distributing each environment to its own
     process. This allows a significant speed up when the environment is computationally complex.
@@ -144,9 +143,6 @@ class SubprocStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredE
         self.remotes[0].send(('get_spaces', None))
         self._observation_spaces_dict, self._action_spaces_dict = self.remotes[0].recv()
 
-        # initialize observation aggregation
-        self.obs_aggregator = DictObservationAggregator()
-
         # keep track of registered logging statistics consumers
         self.epoch_stats = LogStatsAggregator(LogStatsLevel.EPOCH)
 
@@ -184,9 +180,7 @@ class SubprocStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredE
             if stat is not None:
                 self.epoch_stats.receive(stat)
 
-        # aggregate list observations
-        self.obs_aggregator.reset(obs)
-        return self.obs_aggregator.aggregate()
+        return stack_numpy_dict_list(obs)
 
     def seed(self, seed=None) -> None:
         """BaseDistributedEnv implementation"""
@@ -238,8 +232,7 @@ class SubprocStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredE
             if stat is not None:
                 self.epoch_stats.receive(stat)
 
-        self.obs_aggregator.reset(obs)
-        return self.obs_aggregator.aggregate(), np.stack(rews), np.stack(env_dones), infos
+        return stack_numpy_dict_list(obs), np.stack(rews), np.stack(env_dones), infos
 
     @override(LogStatsEnv)
     def get_stats(self, level: LogStatsLevel) -> LogStatsAggregator:

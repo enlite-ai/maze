@@ -5,6 +5,10 @@ from typing import Iterable, Any, Tuple, Dict
 import numpy as np
 
 from maze.core.env.base_env import BaseEnv
+from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.env.time_env_mixin import TimeEnvMixin
+from maze.core.log_stats.log_stats_env import LogStatsEnv
 
 
 class DistributedEnv(BaseEnv, ABC):
@@ -49,3 +53,7 @@ class DistributedEnv(BaseEnv, ABC):
         elif isinstance(indices, int):
             indices = [indices]
         return indices
+
+
+class StructuredDistributedEnv(ABC, DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin):
+    """Common superclass for the structured distributed env implementations in Maze."""

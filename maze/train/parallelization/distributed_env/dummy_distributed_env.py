@@ -11,11 +11,11 @@ from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue, get_stats_logger
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.parallelization.observation_aggregator import DictObservationAggregator
+from maze.train.parallelization.distributed_env.distributed_env import StructuredDistributedEnv
+from maze.train.utils.train_utils import stack_numpy_dict_list
 
 
-class DummyStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin):
+class DummyStructuredDistributedEnv(StructuredDistributedEnv):
     """
     Creates a simple wrapper for multiple environments, calling each environment in sequence on the current
     Python process. This is useful for computationally simple environment such as ``cartpole-v1``, as the overhead of
@@ -31,7 +31,6 @@ class DummyStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnv
         super().__init__(n_envs=len(env_factories))
 
         self.envs = [LogStatsWrapper.wrap(env_fn()) for env_fn in env_factories]
-        self.obs_aggregator = DictObservationAggregator()
 
         self._actor_dones: Optional[np.ndarray] = None
         self._actor_ids: Optional[List[Tuple[Union[str, int], int]]] = None
@@ -50,8 +49,7 @@ class DummyStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnv
         :param actions: the list of actions for the respective envs.
         :return: observations, rewards, dones, information-dicts all in env-aggregated form.
         """
-        self.obs_aggregator.reset()
-        rewards, env_dones, infos, actor_dones, actor_ids = [], [], [], [], []
+        observations, rewards, env_dones, infos, actor_dones, actor_ids = [], [], [], [], [], []
 
         for i, env in enumerate(self.envs):
             o, r, env_done, i = env.step(actions[i])
@@ -63,12 +61,12 @@ class DummyStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnv
                 # collect the episode statistics for finished environments
                 self.epoch_stats.receive(env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
-            self.obs_aggregator.observations.append(o)
+            observations.append(o)
             rewards.append(r)
             env_dones.append(env_done)
             infos.append(i)
 
-        obs = self.obs_aggregator.aggregate()
+        obs = stack_numpy_dict_list(observations)
         rewards = np.hstack(rewards).astype(np.float32)
         env_dones = np.hstack(env_dones)
 
@@ -79,16 +77,16 @@ class DummyStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnv
 
     def reset(self) -> Dict[str, np.ndarray]:
         """BaseDistributedEnv implementation"""
-        self.obs_aggregator.reset()
+        observations = []
         for env in self.envs:
-            self.obs_aggregator.observations.append(env.reset())
+            observations.append(env.reset())
             # send the episode statistics of the environment collected before the reset()
             self.epoch_stats.receive(env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
         self._actor_ids = [env.actor_id() for env in self.envs]
         self._actor_dones = np.hstack([env.is_actor_done() for env in self.envs])
 
-        return self.obs_aggregator.aggregate()
+        return stack_numpy_dict_list(observations)
 
     def seed(self, seed: int = None) -> None:
         """BaseDistributedEnv implementation"""
