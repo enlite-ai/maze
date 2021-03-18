@@ -11,10 +11,9 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
-from maze.train.utils.train_utils import unstack_numpy_list_dict
 
 
 class RolloutEvaluator(Evaluator):
@@ -53,7 +52,7 @@ class RolloutEvaluator(Evaluator):
 
             # Sample action and take the step
             sampled_action = policy.compute_action(observations, policy_id=actor_ids.pop()[0], maze_state=None)
-            observations, rewards, dones, infos = self.eval_env.step(unstack_numpy_list_dict(sampled_action))
+            observations, rewards, dones, infos = self.eval_env.step(sampled_action)
 
             # Count done episodes
             n_done_episodes += np.count_nonzero(dones)

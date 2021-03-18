@@ -5,14 +5,13 @@ from typing import Dict, Union
 import gym
 import numpy as np
 import torch
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.perception.perception_utils import flat_structured_observations
 from maze.train.parallelization.distributed_actors.actor import ActorOutput
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.utils.train_utils import unstack_numpy_list_dict
 
 LearnerOutput = collections.namedtuple('LearnerOutput', 'values detached_values actions_logits')
 
@@ -75,8 +74,7 @@ class ImpalaLearner:
             # iterate environment steps
             for step_key in self.sub_step_keys:
                 sampled_action = self.model.policy.compute_action(obs, policy_id=step_key, deterministic=deterministic)
-                actions_dict_list = unstack_numpy_list_dict(sampled_action)
-                obs, step_rewards, dones, infos = self.env.step(actions_dict_list)
+                obs, step_rewards, dones, infos = self.env.step(sampled_action)
 
             if np.any(dones):
                 dones_count += np.count_nonzero(dones)
