@@ -9,7 +9,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.spaces_record import SpacesRecord
 
 
 class DistributedActors:
@@ -58,7 +58,7 @@ class DistributedActors:
         raise NotImplementedError
 
     @abstractmethod
-    def collect_outputs(self, learner_device: str) -> Tuple[SpacesStepRecord, float, float, float]:
+    def collect_outputs(self, learner_device: str) -> Tuple[SpacesRecord, float, float, float]:
         """Collect `self.batch_size` actor outputs from the queue and return them batched where the first dim is
         time and the second is the batch size.
 

@@ -5,10 +5,10 @@ from typing import List, Optional, Any, TypeVar, Generic
 import numpy as np
 
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recording.state_step_record import StateStepRecord
+from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.state_record import StateRecord
 
-StepRecordType = TypeVar('StepRecordType', SpacesStepRecord, StateStepRecord)
+StepRecordType = TypeVar('StepRecordType', SpacesRecord, StateRecord)
 
 
 class TrajectoryRecord(Generic[StepRecordType]):
@@ -33,7 +33,7 @@ class TrajectoryRecord(Generic[StepRecordType]):
                f"   Length: {len(self)}"
 
 
-class StateTrajectoryRecord(TrajectoryRecord[StateStepRecord]):
+class StateTrajectoryRecord(TrajectoryRecord[StateRecord]):
     """Records and keeps trajectory record data for a complete episode.
 
     :param id: ID of the episode. Can be used to link trajectory data from event logs and other sources.
@@ -47,12 +47,12 @@ class StateTrajectoryRecord(TrajectoryRecord[StateStepRecord]):
         self.renderer = renderer
 
 
-class SpacesTrajectoryRecord(TrajectoryRecord[SpacesStepRecord]):
+class SpacesTrajectoryRecord(TrajectoryRecord[SpacesRecord]):
 
-    def stack(self) -> SpacesStepRecord:
-        assert all([isinstance(record, SpacesStepRecord) for record in self.step_records]), \
+    def stack(self) -> SpacesRecord:
+        assert all([isinstance(record, SpacesRecord) for record in self.step_records]), \
             "stacking supported by records of spaces only"
-        return SpacesStepRecord.stack_records(self.step_records)
+        return SpacesRecord.stack_records(self.step_records)
 
     @classmethod
     def stack_trajectories(cls, trajectories: List['SpacesTrajectoryRecord']) -> 'SpacesTrajectoryRecord':
@@ -60,7 +60,7 @@ class SpacesTrajectoryRecord(TrajectoryRecord[SpacesStepRecord]):
 
         stacked_trajectory = SpacesTrajectoryRecord(id=np.stack([trajectory.id for trajectory in trajectories]))
         step_records_in_time = list(zip(*[t.step_records for t in trajectories]))
-        stacked_trajectory.step_records = [SpacesStepRecord.stack_records(list(recs)) for recs in step_records_in_time]
+        stacked_trajectory.step_records = [SpacesRecord.stack_records(list(recs)) for recs in step_records_in_time]
         return stacked_trajectory
 
     def is_done(self):

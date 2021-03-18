@@ -18,7 +18,7 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
-from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
+from maze.core.trajectory_recording.spaces_record import SpacesRecord
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
@@ -267,7 +267,7 @@ class MultiStepActorCritic(Trainer, ABC):
         # perform optimizer step
         self.optimizer.step()
 
-    def _rollout(self) -> SpacesStepRecord:
+    def _rollout(self) -> SpacesRecord:
         """Perform rollout of current policy on distributed structured env and log the time it took."""
         start_time = time.time()
         trajectory = self.rollout_generator.rollout(self.model.policy, n_steps=self.algorithm_config.n_rollout_steps)

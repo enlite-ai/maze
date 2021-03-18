@@ -9,7 +9,7 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.log_events.step_event_log import StepEventLog
 
 
-class StateStepRecord:
+class StateRecord:
     """Keeps trajectory data for one step. Note: It should be ensured that the components are not going to
     change after assigning them to the step record (e.g. by copying the relevant ones, especially state and
     the serializable components).
