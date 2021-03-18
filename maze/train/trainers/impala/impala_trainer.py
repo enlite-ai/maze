@@ -16,7 +16,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
@@ -173,8 +173,8 @@ class MultiStepIMPALA(Trainer):
         self.load_state_dict(state_dict)
 
     @classmethod
-    def _shift_outputs(cls, step_record: SpacesRecord, learner_output: LearnerOutput) -> Tuple[SpacesRecord,
-                                                                                               LearnerOutput]:
+    def _shift_outputs(cls, step_record: StructuredSpacesRecord, learner_output: LearnerOutput) -> Tuple[StructuredSpacesRecord,
+                                                                                                         LearnerOutput]:
         """Shift the output of the actors and agents by removing the last element
 
         :param step_record: the output of the actors already batched

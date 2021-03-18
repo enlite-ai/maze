@@ -9,7 +9,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
-from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
@@ -62,7 +62,7 @@ class DummyDistributedActors(DistributedActors):
         self.policy.load_state_dict(converted_state_dict)
 
     @override(DistributedActors)
-    def collect_outputs(self, learner_device: str) -> Tuple[SpacesRecord, float, float, float]:
+    def collect_outputs(self, learner_device: str) -> Tuple[StructuredSpacesRecord, float, float, float]:
         """Run the rollouts and collect the outputs."""
         start_wait_time = time.time()
         trajectories = []

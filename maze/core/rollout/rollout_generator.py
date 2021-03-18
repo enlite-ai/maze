@@ -7,7 +7,7 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_stats.log_stats import LogStatsLevel
-from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.distributed_env.structured_distributed_env import StructuredDistributedEnv
@@ -71,9 +71,9 @@ class RolloutGenerator:
         # Step the desired number of (flat) steps
         done = False
         for _ in range(n_steps):
-            record = SpacesRecord(observations={}, actions={}, rewards={}, dones={}, infos={},
-                                  logits={} if self.record_logits else None,
-                                  batch_shape=[self.env.n_envs] if self.is_distributed else None)
+            record = StructuredSpacesRecord(observations={}, actions={}, rewards={}, dones={}, infos={},
+                                            logits={} if self.record_logits else None,
+                                            batch_shape=[self.env.n_envs] if self.is_distributed else None)
 
             # Step through all sub-steps, i.e., step until the env time changes
             current_env_time = self.env.get_env_time()
@@ -96,7 +96,7 @@ class RolloutGenerator:
         return trajectory_record
 
     def _record_sub_step(self,
-                         record: SpacesRecord,
+                         record: StructuredSpacesRecord,
                          observation: ObservationType,
                          policy: Union[Policy, TorchPolicy]) -> Union[bool, np.ndarray]:
         """Perform one substep in the environment and record it. Return the done flag(s)."""

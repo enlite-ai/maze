@@ -1,11 +1,11 @@
 import numpy as np
 import torch
 
-from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 
 
 def test_record_stacking():
-    r1 = SpacesRecord(
+    r1 = StructuredSpacesRecord(
         observations={0: dict(x=np.array([10, 10]), y=np.array([10, 10])),
                       1: dict(z=np.array([[11, 11], [11, 11]]))},
         actions={0: dict(action=np.array([10])), 1: dict(action=np.array([11, 11]))},
@@ -13,7 +13,7 @@ def test_record_stacking():
         dones={0: False, 1: False}
     )
 
-    r2 = SpacesRecord(
+    r2 = StructuredSpacesRecord(
         observations={0: dict(x=np.array([20, 20]), y=np.array([20, 20])),
                       1: dict(z=np.array([[21, 21], [21, 21]]))},
         actions={0: dict(action=np.array([20])), 1: dict(action=np.array([21, 21]))},
@@ -21,7 +21,7 @@ def test_record_stacking():
         dones={0: False, 1: False}
     )
 
-    r3 = SpacesRecord(
+    r3 = StructuredSpacesRecord(
         observations={0: dict(x=np.array([30, 30]), y=np.array([30, 30])),
                       1: dict(z=np.array([[31, 31], [31, 31]]))},
         actions={0: dict(action=np.array([30])), 1: dict(action=np.array([31, 31]))},
@@ -29,7 +29,7 @@ def test_record_stacking():
         dones={0: False, 1: True}
     )
 
-    stacked = SpacesRecord.stack_records([r1, r2, r3])
+    stacked = StructuredSpacesRecord.stack_records([r1, r2, r3])
 
     # Check that the observations are stacked as expected
 
@@ -57,7 +57,7 @@ def test_record_stacking():
 
 
 def test_record_conversion():
-    r = SpacesRecord(
+    r = StructuredSpacesRecord(
         observations={0: dict(x=np.array([10, 10]), y=np.array([10, 10])),
                       1: dict(z=np.array([[11, 11], [11, 11]]))},
         actions={0: dict(action=np.array([10])), 1: dict(action=np.array([11, 11]))},
