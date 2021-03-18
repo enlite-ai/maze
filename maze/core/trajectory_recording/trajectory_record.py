@@ -1,31 +1,39 @@
 """Episode record is the main unit of trajectory data recording."""
 
-from typing import List, Optional, Any, TypeVar, Generic
+from typing import List, Optional, Any, TypeVar, Generic, Dict
 
 import numpy as np
 
+from maze.core.env.action_conversion import ActionType
+from maze.core.env.observation_conversion import ObservationType
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord, StepKeyType
 from maze.core.trajectory_recording.state_record import StateRecord
 
-StepRecordType = TypeVar('StepRecordType', SpacesRecord, StateRecord)
+StepRecordType = TypeVar('StepRecordType', StructuredSpacesRecord, StateRecord)
 
 
 class TrajectoryRecord(Generic[StepRecordType]):
+    """Common functionality of trajectory records.
+
+    :param id: ID of the trajectory. Can be a string ID or any other data (like environment seeding information).
+    """
+
     def __init__(self, id: Any):
         self.id = id
         self.step_records: List[StepRecordType] = []
 
     def __len__(self):
+        """Length of the trajectory"""
         return len(self.step_records)
 
     def append(self, step_record: StepRecordType) -> 'TrajectoryRecord':
+        """Append a single step record."""
         self.step_records.append(step_record)
-        return self
 
     def extend(self, trajectory_record: 'TrajectoryRecord') -> 'TrajectoryRecord':
+        """Extend this trajectory with another trajectory."""
         self.step_records.extend(trajectory_record.step_records)
-        return self
 
     def __repr__(self):
         return f"\nTrajectory record:\n" \
@@ -34,7 +42,8 @@ class TrajectoryRecord(Generic[StepRecordType]):
 
 
 class StateTrajectoryRecord(TrajectoryRecord[StateRecord]):
-    """Records and keeps trajectory record data for a complete episode.
+    """Holds state record data (i.e., Maze states and actions, independent of the current
+     action and observation space format) for a complete episode.
 
     :param id: ID of the episode. Can be used to link trajectory data from event logs and other sources.
     :param renderer: Where available, the renderer object should be associated to the episode record. This ensures
@@ -47,32 +56,52 @@ class StateTrajectoryRecord(TrajectoryRecord[StateRecord]):
         self.renderer = renderer
 
 
-class SpacesTrajectoryRecord(TrajectoryRecord[SpacesRecord]):
+class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
+    """Holds structured spaces records (i.e., raw actions and observations recorded during a rollout). """
 
-    def stack(self) -> SpacesRecord:
-        assert all([isinstance(record, SpacesRecord) for record in self.step_records]), \
-            "stacking supported by records of spaces only"
-        return SpacesRecord.stack_records(self.step_records)
+    def stack(self) -> StructuredSpacesRecord:
+        """Stack the whole trajectory into a single structured spaces record.
+
+        Useful for processing whole fixed-length trajectories in a single batch.
+        """
+        return StructuredSpacesRecord.stack_records(self.step_records)
 
     @classmethod
     def stack_trajectories(cls, trajectories: List['SpacesTrajectoryRecord']) -> 'SpacesTrajectoryRecord':
+        """Stack multiple trajectories, keeping the time dimension intact.
+
+        All the trajectories should be of the same length. The resulting trajectory will have the same number of steps,
+        each being a stack of the corresponding steps of the input trajectories.
+
+        :param trajectories: Trajectories to stack.
+        :return: Trajectory record of the same lenght, consisting of stacked structured spaces records.
+        """
         assert len(set([len(t) for t in trajectories])) == 1, "all trajectories must have the same length"
 
         stacked_trajectory = SpacesTrajectoryRecord(id=np.stack([trajectory.id for trajectory in trajectories]))
         step_records_in_time = list(zip(*[t.step_records for t in trajectories]))
-        stacked_trajectory.step_records = [SpacesRecord.stack_records(list(recs)) for recs in step_records_in_time]
+        stacked_trajectory.step_records = [StructuredSpacesRecord.stack_records(list(recs)) for recs in step_records_in_time]
         return stacked_trajectory
 
-    def is_done(self):
-        return list(self.step_records[-1].dones.values())[-1] if len(self) > 0 else False
-
     @property
-    def actions(self):
+    def actions(self) -> List[Dict[StepKeyType, ActionType]]:
+        """Convenience access to all structured action dicts from this trajectory."""
         return [step_record.actions for step_record in self.step_records]
 
+    @property
+    def observations(self) -> List[Dict[StepKeyType, ObservationType]]:
+        """Convenience access to all structured observation dicts from this trajectory."""
+        return [step_record.actions for step_record in self.step_records]
+
+    def is_done(self) -> bool:
+        """Convenience method for checking whether the end of this trajectory represent also an end of the episode."""
+        assert not self.step_records[-1].is_batched(), "cannot determine done state for batched trajectory."
+        return list(self.step_records[-1].dones.values())[-1] if len(self) > 0 else False
+
     def total_reward(self):
+        """Convenience method for calculating the total reward of a given trajectory."""
+        assert not self.step_records[-1].is_batched(), "cannot determine total reward for a batched trajectory."
         total_reward = 0
         for record in self.step_records:
-            for reward in record.rewards.values():
-                total_reward += reward
+            total_reward += sum(record.rewards.values())
         return total_reward

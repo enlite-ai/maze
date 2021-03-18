@@ -15,7 +15,7 @@ StepKeyType = TypeVar('StepKeyType', str, int)
 
 
 @dataclass
-class SpacesRecord:
+class StructuredSpacesRecord:
     """Records spaces (i.e., raw actions and observations) from a single environment step.
 
     Individual items are structured in dictionaries, with keys corresponding to the structured sub-step IDs.
@@ -52,15 +52,18 @@ class SpacesRecord:
     """If the record is batched, this is the shape of the batch."""
 
     @classmethod
-    def stack_records(cls, records: List['SpacesRecord']) -> StateRecord:
+    def stack_records(cls, records: List['StructuredSpacesRecord']) -> StateRecord:
         """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
+
+        All the records should be in numpy and have the same structure of the spaces (i.e. come from the same
+        environment etc.).
 
         :param records: Records to stack.
         :return: Single stacked record, containing all the given records, and having the corresponding batch shape.
         """
         logits_present = records[0].logits is not None
 
-        stacked_record = SpacesRecord(
+        stacked_record = StructuredSpacesRecord(
             observations={}, actions={}, logits={} if logits_present else None,
             rewards=stack_numpy_dict_list([r.rewards for r in records]),
             dones=stack_numpy_dict_list([r.dones for r in records]))
@@ -84,7 +87,7 @@ class SpacesRecord:
 
     @classmethod
     def converted_from(cls, state_record: StateRecord, conversion_env: MazeEnv, first_step_in_episode: bool) \
-            -> 'SpacesRecord':
+            -> 'StructuredSpacesRecord':
         """Convert a state record (containing a Maze state and Maze action) into a spaces record (containing
         raw actions and observations for each sub-step).
 
@@ -106,7 +109,7 @@ class SpacesRecord:
                                                                RawMazeAction) else state_record.maze_action
 
         obs, action = conversion_env.get_observation_and_action_dicts(obs, action, first_step_in_episode)
-        return SpacesRecord(observations=obs, actions=action, rewards=None, dones=None)
+        return StructuredSpacesRecord(observations=obs, actions=action, rewards=None, dones=None)
 
     def to_numpy(self):
         """Convert the record to numpy."""

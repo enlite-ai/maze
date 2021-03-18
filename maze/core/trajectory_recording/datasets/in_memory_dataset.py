@@ -10,7 +10,7 @@ import torch
 from torch.utils.data.dataset import Dataset, Subset
 
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.state_record import StateRecord
 from maze.core.trajectory_recording.trajectory_record import TrajectoryRecord
 
@@ -139,7 +139,7 @@ class InMemoryDataset(Dataset, ABC):
 
     @staticmethod
     def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: Optional[StructuredEnv]) \
-            -> List[SpacesRecord]:
+            -> List[StructuredSpacesRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
         :param trajectory: Episode record to load
@@ -163,14 +163,14 @@ class InMemoryDataset(Dataset, ABC):
                 if step_record.maze_state is None or step_record.maze_action is None:
                     continue
                 # Convert to spaces
-                step_record = SpacesRecord.converted_from(step_record, conversion_env=conversion_env,
-                                                          first_step_in_episode=step_id == 0)
+                step_record = StructuredSpacesRecord.converted_from(step_record, conversion_env=conversion_env,
+                                                                    first_step_in_episode=step_id == 0)
 
             step_records.append(step_record)
 
         return step_records
 
-    def _store_loaded_trajectory(self, records: List[SpacesRecord]) -> None:
+    def _store_loaded_trajectory(self, records: List[StructuredSpacesRecord]) -> None:
         """Stores the step records, keeping a reference that they belong to the same episode.
 
         Keeping the reference is important in case we want to split the dataset later -- samples from

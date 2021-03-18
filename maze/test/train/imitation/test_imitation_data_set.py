@@ -6,7 +6,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.state_record import StateRecord
 from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
@@ -70,7 +70,7 @@ def _mock_spaces_trajectory_record(step_count: int):
     episode_record = SpacesTrajectoryRecord("test")
 
     for i in range(step_count):
-        episode_record.step_records.append(SpacesRecord(
+        episode_record.step_records.append(StructuredSpacesRecord(
             observations={0: dict(observation=i)},
             actions={0: dict(action=i)},
             rewards={0: 0},
