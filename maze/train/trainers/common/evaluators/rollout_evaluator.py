@@ -45,13 +45,10 @@ class RolloutEvaluator(Evaluator):
         observations = self.eval_env.reset()
 
         while n_done_episodes < self.n_episodes:
-            # Get the actor. Only synchronous envs are supported, i.e. the actor ID should always be the same
-            # (regardless of the sub-step)
-            actor_ids = set(self.eval_env.actor_id())
-            assert len(actor_ids) == 1, "only synchronous environments are supported"
+            policy_id, _ = self.eval_env.actor_id()
 
             # Sample action and take the step
-            sampled_action = policy.compute_action(observations, policy_id=actor_ids.pop()[0], maze_state=None)
+            sampled_action = policy.compute_action(observations, policy_id=policy_id, maze_state=None)
             observations, rewards, dones, infos = self.eval_env.step(sampled_action)
 
             # Count done episodes
