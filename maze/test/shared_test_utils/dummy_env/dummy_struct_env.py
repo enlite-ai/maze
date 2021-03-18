@@ -78,14 +78,16 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         self._sub_step_index = 0
         self.maze_env = maze_env
 
+        self.last_obs = None
+
     def reset(self) -> Any:
         """Resets the environment and returns the initial state.
 
         :return: the initial state after resetting.
         """
-        obs = self.env.reset()
+        self.last_obs = self.env.reset()
         self._sub_step_index = 0
-        return filter_dict_starts_with(obs, 'observation_0')
+        return filter_dict_starts_with(self.last_obs, 'observation_0')
 
     def step(self, action) -> Tuple[Dict, float, bool, Optional[Dict]]:
         """Generic sub-step function.
@@ -152,8 +154,8 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
 
         :return: state, reward, done, info
         """
-        obs, _, _, _ = self.maze_env.step(action)
-        return filter_dict_starts_with(obs, 'observation_1'), 0, False, None
+        # Only the second sub step actually steps the underlying core env
+        return filter_dict_starts_with(self.last_obs, 'observation_1'), 0, False, None
 
     def _action1(self, action) -> Tuple[Dict, float, bool, Optional[Dict[str, np.ndarray]]]:
         """
@@ -161,5 +163,6 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
 
         :return: state, reward, done, info
         """
-        obs, _, _, _ = self.maze_env.step(action)
-        return filter_dict_starts_with(obs, 'observation_0'), 0, False, None
+        # Only the second sub step actually steps the underlying core env
+        self.last_obs, _, _, _ = self.maze_env.step(action)
+        return filter_dict_starts_with(self.last_obs, 'observation_0'), 0, False, None
