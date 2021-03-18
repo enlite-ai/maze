@@ -4,7 +4,9 @@ from typing import Iterable, Any, Tuple, Dict
 
 import numpy as np
 
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
+from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
@@ -14,6 +16,15 @@ from maze.core.log_stats.log_stats_env import LogStatsEnv
 class DistributedEnv(BaseEnv, ABC):
     """Abstract base class for distributed environments.
 
+    An instance of this class encapsulates multiple environments under the hood and steps them synchronously.
+
+    Note that actions and observations are handled and returned in a stacked form, i.e. not as a list,
+    but as a single action/observation dict where the items have an additional dimension corresponding
+    to the number of encapsulated environments (as such setting is more convenient when working with
+    Torch policies). To convert these to/from a list, use the training helpers such as
+    :method:`maze.train.utils.train_utils.stack_numpy_dict_list` and
+    :method:`maze.train.utils.train_utils.unstack_numpy_list_dict`.
+
     :param: num_envs: the number of distributed environments.
     """
 
@@ -21,8 +32,8 @@ class DistributedEnv(BaseEnv, ABC):
         self.n_envs = n_envs
 
     @abstractmethod
-    def step(self, actions: Iterable[Any]
-             ) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def step(self, actions: ActionType
+             ) -> Tuple[ObservationType, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
@@ -55,5 +66,5 @@ class DistributedEnv(BaseEnv, ABC):
         return indices
 
 
-class StructuredDistributedEnv(ABC, DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin):
+class StructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin, ABC):
     """Common superclass for the structured distributed env implementations in Maze."""

@@ -9,7 +9,6 @@ from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.utils.train_utils import unstack_numpy_list_dict
 
 
 class RolloutGenerator:
@@ -62,10 +61,6 @@ class RolloutGenerator:
                     action = policy.compute_action(observation, policy_id=step_key, maze_state=maze_state,
                                                    deterministic=False)
                 record.actions[step_key] = action
-
-                # Unstack action in distributed env scenarios (the env should handle this in the future)
-                if self.is_distributed:
-                    action = unstack_numpy_list_dict(action)
 
                 # Take the step
                 observation, reward, done, info = self.env.step(action)

@@ -6,7 +6,9 @@ import gym
 import numpy as np
 
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_env import MazeEnv
+from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
@@ -15,7 +17,7 @@ from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.distributed_env.distributed_env import StructuredDistributedEnv
 from maze.train.parallelization.distributed_env.distributed_env_utils import disable_epoch_level_stats
-from maze.train.utils.train_utils import stack_numpy_dict_list
+from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
 
 
 def _worker(remote, parent_remote, env_fn_wrapper):
@@ -154,13 +156,13 @@ class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
         self._actor_dones = None
         self._actor_ids = None
 
-    def step(self, actions: Iterable[Any]) -> \
-            Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
         :return: observations, rewards, dones, information-dicts all in env-aggregated form.
         """
+        actions = unstack_numpy_list_dict(actions)
         self._step_async(actions)
         return self._step_wait()
 
