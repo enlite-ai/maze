@@ -223,6 +223,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
     env.reset()
     env.close()
 
-    # The step count should correspond to core env steps (disregarding sub-steps)
-    assert writer.step_count == 5 * (10 + 1)  # Count also the recorded final state
+    # The step count should correspond to core env steps (disregarding sub-steps),
+    # I.e., 5 flat steps per 10 structured + 1 final state for each episode
+    assert writer.step_count == 5 * (5 + 1)
     assert writer.episode_count == 5
