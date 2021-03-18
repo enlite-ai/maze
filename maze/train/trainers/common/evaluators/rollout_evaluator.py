@@ -12,7 +12,7 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 from maze.train.utils.train_utils import unstack_numpy_list_dict
 
@@ -27,7 +27,7 @@ class RolloutEvaluator(Evaluator):
     """
 
     def __init__(self,
-                 eval_env: Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
                  n_episodes: int,
                  model_selection: Optional[ModelSelectionBase]):
         self.eval_env = eval_env

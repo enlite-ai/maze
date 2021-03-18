@@ -1,42 +1,33 @@
 import multiprocessing
-import pickle
 from typing import Callable, List, Iterable, Any, Tuple, Dict, Optional, Union
 
+import cloudpickle
 import gym
 import numpy as np
-import cloudpickle
 
 from maze.core.annotations import override
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue, get_stats_logger, \
-    LogStatsConsumer, LogStats
+from maze.core.env.time_env_mixin import TimeEnvMixin
+from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue, get_stats_logger
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env_utils import SinkHoleConsumer, disable_epoch_level_stats
 from maze.train.parallelization.observation_aggregator import DictObservationAggregator
-
-
-class SinkHoleConsumer(LogStatsConsumer):
-    """Sink hole statistics consumer. Discards all statistics on receive."""
-
-    def receive(self, stat: LogStats):
-        """Do not keep the received statistics."""
-        pass
 
 
 def _worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
-    env: Union[StructuredEnv, StructuredEnvSpacesMixin] = env_fn_wrapper.var()
+    env: MazeEnv = env_fn_wrapper.var()
 
     # enable collection of logging statistics
     if not isinstance(env, LogStatsWrapper):
         env = LogStatsWrapper.wrap(env)
 
     # discard epoch-level statistics (as stats are shipped to the main process after each episode)
-    sink_hole_consumer = SinkHoleConsumer()
-    env.stats_map[LogStatsLevel.EPOCH] = sink_hole_consumer
-    env.stats_map[LogStatsLevel.EPISODE].consumers = [sink_hole_consumer]
+    env = disable_epoch_level_stats(env)
 
     while True:
         try:
@@ -54,14 +45,16 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                     # collect episode stats after the reset
                     episode_stats = env.get_stats(LogStatsLevel.EPISODE).last_stats
 
-                remote.send((observation, reward, env_done, info, actor_done, actor_id, episode_stats))
+                remote.send((observation, reward, env_done, info, actor_done, actor_id, episode_stats,
+                             env.get_env_time()))
             elif cmd == 'seed':
                 env.seed(data)
             elif cmd == 'reset':
                 observation = env.reset()
                 actor_done = env.is_actor_done()
                 actor_id = env.actor_id()
-                remote.send((observation, actor_done, actor_id, env.get_stats(LogStatsLevel.EPISODE).last_stats))
+                remote.send((observation, actor_done, actor_id, env.get_stats(LogStatsLevel.EPISODE).last_stats,
+                             env.get_env_time()))
             elif cmd == 'close':
                 remote.close()
                 break
@@ -97,7 +90,8 @@ class CloudpickleWrapper(object):
         self.var = cloudpickle.loads(obs)
 
 
-class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv):
+class SubprocStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv,
+                                      TimeEnvMixin):
     """
     Creates a multiprocess wrapper for multiple environments, distributing each environment to its own
     process. This allows a significant speed up when the environment is computationally complex.
@@ -159,7 +153,8 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
         if logging_prefix is not None:
             self.epoch_stats.register_consumer(get_stats_logger(logging_prefix))
 
-        # keep track of the current actor IDs and dones exposed by the workers
+        # keep track of the current env times, actor IDs, and actor dones exposed by the workers
+        self._env_times = None
         self._actor_dones = None
         self._actor_ids = None
 
@@ -178,8 +173,9 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
         for remote in self.remotes:
             remote.send(('reset', None))
         results = [remote.recv() for remote in self.remotes]
-        obs, actor_dones, actor_ids, episode_stats = zip(*results)
+        obs, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
 
+        self._env_times = np.stack(env_times)
         self._actor_dones = np.stack(actor_dones)
         self._actor_ids = actor_ids
 
@@ -231,8 +227,9 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
         """
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
-        obs, rews, env_dones, infos, actor_dones, actor_ids, episode_stats = zip(*results)
+        obs, rews, env_dones, infos, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
 
+        self._env_times = np.stack(env_times)
         self._actor_dones = np.stack(actor_dones)
         self._actor_ids = actor_ids
 
@@ -311,4 +308,9 @@ class SubprocStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structu
         """implementation of :class:`~maze.core.env.structured_env_spaces_mixin.StructuredEnvSpacesMixin` interface
         """
         sub_step_id = self.actor_id[0][0]
-        return self.observation_space[sub_step_id]
+        return self.observation_spaces_dict[sub_step_id]
+
+    @override(TimeEnvMixin)
+    def get_env_time(self) -> np.ndarray:
+        """Return current env time for all distributed environments."""
+        return self._env_times

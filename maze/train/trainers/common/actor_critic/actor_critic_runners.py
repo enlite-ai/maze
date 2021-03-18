@@ -10,7 +10,7 @@ from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.factory import Factory
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import MultiStepActorCritic
@@ -71,7 +71,7 @@ class ACRunner(TrainingRunner):
                                env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                concurrency: int,
                                logging_prefix: str
-                               ) -> BaseDistributedEnv:
+                               ) -> DistributedEnv:
         """The dev and local runner implement the setup of the distribution env"""
 
 
