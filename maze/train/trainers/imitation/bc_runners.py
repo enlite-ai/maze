@@ -19,7 +19,7 @@ from maze.core.utils.factory import Factory
 from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
@@ -128,10 +128,10 @@ class BCDevRunner(BCRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> DummyStructuredDistributedEnv:
+                                    ) -> SequentialDistributedEnv:
         """create single-threaded env distribution"""
-        return DummyStructuredDistributedEnv([env_factory for _ in range(eval_concurrency)],
-                                             logging_prefix=logging_prefix)
+        return SequentialDistributedEnv([env_factory for _ in range(eval_concurrency)],
+                                        logging_prefix=logging_prefix)
 
 
 @dataclass

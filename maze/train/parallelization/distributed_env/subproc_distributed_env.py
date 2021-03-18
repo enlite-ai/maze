@@ -1,21 +1,15 @@
 import multiprocessing
-from typing import Callable, List, Iterable, Any, Tuple, Dict, Optional, Union
+from typing import Callable, List, Iterable, Any, Tuple, Dict, Optional
 
 import cloudpickle
-import gym
 import numpy as np
 
-from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.env.time_env_mixin import TimeEnvMixin
-from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue, get_stats_logger
-from maze.core.log_stats.log_stats_env import LogStatsEnv
+from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.distributed_env import StructuredDistributedEnv
+from maze.train.parallelization.distributed_env.structured_distributed_env import StructuredDistributedEnv
 from maze.train.parallelization.distributed_env.distributed_env_utils import disable_epoch_level_stats
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
 
@@ -116,13 +110,12 @@ class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
     """
 
     def __init__(self,
-                 env_factories: List[Callable[[], StructuredEnv]],
+                 env_factories: List[Callable[[], MazeEnv]],
                  logging_prefix: Optional[str] = None,
                  start_method: str = None):
-        super().__init__(n_envs=len(env_factories))
-
         self.waiting = False
         self.closed = False
+        n_envs = len(env_factories)
 
         if start_method is None:
             # Fork is not a thread safe method (see issue #217)
@@ -132,7 +125,7 @@ class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
             start_method = 'forkserver' if forkserver_available else 'spawn'
         ctx = multiprocessing.get_context(start_method)
 
-        self.remotes, self.work_remotes = zip(*[ctx.Pipe(duplex=True) for _ in range(self.n_envs)])
+        self.remotes, self.work_remotes = zip(*[ctx.Pipe(duplex=True) for _ in range(n_envs)])
         self.processes = []
         for work_remote, remote, env_fn in zip(self.work_remotes, self.remotes, env_factories):
             args = (work_remote, remote, CloudpickleWrapper(env_fn))
@@ -143,18 +136,14 @@ class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
             work_remote.close()
 
         self.remotes[0].send(('get_spaces', None))
-        self._observation_spaces_dict, self._action_spaces_dict = self.remotes[0].recv()
+        observation_spaces_dict, action_spaces_dict = self.remotes[0].recv()
 
-        # keep track of registered logging statistics consumers
-        self.epoch_stats = LogStatsAggregator(LogStatsLevel.EPOCH)
-
-        if logging_prefix is not None:
-            self.epoch_stats.register_consumer(get_stats_logger(logging_prefix))
-
-        # keep track of the current env times, actor IDs, and actor dones exposed by the workers
-        self._env_times = None
-        self._actor_dones = None
-        self._actor_ids = None
+        super().__init__(
+            n_envs=n_envs,
+            action_spaces_dict=action_spaces_dict,
+            observation_spaces_dict=observation_spaces_dict,
+            logging_prefix=logging_prefix
+        )
 
     def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
@@ -235,77 +224,3 @@ class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
                 self.epoch_stats.receive(stat)
 
         return stack_numpy_dict_list(obs), np.stack(rews), np.stack(env_dones), infos
-
-    @override(LogStatsEnv)
-    def get_stats(self, level: LogStatsLevel) -> LogStatsAggregator:
-        """Returns the aggregator of the individual episode statistics emitted by the parallel envs.
-
-        :param level: Must be set to `LogStatsLevel.EPOCH`, step or episode statistics are not propagated
-        """
-
-        # support only epoch statistics
-        assert level == LogStatsLevel.EPOCH
-
-        return self.epoch_stats
-
-    @override(LogStatsEnv)
-    def write_epoch_stats(self):
-        """Trigger the epoch statistics generation."""
-        self.epoch_stats.reduce()
-
-    @override(LogStatsEnv)
-    def get_stats_value(self,
-                        event: Callable,
-                        level: LogStatsLevel,
-                        name: Optional[str] = None) -> LogStatsValue:
-        """Obtain a single value from the epoch statistics dict.
-
-        :param event: The event interface method of the value in question.
-        :param name: The *output_name* of the statistics in case it has been specified in
-                     :func:`maze.core.log_stats.event_decorators.define_epoch_stats`
-        :param level: Must be set to `LogStatsLevel.EPOCH`, step or episode statistics are not propagated.
-        """
-        assert level == LogStatsLevel.EPOCH
-
-        return self.epoch_stats.last_stats[(event, name, None)]
-
-    @override(StructuredEnv)
-    def actor_id(self) -> List[Tuple[Union[str, int], int]]:
-        """Vectorized version of StructuredEnv.actor_id"""
-        return self._actor_ids
-
-    @override(StructuredEnv)
-    def is_actor_done(self) -> np.ndarray:
-        """Vectorized version of StructuredEnv.is_done"""
-        return self._actor_dones
-
-    @property
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
-        """Return the action space of one of the distributed envs."""
-        return self._action_spaces_dict
-
-    @property
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
-        """Return the observation space of one of the distributed envs."""
-        return self._observation_spaces_dict
-
-    @property
-    @override(StructuredEnvSpacesMixin)
-    def action_space(self) -> gym.spaces.Space:
-        """implementation of :class:`~maze.core.env.structured_env_spaces_mixin.StructuredEnvSpacesMixin` interface
-        """
-        sub_step_id = self.actor_id[0][0]
-        return self.action_spaces_dict[sub_step_id]
-
-    @property
-    @override(StructuredEnvSpacesMixin)
-    def observation_space(self) -> gym.spaces.Space:
-        """implementation of :class:`~maze.core.env.structured_env_spaces_mixin.StructuredEnvSpacesMixin` interface
-        """
-        sub_step_id = self.actor_id[0][0]
-        return self.observation_spaces_dict[sub_step_id]
-
-    @override(TimeEnvMixin)
-    def get_env_time(self) -> np.ndarray:
-        """Return current env time for all distributed environments."""
-        return self._env_times

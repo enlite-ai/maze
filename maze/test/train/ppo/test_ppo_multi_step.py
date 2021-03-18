@@ -7,7 +7,7 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 from maze.train.trainers.ppo.ppo_trainer import MultiStepPPO
@@ -77,10 +77,10 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepPPO:
 
 def test_ppo_multi_step():
     """ ppo unit tests """
-    ppo = train_function(n_epochs=2, distributed_env_cls=DummyStructuredDistributedEnv)
+    ppo = train_function(n_epochs=2, distributed_env_cls=SequentialDistributedEnv)
     assert isinstance(ppo, MultiStepPPO)
 
-    ppo = train_function(n_epochs=2, distributed_env_cls=DummyStructuredDistributedEnv)
+    ppo = train_function(n_epochs=2, distributed_env_cls=SequentialDistributedEnv)
     assert isinstance(ppo, MultiStepPPO)
 
 

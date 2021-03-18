@@ -7,7 +7,7 @@ from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
@@ -74,10 +74,10 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepA2C:
 
 def test_a2c_multi_step():
     """ A2C unit tests """
-    a2c = train_function(n_epochs=2, distributed_env_cls=DummyStructuredDistributedEnv)
+    a2c = train_function(n_epochs=2, distributed_env_cls=SequentialDistributedEnv)
     assert isinstance(a2c, MultiStepA2C)
 
-    a2c = train_function(n_epochs=2, distributed_env_cls=DummyStructuredDistributedEnv)
+    a2c = train_function(n_epochs=2, distributed_env_cls=SequentialDistributedEnv)
     assert isinstance(a2c, MultiStepA2C)
 
 

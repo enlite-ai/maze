@@ -5,7 +5,7 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, build_dummy_maze_env
 from maze.test.shared_test_utils.helper_functions import flatten_concat_probabilistic_policy_for_env
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 
 
 def test_standard_rollout():
@@ -30,7 +30,7 @@ def test_standard_rollout():
 
 def test_distributed_rollout():
     concurrency = 3
-    env = DummyStructuredDistributedEnv([build_dummy_structured_env] * concurrency)
+    env = SequentialDistributedEnv([build_dummy_structured_env] * concurrency)
     rollout_generator = RolloutGenerator(env=env)
     policy = DistributedRandomPolicy(env.action_spaces_dict, concurrency=concurrency)
     trajectory = rollout_generator.rollout(policy, n_steps=10)

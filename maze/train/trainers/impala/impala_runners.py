@@ -14,7 +14,7 @@ from maze.train.parallelization.distributed_actors.distributed_actors import Dis
 from maze.train.parallelization.distributed_actors.dummy_distributed_actors import DummyDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
@@ -114,12 +114,12 @@ class ImpalaDevRunner(ImpalaRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> DummyStructuredDistributedEnv:
+                                    ) -> SequentialDistributedEnv:
         """create single-threaded env distribution"""
         # fallback to a fixed number of pseudo-concurrent environments to avoid making this sequential execution
         # unnecessary slow on machines with a higher core number
-        return DummyStructuredDistributedEnv([env_factory for _ in range(eval_concurrency)],
-                                             logging_prefix=logging_prefix)
+        return SequentialDistributedEnv([env_factory for _ in range(eval_concurrency)],
+                                        logging_prefix=logging_prefix)
 
 
 @dataclass

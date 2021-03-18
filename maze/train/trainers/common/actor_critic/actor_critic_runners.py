@@ -11,7 +11,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.factory import Factory
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import MultiStepActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
@@ -82,11 +82,11 @@ class ACDevRunner(ACRunner):
                                env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                concurrency: int,
                                logging_prefix: str
-                               ) -> DummyStructuredDistributedEnv:
+                               ) -> SequentialDistributedEnv:
         """create single-threaded env distribution"""
         # fallback to a fixed number of pseudo-concurrent environments to avoid making this sequential execution
         # unnecessary slow on machines with a higher core number
-        return DummyStructuredDistributedEnv([env_factory for _ in range(concurrency)], logging_prefix=logging_prefix)
+        return SequentialDistributedEnv([env_factory for _ in range(concurrency)], logging_prefix=logging_prefix)
 
 
 class ACLocalRunner(ACRunner):

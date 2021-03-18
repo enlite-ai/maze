@@ -4,6 +4,8 @@ from typing import Tuple, Union
 
 from maze.core.env.base_env import BaseEnv
 
+ActorIDType = Tuple[Union[str, int], int]
+
 
 class StructuredEnv(BaseEnv):
     """Interface for environments with sub-step structure, which is generally enough to cover multi-step,
@@ -36,7 +38,7 @@ class StructuredEnv(BaseEnv):
     """
 
     @abstractmethod
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorIDType:
         """Returns the current sub step key along with the currently executed actor.
 
         The env must decide the actor in :meth:`~maze.core.env.base_env.BaseEnv.reset` and

@@ -6,7 +6,7 @@ from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
 from maze.utils.log_stats_utils import setup_logging
@@ -19,12 +19,12 @@ def main(n_epochs: int) -> None:
     """
 
     # initialize distributed env
-    envs = DummyStructuredDistributedEnv([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(8)],
-                                         logging_prefix="train")
+    envs = SequentialDistributedEnv([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(8)],
+                                    logging_prefix="train")
 
     # initialize the env and enable statistics collection
-    eval_env = DummyStructuredDistributedEnv([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(8)],
-                                             logging_prefix="eval")
+    eval_env = SequentialDistributedEnv([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(8)],
+                                        logging_prefix="eval")
 
     # init distribution mapper
     env = GymMazeEnv(env="CartPole-v0")

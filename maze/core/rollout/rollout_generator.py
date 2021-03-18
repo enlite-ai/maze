@@ -2,23 +2,22 @@ from typing import Union, Optional, Any
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
-from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.env.maze_env import MazeEnv
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.parallelization.distributed_env.structured_distributed_env import StructuredDistributedEnv
 
 
 class RolloutGenerator:
     def __init__(self,
-                 env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin],
+                 env: Union[MazeEnv, StructuredDistributedEnv],
                  record_logits: bool = False,
                  record_stats: bool = False,
                  terminate_on_done: bool = False):
         self.env = env
-        self.is_distributed = isinstance(self.env, DistributedEnv)
+        self.is_distributed = isinstance(self.env, StructuredDistributedEnv)
         self.record_logits = record_logits
         self.record_stats = record_stats
         self.terminate_on_done = terminate_on_done
@@ -46,7 +45,9 @@ class RolloutGenerator:
                                       logits={} if self.record_logits else None,
                                       batch_shape=[self.env.n_envs] if self.is_distributed else None)
 
-            for step_key in self.step_keys:
+            current_env_time = self.env.get_env_time()
+            while current_env_time == self.env.get_env_time():
+                step_key, _ = self.env.actor_id()
                 # Record copy of the observation (as by default, the policy converts and handles it in place)
                 record.observations[step_key] = observation.copy()
 
