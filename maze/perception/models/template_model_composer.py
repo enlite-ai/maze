@@ -25,6 +25,7 @@ from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.policies.base_policy_composer import BasePolicyComposer
 from maze.perception.models.policies.probabilistic_policy_composer import ProbabilisticPolicyComposer
 from maze.perception.weight_init import make_module_init_normc
+from maze.utils.bcolors import BColors
 
 
 class TemplateModelComposer(BaseModelComposer):
@@ -188,6 +189,15 @@ class TemplateModelComposer(BaseModelComposer):
             value_heads = {'q_value': 1}
         else:
             value_heads = {f'{act_key}_q_values': act_space.n for act_key, act_space in action_space.spaces.items()}
+
+        # check if actions are considered as observations for the state-action critic
+        for action_head in action_space.spaces.keys():
+            if action_head not in self.model_builder.observation_modality_mapping:
+                BColors.print_colored(
+                    f'TemplateModelComposer: The action \'{action_head}\' could not be found in the '
+                    f'model_builder.observation_modality_mapping and wont be considered '
+                    f'as an input to the state-action critic!',
+                    BColors.FAIL)
 
         # build perception net
         if perception_net is None:

@@ -69,9 +69,10 @@ class ConcatModelBuilder(BaseModelBuilder):
         # --- iterate and process observations ---
         for obs_key in observation_space.spaces.keys():
             if obs_key not in self.observation_modality_mapping:
-                BColors.print_colored(f'The observation \'{obs_key}\' could not be found in the specified modality '
-                                      f'config and will therefore not be considered as an input to the network.',
-                                      BColors.WARNING)
+                BColors.print_colored(
+                    f'ConcatModelBuilder: The observation \'{obs_key}\' could not be found in the '
+                    f'model_builder.observation_modality_mapping and wont be considered as an input to the network.',
+                    BColors.WARNING)
                 continue
             in_keys.append(obs_key)
             modality = self.observation_modality_mapping[obs_key]

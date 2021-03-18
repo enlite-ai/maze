@@ -38,7 +38,7 @@ def _run_multirun_job(cfg: DictConfig) -> float:
     # when optimizing hyper parameters a single exception
     # in one job should not break the entire experiment
     except:
-        return np.finfo(np.float32).min
+        return float(np.finfo(np.float32).min)
 
     # load tensorboard log and return maximum mean reward
     # load tensorboard log
