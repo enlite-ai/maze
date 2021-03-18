@@ -7,14 +7,15 @@ import numpy as np
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue, get_stats_logger
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.parallelization.observation_aggregator import DictObservationAggregator
 
 
-class DummyStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv):
+class DummyStructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin):
     """
     Creates a simple wrapper for multiple environments, calling each environment in sequence on the current
     Python process. This is useful for computationally simple environment such as ``cartpole-v1``, as the overhead of
@@ -169,4 +170,9 @@ class DummyStructuredDistributedEnv(BaseDistributedEnv, StructuredEnv, Structure
         """implementation of :class:`~maze.core.env.structured_env_spaces_mixin.StructuredEnvSpacesMixin` interface
         """
         sub_step_id = self.actor_id[0][0]
-        return self.observation_space[sub_step_id]
+        return self.observation_spaces_dict[sub_step_id]
+
+    @override(TimeEnvMixin)
+    def get_env_time(self) -> np.ndarray:
+        """Return current env time for all distributed environments."""
+        return np.array([env.get_env_time() for env in self.envs])

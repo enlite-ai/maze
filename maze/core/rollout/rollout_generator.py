@@ -8,18 +8,18 @@ from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.utils.train_utils import unstack_numpy_list_dict
 
 
 class RolloutGenerator:
     def __init__(self,
-                 env: Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin],
+                 env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin],
                  record_logits: bool = False,
                  record_stats: bool = False,
                  terminate_on_done: bool = False):
         self.env = env
-        self.is_distributed = isinstance(self.env, BaseDistributedEnv)
+        self.is_distributed = isinstance(self.env, DistributedEnv)
         self.record_logits = record_logits
         self.record_stats = record_stats
         self.terminate_on_done = terminate_on_done

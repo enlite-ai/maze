@@ -13,7 +13,7 @@ from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.train.parallelization.distributed_actors.distributed_actors import BaseDistributedActors
 from maze.train.parallelization.distributed_actors.dummy_distributed_actors import DummyDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
@@ -80,7 +80,7 @@ class ImpalaRunner(TrainingRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> BaseDistributedEnv:
+                                    ) -> DistributedEnv:
         """The individual runners implement the setup of the distributed eval env"""
 
     @abstractmethod

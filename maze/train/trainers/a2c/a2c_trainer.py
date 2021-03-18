@@ -9,7 +9,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import MultiStepActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
@@ -29,8 +29,8 @@ class MultiStepA2C(MultiStepActorCritic):
 
     def __init__(self,
                  algorithm_config: A2CAlgorithmConfig,
-                 env: Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
-                 eval_env: Optional[Union[BaseDistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+                 env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Optional[Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
                  model: TorchActorCritic,
                  model_selection: Optional[BestModelSelection],
                  initial_state: Optional[str] = None):

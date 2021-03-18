@@ -18,7 +18,7 @@ from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
 from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from maze.train.parallelization.distributed_env.distributed_env import BaseDistributedEnv
+from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
 from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
@@ -116,7 +116,7 @@ class BCRunner(TrainingRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> BaseDistributedEnv:
+                                    ) -> DistributedEnv:
         """The individual runners implement the setup of the distributed eval env"""
 
 

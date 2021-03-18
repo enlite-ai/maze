@@ -7,7 +7,7 @@ import numpy as np
 from maze.core.env.base_env import BaseEnv
 
 
-class BaseDistributedEnv(BaseEnv, ABC):
+class DistributedEnv(BaseEnv, ABC):
     """Abstract base class for distributed environments.
 
     :param: num_envs: the number of distributed environments.
