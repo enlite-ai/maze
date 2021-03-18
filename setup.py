@@ -56,7 +56,11 @@ setup(name="maze-rl",
           "pyyaml",
           "requests",
           "pillow",
-          "hydra-core >= 1.1.0.dev4",
+
+          # pinned hydra-core and the associated omegaconf version to 1.1.0 pre-release
+          "hydra-core == 1.1.0.dev4",
+          "omegaconf == 2.1.0.dev21",
+
           "gym[box2d]; python_version < '3.8'",
           "gym; python_version >= '3.8'",
           "pandas",
