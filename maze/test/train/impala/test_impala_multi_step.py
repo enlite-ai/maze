@@ -8,7 +8,7 @@ from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNe
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.train.parallelization.distributed_actors.dummy_distributed_actors import DummyDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
-from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
+from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmConfig
 from maze.train.trainers.impala.impala_trainer import MultiStepIMPALA
 from maze.utils.timeout import Timeout
@@ -60,7 +60,7 @@ def _algorithm_config():
 
 def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> MultiStepIMPALA:
     impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()), rollout_actors=train_actors,
-                             eval_env=DummyStructuredDistributedEnv([_env_factory], logging_prefix="eval"),
+                             eval_env=SequentialDistributedEnv([_env_factory], logging_prefix="eval"),
                              options=algorithm_config)
 
     impala.train(n_epochs=algorithm_config.n_epochs, epoch_length=algorithm_config.epoch_length,

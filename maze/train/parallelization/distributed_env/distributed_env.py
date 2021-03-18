@@ -7,10 +7,6 @@ import numpy as np
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.env.time_env_mixin import TimeEnvMixin
-from maze.core.log_stats.log_stats_env import LogStatsEnv
 
 
 class DistributedEnv(BaseEnv, ABC):
@@ -25,7 +21,10 @@ class DistributedEnv(BaseEnv, ABC):
     :method:`maze.train.utils.train_utils.stack_numpy_dict_list` and
     :method:`maze.train.utils.train_utils.unstack_numpy_list_dict`.
 
-    :param: num_envs: the number of distributed environments.
+    Also note that in structured scenarios, only synchronous environments are supported -- i.e., in each
+    sub-step, the actor ID must be the same for all environments.
+
+    :param n_envs: The number of distributed environments.
     """
 
     def __init__(self, n_envs: int):
@@ -64,7 +63,3 @@ class DistributedEnv(BaseEnv, ABC):
         elif isinstance(indices, int):
             indices = [indices]
         return indices
-
-
-class StructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin, ABC):
-    """Common superclass for the structured distributed env implementations in Maze."""
