@@ -10,7 +10,7 @@ from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.train.parallelization.distributed_actors.distributed_actors import BaseDistributedActors
+from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.train.parallelization.distributed_actors.dummy_distributed_actors import DummyDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
@@ -91,7 +91,7 @@ class ImpalaRunner(TrainingRunner):
             n_rollout_steps: int,
             n_actors: int,
             batch_size: int,
-            queue_out_of_sync_factor: float) -> BaseDistributedActors:
+            queue_out_of_sync_factor: float) -> DistributedActors:
         """The individual runners implement the setup of the distributed training rollout actors"""
 
 

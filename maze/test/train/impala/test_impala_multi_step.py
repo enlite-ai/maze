@@ -5,7 +5,7 @@ from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
-from maze.train.parallelization.distributed_actors.distributed_actors import BaseDistributedActors
+from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.train.parallelization.distributed_actors.dummy_distributed_actors import DummyDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
 from maze.train.parallelization.distributed_env.dummy_distributed_env import DummyStructuredDistributedEnv
@@ -58,7 +58,7 @@ def _algorithm_config():
         reward_clipping='abs_one')
 
 
-def _train_function(train_actors: BaseDistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> MultiStepIMPALA:
+def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> MultiStepIMPALA:
     impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()), rollout_actors=train_actors,
                              eval_env=DummyStructuredDistributedEnv([_env_factory], logging_prefix="eval"),
                              options=algorithm_config)

@@ -172,8 +172,7 @@ class MultiStepActorCritic(Trainer, ABC):
                 sampled_action = self.model.policy.compute_action(obs, policy_id=step_id, deterministic=deterministic)
 
                 # take env step
-                actions_dict_list = self._compile_actions_dict_list(sampled_action)
-                obs, step_rewards, dones, infos = self.eval_env.step(actions_dict_list)
+                obs, step_rewards, dones, infos = self.eval_env.step(sampled_action)
 
             # the last observation of the step sequence is the first observation of the next iteration
             prev_obs_1 = obs
