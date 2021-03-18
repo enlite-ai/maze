@@ -12,7 +12,7 @@ from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 
 
-class BaseDistributedActors:
+class DistributedActors:
     """The base class for all distributed actors.
 
     Distributed actors run rollouts independently. Rollouts are recorded and made available in batches

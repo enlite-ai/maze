@@ -13,11 +13,11 @@ from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
 from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
-from maze.train.parallelization.distributed_actors.distributed_actors import BaseDistributedActors
+from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.utils.bcolors import BColors
 
 
-class DummyDistributedActors(BaseDistributedActors):
+class DummyDistributedActors(DistributedActors):
     """Dummy implementation of distributed actors creates the actors as a list. Once the outputs are to
         be collected, it simply rolls them out in a loop until is has enough to be returned."""
 
@@ -35,7 +35,7 @@ class DummyDistributedActors(BaseDistributedActors):
         self.actors: List[RolloutGenerator] = []
         self.policy_version_counter = 0
 
-        for ii in range(self.n_actors):
+        for _ in range(self.n_actors):
             actor = RolloutGenerator(env=env_factory(), record_logits=True, record_stats=True)
             self.actors.append(actor)
 
@@ -45,23 +45,23 @@ class DummyDistributedActors(BaseDistributedActors):
                 f'the actor_batch_size (given value: {batch_size}) when using the DummyMultiprocessingModule.',
                 color=BColors.WARNING)
 
-    @override(BaseDistributedActors)
+    @override(DistributedActors)
     def start(self) -> None:
         """Nothing to do in dummy implementation"""
         pass
 
-    @override(BaseDistributedActors)
+    @override(DistributedActors)
     def stop(self) -> None:
         """Nothing to do in dummy implementation"""
         pass
 
-    @override(BaseDistributedActors)
+    @override(DistributedActors)
     def broadcast_updated_policy(self, state_dict: Dict) -> None:
         """Store the newest policy in the shared network object"""
         converted_state_dict = convert_to_torch(state_dict, in_place=False, cast=None, device=self.policy.device)
         self.policy.load_state_dict(converted_state_dict)
 
-    @override(BaseDistributedActors)
+    @override(DistributedActors)
     def collect_outputs(self, learner_device: str) -> Tuple[SpacesStepRecord, float, float, float]:
         """Run the rollouts and collect the outputs."""
         start_wait_time = time.time()
