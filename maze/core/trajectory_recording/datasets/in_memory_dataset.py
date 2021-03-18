@@ -10,8 +10,8 @@ import torch
 from torch.utils.data.dataset import Dataset, Subset
 
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.trajectory_recording.spaces_step_record import SpacesStepRecord
-from maze.core.trajectory_recording.state_step_record import StateStepRecord
+from maze.core.trajectory_recording.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.state_record import StateRecord
 from maze.core.trajectory_recording.trajectory_record import TrajectoryRecord
 
 logger = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class InMemoryDataset(Dataset, ABC):
 
     @staticmethod
     def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: Optional[StructuredEnv]) \
-            -> List[SpacesStepRecord]:
+            -> List[SpacesRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
         :param trajectory: Episode record to load
@@ -155,7 +155,7 @@ class InMemoryDataset(Dataset, ABC):
         for step_id, step_record in enumerate(trajectory.step_records):
 
             # Process and convert in case we are dealing with state records (otherwise no conversion needed)
-            if isinstance(step_record, StateStepRecord):
+            if isinstance(step_record, StateRecord):
                 assert conversion_env is not None, "when conversion from Maze states is needed, conversion env " \
                                                    "needs to be present."
 
@@ -163,14 +163,14 @@ class InMemoryDataset(Dataset, ABC):
                 if step_record.maze_state is None or step_record.maze_action is None:
                     continue
                 # Convert to spaces
-                step_record = SpacesStepRecord.converted_from(step_record, conversion_env=conversion_env,
-                                                              first_step_in_episode=step_id == 0)
+                step_record = SpacesRecord.converted_from(step_record, conversion_env=conversion_env,
+                                                          first_step_in_episode=step_id == 0)
 
             step_records.append(step_record)
 
         return step_records
 
-    def _store_loaded_trajectory(self, records: List[SpacesStepRecord]) -> None:
+    def _store_loaded_trajectory(self, records: List[SpacesRecord]) -> None:
         """Stores the step records, keeping a reference that they belong to the same episode.
 
         Keeping the reference is important in case we want to split the dataset later -- samples from
