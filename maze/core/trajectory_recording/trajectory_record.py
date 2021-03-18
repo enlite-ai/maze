@@ -95,11 +95,17 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
 
     def is_done(self) -> bool:
         """Convenience method for checking whether the end of this trajectory represent also an end of the episode."""
+        if len(self) == 0:
+            return False
+
         assert not self.step_records[-1].is_batched(), "cannot determine done state for batched trajectory."
         return list(self.step_records[-1].dones.values())[-1] if len(self) > 0 else False
 
     def total_reward(self):
         """Convenience method for calculating the total reward of a given trajectory."""
+        if len(self) == 0:
+            return 0
+
         assert not self.step_records[-1].is_batched(), "cannot determine total reward for a batched trajectory."
         total_reward = 0
         for record in self.step_records:
