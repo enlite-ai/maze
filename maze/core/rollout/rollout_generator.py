@@ -66,7 +66,8 @@ class RolloutGenerator:
         self.rollout_counter += 1
 
         # Reset the environment during the first rollout only
-        observation = self.last_observation if self.last_observation else self.env.reset()
+        if self.last_observation is None:
+            self.last_observation = self.env.reset()
 
         # Step the desired number of (flat) steps
         done = False
@@ -78,7 +79,7 @@ class RolloutGenerator:
             # Step through all sub-steps, i.e., step until the env time changes
             current_env_time = self.env.get_env_time()
             while np.all(current_env_time == self.env.get_env_time()):
-                done = self._record_sub_step(record, observation=observation, policy=policy)
+                done = self._record_sub_step(record, observation=self.last_observation, policy=policy)
 
             # Record episode stats
             if self.record_stats:
@@ -102,7 +103,7 @@ class RolloutGenerator:
         """Perform one substep in the environment and record it. Return the done flag(s)."""
         step_key, _ = self.env.actor_id()
         # Record copy of the observation (as by default, the policy converts and handles it in place)
-        record.observations[step_key] = observation.copy()
+        record.observations[step_key] = self.last_observation.copy()
 
         # Sample action and record logits if configured
         if self.record_logits:
@@ -117,7 +118,7 @@ class RolloutGenerator:
         record.actions[step_key] = action
 
         # Take the step
-        observation, reward, done, info = self.env.step(action)
+        self.last_observation, reward, done, info = self.env.step(action)
 
         record.rewards[step_key] = reward
         record.dones[step_key] = done
