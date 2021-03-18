@@ -76,14 +76,14 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         assert len(in_shapes[1]) >= 1, 'The second shape given to the block should be at least of dim 1 ' \
                                        f'but got {in_shapes[1]}'
         assert all([in_shapes[0][idx] == in_shapes[1][idx] for idx in range(len(in_shapes[1]))])
-
+        self._pooling_func_name = pooling_func
         # select appropriate pooling function
-        if pooling_func == "mean":
+        if self._pooling_func_name == "mean":
             self.pooling_func = self._masked_mean
-        elif pooling_func == "sum":
+        elif self._pooling_func_name == "sum":
             self.pooling_func = self._masked_sum
         else:
-            raise ValueError(f"Pooling function ({pooling_func}, {type(pooling_func)}) is not yet supported!")
+            raise ValueError(f"Pooling function {self._pooling_func_name} is not yet supported!")
 
         self.pooling_dim = pooling_dim
 
@@ -111,6 +111,6 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
 
     def __repr__(self):
         txt = f"{self.__class__.__name__}"
-        txt += f'\n\tPooling func: {self.pooling_func}'
+        txt += f'\n\tPooling func: {self._pooling_func_name}'
         txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt
