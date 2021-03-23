@@ -67,8 +67,8 @@ def perform_pointnet_block_test(batch_dim: int, num_points: int, num_features: i
     pointnet_block = PointNetBlock(in_keys=list(in_dict.keys()), in_shapes=in_shapes, out_keys='out_key',
                                    use_batch_norm=use_batch_norm, non_lin=torch.nn.ReLU, embedding_dim=embedding_dim,
                                    pooling_func_name=pooling_func_str, use_feature_transform=use_feature_transform)
-    str(pointnet_block)
 
+    str(pointnet_block)
     out = pointnet_block(in_dict)['out_key']
     assert out.shape == torch.Size([batch_dim, embedding_dim])
 

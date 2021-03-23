@@ -1,5 +1,6 @@
 """ Contains an implementation of the point net block from https://arxiv.org/abs/1612.00593 and its components. """
-from typing import Union, List, Dict, Sequence
+from collections import OrderedDict
+from typing import Union, List, Dict, Sequence, Optional
 
 import torch
 from torch import nn as nn
@@ -36,6 +37,7 @@ class PointNetFeatureTransformNet(nn.Module):
         self._use_batch_norm = use_batch_norm
         self._pooling_func_name = pooling_func_name
         self._num_features = num_features
+        self._embedding_dim = embedding_dim
 
         # Init convolutions
         self.conv1 = torch.nn.Conv1d(num_features, embedding_dim // 16, 1)
@@ -122,7 +124,7 @@ class PointNetFeatureTransformNet(nn.Module):
         # out: (BB, num_features ** 2)
 
         identity = torch.Tensor(torch.flatten(torch.eye(self._num_features),
-                                              start_dim=-2).to(torch.float32).to(out.device))
+                                              start_dim=-2)).to(torch.float32).to(out.device)
         identity = identity.repeat(batch_size, 1)
         out = out + identity
 
@@ -130,6 +132,27 @@ class PointNetFeatureTransformNet(nn.Module):
         out = out.view(-1, self._num_features, self._num_features)
         # out: (BB, num_features, num_features)
         return out
+
+    def get_internal_shape_inference_as_string(self, num_points: Optional[int]) -> str:
+        """Return a string representation of the internal workings of the block.
+
+        :param num_points: The number of points in the point cloud.
+        :return: A string depicting the input processing done by the block with a focus on the shapes.
+        """
+        num_points = 'NN' if num_points is None else str(num_points)
+        batch_size = 'BB'
+        input_shape = f'({batch_size}x{self._num_features}x{num_points})'
+        conv1_out_shape = f'({batch_size}x{self._embedding_dim // 16}x{num_points})'
+        conv2_out_shape = f'({batch_size}x{self._embedding_dim // 8}x{num_points})'
+        conv3_out_shape = f'({batch_size}x{self._embedding_dim}x{num_points})'
+        pooling_out_shape = f'({batch_size}x{self._embedding_dim})'
+        fc1_out_shape = f'({batch_size}x{self._embedding_dim // 2})'
+        fc2_out_shape = f'({batch_size}x{self._embedding_dim // 4})'
+        fc3_out_shape = f'({batch_size}x{self._num_features * self._num_features})'
+        out_shape = f'({batch_size}x{self._num_features}x{self._num_features})'
+        return '->'.join([input_shape, conv1_out_shape, conv2_out_shape, conv3_out_shape, pooling_out_shape,
+                          fc1_out_shape, fc2_out_shape, fc3_out_shape, out_shape])
+
 
 
 class PointNetBlock(ShapeNormalizationBlock):
@@ -174,9 +197,10 @@ class PointNetBlock(ShapeNormalizationBlock):
         self._use_feature_transform = use_feature_transform
         self._embedding_dim = embedding_dim
         self._use_batch_norm = use_batch_norm
+        self._num_features = self.in_shapes[0][-1]
 
         self.input_transform = PointNetFeatureTransformNet(
-            self.in_shapes[0][-1], non_lin=non_lin, use_batch_norm=self._use_batch_norm, embedding_dim=embedding_dim,
+            self._num_features, non_lin=non_lin, use_batch_norm=self._use_batch_norm, embedding_dim=embedding_dim,
             pooling_func_name=pooling_func_name)
         if self._use_feature_transform:
             self.feature_transform = PointNetFeatureTransformNet(
@@ -184,7 +208,7 @@ class PointNetBlock(ShapeNormalizationBlock):
                 pooling_func_name=pooling_func_name
             )
 
-        self.conv1 = torch.nn.Conv1d(self.in_shapes[0][-1], embedding_dim // 16, 1)
+        self.conv1 = torch.nn.Conv1d(self._num_features, embedding_dim // 16, 1)
         self.conv2 = torch.nn.Conv1d(embedding_dim // 16, embedding_dim // 8, 1)
         self.conv3 = torch.nn.Conv1d(embedding_dim // 8, embedding_dim, 1)
 
@@ -210,6 +234,9 @@ class PointNetBlock(ShapeNormalizationBlock):
         self.non_lin_cls = Factory(base_type=nn.Module).class_type_from_name(non_lin)
         self.non_lin_1 = self.non_lin_cls()
         self.non_lin_2 = self.non_lin_cls()
+
+        # Debugging parameter for displaying the internal processing of the input in more detail.
+        self._print_internal_shape_representation = False
 
     @override(ShapeNormalizationBlock)
     def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -258,11 +285,49 @@ class PointNetBlock(ShapeNormalizationBlock):
 
         return {self.out_keys[0]: output_tensor}
 
-    def __repr__(self):
+    def _get_internal_shape_inference_as_string(self) -> str:
+        """Return a string representation of the internal workings of the block.
+
+        :return: A string depicting the input processing done by the block with a focus on the shapes.
+        """
+        num_points = self.in_shapes[0][-2]
+        batch_size = 'BB'
+        shapes = OrderedDict()
+        in_shape = f'({batch_size}x{num_points}x{self._num_features})'
+        shapes['in_shape'] = in_shape
+        shapes['t_shape'] = f'({batch_size}x{self._num_features}x{num_points})'
+        shapes['input_transform_shape'] = self.input_transform.get_internal_shape_inference(num_points, None)
+        shapes['input_transform_out_shape'] = f'({batch_size}x{self._num_features}x{num_points})'
+        shapes['conv1_out_shape'] = f'({batch_size}x{self._embedding_dim // 16}x{num_points})'
+        if self._use_feature_transform:
+            shapes['feature_transform_shape'] = self.feature_transform.get_internal_shape_inference(num_points, None)
+            shapes['feature_transform_out_shape'] = f'({batch_size}x{self._embedding_dim // 16}x{num_points})'
+        shapes['conv2_out_shape'] = f'({batch_size}x{self._embedding_dim // 8}x{num_points})'
+        shapes['conv3_out_shape'] = f'({batch_size}x{self._embedding_dim}x{num_points})'
+        shapes['pooling_out_shape'] = f'({batch_size}x{self._embedding_dim})'
+        max_length = max(map(len, shapes.values()))
+        shapes_txt = '\n\t' + '-' * (max_length // 2) + '   Internal Shapes inference:   ' + '-' * (max_length // 2)
+        max_length = len(shapes_txt)
+        for idx, (name, shape) in enumerate(shapes.items()):
+            shapes_txt += f'\n\t\t{idx}, {name}: {shape}'
+        shapes_txt += '\n\t' + '-' * max_length
+
+        return shapes_txt
+
+    def __repr__(self) -> str:
+        """Return a string representation of the block.
+
+        :return: A string representation of the block.
+        """
+
         txt = f"{PointNetBlock.__name__}({self.non_lin_cls.__name__})"
         txt += f"\n\tembedding_dim: {self._embedding_dim}"
         txt += f"\n\tpooling_func_str: {self.pooling_func_str}"
         txt += f"\n\tuse_feature_transform: {self._use_feature_transform}"
         txt += f"\n\tuse_batch_norm: {self._use_batch_norm}"
+
+        if self._print_internal_shape_representation:
+            txt += self._get_internal_shape_inference_as_string()
+
         txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt

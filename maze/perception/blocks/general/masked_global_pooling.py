@@ -97,7 +97,7 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         self._use_masking = len(self.in_keys) > 1
 
         assert len(self.in_shapes[0]) >= 2, 'The first shape given to the block should be at least of dim 2, ' \
-                                       f'but got {in_shapes[0]}'
+                                            f'but got {in_shapes[0]}'
 
         if self._use_masking:
             assert len(self.in_shapes[1]) >= 1, 'The second shape given to the block should be at least of dim 1 ' \
