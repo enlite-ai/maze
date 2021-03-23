@@ -45,8 +45,11 @@ class StructuredSpacesRecord:
     event_log: Optional[StepEventLog] = None
     """Log of events recorded during the whole step."""
 
-    stats: Optional[LogStats] = None
+    step_stats: Optional[LogStats] = None
     """Statistics recorded during the whole step."""
+
+    episode_stats: Optional[LogStats] = None
+    """Aggregated statistics from the last episode. Expected to be attached only to terminal steps of episodes."""
 
     batch_shape: Optional[List[int]] = None
     """If the record is batched, this is the shape of the batch."""
@@ -84,6 +87,10 @@ class StructuredSpacesRecord:
     def is_batched(self):
         """Return whether this record is batched or not."""
         return self.batch_shape is not None
+
+    def is_done(self) -> bool:
+        """Return true if the episode ended during this structured step."""
+        return np.any(list(self.dones.values()))
 
     @classmethod
     def converted_from(cls, state_record: StateRecord, conversion_env: MazeEnv, first_step_in_episode: bool) \

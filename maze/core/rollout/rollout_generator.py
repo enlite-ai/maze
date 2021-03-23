@@ -21,7 +21,8 @@ class RolloutGenerator:
 
     :param env: Environment to run rollouts in. Will be reset before the first rollout.
     :param record_logits: Whether to record the policy logits.
-    :param record_stats:  Whether to record step statistics.
+    :param record_step_stats: Whether to record step statistics.
+    :param record_episode_stats: Whether to record episode stats (happens only when an episode is done).
     :param terminate_on_done: Whether to end the rollout when the env is done (by default resets the env and continues
                               until the desired number of steps has been recorded). Only applicable in non-distributed
                               scenarios.
@@ -29,15 +30,17 @@ class RolloutGenerator:
     def __init__(self,
                  env: Union[MazeEnv, StructuredDistributedEnv],
                  record_logits: bool = False,
-                 record_stats: bool = False,
+                 record_step_stats: bool = False,
+                 record_episode_stats: bool = False,
                  terminate_on_done: bool = False):
         self.env = env
         self.is_distributed = isinstance(self.env, StructuredDistributedEnv)
         self.record_logits = record_logits
-        self.record_stats = record_stats
+        self.record_step_stats = record_step_stats
+        self.record_episode_stats = record_episode_stats
         self.terminate_on_done = terminate_on_done
 
-        if self.record_stats and not isinstance(self.env, LogStatsWrapper):
+        if (self.record_step_stats or self.record_episode_stats) and not isinstance(self.env, LogStatsWrapper):
             self.env = LogStatsWrapper.wrap(self.env)
 
         self.step_keys = list(env.observation_spaces_dict.keys())  # Only synchronous environments are supported
@@ -77,22 +80,20 @@ class RolloutGenerator:
                                             batch_shape=[self.env.n_envs] if self.is_distributed else None)
 
             # Step through all sub-steps, i.e., step until the env time changes
+            # Note: If the env returns done in a sub-step, this is detected as well as env time changes after reset
             current_env_time = self.env.get_env_time()
             while np.all(current_env_time == self.env.get_env_time()):
                 done = self._record_sub_step(record, observation=self.last_observation, policy=policy)
 
             # Record episode stats
-            if self.record_stats:
-                record.stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
+            if self.record_step_stats:
+                record.step_stats = self.env.get_stats(LogStatsLevel.STEP).last_stats
 
             trajectory_record.append(record)
 
-            # When the env is done in non-distributed scenario, reset or break depending on preferences
-            if not self.is_distributed and done:
-                if self.terminate_on_done:
-                    break
-                else:
-                    self.env.reset()
+            # End prematurely on env done if desired
+            if not self.is_distributed and done and self.terminate_on_done:
+                break
 
         return trajectory_record
 
@@ -100,7 +101,10 @@ class RolloutGenerator:
                          record: StructuredSpacesRecord,
                          observation: ObservationType,
                          policy: Union[Policy, TorchPolicy]) -> Union[bool, np.ndarray]:
-        """Perform one substep in the environment and record it. Return the done flag(s)."""
+        """Perform one substep in the environment and record it. Return the done flag(s).
+
+        Resets non-vectorised envs when done.
+        """
         step_key, _ = self.env.actor_id()
         # Record copy of the observation (as by default, the policy converts and handles it in place)
         record.observations[step_key] = self.last_observation.copy()
@@ -123,5 +127,13 @@ class RolloutGenerator:
         record.rewards[step_key] = reward
         record.dones[step_key] = done
         record.infos[step_key] = info
+
+        # Reset the env if done and keep the terminal observation
+        if not self.is_distributed and done:
+            record.infos[step_key]["terminal_observation"] = self.last_observation
+            self.last_observation = self.env.reset()
+
+            if self.record_episode_stats:
+                record.episode_stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
 
         return done

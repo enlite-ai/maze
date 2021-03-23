@@ -6,7 +6,7 @@ from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
-from maze.train.parallelization.distributed_actors.dummy_distributed_actors import DummyDistributedActors
+from maze.train.parallelization.distributed_actors.sequential_distributed_actors import SequentialDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
 from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
 from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmConfig
@@ -72,10 +72,10 @@ def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlg
 
 def test_impala_multi_step_dummy():
     algorithm_config = _algorithm_config()
-    train_actors = DummyDistributedActors(_env_factory, _policy(_env_factory()).policy,
-                                          n_rollout_steps=algorithm_config.n_rollout_steps,
-                                          n_actors=algorithm_config.num_actors,
-                                          batch_size=algorithm_config.actors_batch_size)
+    train_actors = SequentialDistributedActors(_env_factory, _policy(_env_factory()).policy,
+                                               n_rollout_steps=algorithm_config.n_rollout_steps,
+                                               n_actors=algorithm_config.num_actors,
+                                               batch_size=algorithm_config.actors_batch_size)
     impala = _train_function(train_actors, algorithm_config)
     assert isinstance(impala, MultiStepIMPALA)
 

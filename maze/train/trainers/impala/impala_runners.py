@@ -11,7 +11,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
-from maze.train.parallelization.distributed_actors.dummy_distributed_actors import DummyDistributedActors
+from maze.train.parallelization.distributed_actors.sequential_distributed_actors import SequentialDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
 from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
 from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
@@ -106,9 +106,9 @@ class ImpalaDevRunner(ImpalaRunner):
             n_rollout_steps: int,
             n_actors: int,
             batch_size: int,
-            queue_out_of_sync_factor: float) -> DummyDistributedActors:
+            queue_out_of_sync_factor: float) -> SequentialDistributedActors:
         """Create dummy (sequentially-executed) actors."""
-        return DummyDistributedActors(env_factory, policy, n_rollout_steps, n_actors, batch_size)
+        return SequentialDistributedActors(env_factory, policy, n_rollout_steps, n_actors, batch_size)
 
     def create_distributed_eval_env(self,
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],

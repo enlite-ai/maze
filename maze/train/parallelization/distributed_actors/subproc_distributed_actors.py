@@ -96,7 +96,7 @@ class SubprocDistributedActors(DistributedActors):
         q_size_before = self.actor_output_queue.qsize()
 
         while len(trajectories) < self.batch_size:
-            trajectory_report = self.actor_output_queue.get()
+            trajectory_report: Union[SpacesTrajectoryRecord, ExceptionReport] = self.actor_output_queue.get()
             if isinstance(trajectory_report, ExceptionReport):
                 raise RuntimeError("An actor encountered the following error:\n"
                                    + trajectory_report.traceback) from trajectory_report.exception
@@ -105,8 +105,8 @@ class SubprocDistributedActors(DistributedActors):
 
             # collect episode statistics
             for record in trajectory_report.step_records:
-                if record.stats is not None:
-                    self.epoch_stats.receive(record.stats)
+                if record.episode_stats is not None:
+                    self.epoch_stats.receive(record.episode_stats)
 
         q_size_after = self.actor_output_queue.qsize()
         stacked_record = SpacesTrajectoryRecord.stack_trajectories(trajectories).stack()
@@ -160,7 +160,7 @@ def _actor_worker(pickled_env_factory: bytes, pickled_policy: bytes,
         policy: TorchPolicy = cloudpickle.loads(pickled_policy)
         policy_version_counter = 0
 
-        rollout_generator = RolloutGenerator(env=env_factory(), record_logits=True, record_stats=True)
+        rollout_generator = RolloutGenerator(env=env_factory(), record_logits=True, record_episode_stats=True)
 
         while not broadcasting_container.stop_flag():
             # Update the policy if new version is available
