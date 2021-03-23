@@ -18,8 +18,8 @@ class VectorEnv(BaseEnv, ABC):
     but as a single action/observation dict where the items have an additional dimension corresponding
     to the number of encapsulated environments (as such setting is more convenient when working with
     Torch policies). To convert these to/from a list, use the training helpers such as
-    :method:`maze.train.utils.train_utils.stack_numpy_dict_list` and
-    :method:`maze.train.utils.train_utils.unstack_numpy_list_dict`.
+    :func:`maze.train.utils.train_utils.stack_numpy_dict_list` and
+    :func:`maze.train.utils.train_utils.unstack_numpy_list_dict`.
 
     Also note that in structured scenarios, only synchronous environments are supported -- i.e., in each
     sub-step, the actor ID must be the same for all environments.
