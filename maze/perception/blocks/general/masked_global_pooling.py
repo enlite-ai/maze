@@ -94,11 +94,15 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
                  pooling_func: str, pooling_dim: Union[int, Sequence[int]]):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
-        assert len(in_shapes[0]) >= 2, 'The first shape given to the block should be at least of dim 2, ' \
+        self._use_masking = len(self.in_keys) > 1
+
+        assert len(self.in_shapes[0]) >= 2, 'The first shape given to the block should be at least of dim 2, ' \
                                        f'but got {in_shapes[0]}'
-        assert len(in_shapes[1]) >= 1, 'The second shape given to the block should be at least of dim 1 ' \
-                                       f'but got {in_shapes[1]}'
-        assert all([in_shapes[0][idx] == in_shapes[1][idx] for idx in range(len(in_shapes[1]))])
+
+        if self._use_masking:
+            assert len(self.in_shapes[1]) >= 1, 'The second shape given to the block should be at least of dim 1 ' \
+                                           f'but got {in_shapes[1]}'
+            assert all([self.in_shapes[0][idx] == self.in_shapes[1][idx] for idx in range(len(self.in_shapes[1]))])
         self._pooling_func_name = pooling_func
         # select appropriate pooling function
         if self._pooling_func_name == "mean":
@@ -122,12 +126,15 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
 
         # check input tensor
         input_tensor = block_input[self.in_keys[0]]
-        mask_tensor = block_input[self.in_keys[1]]
-        # Enusre that one value is always true for each batch to circumvent nan values
-        mask_tensor[..., 0] = 1.0
+        if self._use_masking:
+            mask_tensor = block_input[self.in_keys[1]]
+            # Ensure that one value is always true for each batch to circumvent nan values
+            mask_tensor[..., 0] = 1.0
 
-        # prepare mask tensor
-        mask_tensor: torch.Tensor = ~torch.eq(mask_tensor, 0)
+            # prepare mask tensor
+            mask_tensor: torch.Tensor = ~torch.eq(mask_tensor, 0)
+        else:
+            mask_tensor = torch.ones(1).to(input_tensor.device)
 
         # apply pooling
         rep = self.pooling_func(input_tensor=input_tensor, mask_tensor=mask_tensor, dim=self.pooling_dim)
