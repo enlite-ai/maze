@@ -14,15 +14,15 @@ from maze.runner import Runner
 from maze.utils.log_stats_utils import clear_global_state
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
-# switch matplotlib backend for maze runs (non-interactive)
-matplotlib.use('Agg')
-
 
 def _run_job(cfg: DictConfig) -> None:
     """Runs a regular maze job.
 
     :param cfg: Hydra configuration for the rollout.
     """
+    # switch matplotlib backend for maze runs (non-interactive)
+    matplotlib.use('Agg')
+
     print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
     runner = Factory(base_type=Runner).instantiate(cfg.runner)
     runner.run(cfg)
