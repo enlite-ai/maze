@@ -50,75 +50,19 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         """Triggers logging events for observations, actions and reward.
         """
 
-        # get identifier of current sub step
-        substep_id, _ = self.env.actor_id() if isinstance(self.env, StructuredEnv) else (None, None)
-        substep_name = f"step_key_{substep_id}" if substep_id is not None else None
+        substep_name = self._get_substep_name()
+
+        if self.action_logging:
+            self._log_action(substep_name, action)
 
         # take wrapped env step
         obs, rew, done, info = self.env.step(action)
 
-        # OBSERVATION LOGGING
-        # -------------------
         if self.observation_logging:
-            # log processed observations
-            for observation_name, observation_value in obs.items():
-                self.observation_events.observation_processed(
-                    step_key=substep_name, name=observation_name, value=observation_value)
+            self._log_observation(substep_name, obs)
 
-            # log original observations
-            for observation_name, observation_value in self.observation_original.items():
-                self.observation_events.observation_original(
-                    step_key=substep_name, name=observation_name, value=observation_value)
-
-        # ACTION LOGGING
-        # --------------
-        if self.action_logging:
-            assert isinstance(action, Dict), "The action space of your env has to be a dict action space."
-
-            for actor_name, actor_action_space in self._action_space.spaces.items():
-                # If actor_name is not in action, cycle loop
-                if actor_name not in action:
-                    continue
-                # Check for discrete sub-action space
-                if isinstance(actor_action_space, spaces.Discrete):
-                    # For some policies, the action is a np.ndarray, for others the action is an int. To support both cases,
-                    # transform the actions to int (done via v.item() below)
-                    actor_action = action[actor_name]
-                    if isinstance(actor_action, np.ndarray):
-                        actor_action = actor_action.item()
-                    self.action_events.discrete_action(step_key=substep_name, name=actor_name,
-                                                       value=actor_action, action_dim=actor_action_space.n)
-
-                # Check for multi-discrete sub-action space
-                elif isinstance(actor_action_space, spaces.MultiDiscrete):
-                    for sub_actor_idx, sub_action_space in enumerate(actor_action_space.nvec):
-                        # a multi-discrete action space consists of several discrete action spaces
-                        self.action_events.discrete_action(step_key=substep_name,
-                                                           name=f'{actor_name}_{sub_actor_idx}',
-                                                           value=action[actor_name][..., sub_actor_idx],
-                                                           action_dim=actor_action_space.nvec[sub_actor_idx])
-
-                elif isinstance(actor_action_space, spaces.MultiBinary):
-                    actor_action = action[actor_name]
-                    assert isinstance(actor_action, np.ndarray)
-                    self.action_events.multi_binary_action(step_key=substep_name, name=actor_name,
-                                                           value=actor_action, num_binary_actions=actor_action_space.n)
-
-                # Check for box sub-action space
-                elif isinstance(actor_action_space, spaces.Box):
-                    actor_action = action[actor_name]
-                    self.action_events.continuous_action(step_key=substep_name, name=actor_name, value=actor_action)
-
-        # REWARD LOGGING
-        # --------------
         if self.reward_logging:
-            if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self._last_env_time:
-                self._last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) \
-                    else self._last_env_time + 1
-
-                # record original reward only after actual maze env step
-                if isinstance(self.env, MazeEnv):
-                    self.reward_events.reward_original(value=self.env.reward_original)
+            self._log_original_reward()
 
         # update action space
         self._action_space = self.env.action_space
@@ -132,8 +76,14 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         """
         # preserve action space
         self._action_space = self.env.action_space
+
         # reset env
         obs = self.env.reset()
+
+        if self.observation_logging:
+            substep_name = self._get_substep_name()
+            self._log_observation(substep_name, obs)
+
         # update env time
         self._last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
         return obs
@@ -144,3 +94,66 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
+
+    def _get_substep_name(self):
+        if isinstance(self.env, StructuredEnv):
+            return f"step_key_{self.env.actor_id()[0]}"
+        else:
+            return None
+
+    def _log_observation(self, substep_name: Union[str, int], observation: ObservationType) -> None:
+        # log processed observations
+        for observation_name, observation_value in observation.items():
+            self.observation_events.observation_processed(
+                step_key=substep_name, name=observation_name, value=observation_value)
+
+        # log original observations
+        for observation_name, observation_value in self.observation_original.items():
+            self.observation_events.observation_original(
+                step_key=substep_name, name=observation_name, value=observation_value)
+
+    def _log_action(self, substep_name: Union[str, int], action: ActionType) -> None:
+        assert isinstance(action, Dict), "The action space of your env has to be a dict action space."
+
+        for actor_name, actor_action_space in self._action_space.spaces.items():
+            # If actor_name is not in action, cycle loop
+            if actor_name not in action:
+                continue
+            # Check for discrete sub-action space
+            if isinstance(actor_action_space, spaces.Discrete):
+                # For some policies, the action is a np.ndarray, for others the action is an int. To support both cases,
+                # transform the actions to int (done via v.item() below)
+                actor_action = action[actor_name]
+                if isinstance(actor_action, np.ndarray):
+                    actor_action = actor_action.item()
+                self.action_events.discrete_action(step_key=substep_name, name=actor_name,
+                                                   value=actor_action, action_dim=actor_action_space.n)
+
+            # Check for multi-discrete sub-action space
+            elif isinstance(actor_action_space, spaces.MultiDiscrete):
+                for sub_actor_idx, sub_action_space in enumerate(actor_action_space.nvec):
+                    # a multi-discrete action space consists of several discrete action spaces
+                    self.action_events.discrete_action(step_key=substep_name,
+                                                       name=f'{actor_name}_{sub_actor_idx}',
+                                                       value=action[actor_name][..., sub_actor_idx],
+                                                       action_dim=actor_action_space.nvec[sub_actor_idx])
+
+            elif isinstance(actor_action_space, spaces.MultiBinary):
+                actor_action = action[actor_name]
+                assert isinstance(actor_action, np.ndarray)
+                self.action_events.multi_binary_action(step_key=substep_name, name=actor_name,
+                                                       value=actor_action, num_binary_actions=actor_action_space.n)
+
+            # Check for box sub-action space
+            elif isinstance(actor_action_space, spaces.Box):
+                actor_action = action[actor_name]
+                self.action_events.continuous_action(step_key=substep_name, name=actor_name, value=actor_action)
+
+    def _log_original_reward(self):
+        if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self._last_env_time:
+            self._last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) \
+                else self._last_env_time + 1
+
+            # record original reward only after actual maze env step
+            if isinstance(self.env, MazeEnv):
+                self.reward_events.reward_original(value=self.env.reward_original)
