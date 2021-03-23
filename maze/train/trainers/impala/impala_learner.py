@@ -11,7 +11,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 
 LearnerOutput = collections.namedtuple('LearnerOutput', 'values detached_values actions_logits')
 
@@ -23,7 +23,7 @@ class ImpalaLearner:
         """
 
     def __init__(self,
-                 eval_env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
                  model: TorchActorCritic,
                  n_rollout_steps: int):
         self.env = eval_env

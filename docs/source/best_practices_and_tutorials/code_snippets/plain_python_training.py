@@ -10,7 +10,7 @@ from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.general.torch_model_block import TorchModelBlock
-from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
@@ -170,8 +170,8 @@ def train(n_epochs):
     # ------------------------
     # In order to use the distributed trainers, the previously created env factory is supplied to one of Maze's
     # distribution classes:
-    train_envs = SequentialDistributedEnv([cartpole_env_factory for _ in range(2)], logging_prefix="train")
-    eval_envs = SequentialDistributedEnv([cartpole_env_factory for _ in range(2)], logging_prefix="eval")
+    train_envs = SequentialVectorEnv([cartpole_env_factory for _ in range(2)], logging_prefix="train")
+    eval_envs = SequentialVectorEnv([cartpole_env_factory for _ in range(2)], logging_prefix="eval")
 
     # Initialize best model selection.
     model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)

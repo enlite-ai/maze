@@ -8,11 +8,11 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.structured_distributed_env import StructuredDistributedEnv
+from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
 
 
-class SequentialDistributedEnv(StructuredDistributedEnv):
+class SequentialVectorEnv(StructuredVectorEnv):
     """
     Creates a simple wrapper for multiple environments, calling each environment in sequence on the current
     Python process. This is useful for computationally simple environment such as ``cartpole-v1``, as the overhead of
@@ -68,7 +68,7 @@ class SequentialDistributedEnv(StructuredDistributedEnv):
         return obs, rewards, env_dones, infos
 
     def reset(self) -> Dict[str, np.ndarray]:
-        """BaseDistributedEnv implementation"""
+        """VectorEnv implementation"""
         observations = []
         for env in self.envs:
             observations.append(env.reset())
@@ -82,12 +82,12 @@ class SequentialDistributedEnv(StructuredDistributedEnv):
         return stack_numpy_dict_list(observations)
 
     def seed(self, seed: int = None) -> None:
-        """BaseDistributedEnv implementation"""
+        """VectorEnv implementation"""
         for env in self.envs:
             env.seed(seed)
             seed += 1
 
     def close(self) -> None:
-        """BaseDistributedEnv implementation"""
+        """VectorEnv implementation"""
         for env in self.envs:
             env.close()

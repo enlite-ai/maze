@@ -10,7 +10,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import MultiStepActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
@@ -29,8 +29,8 @@ class MultiStepPPO(MultiStepActorCritic):
 
     def __init__(self,
                  algorithm_config: PPOAlgorithmConfig,
-                 env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
-                 eval_env: Optional[Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+                 env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Optional[Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
                  model: TorchActorCritic,
                  model_selection: Optional[BestModelSelection],
                  initial_state: Optional[str] = None):

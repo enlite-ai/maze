@@ -21,7 +21,7 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.common.actor_critic.actor_critic_events import MultiStepActorCriticEvents
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
@@ -44,8 +44,8 @@ class MultiStepActorCritic(Trainer, ABC):
 
     def __init__(self,
                  algorithm_config: Union[A2CAlgorithmConfig, PPOAlgorithmConfig],
-                 env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
-                 eval_env: Optional[Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+                 env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Optional[Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
                  model: TorchActorCritic,
                  model_selection: Optional[BestModelSelection],
                  initial_state: Optional[str] = None):

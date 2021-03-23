@@ -6,7 +6,7 @@ from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.observation_stack_wrapper import ObservationStackWrapper
 from maze.perception.builders import ConcatModelBuilder
 from maze.perception.models.template_model_composer import TemplateModelComposer
-from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
 from maze.utils.log_stats_utils import setup_logging
@@ -41,14 +41,14 @@ def main(n_epochs: int, rnn_steps: int) -> None:
     env_name = "CartPole-v0"
 
     # initialize distributed env
-    envs = SequentialDistributedEnv([lambda: to_rnn_dict_space_environment(env=env_name, rnn_steps=rnn_steps)
-                                     for _ in range(4)],
-                                    logging_prefix="train")
+    envs = SequentialVectorEnv([lambda: to_rnn_dict_space_environment(env=env_name, rnn_steps=rnn_steps)
+                                for _ in range(4)],
+                               logging_prefix="train")
 
     # initialize the env and enable statistics collection
-    eval_env = SequentialDistributedEnv([lambda: to_rnn_dict_space_environment(env=env_name, rnn_steps=rnn_steps)
-                                         for _ in range(4)],
-                                        logging_prefix="eval")
+    eval_env = SequentialVectorEnv([lambda: to_rnn_dict_space_environment(env=env_name, rnn_steps=rnn_steps)
+                                    for _ in range(4)],
+                                   logging_prefix="eval")
 
     # map observations to a modality
     obs_modalities_mappings = {"observation": "feature"}

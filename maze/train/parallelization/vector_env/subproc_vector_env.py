@@ -9,8 +9,8 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.train.parallelization.distributed_env.structured_distributed_env import StructuredDistributedEnv
-from maze.train.parallelization.distributed_env.distributed_env_utils import disable_epoch_level_stats
+from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
+from maze.train.parallelization.vector_env.vector_env_utils import disable_epoch_level_stats
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
 
 
@@ -86,7 +86,7 @@ class CloudpickleWrapper(object):
         self.var = cloudpickle.loads(obs)
 
 
-class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
+class SubprocVectorEnv(StructuredVectorEnv):
     """
     Creates a multiprocess wrapper for multiple environments, distributing each environment to its own
     process. This allows a significant speed up when the environment is computationally complex.
@@ -156,7 +156,7 @@ class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
         return self._step_wait()
 
     def reset(self) -> Dict[str, np.ndarray]:
-        """BaseDistributedEnv implementation"""
+        """VectorEnv implementation"""
         for remote in self.remotes:
             remote.send(('reset', None))
         results = [remote.recv() for remote in self.remotes]
@@ -174,12 +174,12 @@ class SubprocStructuredDistributedEnv(StructuredDistributedEnv):
         return stack_numpy_dict_list(obs)
 
     def seed(self, seed=None) -> None:
-        """BaseDistributedEnv implementation"""
+        """VectorEnv implementation"""
         for idx, remote in enumerate(self.remotes):
             remote.send(('seed', seed + idx))
 
     def close(self) -> None:
-        """BaseDistributedEnv implementation"""
+        """VectorEnv implementation"""
         if self.closed:
             return
         if self.waiting:

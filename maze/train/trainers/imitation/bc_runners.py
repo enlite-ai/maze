@@ -18,9 +18,9 @@ from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
 from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
-from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.imitation.bc_loss import BCLoss
@@ -116,7 +116,7 @@ class BCRunner(TrainingRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> DistributedEnv:
+                                    ) -> VectorEnv:
         """The individual runners implement the setup of the distributed eval env"""
 
 
@@ -128,10 +128,10 @@ class BCDevRunner(BCRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> SequentialDistributedEnv:
+                                    ) -> SequentialVectorEnv:
         """create single-threaded env distribution"""
-        return SequentialDistributedEnv([env_factory for _ in range(eval_concurrency)],
-                                        logging_prefix=logging_prefix)
+        return SequentialVectorEnv([env_factory for _ in range(eval_concurrency)],
+                                   logging_prefix=logging_prefix)
 
 
 @dataclass
@@ -142,7 +142,7 @@ class BCLocalRunner(BCRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> SubprocStructuredDistributedEnv:
+                                    ) -> SubprocVectorEnv:
         """create multi-process env distribution"""
-        return SubprocStructuredDistributedEnv([env_factory for _ in range(eval_concurrency)],
-                                               logging_prefix=logging_prefix)
+        return SubprocVectorEnv([env_factory for _ in range(eval_concurrency)],
+                                logging_prefix=logging_prefix)
