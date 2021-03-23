@@ -138,7 +138,12 @@ def map_nested_structure(nested_instance: Any,
                                 'the method had to be applied at depth 0, and the mapped results is not the same')
             return out
         else:
-            return mapping(copy.deepcopy(nested_instance))
+            if isinstance(nested_instance, torch.Tensor):
+                return mapping(nested_instance.clone().detach())
+            elif isinstance(nested_instance, np.ndarray):
+                return mapping(np.copy(nested_instance))
+            else:
+                return mapping(nested_instance)
     else:
         if isinstance(nested_instance, dict):
             if in_place:
