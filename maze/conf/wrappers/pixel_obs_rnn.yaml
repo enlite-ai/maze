@@ -17,7 +17,7 @@ maze.core.wrappers.observation_preprocessing.preprocessing_wrapper.PreProcessing
       keep_original: false
       config:
         dim: -3
-ObservationStackWrapper:
+maze.core.wrappers.observation_stack_wrapper.ObservationStackWrapper:
   stack_config:
     - observation: observation-rgb2gray-resize_img-unsqueeze
       keep_original: false

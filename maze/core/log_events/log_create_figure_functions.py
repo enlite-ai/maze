@@ -113,7 +113,7 @@ def create_violin_distribution(value: List[np.ndarray]) -> None:
     # extract array
     value_array = np.stack(value)
 
-    fig_size = (7, value_array.shape[1] // 2)
+    fig_size = (7, max(7, value_array.shape[1] // 2))
     fig = plt.figure(figsize=fig_size)
     plt.violinplot(value_array, showmeans=True)
     plt.grid(True)

@@ -1,6 +1,7 @@
 """ Contains a Masked value mean block. """
 from typing import Union, List, Sequence, Dict
 
+import numpy as np
 import torch
 
 from maze.core.annotations import override
@@ -16,7 +17,7 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
     :param in_keys: One key identifying the input tensors.
     :param out_keys: One key identifying the output tensors.
     :param in_shapes: List of input shapes.
-    :param pooling_func: Options: {'mean'}. So far only mean pooling is supported.
+    :param pooling_func: Options: {'mean', 'sum', 'max'}.
     :param pooling_dim: The dimension(s) along which the pooling functions get applied.
     """
 
@@ -27,8 +28,8 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
 
         :param input_tensor: The input tensor.
         :param mask_tensor: The masking tensor.
-        :param dim: The dimension(s) along which to compute the mean.
-        :return: The masked mean tensor.
+        :param dim: The dimension(s) along which to compute the sum.
+        :return: The masked sum tensor.
         """
         # expand dimensions of tensor if required
         while mask_tensor.ndimension() < input_tensor.ndimension():
@@ -38,8 +39,8 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         zero_input_tensor = input_tensor * mask_tensor
 
         # compute masked average
-        sum = torch.sum(zero_input_tensor, dim=dim)
-        return sum
+        masked_sum = torch.sum(zero_input_tensor, dim=dim)
+        return masked_sum
 
 
     @classmethod
@@ -63,8 +64,30 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         # compute masked average
         tot = torch.sum(zero_input_tensor, dim=dim)
         cnt = torch.sum(mask_tensor, dim=dim)
-        avg = torch.div(tot, cnt)
-        return avg
+        masked_mean = torch.div(tot, cnt)
+        return masked_mean
+
+    @classmethod
+    def _masked_max(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim=Union[int, Sequence[int]]) \
+            -> torch.Tensor:
+        """Compute max of tensor along certain dimensions considering a given masking tensor.
+
+        :param input_tensor: The input tensor.
+        :param mask_tensor: The masking tensor.
+        :param dim: The dimension(s) along which to compute the max.
+        :return: The masked max tensor.
+        """
+        # expand dimensions of tensor if required
+        while mask_tensor.ndimension() < input_tensor.ndimension():
+            mask_tensor = mask_tensor.unsqueeze(-1)
+
+        # zero out masked values
+        inverted_mask_tensor = torch.tensor(1.0).to(mask_tensor.device) - (1.0 * mask_tensor)
+        zero_input_tensor = input_tensor + inverted_mask_tensor * np.finfo(np.float32).min
+
+        # compute masked average
+        masked_max, _ = torch.max(zero_input_tensor, dim=dim)
+        return masked_max
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]],
@@ -82,6 +105,8 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
             self.pooling_func = self._masked_mean
         elif self._pooling_func_name == "sum":
             self.pooling_func = self._masked_sum
+        elif self._pooling_func_name == "max":
+            self.pooling_func = self._masked_max
         else:
             raise ValueError(f"Pooling function {self._pooling_func_name} is not yet supported!")
 

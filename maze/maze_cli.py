@@ -3,6 +3,7 @@ import glob
 from typing import Optional
 
 import hydra
+import matplotlib
 import numpy as np
 import yaml
 from hydra.core.hydra_config import HydraConfig
@@ -12,6 +13,9 @@ from maze.core.utils.factory import Factory
 from maze.runner import Runner
 from maze.utils.log_stats_utils import clear_global_state
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
+
+# switch matplotlib backend for maze runs (non-interactive)
+matplotlib.use('Agg')
 
 
 def _run_job(cfg: DictConfig) -> None:

@@ -123,6 +123,9 @@ class TrainingRunner(Runner):
         # Should be done after the normalization runs, otherwise stats from those will get logged as well.
         setup_logging(job_config=cfg)
 
+        # close normalization env
+        normalization_env.close()
+
     @classmethod
     def _init_trainer_from_input_dir(cls, trainer: Trainer, state_dict_dump_file: str, input_dir: str) -> None:
         """Initialize trainer from given state dict and input directory.

@@ -127,12 +127,14 @@ class FlattenConcatStateActionValueNet(FlattenConcatBaseNet):
     """Flatten and concatenation state action value model.
 
     :param obs_shapes: Dictionary mapping of observation names to shapes.
+    :param output_shapes: Dictionary mapping of output heads to shapes.
     :param hidden_units: Dictionary mapping of action names to shapes.
     :param non_lin: The non-linearity to apply.
     """
 
     def __init__(self,
-                 obs_shapes: Dict[str, Sequence[int]], output_shapes: Dict[str, Sequence[int]],
+                 obs_shapes: Dict[str, Sequence[int]],
+                 output_shapes: Dict[str, Sequence[int]],
                  hidden_units: List[int],
                  non_lin: nn.Module):
         super().__init__(obs_shapes, hidden_units, non_lin)

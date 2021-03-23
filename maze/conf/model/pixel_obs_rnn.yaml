@@ -16,7 +16,7 @@ model_builder:
     feature:
       block_type: maze.perception.blocks.DenseBlock
       block_params:
-        hidden_units: [100]
+        hidden_units: [128]
         non_lin: torch.nn.Tanh
     image:
       block_type: maze.perception.blocks.StridedConvolutionDenseBlock
@@ -34,7 +34,7 @@ model_builder:
     recurrence:
       block_type: maze.perception.blocks.LSTMLastStepBlock
       block_params:
-        hidden_size: 32
+        hidden_size: 128
         num_layers: 1
         bidirectional: False
         non_lin: torch.nn.Tanh
