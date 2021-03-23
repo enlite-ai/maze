@@ -72,7 +72,6 @@ Actor-Critics (AC)
     ~impala.impala_runners.ImpalaRunner
     ~impala.impala_runners.ImpalaDevRunner
     ~impala.impala_runners.ImpalaLocalRunner
-    ~impala.impala_batching.batch_outputs_time_major
     ~impala.impala_vtrace.log_probs_from_logits_and_actions_and_spaces
     ~impala.impala_vtrace.from_logits
     ~impala.impala_vtrace.from_importance_weights
@@ -116,9 +115,6 @@ Imitation Learning (IL) and Learning from Demonstrations (LfD)
     :template: classtemplate.rst
 
     ~imitation.imitation_events.ImitationEvents
-    ~imitation.parallel_loaded_im_data_set.ParallelLoadedImitationDataset
-    ~imitation.parallel_loaded_im_data_set.DataLoadWorker
-    ~imitation.in_memory_data_set.InMemoryImitationDataSet
     ~imitation.bc_runners.BCRunner
     ~imitation.bc_trainer.BCTrainer
     ~imitation.bc_algorithm_config.BCAlgorithmConfig

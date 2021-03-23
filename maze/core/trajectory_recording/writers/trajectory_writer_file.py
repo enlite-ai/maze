@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Union
 
 from maze.core.annotations import override
-from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord
-from maze.core.trajectory_recording.trajectory_writer import TrajectoryWriter
+from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 
 
 class TrajectoryWriterFile(TrajectoryWriter):

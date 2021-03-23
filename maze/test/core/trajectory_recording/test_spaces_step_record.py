@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
 
 def test_record_stacking():

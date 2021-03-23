@@ -19,8 +19,8 @@ from maze.core.log_stats.log_stats import LogStatsConsumer, LogStats
 from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.rollout.rollout_runner import RolloutRunner
-from maze.core.trajectory_recording.trajectory_writer_file import TrajectoryWriterFile
-from maze.core.trajectory_recording.trajectory_writer_registry import TrajectoryWriterRegistry
+from maze.core.trajectory_recording.writers.trajectory_writer_file import TrajectoryWriterFile
+from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.utils.factory import ConfigType, CollectionOfConfigType
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper

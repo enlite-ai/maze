@@ -10,28 +10,29 @@ This page contains the reference documentation for the parallelization module.
     :nosignatures:
     :template: classtemplate.rst
 
-    ~observation_aggregator.ObservationAggregator
-
     ~base_worker.BaseWorker
     ~base_worker.BaseWorkerOutput
 
-Distributed Environments
+Vectorized Environments
 ------------------------
 
-These are interfaces, classes and utility functions for distributed environments:
+These are interfaces, classes and utility functions for vectorized environments:
 
-.. currentmodule:: maze.train.parallelization.distributed_env
+.. currentmodule:: maze.train.parallelization.vector_env
 
 .. autosummary::
     :toctree: generated
     :nosignatures:
     :template: classtemplate.rst
 
-    ~distributed_env.BaseDistributedEnv
-    ~dummy_distributed_env.DummyStructuredDistributedEnv
-    ~subproc_distributed_env.SubprocStructuredDistributedEnv
-    ~subproc_distributed_env.SinkHoleConsumer
-    ~subproc_distributed_env.CloudpickleWrapper
+    ~vector_env.VectorEnv
+    ~structured_vector_env.StructuredVectorEnv
+    ~sequential_vector_env.SequentialVectorEnv
+    ~subproc_vector_env.SubprocVectorEnv
+    ~subproc_vector_env.CloudpickleWrapper
+    ~vector_env_utils.SinkHoleConsumer
+    ~vector_env_utils.disable_epoch_level_stats
+
 
 Distributed Actors
 ------------------
@@ -45,9 +46,8 @@ These are interfaces, classes and utility functions for distributed actors:
     :nosignatures:
     :template: classtemplate.rst
 
-    ~actor.ActorAgent
-    ~distributed_actors.BaseDistributedActors
-    ~dummy_distributed_actors.DummyDistributedActors
+    ~distributed_actors.DistributedActors
+    ~sequential_distributed_actors.SequentialDistributedActors
     ~subproc_distributed_actors.SubprocDistributedActors
     ~subproc_distributed_actors.MyManager
     ~broadcasting_container.BroadcastingContainer

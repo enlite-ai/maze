@@ -10,9 +10,9 @@ import torch
 from torch.utils.data.dataset import Dataset, Subset
 
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
-from maze.core.trajectory_recording.state_record import StateRecord
-from maze.core.trajectory_recording.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.state_record import StateRecord
+from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
 
 logger = logging.getLogger(__name__)
 

@@ -7,8 +7,8 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_stats.log_stats import LogStatsLevel
-from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
-from maze.core.trajectory_recording.trajectory_record import SpacesTrajectoryRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 
