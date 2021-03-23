@@ -17,7 +17,7 @@ from maze.train.parallelization.distributed_actors.distributed_actors import Dis
 from maze.utils.bcolors import BColors
 
 
-class DummyDistributedActors(DistributedActors):
+class SequentialDistributedActors(DistributedActors):
     """Dummy implementation of distributed actors creates the actors as a list. Once the outputs are to
         be collected, it simply rolls them out in a loop until is has enough to be returned."""
 
@@ -36,7 +36,7 @@ class DummyDistributedActors(DistributedActors):
         self.policy_version_counter = 0
 
         for _ in range(self.n_actors):
-            actor = RolloutGenerator(env=env_factory(), record_logits=True, record_stats=True)
+            actor = RolloutGenerator(env=env_factory(), record_logits=True, record_episode_stats=True)
             self.actors.append(actor)
 
         if self.n_actors > self.batch_size:
@@ -72,8 +72,8 @@ class DummyDistributedActors(DistributedActors):
 
             # collect episode statistics
             for record in trajectory.step_records:
-                if record.stats is not None:
-                    self.epoch_stats.receive(record.stats)
+                if record.episode_stats is not None:
+                    self.epoch_stats.receive(record.episode_stats)
 
             trajectories.append(trajectory)
             self.current_actor_idx = self.current_actor_idx + 1 if self.current_actor_idx < len(self.actors) - 1 else 0
