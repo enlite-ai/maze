@@ -3,7 +3,7 @@ from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.test.shared_test_utils.helper_functions import flatten_concat_probabilistic_policy_for_env
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 
 
@@ -17,7 +17,7 @@ class _MockModelSelection(ModelSelectionBase):
 
 
 def test_rollout_evaluator():
-    env = SequentialDistributedEnv([lambda: make_gym_maze_env("CartPole-v0")] * 2)
+    env = SequentialVectorEnv([lambda: make_gym_maze_env("CartPole-v0")] * 2)
     policy = flatten_concat_probabilistic_policy_for_env(make_gym_maze_env("CartPole-v0"))
     model_selection = _MockModelSelection()
 

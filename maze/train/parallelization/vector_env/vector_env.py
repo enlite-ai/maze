@@ -1,4 +1,4 @@
-"""Interfaces for distributed environments."""
+"""Interfaces for vectorised environments."""
 from abc import ABC, abstractmethod
 from typing import Iterable, Any, Tuple, Dict
 
@@ -9,8 +9,8 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.observation_conversion import ObservationType
 
 
-class DistributedEnv(BaseEnv, ABC):
-    """Abstract base class for distributed environments.
+class VectorEnv(BaseEnv, ABC):
+    """Abstract base class for vectorised environments.
 
     An instance of this class encapsulates multiple environments under the hood and steps them synchronously.
 
@@ -24,7 +24,7 @@ class DistributedEnv(BaseEnv, ABC):
     Also note that in structured scenarios, only synchronous environments are supported -- i.e., in each
     sub-step, the actor ID must be the same for all environments.
 
-    :param n_envs: The number of distributed environments.
+    :param n_envs: The number of encapsulated environments.
     """
 
     def __init__(self, n_envs: int):
@@ -48,8 +48,7 @@ class DistributedEnv(BaseEnv, ABC):
 
     @abstractmethod
     def seed(self, seed: int = None) -> None:
-        """Sets the seed for this distributed env's random number generator(s) and its contained parallel envs.
-        """
+        """Sets the seed for this vectorised env's random number generator(s) and its contained parallel envs."""
 
     def _get_indices(self, indices):
         """

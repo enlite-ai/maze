@@ -10,13 +10,13 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 
 
-class StructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin, ABC):
-    """Common superclass for the structured distributed env implementations in Maze.
+class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv, TimeEnvMixin, ABC):
+    """Common superclass for the structured vectorised env implementations in Maze.
 
-    :param n_envs: The number of distributed environments.
+    :param n_envs: The number of vectorised environments.
     :param action_spaces_dict: Action spaces dict (not vectorized, as it is the same for all environments)
     :param observation_spaces_dict: Observation spaces dict (not vectorized, as it is the same for all environments)
     :param logging_prefix: If set, will report epoch statistics under this logging prefix.
@@ -58,17 +58,17 @@ class StructuredDistributedEnv(DistributedEnv, StructuredEnv, StructuredEnvSpace
 
     @override(TimeEnvMixin)
     def get_env_time(self) -> np.ndarray:
-        """Return current env time for all distributed environments."""
+        """Return current env time for all vectorised environments."""
         return self._env_times
 
     @property
     def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
-        """Return the action space of one of the distributed envs."""
+        """Return the action space of one of the vectorised envs."""
         return self._action_spaces_dict
 
     @property
     def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
-        """Return the observation space of one of the distributed envs."""
+        """Return the observation space of one of the vectorised envs."""
         return self._observation_spaces_dict
 
     @property

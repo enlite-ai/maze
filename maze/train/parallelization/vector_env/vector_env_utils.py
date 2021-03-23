@@ -13,7 +13,7 @@ class SinkHoleConsumer(LogStatsConsumer):
 def disable_epoch_level_stats(env: LogStatsWrapper):
     """Disable collection of statistics on epoch level to save memory.
 
-    This is useful in distributed env scenarios as episode statistics are shipped to the main worker/node
+    This is useful in distributed vectorized env scenarios as episode statistics are shipped to the main worker/node
     and there is no need to keep them and aggregate them on worker level.
     """
     sink_hole_consumer = SinkHoleConsumer()

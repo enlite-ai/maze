@@ -2,13 +2,11 @@ from typing import Dict, Any, Tuple
 
 from maze.core.agent.random_policy import RandomPolicy, DistributedRandomPolicy
 from maze.core.env.base_env import BaseEnv
-from maze.core.env.maze_env import MazeEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
-from maze.core.wrappers.wrapper import Wrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, build_dummy_maze_env
 from maze.test.shared_test_utils.helper_functions import flatten_concat_probabilistic_policy_for_env
-from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 
 
 def test_standard_rollout():
@@ -33,7 +31,7 @@ def test_standard_rollout():
 
 def test_distributed_rollout():
     concurrency = 3
-    env = SequentialDistributedEnv([build_dummy_structured_env] * concurrency)
+    env = SequentialVectorEnv([build_dummy_structured_env] * concurrency)
     rollout_generator = RolloutGenerator(env=env)
     policy = DistributedRandomPolicy(env.action_spaces_dict, concurrency=concurrency)
     trajectory = rollout_generator.rollout(policy, n_steps=10)

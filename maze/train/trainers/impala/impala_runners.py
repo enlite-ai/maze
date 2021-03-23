@@ -13,9 +13,9 @@ from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.train.parallelization.distributed_actors.sequential_distributed_actors import SequentialDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
-from maze.train.parallelization.distributed_env.sequential_distributed_env import SequentialDistributedEnv
-from maze.train.parallelization.distributed_env.subproc_distributed_env import SubprocStructuredDistributedEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.impala.impala_trainer import MultiStepIMPALA
@@ -80,7 +80,7 @@ class ImpalaRunner(TrainingRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> DistributedEnv:
+                                    ) -> VectorEnv:
         """The individual runners implement the setup of the distributed eval env"""
 
     @abstractmethod
@@ -114,12 +114,12 @@ class ImpalaDevRunner(ImpalaRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> SequentialDistributedEnv:
+                                    ) -> SequentialVectorEnv:
         """create single-threaded env distribution"""
         # fallback to a fixed number of pseudo-concurrent environments to avoid making this sequential execution
         # unnecessary slow on machines with a higher core number
-        return SequentialDistributedEnv([env_factory for _ in range(eval_concurrency)],
-                                        logging_prefix=logging_prefix)
+        return SequentialVectorEnv([env_factory for _ in range(eval_concurrency)],
+                                   logging_prefix=logging_prefix)
 
 
 @dataclass
@@ -145,9 +145,9 @@ class ImpalaLocalRunner(ImpalaRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> SubprocStructuredDistributedEnv:
+                                    ) -> SubprocVectorEnv:
         """create multi-process env distribution"""
-        return SubprocStructuredDistributedEnv([env_factory for _ in range(eval_concurrency)],
-                                               logging_prefix=logging_prefix)
+        return SubprocVectorEnv([env_factory for _ in range(eval_concurrency)],
+                                logging_prefix=logging_prefix)
 
 

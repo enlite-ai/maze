@@ -18,7 +18,7 @@ from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
-from maze.train.parallelization.distributed_env.distributed_env import DistributedEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.impala import impala_vtrace
@@ -39,7 +39,7 @@ class MultiStepIMPALA(Trainer):
     """
 
     def __init__(self, model: TorchActorCritic, rollout_actors: DistributedActors,
-                 eval_env: Union[DistributedEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
                  options: ImpalaAlgorithmConfig):
         self.distributed_actors = rollout_actors
         self.model = model
