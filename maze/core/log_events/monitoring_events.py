@@ -68,11 +68,11 @@ class ObservationEvents(ABC):
     @define_step_stats(None)
     @define_stats_grouping("step_key", "name")
     def observation_processed(self, step_key: str, name: str, value: int):
-        """ observation seen and dimensionality of observation space """
+        """ observation after being processed by observation wrappers """
 
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
     @define_stats_grouping("step_key", "name")
     def observation_original(self, step_key: str, name: str, value: int):
-        """ observation seen and dimensionality of observation space """
+        """ original MazeEnv observation before being processed be observation wrappers """

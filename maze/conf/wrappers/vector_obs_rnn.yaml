@@ -1,5 +1,5 @@
 # @package wrappers
-ObservationStackWrapper:
+maze.core.wrappers.observation_stack_wrapper.ObservationStackWrapper:
   stack_config:
     - observation: observation
       keep_original: false
