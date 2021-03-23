@@ -9,7 +9,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
 
 class DistributedActors:

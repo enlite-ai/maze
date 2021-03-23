@@ -7,8 +7,8 @@ import numpy as np
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord, StepKeyType
-from maze.core.trajectory_recording.state_record import StateRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord, StepKeyType
+from maze.core.trajectory_recording.records.state_record import StateRecord
 
 StepRecordType = TypeVar('StepRecordType', StructuredSpacesRecord, StateRecord)
 

@@ -2,7 +2,7 @@
 from typing import Dict, Any
 
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 
 
 class KeyboardControlledTrajectoryViewer:

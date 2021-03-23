@@ -5,8 +5,8 @@ environments.
 
 from typing import List
 
-from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord
-from maze.core.trajectory_recording.trajectory_writer import TrajectoryWriter
+from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 
 
 class TrajectoryWriterRegistry:

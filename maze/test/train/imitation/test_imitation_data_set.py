@@ -6,9 +6,9 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.trajectory_recording.structured_spaces_record import StructuredSpacesRecord
-from maze.core.trajectory_recording.state_record import StateRecord
-from maze.core.trajectory_recording.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.state_record import StateRecord
+from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.core.wrappers.wrapper import ObservationWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
