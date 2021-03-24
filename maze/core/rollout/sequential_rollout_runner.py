@@ -1,4 +1,5 @@
 """Sequential rollout runner for running envs and agents in the local process."""
+from tqdm import tqdm
 
 from maze.core.annotations import override
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
@@ -38,7 +39,7 @@ class SequentialRolloutRunner(RolloutRunner):
             assert record_trajectory, "Rendering is supported only when trajectory recording is enabled."
 
         self.render = render
-        self.n_episodes_done = None
+        self.progress_bar = None
 
     @override(RolloutRunner)
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType):
@@ -57,15 +58,12 @@ class SequentialRolloutRunner(RolloutRunner):
             if not isinstance(env, TrajectoryRecordingWrapper):
                 env = TrajectoryRecordingWrapper.wrap(env)
 
-        self.n_episodes_done = 0
+        self.progress_bar = tqdm(desc="Episodes done", unit=" episodes", total=self.n_episodes)
         RolloutRunner.run_interaction_loop(env, agent, self.n_episodes, render=self.render,
                                            episode_end_callback=lambda: self.update_progress())
+        self.progress_bar.close()
         env.write_epoch_stats()
 
     def update_progress(self):
         """Called on episode end to update a simple progress indicator."""
-        self.n_episodes_done += 1
-        print(f"\rEpisodes done: {self.n_episodes_done}/{self.n_episodes}", end="")
-
-        if self.n_episodes_done == self.n_episodes:
-            print("\n")
+        self.progress_bar.update()

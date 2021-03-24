@@ -202,7 +202,7 @@ class ParallelRolloutRunner(RolloutRunner):
     def _monitor_rollout(self, workers: Iterable[Process]) -> None:
         """Collect the stats and event logs from the rollout, print progress, and join the workers when done."""
 
-        for _ in tqdm(range(self.n_episodes)):
+        for _ in tqdm(range(self.n_episodes), desc="Episodes done", unit=" episodes"):
             report = self.reporting_queue.get()
             if isinstance(report, ExceptionReport):
                 for p in workers:
