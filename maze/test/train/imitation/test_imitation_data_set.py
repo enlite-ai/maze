@@ -1,3 +1,4 @@
+import pickle
 from typing import Any, Dict, Union, Tuple, List, Optional
 
 import gym
@@ -197,7 +198,7 @@ def test_data_split():
     assert _extract_observation_values_from(valid) == [0, 2, 4, 6, 8] * 1
 
 
-def test_parallel_data_load():
+def test_parallel_data_load_from_directory():
     """Test loading trajectories of multiple episodes in parallel into an in-memory dataset. (Each
     data-loader process reads the files assigned to it.)"""
     # Heuristics rollout
@@ -219,3 +220,17 @@ def test_parallel_data_load():
     )
 
     assert len(dataset) == 5 * 3
+
+
+def test_parallel_data_load_from_file():
+    trajectories = [_mock_spaces_trajectory_record(5)] * 10
+    with open("trajectories.pkl", "wb") as out_ts:
+        pickle.dump(trajectories, out_ts)
+
+    dataset = ParallelLoadDataset(
+        n_workers=2,
+        conversion_env_factory=None,
+        dir_or_file="trajectories.pkl"
+    )
+
+    assert len(dataset) == 5 * 10
