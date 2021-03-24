@@ -15,6 +15,7 @@ def plot_1c_image_stack(value: List[np.ndarray], **kwargs) -> None:
     step_key, obs_name = kwargs["groups"]
 
     fig = None
+    # check which observation of the dict-space to visualize
     if step_key == 'step_key_0' and obs_name == 'observation-rgb2gray-resize_img':
 
         # randomly select one observation

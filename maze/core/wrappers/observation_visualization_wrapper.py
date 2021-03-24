@@ -35,7 +35,7 @@ def histogram_plot(value: List[np.ndarray], **kwargs) -> None:
     return fig
 
 
-class ObservationPlottingEvents(ABC):
+class ObservationVisualizationEvents(ABC):
     """Event topic class with logging statistics based only on observations, therefore applicable to any valid
     reinforcement learning environment.
     """
@@ -47,8 +47,8 @@ class ObservationPlottingEvents(ABC):
     @define_episode_stats(histogram)
     @define_step_stats(None)
     @define_stats_grouping("step_key", "name")
-    def observation_processed_plot(self, step_key: str, name: str, value: int):
-        """ observation after being processed by observation wrappers """
+    def observation_to_visualize(self, step_key: str, name: str, value: int):
+        """ observation to be visualized """
 
 
 class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
@@ -66,12 +66,12 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
         super().__init__(env)
 
         # create event topics
-        self.observation_events = self.core_env.context.event_service.create_event_topic(ObservationPlottingEvents)
+        self.observation_events = self.core_env.context.event_service.create_event_topic(ObservationVisualizationEvents)
 
         # update plot function
         if plot_function is not None:
             function = Factory(Callable).type_from_name(plot_function)
-            ObservationPlottingEvents.observation_processed_plot.tensorboard_render_figure_dict[None] = function
+            ObservationVisualizationEvents.observation_to_visualize.tensorboard_render_figure_dict[None] = function
 
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
@@ -87,7 +87,7 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
 
         # log processed observations
         for observation_name, observation_value in obs.items():
-            self.observation_events.observation_processed_plot(
+            self.observation_events.observation_to_visualize(
                 step_key=substep_name, name=observation_name, value=observation_value)
 
         return obs, rew, done, info
