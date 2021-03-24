@@ -20,9 +20,7 @@ def run_behavioral_cloning(env: str, teacher_policy: str, bc_runner: str, bc_wra
     # Behavioral cloning on top of the heuristic rollout trajectories
     train_config = dict(configuration="test", env=env, wrappers=bc_wrappers,
                         model=bc_model, algorithm="bc", runner=bc_runner)
-    with initialize_config_module(config_module="maze.conf"):
-        cfg = compose(config_name="conf_train", overrides=[key + "=" + value for key, value in train_config.items()])
-        maze_run(cfg)
+    run_maze_job(train_config, config_module="maze.conf", config_name="conf_train")
 
     # Note: The log might output statistics multiple times -- this is caused by stats log writers being
     #       registered repeatedly in each maze_run method above (does not happen in normal scenario)
