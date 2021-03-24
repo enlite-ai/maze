@@ -11,7 +11,7 @@ from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawM
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list
 
-StepKeyType = TypeVar('StepKeyType', str, int)
+StepKeyType = Union[str, int]
 
 
 @dataclass

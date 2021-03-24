@@ -80,9 +80,11 @@ The trajectories will be dumped similar to the file structure shown below.
             - 00653455-d7e2-4737-a82b-d6d1bfce12f7.pkl
             - ...
 
-The pickle files contain the distinct episodes recorded as a sequences of
-:class:`~maze.core.trajectory_recorder.records.state_record.StateRecord` objects
-each keeping the trajectory data for one step (state, action, reward, ...).
+The pickle files contain the distinct episodes recorded as
+:class:`StateTrajectoryRecord <maze.core.trajectory_recording.records.trajectory_record.StateTrajectoryRecord>` objects,
+each containing a sequence of
+:class:`StateRecord <maze.core.trajectory_recording.records.state_record.StateRecord>` objects,
+which keep the trajectory data for one step (state, action, reward, ...).
 
 Learn from Example Trajectories
 -------------------------------
