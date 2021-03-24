@@ -55,6 +55,7 @@ Below you find the reference documentation for  environment wrappers.
 
     ~log_stats_wrapper.LogStatsWrapper
     ~monitoring_wrapper.MazeEnvMonitoringWrapper
+    ~observation_visualization_wrapper.ObservationVisualizationWrapper
     ~time_limit_wrapper.TimeLimitWrapper
     ~random_reset_wrapper.RandomResetWrapper
     ~sorted_spaces_wrapper.SortedSpacesWrapper
