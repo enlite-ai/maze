@@ -133,8 +133,6 @@ nitpick_ignore = [
     ('py:class', 'torch.utils.data.dataset.Subset'),
 
     # special maze data types
-    ('py:class', 'maze.train.parallelization.distributed_actors.actor.AgentOutput'),
-    ('py:class', 'maze.train.parallelization.distributed_actors.actor.AgentOutput_w_stats'),
     ('py:class', 'maze.train.trainers.impala.impala_learner.LearnerOutput'),
     ('py:class', 'maze.train.trainers.imitation.parallel_loaded_im_data_set.ActionTuple'),
     ('py:class', 'maze.train.trainers.imitation.parallel_loaded_im_data_set.ExceptionReport'),
@@ -147,6 +145,7 @@ nitpick_ignore = [
     ('py:class', 'EnvType'),
     ('py:class', 'WrapperType'),
     ('py:class', 'BaseType'),
+    ('py:class', 'StepRecordType'),
 
     # hydra data types
     ('py:class', 'hydra.core.utils.JobReturn'),
