@@ -32,7 +32,7 @@ class LSTMBlock(ShapeNormalizationBlock):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.bidirectional = bidirectional
-        self.non_lin = Factory(base_type=nn.Module).class_type_from_name(non_lin)
+        self.non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
         self.output_units = 2 * self.hidden_size if self.bidirectional else self.hidden_size
 
         # compile network

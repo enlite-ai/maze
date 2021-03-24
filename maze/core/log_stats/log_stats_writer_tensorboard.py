@@ -50,7 +50,7 @@ class LogStatsWriterTensorboard(LogStatsWriter):
                 render_figure_dict = getattr(event, "tensorboard_render_figure_dict", dict())
                 render_figure_function = render_figure_dict.get(name, None)
                 if render_figure_function:
-                    fig = render_figure_function(value)
+                    fig = render_figure_function(value, event=event, name=event, groups=groups)
                     self.summary_writer.add_figure(tag=tag, figure=fig, global_step=step)
 
             self.summary_writer.flush()

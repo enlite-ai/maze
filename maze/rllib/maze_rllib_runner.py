@@ -79,7 +79,7 @@ class MazeRLlibRunner(Runner):
         using_rllib_model_composer = cfg.model.keys() == MODEL_DEFAULTS.keys()
         if not using_rllib_model_composer:
             # Get model class
-            model_cls = Factory(MazeRLlibBaseModel).class_type_from_name(cfg.algorithm.model_cls)
+            model_cls = Factory(MazeRLlibBaseModel).type_from_name(cfg.algorithm.model_cls)
             # Register maze model
             ModelCatalog.register_custom_model("maze_model", model_cls)
 

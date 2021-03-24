@@ -3,7 +3,7 @@ Provides functionality for instantiating objects from configuration.
 """
 import copy
 import importlib
-from typing import TypeVar, Type, Dict, Union, Any, List, Mapping, Generic, Tuple, Sequence
+from typing import TypeVar, Type, Dict, Union, Any, List, Mapping, Generic, Tuple, Sequence, Callable
 
 from hydra.utils import instantiate
 from omegaconf import open_dict, DictConfig
@@ -116,26 +116,26 @@ class Factory(Generic[BaseType]):
 
         return path, class_name
 
-    def class_type_from_name(self, class_name: Union[str, Type[BaseType]]) -> Type[BaseType]:
-        """Import the given module and lookup the class from the module with the correct base type.
+    def type_from_name(self, name: Union[str, Type[BaseType]]) -> Type[BaseType]:
+        """Import the given module and lookup the callable or class from the module with the correct base type.
 
-        :param class_name: Fully qualified class name including the module path (e.g.
-                            ``maze_envs.logistics.property_based_replenishment.env.maze_env.MazeEnv``)
-        :return: The one and only class with the given name that derives from base_type.
+        :param name: Fully qualified name including the module path (e.g.
+                     ``maze_envs.logistics.property_based_replenishment.env.maze_env.MazeEnv``)
+        :return: The one and only callable or class with the given name that derives from base_type.
         """
-        if not isinstance(class_name, str) and issubclass(class_name, self.base_type):
-            return class_name
+        if not isinstance(name, str) and issubclass(name, self.base_type):
+            return name
 
-        full_name = class_name
+        full_name = name
 
-        class_name, specified_class_name = self._split_module_and_class(class_name)
+        name, specified_class_name = self._split_module_and_class(name)
 
-        module = importlib.import_module(class_name)
-        class_type = getattr(module, specified_class_name, None)
-        if not class_type:
-            raise ValueError(f"'{specified_class_name}' not found in module '{class_name}'")
+        module = importlib.import_module(name)
+        obj_type = getattr(module, specified_class_name, None)
+        if not obj_type:
+            raise ValueError(f"'{specified_class_name}' not found in module '{name}'")
 
-        if not issubclass(class_type, self.base_type):
+        if self.base_type != Callable and not issubclass(obj_type, self.base_type):
             raise ValueError(f"Class '{full_name}' is not of type {self.base_type}")
 
-        return class_type
+        return obj_type

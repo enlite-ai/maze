@@ -51,7 +51,7 @@ class ConcatModelBuilder(BaseModelBuilder):
         self.block_params = dict()
         for modality, config in self.modality_config.items():
             if config != {}:
-                self.obs_to_block[modality] = Factory(PerceptionBlock).class_type_from_name(config["block_type"])
+                self.obs_to_block[modality] = Factory(PerceptionBlock).type_from_name(config["block_type"])
                 self.block_params[modality] = config["block_params"]
 
     @override(BaseModelBuilder)

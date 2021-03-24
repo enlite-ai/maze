@@ -110,7 +110,7 @@ class TrainingRunner(Runner):
             normalization_env.dump_statistics()
 
         # init model composer
-        composer_type = Factory(base_type=BaseModelComposer).class_type_from_name(cfg.model['_target_'])
+        composer_type = Factory(base_type=BaseModelComposer).type_from_name(cfg.model['_target_'])
         composer_type.check_model_config(cfg.model)
         self.model_composer = Factory(base_type=BaseModelComposer).instantiate(
             cfg.model,
