@@ -59,7 +59,7 @@ class CustomModelComposer(BaseModelComposer):
         # init critic composer
         self._critics_composer = None
         if critic is not None:
-            critic_type = Factory(CriticComposerInterface).class_type_from_name(critic['_target_'])
+            critic_type = Factory(CriticComposerInterface).type_from_name(critic['_target_'])
             if issubclass(critic_type, BaseStateCriticComposer):
                 self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
                     critic, observation_spaces_dict=self.observation_spaces_dict

@@ -69,7 +69,7 @@ class PreProcessingWrapper(ObservationWrapper[StructuredEnv]):
             obs_key = mapping["observation"]
             assert obs_key in observation_spaces, f"Observation {obs_key} not contained in observation space."
 
-            pre_processor_cls = Factory(PreProcessor).class_type_from_name(mapping["_target_"])
+            pre_processor_cls = Factory(PreProcessor).type_from_name(mapping["_target_"])
             assert isinstance(mapping["config"], Mapping), \
                 f"Make sure that the config for {pre_processor_cls.__name__} of observation {obs_key} is a dict!"
             processor = pre_processor_cls(observation_space=observation_spaces[obs_key], **mapping["config"])

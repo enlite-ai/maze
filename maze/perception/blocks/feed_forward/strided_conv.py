@@ -67,7 +67,7 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
 
         self.hidden_channels = hidden_channels
         self.hidden_kernels = hidden_kernels
-        self.non_lin = Factory(base_type=nn.Module).class_type_from_name(non_lin)
+        self.non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
         self.output_channels = self.hidden_channels[-1]
 
         # Optional arguments

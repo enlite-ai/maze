@@ -65,9 +65,9 @@ class TemplateModelComposer(BaseModelComposer):
 
         super().__init__(action_spaces_dict, observation_spaces_dict, distribution_mapper_config)
 
-        self._policy_type = Factory(BasePolicyComposer).class_type_from_name(policy['_target_']) \
+        self._policy_type = Factory(BasePolicyComposer).type_from_name(policy['_target_']) \
             if policy is not None else None
-        self._critic_type = Factory(CriticComposerInterface).class_type_from_name(critic['_target_']) \
+        self._critic_type = Factory(CriticComposerInterface).type_from_name(critic['_target_']) \
             if critic is not None else None
         self.model_builder = Factory(BaseModelBuilder).instantiate(model_builder)
 

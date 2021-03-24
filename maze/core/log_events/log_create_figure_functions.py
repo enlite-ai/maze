@@ -5,14 +5,18 @@ from typing import List, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
+from maze.core.annotations import unused
 
-def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], List[float]]):
+
+def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], List[float]], **kwargs):
     """ Checks the type of value and calls the correct plotting function accordingly.
 
     :param value: Output of an reducer function
+    :param kwargs: Additional plotting relevant arguments.
     :return: plt.figure that contains a bar plot
     """
-    fig = None
+    unused(kwargs)
+
     if isinstance(value[0], tuple):
         # in this case, we have the discrete action events and need the relative bar plot for plotting
         fig = create_multi_binary_relative_bar_plot(value)
@@ -22,12 +26,15 @@ def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], Lis
     return fig
 
 
-def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[float]]):
+def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[float]], **kwargs):
     """ Checks the type of value and calls the correct plotting function accordingly.
 
     :param value: Output of an reducer function
+    :param kwargs: Additional plotting relevant arguments.
     :return: plt.figure that contains a bar plot
     """
+    unused(kwargs)
+
     fig = None
     if isinstance(value[0], tuple):
         # in this case, we have the discrete action events and need the relative bar plot for plotting
@@ -102,13 +109,15 @@ def create_relative_bar_plot(value: List[Tuple[int, int]]):
     return fig
 
 
-def create_violin_distribution(value: List[np.ndarray]) -> None:
+def create_violin_distribution(value: List[np.ndarray], **kwargs) -> None:
     """
     Creates simple matplotlib violin plot of value.
 
     :param value: output of an event (expected to be a list of numpy vectors)
+    :param kwargs: Additional plotting relevant arguments.
     :return: plt.figure that contains a bar plot
     """
+    unused(kwargs)
 
     # extract array
     value_array = np.stack(value)

@@ -50,7 +50,7 @@ class DistributionMapper:
                    ("action_space" not in entry_dict and "action_head" in entry_dict)
 
             # get the distribution type
-            distribution_type = Factory(TorchProbabilityDistribution).class_type_from_name(
+            distribution_type = Factory(TorchProbabilityDistribution).type_from_name(
                 entry_dict["distribution"])
 
             # get additional distribution arguments
@@ -60,7 +60,7 @@ class DistributionMapper:
                 self._action_head_to_distribution[entry_dict["action_head"]] = (distribution_type, args)
 
             elif "action_space" in entry_dict:
-                sub_action_space = Factory(spaces.Space).class_type_from_name(entry_dict["action_space"])
+                sub_action_space = Factory(spaces.Space).type_from_name(entry_dict["action_space"])
 
                 for action_head in self.action_space.spaces:
 

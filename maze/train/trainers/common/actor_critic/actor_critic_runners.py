@@ -54,7 +54,7 @@ class ACRunner(TrainingRunner):
         model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=model)
 
         # look up model class
-        trainer_class = Factory(base_type=MultiStepActorCritic).class_type_from_name(self.trainer_class)
+        trainer_class = Factory(base_type=MultiStepActorCritic).type_from_name(self.trainer_class)
 
         # initialize trainer (from input directory)
         trainer = trainer_class(algorithm_config=cfg.algorithm, env=envs, eval_env=eval_env, model=model,

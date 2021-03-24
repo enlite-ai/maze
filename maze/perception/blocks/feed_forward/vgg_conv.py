@@ -29,7 +29,7 @@ class VGGConvolutionBlock(ShapeNormalizationBlock):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=4, out_num_dims=4)
         self.input_channels = self.in_shapes[0][-3]
         self.hidden_channels = hidden_channels
-        self.non_lin = Factory(base_type=nn.Module).class_type_from_name(non_lin)
+        self.non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
         self.output_channels = self.hidden_channels[-1]
 
         # compile layer dictionary

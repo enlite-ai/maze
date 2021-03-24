@@ -35,7 +35,7 @@ class WrapperFactory(Factory[Wrapper]):
 
         wrapped_env: Union[Wrapper, T] = env
         for wrapper_module in wrapper_config:
-            wrapped_env = Factory(Wrapper).class_type_from_name(wrapper_module).wrap(
+            wrapped_env = Factory(Wrapper).type_from_name(wrapper_module).wrap(
                 wrapped_env,
                 # Pass on additional arguments
                 **wrapper_config[wrapper_module]
