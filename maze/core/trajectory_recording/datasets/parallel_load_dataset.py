@@ -22,9 +22,9 @@ class ParallelLoadDataset(InMemoryDataset):
     This significantly speeds up data loading in cases where conversion of MazeStates and MazeActions into actions
     and observations is demanding.
 
-    :param data_dir: See the parent class.
-    :param conversion_env_factory: See the parent class.
     :param n_workers: Number of worker processes to load data in.
+    :param dir_or_file: See the parent class.
+    :param conversion_env_factory: See the parent class.
     """
 
     def __init__(self,
