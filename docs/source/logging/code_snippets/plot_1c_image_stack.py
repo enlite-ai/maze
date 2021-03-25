@@ -1,18 +1,19 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_1c_image_stack(value: List[np.ndarray], **kwargs) -> None:
+def plot_1c_image_stack(value: List[np.ndarray], groups: Tuple[str, str], **kwargs) -> None:
     """Plots a stack of single channel images with shape [N_STACK x H x W] using imshow.
 
     :param value: A list of image stacks.
+    :param groups: A tuple containing step key and observation name.
     :param kwargs: Additional plotting relevant arguments.
     """
 
     # extract step key and observation name to enter appropriate plotting branch
-    step_key, obs_name = kwargs["groups"]
+    step_key, obs_name = groups
 
     fig = None
     # check which observation of the dict-space to visualize
