@@ -1,79 +1,66 @@
 """ Implements step skipping as an environment wrapper. """
+from collections import defaultdict, deque
 from typing import Any, Dict, Tuple, Union, Optional
 
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import Wrapper, EnvType
 
 
 class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
-    """A step-skip-wrapper providing functionality for:
-        - skipping n_steps
-        - specify what action is provided when skipping a step
-            - noop: apply the noop action
-            - sticky: apply the last action again
+    """A step-skip-wrapper providing functionality for skipping n_steps environment steps.
+    Options for skipping are: (noop: apply the noop action, sticky: apply the last action again).
 
-    :param env: Environment/wrapper to wrap.
-    :param n_steps: int specifying how many steps should be skipped.
-    :param skip_mode: str specifying the mode of skipping.
-            options: noop, sticky
+    :param env: Environment to wrap.
+    :param n_skip_steps: Number of steps that should be skipped.
+    :param skip_mode: Skipping action selection mode (noop, sticky).
     """
     SKIPPING_MODES = ['sticky', 'noop']
 
-    def __init__(self, env: Union[StructuredEnvSpacesMixin, MazeEnv], n_steps: int, skip_mode: str):
+    def __init__(self, env: Union[StructuredEnvSpacesMixin, MazeEnv], n_skip_steps: int, skip_mode: str):
         super().__init__(env)
 
         # initialize observation skipping
-        self.n_steps = n_steps
+        self.n_skip_steps = n_skip_steps
         self.skip_mode = skip_mode
-        assert self.skip_mode in self.SKIPPING_MODES, f'Skips mode ({self.skip_mode}) has to be one of the ' \
-                                                      f'following {self.SKIPPING_MODES}'
-        self._step_actions = dict()
-        self._record_actions = True
+        assert self.skip_mode in self.SKIPPING_MODES, \
+            f'Skips mode ({self.skip_mode}) has to be one of the following {self.SKIPPING_MODES}'
 
-    def _record_action(self, action) -> None:
-        """Record the current action for later use
+        assert len(env.action_spaces_dict.keys()) == 1, \
+            f'The StepSkipWrapper only supports single step environments.'
 
-        :param action: The action the agent wants to execute
-        """
-        if self.skip_mode == 'sticky':
-            self._step_actions[self.actor_id()[0]] = action
-        elif self.skip_mode == 'noop':
-            self._step_actions[self.actor_id()[0]] = self.env.action_conversion.noop_action()
-            assert self._step_actions[self.actor_id()[0]] is not None, 'Noop action not defined in the ' \
-                                                                       'action_conversion interface'
-
-    def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
-        if self.n_steps == 0:
-            # if n_steps is 0 execute steps normally
-            observation, reward, done, info = self.env.step(action)
 
-            return observation, reward, done, info
-        elif self._record_actions:
-            # If record actions is true record the actions given until one flat step finished
-            self._record_action(action)
-            observation, reward, done, info = self.env.step(action)
-            if self.actor_id() == 0 and len(self._step_actions) > 0:
-                self._record_actions = False
+        # init reward accumulation
+        observation, acc_reward, done, info = None, 0, None, None
 
-            return observation, reward, done, info
-        else:
-            # Once all sub actions are recorded perform the skipping
-            for i in range(self.n_steps):
-                for j in range(len(self._step_actions)):
-                    observation, reward, done, info = self.env.step(self._step_actions[self.actor_id()[0]])
-                    if done:
-                        self._record_actions = True
-                        self._step_actions = dict()
-                        return observation, reward, done, info
-            self._record_actions = True
-            self._step_actions = dict()
-            return observation, reward, done, info
+        # init event buffering
+        topics = self.env.core_env.context.event_service.topics
+        event_buffer = defaultdict(deque)
+
+        # perform n_steps + 1 steps
+        for _ in range(self.n_skip_steps + 1):
+            # take env step
+            observation, reward, done, info = self.env.step(action)
+            # accumulate reward and collect events
+            acc_reward += reward
+            for key, topic in topics.items():
+                event_buffer[key].extend(list(topic.events))
+            if done:
+                break
+
+        # write buffered events back to topic
+        for key, events in event_buffer.items():
+            topics[key].events = event_buffer[key]
+
+        return observation, acc_reward, done, info
 
     @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],

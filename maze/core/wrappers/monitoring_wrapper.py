@@ -12,7 +12,6 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.log_events.monitoring_events import ActionEvents, RewardEvents, ObservationEvents
 from maze.core.wrappers.wrapper import Wrapper
 
@@ -43,7 +42,6 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
 
         # maintain for multi-step environments
         self._action_space: Optional[spaces.Dict] = None
-        self._last_env_time: Optional[int] = None
 
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
@@ -62,7 +60,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
             self._log_observation(substep_name, obs)
 
         if self.reward_logging:
-            self._log_original_reward()
+            self.reward_events.reward_processed(step_key=substep_name, value=rew)
 
         # update action space
         self._action_space = self.env.action_space
@@ -84,8 +82,6 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
             substep_name = self._get_substep_name()
             self._log_observation(substep_name, obs)
 
-        # update env time
-        self._last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
         return obs
 
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
@@ -148,12 +144,3 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
             elif isinstance(actor_action_space, spaces.Box):
                 actor_action = action[actor_name]
                 self.action_events.continuous_action(step_key=substep_name, name=actor_name, value=actor_action)
-
-    def _log_original_reward(self):
-        if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self._last_env_time:
-            self._last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) \
-                else self._last_env_time + 1
-
-            # record original reward only after actual maze env step
-            if isinstance(self.env, MazeEnv):
-                self.reward_events.reward_original(value=self.env.reward_original)

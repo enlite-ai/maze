@@ -1,3 +1,0 @@
-StepSkipWrapper:
-  skip_mode: 'noop'
-  n_steps: 2

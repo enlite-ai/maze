@@ -53,6 +53,16 @@ class RewardEvents(ABC):
     @define_epoch_stats(np.std, input_name="sum", output_name="std")
     @define_episode_stats(np.sum, output_name="sum")
     @define_step_stats(sum)
+    @define_stats_grouping("step_key")
+    def reward_processed(self, step_key: str, value: float):
+        """ reward after being processed by reward wrappers """
+
+    @define_epoch_stats(np.max, input_name="sum", output_name="max")
+    @define_epoch_stats(np.min, input_name="sum", output_name="min")
+    @define_epoch_stats(np.mean, input_name="sum", output_name="mean")
+    @define_epoch_stats(np.std, input_name="sum", output_name="std")
+    @define_episode_stats(np.sum, output_name="sum")
+    @define_step_stats(sum)
     def reward_original(self, value: float):
         """ original reward returned by the MazeEnv. """
 
