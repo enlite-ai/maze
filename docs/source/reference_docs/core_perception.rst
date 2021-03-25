@@ -45,6 +45,7 @@ These are basic neural network building blocks and interfaces:
     ~graph_conv.GraphConvBlock
     ~graph_attention.GraphAttentionBlock
     ~multi_head_attention.MultiHeadAttentionBlock
+    ~point_net.PointNetFeatureBlock
 
 **Recurrent:** these are built-in recurrent building blocks:
 

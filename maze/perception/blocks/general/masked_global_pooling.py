@@ -1,7 +1,6 @@
 """ Contains a Masked value mean block. """
 from typing import Union, List, Sequence, Dict
 
-import numpy as np
 import torch
 
 from maze.core.annotations import override
@@ -9,10 +8,8 @@ from maze.perception.blocks.base import PerceptionBlock
 
 
 class MaskedGlobalPoolingBlock(PerceptionBlock):
-    """A block applying masked global pooling.
-    Pooling is applied wrt the mask (in_keys[1]) and the selected pooling function.
-    That is, in the forward pass the input tensor 1 is iterated over in the first 2
-    dimensions, where the elements are selected based on the mask, before applying the pooling function.
+    """A block applying global pooling with optional masking.
+    Pooling is applied wrt the mask (in_keys[1]) if given, the selected pooling function and the pooling dimension.
 
     :param in_keys: One key identifying the input tensors.
     :param out_keys: One key identifying the output tensors.
@@ -22,7 +19,7 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
     """
 
     @classmethod
-    def _masked_sum(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim=Union[int, Sequence[int]]) \
+    def _masked_sum(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: Union[int, Sequence[int]]) \
             -> torch.Tensor:
         """Compute sum of tensor along certain dimensions considering a given masking tensor.
 
@@ -42,9 +39,8 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         masked_sum = torch.sum(zero_input_tensor, dim=dim)
         return masked_sum
 
-
     @classmethod
-    def _masked_mean(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim=Union[int, Sequence[int]]) \
+    def _masked_mean(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: Union[int, Sequence[int]]) \
             -> torch.Tensor:
         """Compute mean of tensor along certain dimensions considering a given masking tensor.
 
@@ -68,7 +64,7 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         return masked_mean
 
     @classmethod
-    def _masked_max(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim=Union[int, Sequence[int]]) \
+    def _masked_max(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: Union[int, Sequence[int]]) \
             -> torch.Tensor:
         """Compute max of tensor along certain dimensions considering a given masking tensor.
 
@@ -82,8 +78,8 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
             mask_tensor = mask_tensor.unsqueeze(-1)
 
         # zero out masked values
-        inverted_mask_tensor = torch.tensor(1.0).to(mask_tensor.device) - (1.0 * mask_tensor)
-        zero_input_tensor = input_tensor + inverted_mask_tensor * np.finfo(np.float32).min
+        min_value = torch.tensor(torch.finfo(torch.float32).min).to(input_tensor.device)
+        zero_input_tensor = torch.where(mask_tensor.to(torch.bool), input_tensor, min_value)
 
         # compute masked average
         masked_max, _ = torch.max(zero_input_tensor, dim=dim)
@@ -101,8 +97,9 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
 
         if self._use_masking:
             assert len(self.in_shapes[1]) >= 1, 'The second shape given to the block should be at least of dim 1 ' \
-                                           f'but got {in_shapes[1]}'
+                                                f'but got {in_shapes[1]}'
             assert all([self.in_shapes[0][idx] == self.in_shapes[1][idx] for idx in range(len(self.in_shapes[1]))])
+
         self._pooling_func_name = pooling_func
         # select appropriate pooling function
         if self._pooling_func_name == "mean":
