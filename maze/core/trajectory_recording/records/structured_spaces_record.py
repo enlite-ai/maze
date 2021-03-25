@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, TypeVar, List, Union
+from typing import Dict, Optional, List, Union
 
 import numpy as np
+import torch
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
-from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
+from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list
 
@@ -24,25 +25,25 @@ class StructuredSpacesRecord:
     in a single batch.
     """
 
-    observations: Dict[StepKeyType, Dict[str, np.ndarray]]
+    observations: Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]
     """Dictionary of observations available at sub-step (i.e., those available to the policy for action inferrence)."""
 
-    actions: Dict[StepKeyType, Dict[str, np.ndarray]]
+    actions: Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]
     """Dictionary of actions recorded during the step."""
 
-    rewards: Optional[Dict[StepKeyType, Union[float, np.ndarray]]]
+    rewards: Optional[Dict[StepKeyType, Union[float, np.ndarray, torch.Tensor]]]
     """Dictionary of rewards recorded during the step."""
 
-    dones: Optional[Dict[StepKeyType, Union[float, bool, np.ndarray]]]
+    dones: Optional[Dict[StepKeyType, Union[float, bool, np.ndarray, torch.Tensor]]]
     """Dictionary of dones recorded during the step."""
 
     infos: Optional[Dict[StepKeyType, Dict]] = None
     """Dictionary of info dictionaries recorded during the step."""
 
-    next_observations: Dict[StepKeyType, Dict[str, np.ndarray]] = None
+    next_observations: Optional[Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]] = None
     """Dictionary of observations produced at sub-step (i.e., results of the action taken in this sub-step)."""
 
-    logits: Optional[Dict[StepKeyType, Dict[str, np.ndarray]]] = None
+    logits: Optional[Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]] = None
     """Dictionary of dones recorded during the step."""
 
     event_log: Optional[StepEventLog] = None
