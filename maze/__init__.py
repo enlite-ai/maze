@@ -2,7 +2,7 @@
 import os
 from maze.utils.bcolors import BColors
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 # fixes this issue (https://github.com/pytorch/pytorch/issues/37377) when using conda
 if "MKL_THREADING_LAYER" not in os.environ or os.environ['MKL_THREADING_LAYER'] != 'GNU':
