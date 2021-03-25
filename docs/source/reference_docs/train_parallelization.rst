@@ -3,16 +3,6 @@ Parallelization
 
 This page contains the reference documentation for the parallelization module.
 
-.. currentmodule:: maze.train.parallelization
-
-.. autosummary::
-    :toctree: generated
-    :nosignatures:
-    :template: classtemplate.rst
-
-    ~base_worker.BaseWorker
-    ~base_worker.BaseWorkerOutput
-
 Vectorized Environments
 ------------------------
 
