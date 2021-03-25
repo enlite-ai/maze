@@ -32,12 +32,14 @@ class RolloutGenerator:
                  record_logits: bool = False,
                  record_step_stats: bool = False,
                  record_episode_stats: bool = False,
+                 record_next_observations: bool = False,
                  terminate_on_done: bool = False):
         self.env = env
         self.is_vectorized = isinstance(self.env, StructuredVectorEnv)
         self.record_logits = record_logits
         self.record_step_stats = record_step_stats
         self.record_episode_stats = record_episode_stats
+        self.record_next_observations = record_next_observations
         self.terminate_on_done = terminate_on_done
 
         if (self.record_step_stats or self.record_episode_stats) and not isinstance(self.env, LogStatsWrapper):
@@ -79,13 +81,14 @@ class RolloutGenerator:
         while True:
             record = StructuredSpacesRecord(observations={}, actions={}, rewards={}, dones={}, infos={},
                                             logits={} if self.record_logits else None,
+                                            next_observations={} if self.record_next_observations else None,
                                             batch_shape=[self.env.n_envs] if self.is_vectorized else None)
 
             # Step through all sub-steps, i.e., step until the env time changes
             # Note: If the env returns done in a sub-step, this is detected as well as env time changes after reset
             current_env_time = self.env.get_env_time()
             while np.all(current_env_time == self.env.get_env_time()):
-                done = self._record_sub_step(record, observation=self.last_observation, policy=policy)
+                done = self._record_sub_step(record, policy=policy)
 
             # Record episode stats
             if self.record_step_stats:
@@ -106,7 +109,6 @@ class RolloutGenerator:
 
     def _record_sub_step(self,
                          record: StructuredSpacesRecord,
-                         observation: ObservationType,
                          policy: Union[Policy, TorchPolicy]) -> Union[bool, np.ndarray]:
         """Perform one substep in the environment and record it. Return the done flag(s).
 
@@ -114,17 +116,18 @@ class RolloutGenerator:
         """
         step_key, _ = self.env.actor_id()
         # Record copy of the observation (as by default, the policy converts and handles it in place)
-        record.observations[step_key] = self.last_observation.copy()
+        record.observations[step_key] = self.last_observation
 
         # Sample action and record logits if configured
+        # Note: Copy the observation (as by default, the policy converts and handles it in place)
         if self.record_logits:
-            action, logits = policy.compute_action_with_logits(observation, policy_id=step_key,
+            action, logits = policy.compute_action_with_logits(self.last_observation.copy(), policy_id=step_key,
                                                                deterministic=False)
             record.logits[step_key] = logits
         else:
             # Inject the MazeEnv state if desired by the policy
             maze_state = self.env.get_maze_state() if policy.needs_state() else None
-            action = policy.compute_action(observation, policy_id=step_key, maze_state=maze_state,
+            action = policy.compute_action(self.last_observation.copy(), policy_id=step_key, maze_state=maze_state,
                                            deterministic=False)
         record.actions[step_key] = action
 
@@ -134,6 +137,10 @@ class RolloutGenerator:
         record.rewards[step_key] = reward
         record.dones[step_key] = done
         record.infos[step_key] = info
+
+        # Record the resulting observation if requested
+        if self.record_next_observations:
+            record.next_observations[step_key] = self.last_observation
 
         # Reset the env if done and keep the terminal observation
         if not self.is_vectorized and done:
