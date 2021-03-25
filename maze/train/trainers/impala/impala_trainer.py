@@ -249,13 +249,15 @@ class MultiStepIMPALA(Trainer):
         # Shift values:
         record, learner_output = self._shift_outputs(record, learner_output)
 
+        # TODO: Take into account all rewards, not just from the last sub-step
+        last_rewards = list(record.rewards.values())[-1]
+
         # Clip reward:
         if self.reward_clipping == 'abs_one':
-            clipped_rewards = record.rewards[list(record.rewards.keys())[-1]].clamp(-1, 1)
+            clipped_rewards = last_rewards.clamp(-1, 1)
         elif self.reward_clipping == 'soft_asymmetric':
-            squeezed = torch.tanh(record.rewards[list(record.rewards.keys())[-1]] / 5.0)
-            clipped_rewards = torch.where(
-                record.rewards[list(record.rewards.keys())[-1]] < 0, 0.3 * squeezed, squeezed) * 5.
+            squeezed = torch.tanh(last_rewards / 5.0)
+            clipped_rewards = torch.where(last_rewards < 0, 0.3 * squeezed, squeezed) * 5.
         else:
             clipped_rewards = record.rewards[list(record.rewards.keys())[-1]]
         # START: Loss computation --------------------------------------------------------------------------------------
