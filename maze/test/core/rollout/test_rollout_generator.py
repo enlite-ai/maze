@@ -1,5 +1,7 @@
 from typing import Dict, Any, Tuple
 
+import numpy as np
+
 from maze.core.agent.random_policy import RandomPolicy, DistributedRandomPolicy
 from maze.core.env.base_env import BaseEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
@@ -88,6 +90,7 @@ def test_terminates_on_done():
 def test_handles_done_in_substep_with_recorded_episode_stats():
     class _FiveSubstepsLimitWrapper(TimeLimitWrapper):
         """Returns done after 5 sub-steps (not flat env steps!)"""
+
         def __init__(self, env: BaseEnv):
             super().__init__(env)
             self.elapsed_sub_steps = 0
@@ -129,3 +132,30 @@ def test_handles_done_in_substep_with_recorded_episode_stats():
     assert len(trajectory) == 3
     assert trajectory.is_done()
     assert [0] == list(trajectory.step_records[-1].observations.keys())
+
+
+def test_records_next_observations():
+    env = build_dummy_structured_env()
+    rollout_generator = RolloutGenerator(env=env, record_next_observations=True)
+    policy = RandomPolicy(env.action_spaces_dict)
+    trajectory = rollout_generator.rollout(policy, n_steps=10)
+
+    assert len(trajectory) == 10
+
+    sub_step_keys = env.action_spaces_dict.keys()
+    last_next_obs = None
+    for record in trajectory.step_records:
+        assert sub_step_keys == record.observations.keys()
+        assert sub_step_keys == record.next_observations.keys()
+        assert record.batch_shape == None
+
+        for step_key in sub_step_keys:
+            curr_obs = record.observations[step_key]
+
+            # Next obs from the previous sub-step should be equal to the current observation
+            if last_next_obs:
+                assert list(curr_obs.keys()) == list(last_next_obs.keys())
+                for obs_key in curr_obs.keys():
+                    assert np.all(curr_obs[obs_key] == last_next_obs[obs_key])
+
+            last_next_obs = record.next_observations[step_key]

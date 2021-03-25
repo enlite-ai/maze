@@ -25,7 +25,7 @@ class StructuredSpacesRecord:
     """
 
     observations: Dict[StepKeyType, Dict[str, np.ndarray]]
-    """Dictionary of observations recorded during the step."""
+    """Dictionary of observations available at sub-step (i.e., those available to the policy for action inferrence)."""
 
     actions: Dict[StepKeyType, Dict[str, np.ndarray]]
     """Dictionary of actions recorded during the step."""
@@ -33,11 +33,14 @@ class StructuredSpacesRecord:
     rewards: Optional[Dict[StepKeyType, Union[float, np.ndarray]]]
     """Dictionary of rewards recorded during the step."""
 
-    dones: Optional[Dict[StepKeyType, Union[float, bool]]]
+    dones: Optional[Dict[StepKeyType, Union[float, bool, np.ndarray]]]
     """Dictionary of dones recorded during the step."""
 
     infos: Optional[Dict[StepKeyType, Dict]] = None
     """Dictionary of info dictionaries recorded during the step."""
+
+    next_observations: Dict[StepKeyType, Dict[str, np.ndarray]] = None
+    """Dictionary of observations produced at sub-step (i.e., results of the action taken in this sub-step)."""
 
     logits: Optional[Dict[StepKeyType, Dict[str, np.ndarray]]] = None
     """Dictionary of dones recorded during the step."""
@@ -58,7 +61,7 @@ class StructuredSpacesRecord:
     """Dictionary of (discounted) returns."""
 
     @classmethod
-    def stack_records(cls, records: List['StructuredSpacesRecord']) -> StateRecord:
+    def stack_records(cls, records: List['StructuredSpacesRecord']) -> 'StructuredSpacesRecord':
         """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
 
         All the records should be in numpy and have the same structure of the spaces (i.e. come from the same
@@ -68,9 +71,11 @@ class StructuredSpacesRecord:
         :return: Single stacked record, containing all the given records, and having the corresponding batch shape.
         """
         logits_present = records[0].logits is not None
+        next_observations_present = records[0].next_observations is not None
 
         stacked_record = StructuredSpacesRecord(
             observations={}, actions={}, logits={} if logits_present else None,
+            next_observations={} if next_observations_present else None,
             rewards=stack_numpy_dict_list([r.rewards for r in records]),
             dones=stack_numpy_dict_list([r.dones for r in records]))
 
@@ -81,6 +86,10 @@ class StructuredSpacesRecord:
 
             if logits_present:
                 stacked_record.logits[step_key] = stack_numpy_dict_list([r.logits[step_key] for r in records])
+
+            if next_observations_present:
+                stacked_record.next_observations[step_key] = stack_numpy_dict_list(
+                    [r.next_observations[step_key] for r in records])
 
         stacked_record.batch_shape = [len(records)] + records[0].batch_shape if records[0].batch_shape \
             else [len(records)]
@@ -131,6 +140,9 @@ class StructuredSpacesRecord:
         if self.logits is not None:
             self.logits = convert_to_numpy(self.logits, cast=None, in_place=True)
 
+        if self.next_observations is not None:
+            self.next_observations = convert_to_numpy(self.next_observations, cast=None, in_place=True)
+
         return self
 
     def to_torch(self, device: str):
@@ -145,5 +157,8 @@ class StructuredSpacesRecord:
 
         if self.logits is not None:
             self.logits = convert_to_torch(self.logits, device=device, cast=None, in_place=True)
+
+        if self.next_observations is not None:
+            self.next_observations = convert_to_torch(self.next_observations, device=device, cast=None, in_place=True)
 
         return self
