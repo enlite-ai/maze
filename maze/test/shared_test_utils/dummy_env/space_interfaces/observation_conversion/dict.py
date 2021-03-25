@@ -41,5 +41,5 @@ class ObservationConversion(ObservationConversionInterface):
         """
         return gym.spaces.Dict({
             "observation_0": gym.spaces.Box(shape=(3, 32, 32), low=0, high=1),
-            "observation_1": gym.spaces.Box(shape=(10,), low=0, high=1)
+            "observation_1": gym.spaces.Box(shape=(10,), low=0, high=1),
         })

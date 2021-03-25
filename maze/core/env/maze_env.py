@@ -25,6 +25,7 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
+from maze.core.log_events.monitoring_events import RewardEvents
 from maze.core.rendering.renderer import Renderer
 from maze.core.wrappers.wrapper import Wrapper
 
@@ -77,8 +78,8 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # last observation, captured immediately after the observation_conversion mapping
         self.observation_original = None
 
-        # last reward, captured immediately after the reward aggregation
-        self.reward_original = None
+        # create event topics
+        self.reward_events = self.core_env.context.event_service.create_event_topic(RewardEvents)
 
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
@@ -87,6 +88,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :param action: the action the agent wants to take.
         :return: observation, reward, done, info
         """
+
+        # increment the environment step, which resets the event collection
+        self.core_env.context.increment_env_step()
 
         # compile action object
         maze_state = self.core_env.get_maze_state()
@@ -102,11 +106,8 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         if self.core_env.reward_aggregator:
             reward = self.core_env.reward_aggregator.to_scalar_reward(reward)
 
-        # preserve original reward for logging
-        self.reward_original = reward
-
-        # increment the environment step, which resets the event collection
-        self.core_env.context.increment_env_step()
+        # reward captured immediately after the reward aggregation
+        self.reward_events.reward_original(value=reward)
 
         # record the last MazeAction
         self.last_maze_action = maze_action
@@ -123,7 +124,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         maze_state = self.core_env.reset()
 
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
-        self.reward_original = None
 
         return observation
 

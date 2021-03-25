@@ -46,7 +46,6 @@ class EventService:
             self.interface_class = interface_class
             self.scope = scope
             self.events = deque()
-            self.previous_events = deque()
             self.proxy = proxy
 
     def __init__(self):
@@ -70,7 +69,7 @@ class EventService:
         A generator to iterate all collected events
         """
         for topic_info in self.topics.values():
-            for event in topic_info.previous_events:
+            for event in topic_info.events:
                 yield event
 
     def create_event_topic(self, interface_class: Type[T], scope: EventScope = None) -> T:
@@ -102,18 +101,15 @@ class EventService:
 
     def notify_next_step(self):
         """
-        Notify this service after the env step execution about the start of a new step. This should only be called by
+        Notify this service about the start of a new step. This should only be called by
         the AgentEnvironmentContext.
 
         Clears all collected events and notifies all registered scopes.
         """
+
+        # clear events
         for topic in self.topics.values():
-            # previous events are no longer needed
-            topic.previous_events.clear()
-            # swap the current event and the previous event lists
-            new_previous = topic.events
-            topic.events = topic.previous_events
-            topic.previous_events = new_previous
+            topic.events.clear()
 
         # notify the scopes
         for scope in self.scopes:
