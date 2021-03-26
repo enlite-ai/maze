@@ -38,3 +38,10 @@ class DictActionConversion(ActionConversionInterface):
             "action_1_1": gym.spaces.MultiBinary(5),
             "action_2_0": gym.spaces.Box(low=-5, high=5, shape=(5,)),
         })
+
+    def noop_action(self):
+        """Converts environment MazeAction to agent action.
+
+        :return: the noop action.
+        """
+        return self.space().sample()
