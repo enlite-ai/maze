@@ -81,6 +81,11 @@ We then recommend to compare the different configurations with Tensorboard.
 
     tensorboard --logdir outputs/
 
+Within tensorboard the hyperparameters of the grid search are logged as well, which makes comparison between runs more
+convenient as can be seen in the figure below:
+
+.. image:: tensorboard_multi_run_hparams.png
+
 Per default Hydra uses the local (sequential) runner for processing jobs.
 
 For setting up a more scalable (local, parallel) grid search
