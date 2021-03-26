@@ -23,6 +23,7 @@ The complete code for this part of the tutorial
         - space_interfaces
             - dict_action_conversion.py
             - dict_observation_conversion.py
+        - conf ...
 
 .. contents:: Page Overview
     :depth: 1
