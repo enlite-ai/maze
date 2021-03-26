@@ -9,6 +9,7 @@ import yaml
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
+from maze.core.log_stats.hparam_writer_tensorboard import manipulate_hparams_logging_for_exp
 from maze.core.utils.factory import Factory
 from maze.runner import Runner
 from maze.utils.bcolors import BColors
@@ -59,6 +60,11 @@ def _run_multirun_job(cfg: DictConfig) -> float:
 
     # compute maximum mean reward
     max_mean_reward = np.max(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
+
+    # Add hparams logging to tensorboard
+    metrics = [('train_BaseEnvEvents/reward/mean', max_mean_reward, 'max')]
+    manipulate_hparams_logging_for_exp('.', metrics, clear_hparams=False)
+
     return float(max_mean_reward)
 
 
