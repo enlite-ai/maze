@@ -155,7 +155,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         :return: state, reward, done, info
         """
         # Only the second sub step actually steps the underlying core env
-        return filter_dict_starts_with(self.last_obs, 'observation_1'), 0, False, {}
+        return filter_dict_starts_with(self.last_obs, 'observation_1'), 1, False, {}
 
     def _action1(self, action) -> Tuple[Dict, float, bool, Optional[Dict[str, np.ndarray]]]:
         """
@@ -165,4 +165,4 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         """
         # Only the second sub step actually steps the underlying core env
         self.last_obs, _, _, _ = self.maze_env.step(action)
-        return filter_dict_starts_with(self.last_obs, 'observation_0'), 0, False, {}
+        return filter_dict_starts_with(self.last_obs, 'observation_0'), 2, False, {}
