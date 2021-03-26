@@ -10,13 +10,19 @@ The complete code for this part of the tutorial
 
     # file structure
     - cutting_2d
+        - main.py
+        - env ...
+        - space_interfaces ...
         - conf
             - env
-                - tutorial_cutting_2d_basic.yaml
+                - tutorial_cutting_2d_basic.yaml  # new
             - model
-                - tutorial_cutting_2d_basic.yaml
+                - tutorial_cutting_2d_basic.yaml  # new
             - wrappers
-                - tutorial_cutting_2d_basic.yaml
+                - tutorial_cutting_2d_basic.yaml  # new
+
+.. note::
+    Hydra only accepts **.yaml** as file extension.
 
 .. contents:: Page Overview
     :depth: 1
