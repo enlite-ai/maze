@@ -1,6 +1,6 @@
 """Extension of gym Wrapper to support environment interfaces"""
 from abc import abstractmethod, ABC
-from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional
+from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, List
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -63,6 +63,54 @@ class Wrapper(Generic[EnvType], ABC):
 
         self.fake_class = _FakeClass
 
+        # intercept the step function with a "before_step" call
+        self._register_hooks(["step"])
+
+    def _create_proxy(self, original_fn, hook_before: str):
+        def _proxy_function(*args, **kwargs) -> Any:
+            hook_before_fn(*args, **kwargs)
+            return original_fn(*args, **kwargs)
+
+        # this is intentionally outside of the proxy function for performance reasons
+        hook_before_fn = getattr(self, hook_before, None)
+        if hook_before_fn:
+            return _proxy_function
+
+        # we do not need to change anything in case the hook is not used
+        return None
+
+    def _register_hooks(self, method_names: List[str]) -> None:
+        """Intercept the given list of methods (e.g. the "step" method) and trigger the "before_step" hook.
+
+        The "before_..." functions should be invoked only once. Therefore this must only be called on the
+        outermost Wrapper of the entire wrapper - environment stack.
+
+        :param method_names: The list of methods as function names, which will be overwritten by a proxy function.
+        """
+        # We register hooks only for the outermost wrapper. In case this wrapper was added to an existing wrapper
+        # stack, we need to remove the hooks from the previous wrapper.
+        if isinstance(self.env, Wrapper):
+            self.env.unregister_hooks(method_names)
+
+        for name in method_names:
+            original_fn = getattr(self, name, None)
+            proxy_function = self._create_proxy(original_fn, f"before_{name}")
+            if proxy_function:
+                # safe the original function
+                setattr(self, f"__{name}", original_fn)
+                # make the proxy function the new step function
+                setattr(self, name, proxy_function)
+
+    def unregister_hooks(self, method_names: List[str]) -> None:
+        """Remove the method interception hooks, by restoring the original method functions.
+
+        :param method_names: The list of methods as function names, which will be restored.
+        """
+        for method_name in method_names:
+            original_fn = getattr(self, f"__{method_name}", None)
+            if original_fn:
+                setattr(self, method_name, original_fn)
+
     @property
     def __class__(self):
         """
@@ -117,8 +165,9 @@ class Wrapper(Generic[EnvType], ABC):
 
         return cls(env, **kwargs)
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Convert MazeState and MazeAction back into raw action and observation.
 
@@ -189,8 +238,9 @@ class ObservationWrapper(Wrapper[EnvType], ABC):
     def observation(self, observation: Any) -> Any:
         """Observation mapping method."""
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Convert the observations, keep actions the same."""
         obs_dict, act_dict = self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
@@ -215,8 +265,9 @@ class ActionWrapper(Wrapper[EnvType], ABC):
     def reverse_action(self, action: Any) -> Any:
         """Abstract action reverse mapping method."""
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Reverse the actions, keep the observations the same."""
         obs_dict, act_dict = self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
@@ -237,8 +288,9 @@ class RewardWrapper(Wrapper[EnvType], ABC):
     def reward(self, reward: Any) -> Any:
         """Reward mapping method."""
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
