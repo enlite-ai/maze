@@ -11,8 +11,12 @@ from omegaconf import DictConfig, OmegaConf
 
 from maze.core.utils.factory import Factory
 from maze.runner import Runner
+from maze.utils.bcolors import BColors
 from maze.utils.log_stats_utils import clear_global_state
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
+
+# switch matplotlib backend for maze runs (non-interactive)
+matplotlib.use('Agg')
 
 
 def _run_job(cfg: DictConfig) -> None:
@@ -20,6 +24,16 @@ def _run_job(cfg: DictConfig) -> None:
 
     :param cfg: Hydra configuration for the rollout.
     """
+    # switch matplotlib backend for maze runs (non-interactive)
+    matplotlib.use('Agg')
+
+    # print and log config
+    config_str = yaml.dump(OmegaConf.to_container(cfg, resolve=True))
+    with open("hydra_config.yaml", "w") as fp:
+        fp.write(config_str)
+    BColors.print_colored("\n" + config_str, color=BColors.HEADER)
+
+    # run job
     # switch matplotlib backend for maze runs (non-interactive)
     matplotlib.use('Agg')
 
