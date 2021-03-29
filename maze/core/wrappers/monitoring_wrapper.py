@@ -50,11 +50,11 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
 
         substep_name = self._get_substep_name()
 
-        if self.action_logging:
-            self._log_action(substep_name, action)
-
         # take wrapped env step
         obs, rew, done, info = self.env.step(action)
+
+        if self.action_logging:
+            self._log_action(substep_name, action)
 
         if self.observation_logging:
             self._log_observation(substep_name, obs)
