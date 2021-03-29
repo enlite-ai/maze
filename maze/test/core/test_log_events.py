@@ -52,7 +52,8 @@ def test_logs_events():
         Dummy KPIs for dummy environment.
         """
 
-        def calculate_kpis(self, episode_event_log: EpisodeEventLog, last_maze_state: MazeStateType) -> Dict[str, float]:
+        def calculate_kpis(self, episode_event_log: EpisodeEventLog, last_maze_state: MazeStateType) -> Dict[
+            str, float]:
             """
             Returns a dummy KPI.
             """
@@ -67,7 +68,9 @@ def test_logs_events():
             """
             Return events class is subscribed to.
             """
-            return [BaseEnvEvents]
+            additional_interfaces: List[Type[ABC]] = [BaseEnvEvents]
+            parent_interfaces = super().get_interfaces()
+            return additional_interfaces + parent_interfaces
 
     class CustomDummyCoreEnv(DummyCoreEnvironment):
         """
@@ -218,8 +221,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
 
         def __init__(self, observation_space: gym.spaces.space.Space):
             super().__init__(observation_space)
-            pubsub = Pubsub(self.context.event_service)
-            self.dummy_events = pubsub.create_event_topic(_CoreEnvEvents)
+            self.dummy_events = self.pubsub.create_event_topic(_CoreEnvEvents)
 
         def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
             """Dispatch the step event..."""
@@ -231,8 +233,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
 
         def __init__(self, maze_env):
             super().__init__(maze_env)
-            pubsub = Pubsub(self.context.event_service)
-            self.dummy_events = pubsub.create_event_topic(_SubStepEvents)
+            self.dummy_events = self.pubsub.create_event_topic(_SubStepEvents)
 
         def _action0(self, action) -> Tuple[Dict, float, bool, Optional[Dict[str, np.ndarray]]]:
             self.dummy_events.sub_step_event()

@@ -9,11 +9,11 @@ import numpy as np
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
+from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
 from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
-from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
@@ -32,7 +32,9 @@ def test_records_maze_states_and_actions():
             """
             Return events class is subscribed to.
             """
-            return [BaseEnvEvents]
+            additional_interfaces: List[Type[ABC]] = [BaseEnvEvents]
+            parent_interfaces = super().get_interfaces()
+            return additional_interfaces + parent_interfaces
 
     class CustomDummyCoreEnv(DummyCoreEnvironment):
         """

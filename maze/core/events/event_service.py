@@ -99,7 +99,7 @@ class EventService:
 
         return recorder
 
-    def clear_events(self):
+    def clear_events(self) -> None:
         """
         Notify this service about the start of a new step. This should only be called by
         the AgentEnvironmentContext.
@@ -111,6 +111,8 @@ class EventService:
         for topic in self.topics.values():
             topic.events.clear()
 
-        # clear the events collected by pubsub
+    def clear_pubsub(self) -> None:
+        """ Clears the events collected by pubsub
+        """
         for scope in self.scopes:
             scope.clear_events()

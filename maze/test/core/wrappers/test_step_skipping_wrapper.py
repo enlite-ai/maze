@@ -1,12 +1,7 @@
 """ Contains tests for the step-skip-wrapper. """
-from maze.core.log_events.monitoring_events import RewardEvents
-
-from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
-
 from maze.core.log_events.episode_event_log import EpisodeEventLog
-
 from maze.core.log_events.log_events_writer import LogEventsWriter
-
+from maze.core.log_events.monitoring_events import RewardEvents
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.step_skip_wrapper import StepSkipWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -112,6 +107,26 @@ def test_observation_skipping_wrapper_sticky_flat():
         cum_rew += reward
 
         events = env.get_step_events()
-        assert(len([e for e in events if e.interface_method==RewardEvents.reward_original]) == n_steps)
+        assert (len([e for e in events if e.interface_method == RewardEvents.reward_original]) == n_steps)
 
     assert cum_rew == 6
+
+
+def test_skipping_wrapper_and_reward_aggregation():
+    observation_conversion = ObservationConversion()
+
+    env = DummyEnvironment(
+        core_env=DummyCoreEnvironment(observation_conversion.space()),
+        action_conversion=[DictActionConversion()],
+        observation_conversion=[observation_conversion]
+    )
+
+    n_steps = 3
+    env = StepSkipWrapper.wrap(env, n_steps=n_steps, skip_mode='sticky')
+
+    env.reset()
+    for _ in range(4):
+        action = env.action_space.sample()
+        obs, reward, done, info = env.step(action)
+
+        assert(reward == n_steps*10)
