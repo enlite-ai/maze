@@ -134,7 +134,7 @@ class Pubsub(EventScope):
             registered_subscribers = self.interface_to_subscribers[interface_class]
             registered_subscribers.append(new_subscriber)
 
-    def notify_next_step(self):
+    def clear_events(self) -> None:
         """Resets the aggregated events of all registered subscribers
 
         :return: None

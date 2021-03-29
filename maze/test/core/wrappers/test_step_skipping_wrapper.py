@@ -1,4 +1,12 @@
 """ Contains tests for the step-skip-wrapper. """
+from maze.core.log_events.monitoring_events import RewardEvents
+
+from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
+
+from maze.core.log_events.episode_event_log import EpisodeEventLog
+
+from maze.core.log_events.log_events_writer import LogEventsWriter
+
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.step_skip_wrapper import StepSkipWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -34,7 +42,7 @@ def assertion_routine(env: StepSkipWrapper) -> None:
     for idx in range(n_substeps):
 
         if idx == 1:
-            assert env._internal_steps == 1
+            assert env._steps_done == 1
 
         if idx == 2:
             assert 0 in env._step_actions
@@ -50,7 +58,7 @@ def assertion_routine(env: StepSkipWrapper) -> None:
         elif idx == 1:
             assert rew == 8
 
-    assert env._internal_steps == 0
+    assert env._steps_done == 0
 
 
 def test_observation_skipping_wrapper_sticky():
@@ -75,12 +83,25 @@ def test_observation_skipping_wrapper_noop():
     assertion_routine(env)
 
 
+class TestWriter(LogEventsWriter):
+    """Testing writer. Keeps the episode event record."""
+
+    def __init__(self):
+        self.episode_record = None
+
+    def write(self, episode_record: EpisodeEventLog):
+        """Store the record"""
+        self.episode_record = episode_record
+
+
 def test_observation_skipping_wrapper_sticky_flat():
     """ Step skipping unit test """
 
+    n_steps = 3
+
     # instantiate env
     env = GymMazeEnv("CartPole-v0")
-    env = StepSkipWrapper.wrap(env, n_steps=2, skip_mode='sticky')
+    env = StepSkipWrapper.wrap(env, n_steps=n_steps, skip_mode='sticky')
 
     # reset environment and run interaction loop
     env.reset()
@@ -90,4 +111,7 @@ def test_observation_skipping_wrapper_sticky_flat():
         obs, reward, done, info = env.step(action)
         cum_rew += reward
 
-    assert cum_rew == 4
+        events = env.get_step_events()
+        assert(len([e for e in events if e.interface_method==RewardEvents.reward_original]) == n_steps)
+
+    assert cum_rew == 6

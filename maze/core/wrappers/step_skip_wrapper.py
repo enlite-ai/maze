@@ -36,9 +36,7 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         # init action recording
         self._step_actions = dict()
         self._record_actions = True
-        self._internal_steps = 0
-
-        self.hook_before_fn = getattr(self, "before_step", None)
+        self._steps_done = 0
 
     def _record_action(self, action: ActionType) -> None:
         """Record the current action for later replay.
@@ -60,26 +58,18 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         # init reward accumulation
         observation, acc_reward, done, info = None, 0, None, None
 
-        # init event buffering
-        topics = self.env.core_env.context.event_service.topics
-        event_buffer = defaultdict(deque)
-
         # perform n_steps + 1 steps
-        for _ in range(self.n_steps - self._internal_steps):
-            self._internal_steps += 1
+        for _ in range(self.n_steps - self._steps_done):
+            self._steps_done += 1
 
             # If record actions is true record the actions given until one flat step finished
             if self._record_actions:
                 # record selected action for replay
                 self._record_action(action)
                 # execute step
-                if self.hook_before_fn and self._internal_steps != 1:
-                    self.hook_before_fn(action)
                 observation, reward, done, info = self.env.step(action)
                 # accumulate reward and collect events
                 acc_reward += reward
-                for key, topic in topics.items():
-                    event_buffer[key].extend(list(topic.events))
 
                 # check if all sub-steps have been executed once
                 if self.actor_id()[0] == 0 and len(self._step_actions) > 0:
@@ -93,24 +83,16 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
                 # take env step with recorded action
                 step_key = self.actor_id()[0]
                 action = self._step_actions[step_key]
-                if self.hook_before_fn:
-                    self.hook_before_fn(action)
                 observation, reward, done, info = self.env.step(action)
                 # accumulate reward and collect events
                 acc_reward += reward
-                for key, topic in topics.items():
-                    event_buffer[key].extend(list(topic.events))
                 if done:
                     break
-
-        # write buffered events back to topic
-        for key, events in event_buffer.items():
-            topics[key].events = event_buffer[key]
 
         # reset action recording
         self._record_actions = True
         self._step_actions = dict()
-        self._internal_steps = 0
+        self._steps_done = 0
 
         return observation, acc_reward, done, info
 
