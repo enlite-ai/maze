@@ -274,5 +274,5 @@ def test_records_once_per_maze_step_in_multistep_envs():
     for step_id, step_event_log in enumerate(writer.episode_record.step_event_logs):
         if (step_id + 1) % 2 == 0:
             assert len(step_event_log.events.query_events(_CoreEnvEvents.core_env_step_event)) == 1
-        assert len(step_event_log.events.query_events(_SubStepEvents.sub_step_event)) == 1
+        assert len(step_event_log.events.query_events(_SubStepEvents.sub_step_event)) == 2
         assert step_event_log.env_time == step_id

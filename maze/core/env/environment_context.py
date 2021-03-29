@@ -35,6 +35,8 @@ class EnvironmentContext:
         self.step_id = 0
         self._episode_id = None
 
+        self._step_is_prepared = True
+
     @property
     def episode_id(self) -> str:
         """
@@ -56,11 +58,23 @@ class EnvironmentContext:
         This must be called after the env step execution, to notify the services about the start of a new step.
         """
         self.step_id += 1
-        self.event_service.notify_next_step()
+        self._step_is_prepared = False
 
-    def reset_env_episode(self):
+    def reset_env_episode(self) -> None:
         """
         This must be called when resetting the environment, to notify the context about the start of a new episode.
         """
         self.step_id = 0
         self._episode_id = None  # Reset episode ID
+        self.event_service.clear_events()
+
+    def pre_step(self) -> None:
+        """Prepare the event system for a new step.
+
+        Checks internally if this has already been done for the current env step, in this case nothing happens.
+        """
+        if self._step_is_prepared:
+            return
+
+        self._step_is_prepared = True
+        self.event_service.clear_events()

@@ -1,9 +1,10 @@
 """Extension of gym Wrapper to support environment interfaces"""
 from abc import abstractmethod, ABC
-from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, List
+from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, Callable
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
+from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 
@@ -63,53 +64,49 @@ class Wrapper(Generic[EnvType], ABC):
 
         self.fake_class = _FakeClass
 
-        # intercept the step function with a "before_step" call
-        self._register_hooks(["step"])
+        # intercept the first step function call in the wrapper hierarchy for
+        # a reliable place to trigger the event system reset
+        if hasattr(env, "context"):
+            assert isinstance(env.context, EnvironmentContext)
+            self._register_hook("step", env.context.pre_step)
 
-    def _create_proxy(self, original_fn, hook_before: str):
+    @classmethod
+    def _create_proxy(cls, original_fn: Callable, pre_fn: Callable) -> Callable:
         def _proxy_function(*args, **kwargs) -> Any:
-            hook_before_fn(*args, **kwargs)
+            pre_fn()
             return original_fn(*args, **kwargs)
 
-        # this is intentionally outside of the proxy function for performance reasons
-        hook_before_fn = getattr(self, hook_before, None)
-        if hook_before_fn:
-            return _proxy_function
+        return _proxy_function
 
-        # we do not need to change anything in case the hook is not used
-        return None
+    def _register_hook(self, name: str, pre_fn: Callable) -> None:
+        """Intercept the given list of methods (e.g. the "step" method) and trigger the pre function.
 
-    def _register_hooks(self, method_names: List[str]) -> None:
-        """Intercept the given list of methods (e.g. the "step" method) and trigger the "before_step" hook.
-
-        The "before_..." functions should be invoked only once. Therefore this must only be called on the
+        Pre functions are invoked only once. Therefore this must only be called on the
         outermost Wrapper of the entire wrapper - environment stack.
 
-        :param method_names: The list of methods as function names, which will be overwritten by a proxy function.
+        :param name: The method as function name, which will be overwritten by the proxy function.
         """
         # We register hooks only for the outermost wrapper. In case this wrapper was added to an existing wrapper
         # stack, we need to remove the hooks from the previous wrapper.
         if isinstance(self.env, Wrapper):
-            self.env.unregister_hooks(method_names)
+            self.env.unregister_hook(name)
 
-        for name in method_names:
-            original_fn = getattr(self, name, None)
-            proxy_function = self._create_proxy(original_fn, f"before_{name}")
-            if proxy_function:
-                # safe the original function
-                setattr(self, f"__{name}", original_fn)
-                # make the proxy function the new step function
-                setattr(self, name, proxy_function)
+        original_fn = getattr(self, name, None)
+        proxy_function = self._create_proxy(original_fn, pre_fn)
+        if proxy_function:
+            # safe the original function
+            setattr(self, f"__{name}", original_fn)
+            # make the proxy function the new step function
+            setattr(self, name, proxy_function)
 
-    def unregister_hooks(self, method_names: List[str]) -> None:
-        """Remove the method interception hooks, by restoring the original method functions.
+    def unregister_hook(self, method_name: str) -> None:
+        """Remove the method interception hook, by restoring the original method functions.
 
-        :param method_names: The list of methods as function names, which will be restored.
+        :param method_name: The method as function name, which will be restored.
         """
-        for method_name in method_names:
-            original_fn = getattr(self, f"__{method_name}", None)
-            if original_fn:
-                setattr(self, method_name, original_fn)
+        original_fn = getattr(self, f"__{method_name}", None)
+        if original_fn:
+            setattr(self, method_name, original_fn)
 
     @property
     def __class__(self):

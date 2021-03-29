@@ -22,7 +22,7 @@ class EventScope(ABC):
         """
 
     @abstractmethod
-    def notify_next_step(self) -> None:
+    def clear_events(self) -> None:
         """
         Notification after the env step execution about the start of a new step.
         """
@@ -99,7 +99,7 @@ class EventService:
 
         return recorder
 
-    def notify_next_step(self):
+    def clear_events(self):
         """
         Notify this service about the start of a new step. This should only be called by
         the AgentEnvironmentContext.
@@ -111,6 +111,6 @@ class EventService:
         for topic in self.topics.values():
             topic.events.clear()
 
-        # notify the scopes
+        # clear the events collected by pubsub
         for scope in self.scopes:
-            scope.notify_next_step()
+            scope.clear_events()
