@@ -38,6 +38,8 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         self._record_actions = True
         self._internal_steps = 0
 
+        self.hook_before_fn = getattr(self, "before_step", None)
+
     def _record_action(self, action: ActionType) -> None:
         """Record the current action for later replay.
 
@@ -71,6 +73,8 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
                 # record selected action for replay
                 self._record_action(action)
                 # execute step
+                if self.hook_before_fn and self._internal_steps != 1:
+                    self.hook_before_fn(action)
                 observation, reward, done, info = self.env.step(action)
                 # accumulate reward and collect events
                 acc_reward += reward
@@ -89,6 +93,8 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
                 # take env step with recorded action
                 step_key = self.actor_id()[0]
                 action = self._step_actions[step_key]
+                if self.hook_before_fn:
+                    self.hook_before_fn(action)
                 observation, reward, done, info = self.env.step(action)
                 # accumulate reward and collect events
                 acc_reward += reward

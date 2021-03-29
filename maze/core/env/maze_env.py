@@ -81,6 +81,14 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # create event topics
         self.reward_events = self.core_env.context.event_service.create_event_topic(RewardEvents)
 
+    def before_step(self, action: ActionType) -> None:
+        """Intercept the step function with a "before_step" call.
+
+        :param action: the action the agent wants to take.
+        """
+        # increment the environment step, which resets the event collection
+        self.core_env.context.increment_env_step()
+
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
@@ -88,9 +96,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :param action: the action the agent wants to take.
         :return: observation, reward, done, info
         """
-
-        # increment the environment step, which resets the event collection
-        self.core_env.context.increment_env_step()
 
         # compile action object
         maze_state = self.core_env.get_maze_state()
