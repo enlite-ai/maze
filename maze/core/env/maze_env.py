@@ -112,6 +112,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # schedule a new environment step (the event logs are reset at the beginning of the next step)
         self.core_env.context.increment_env_step()
 
+        # ensure that all reward aggregator are cleared
+        self.core_env.context.event_service.clear_pubsub()
+
         return observation, reward, done, info
 
     @override(BaseEnv)

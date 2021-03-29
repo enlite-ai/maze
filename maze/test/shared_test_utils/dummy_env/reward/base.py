@@ -8,6 +8,12 @@ from typing import List, Type
 from maze.core.env.reward import RewardAggregatorInterface
 
 
+class DummyEnvEvents(ABC):
+    """Minimal event class for the DummyCoreEnv"""
+    def twice_per_step(self, value: int):
+        """A dummy event that is called twice per step."""
+
+
 class RewardAggregator(RewardAggregatorInterface):
     """Event aggregation object dealing with cutting rewards.
     """
@@ -16,14 +22,14 @@ class RewardAggregator(RewardAggregatorInterface):
         """
         A emtpy get_interfaces function
         """
-        pass
+        return [DummyEnvEvents]
 
     def summarize_reward(self) -> float:
         """Summarize reward based on the orders and pieces to cut.
 
         :return: the summarized scalar reward.
         """
-        raise NotImplementedError
+        return sum(e.value for e in self.query_events(DummyEnvEvents.twice_per_step))
 
     @classmethod
     def to_scalar_reward(cls, reward: float) -> float:

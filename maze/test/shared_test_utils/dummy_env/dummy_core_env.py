@@ -7,9 +7,10 @@ import gym
 import numpy as np
 
 from maze.core.env.core_env import CoreEnv
+from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
 from maze.core.utils.seeding import set_random_states
-from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator
+from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator, DummyEnvEvents
 
 
 class DummyCoreEnvironment(CoreEnv):
@@ -22,7 +23,12 @@ class DummyCoreEnvironment(CoreEnv):
     def __init__(self, observation_space: gym.spaces.space.Space):
         super().__init__()
 
+        self.pubsub = Pubsub(self.context.event_service)
+        self.dummy_core_events = self.pubsub.create_event_topic(DummyEnvEvents)
+
         self.reward_aggregator = RewardAggregator()
+        self.pubsub.register_subscriber(self.reward_aggregator)
+
         self.observation_space = observation_space
 
     def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
@@ -31,7 +37,10 @@ class DummyCoreEnvironment(CoreEnv):
         :return: state, reward, done, info
         """
 
-        return self.get_maze_state(), 10, False, {}
+        self.dummy_core_events.twice_per_step(3)
+        self.dummy_core_events.twice_per_step(7)
+
+        return self.get_maze_state(), self.reward_aggregator.summarize_reward(), False, {}
 
     def get_maze_state(self) -> Dict[str, np.ndarray]:
         """

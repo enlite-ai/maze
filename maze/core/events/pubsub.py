@@ -60,7 +60,8 @@ class Subscriber(ABC):
 
         for ev in event_spec:
             assert self._get_class_that_defined_method(ev) in self.get_interfaces(), \
-                f"Event {ev} queried, but class not subscribed. Check your get_interfaces() implementation."
+                f"Event {ev} queried, but class not subscribed. Check your get_interfaces() implementation " \
+                f"{self.get_interfaces()}."
 
         return self.events.query_events(event_spec)
 
