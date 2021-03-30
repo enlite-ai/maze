@@ -36,9 +36,12 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         self.reward_logging = reward_logging
 
         # create event topics
-        self.observation_events = self.core_env.context.event_service.create_event_topic(ObservationEvents)
-        self.action_events = self.core_env.context.event_service.create_event_topic(ActionEvents)
-        self.reward_events = self.core_env.context.event_service.create_event_topic(RewardEvents)
+        if self.observation_logging:
+            self.observation_events = self.core_env.context.event_service.create_event_topic(ObservationEvents)
+        if self.action_logging:
+            self.action_events = self.core_env.context.event_service.create_event_topic(ActionEvents)
+        if self.reward_logging:
+            self.reward_events = self.core_env.context.event_service.create_event_topic(RewardEvents)
 
         # maintain for multi-step environments
         self._action_space: Optional[spaces.Dict] = None
@@ -98,6 +101,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
             return None
 
     def _log_observation(self, substep_name: Union[str, int], observation: ObservationType) -> None:
+
         # log processed observations
         for observation_name, observation_value in observation.items():
             self.observation_events.observation_processed(
