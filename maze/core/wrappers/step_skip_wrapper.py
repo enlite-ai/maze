@@ -1,6 +1,5 @@
 """ Implements step skipping as an environment wrapper. """
 import copy
-from collections import defaultdict, deque
 from typing import Any, Dict, Tuple, Union, Optional
 
 from maze.core.annotations import override
