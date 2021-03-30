@@ -44,8 +44,7 @@ def test_observation_monitoring():
         # Observation will get reported in the next step (when the agent is actually acting on it)
         obs = env.step(env.action_space.sample())[0]
 
-        obs_event_count = 8 if ii == 0 else 4
-        assert len(env.core_env.context.event_service.topics[ObservationEvents].events) == obs_event_count
+        assert len(env.core_env.context.event_service.topics[ObservationEvents].events) == 4
 
         for event in env.core_env.context.event_service.topics[ObservationEvents].events:
             assert issubclass(event.interface_class, ObservationEvents)

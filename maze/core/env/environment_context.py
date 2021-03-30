@@ -10,6 +10,9 @@ several benefits
 """
 
 import uuid
+from typing import Optional
+
+from maze.utils.bcolors import BColors
 
 
 class EnvironmentContext:
@@ -35,7 +38,10 @@ class EnvironmentContext:
         self.step_id = 0
         self._episode_id = None
 
-        self._step_is_prepared = True
+        self.last_env_time: Optional[int] = None
+        self._should_clear_events = True
+
+        self._increment_env_step_warning_printed = False
 
     @property
     def episode_id(self) -> str:
@@ -57,8 +63,15 @@ class EnvironmentContext:
         """
         This must be called after the env step execution, to notify the services about the start of a new step.
         """
+        if self._should_clear_events and not self._increment_env_step_warning_printed:
+            BColors.print_colored("Events have not been cleared at the start of the current step!"
+                                  "If you called the step function inside a wrapper, look into the "
+                                  "`Wrapper.keep_inner_hooks` flag.", BColors.WARNING)
+            # log only once
+            self._increment_env_step_warning_printed = True
+
         self.step_id += 1
-        self._step_is_prepared = False
+        self._should_clear_events = True
 
     def reset_env_episode(self) -> None:
         """
@@ -67,14 +80,15 @@ class EnvironmentContext:
         self.step_id = 0
         self._episode_id = None  # Reset episode ID
         self.event_service.clear_events()
+        self.event_service.clear_pubsub()
 
     def pre_step(self) -> None:
         """Prepare the event system for a new step.
 
         Checks internally if this has already been done for the current env step, in this case nothing happens.
         """
-        if self._step_is_prepared:
+        if not self._should_clear_events:
             return
 
-        self._step_is_prepared = True
+        self._should_clear_events = False
         self.event_service.clear_events()

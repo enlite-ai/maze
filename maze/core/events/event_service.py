@@ -111,6 +111,9 @@ class EventService:
         for topic in self.topics.values():
             topic.events.clear()
 
+        # always clear the pubsub events to ensure that no events in the RewardAggregator are left
+        self.clear_pubsub()
+
     def clear_pubsub(self) -> None:
         """ Clears the events collected by pubsub
         """
