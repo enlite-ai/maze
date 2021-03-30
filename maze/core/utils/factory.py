@@ -77,7 +77,7 @@ class Factory(Generic[BaseType]):
             with open_dict(config):
                 del config["_"]
 
-        o = instantiate(config, _recursive_=False, **kwargs)
+        o = instantiate(config, _recursive_=config.get("_recursive_", False), **kwargs)
         assert isinstance(o, self.base_type), f"{o} is not of type {self.base_type}"
 
         return o
