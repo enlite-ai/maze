@@ -2,6 +2,7 @@ import multiprocessing
 from typing import Callable, List, Iterable, Any, Tuple, Dict, Optional
 
 import cloudpickle
+import matplotlib
 import numpy as np
 
 from maze.core.env.action_conversion import ActionType
@@ -15,6 +16,9 @@ from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_li
 
 
 def _worker(remote, parent_remote, env_fn_wrapper):
+    # switch to non-interactive matplotlib backend
+    matplotlib.use('Agg')
+
     parent_remote.close()
     env: MazeEnv = env_fn_wrapper.var()
 
