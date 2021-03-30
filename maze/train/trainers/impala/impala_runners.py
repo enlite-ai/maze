@@ -24,7 +24,7 @@ from omegaconf import DictConfig
 
 @dataclass
 class ImpalaRunner(TrainingRunner):
-    """Runner for single-threaded training, based on DummyStructuredDistributedEnv."""
+    """Common superclass for IMPALA runners, implementing the main training controls."""
 
     @override(TrainingRunner)
     def run(self, cfg: DictConfig) -> None:
@@ -97,7 +97,7 @@ class ImpalaRunner(TrainingRunner):
 
 @dataclass
 class ImpalaDevRunner(ImpalaRunner):
-    """Runner for single-threaded training, based on DummyStructuredDistributedEnv."""
+    """Runner for single-threaded training, based on SequentialVectorEnv."""
 
     def create_distributed_rollout_actors(
             self,
@@ -124,7 +124,7 @@ class ImpalaDevRunner(ImpalaRunner):
 
 @dataclass
 class ImpalaLocalRunner(ImpalaRunner):
-    """Runner for locally distributed training, based on SubprocStructuredDistributedEnv."""
+    """Runner for locally distributed training, based on SubprocVectorEnv."""
 
     start_method: str
     """Type of start method used for multiprocessing ('forkserver', 'spawn', 'fork')"""

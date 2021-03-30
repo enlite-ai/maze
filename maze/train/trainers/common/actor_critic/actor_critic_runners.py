@@ -76,7 +76,7 @@ class ACRunner(TrainingRunner):
 
 
 class ACDevRunner(ACRunner):
-    """Runner for single-threaded training, based on DummyStructuredDistributedEnv."""
+    """Runner for single-threaded training, based on SequentialVectorEnv."""
 
     def create_distributed_env(self,
                                env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
@@ -90,7 +90,7 @@ class ACDevRunner(ACRunner):
 
 
 class ACLocalRunner(ACRunner):
-    """Runner for locally distributed training, based on DummyStructuredDistributedEnv."""
+    """Runner for locally distributed training, based on SubprocVectorEnv."""
 
     def create_distributed_env(self,
                                env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
