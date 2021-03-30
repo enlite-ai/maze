@@ -234,15 +234,19 @@ for A2C is A2CAlgorithmConfig. We will use the default parameters, which can als
         max_grad_norm=0.0,
         device='cpu')
 
-In order to use the distributed trainers, the previously created env factory is supplied to one of Maze's
-distribution classes:
+In order to use the distributed trainers, we create a vector environment (i.e., multiple environment
+instances encapsulated to be stepped simultaneously) using the environment factory function:
 
 .. code-block:: python
 
-    train_envs = DummyStructuredDistributedEnv(
+    train_envs = SequentialVectorEnv(
         [cartpole_env_factory for _ in range(2)], logging_prefix="train")
-    eval_envs = DummyStructuredDistributedEnv(
+    eval_envs = SequentialVectorEnv(
         [cartpole_env_factory for _ in range(2)], logging_prefix="eval")
+
+(In this case, we create sequential vector environments, i.e. all environment instances are
+located in the main process and stepped sequentially.
+When we are ready to scale the training, we might want to use e.g. sub-process distributed vector environments.)
 
 For this example, we want to save the parameters of the best model in terms of mean achieved reward. This is done
 with the
