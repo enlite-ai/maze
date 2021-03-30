@@ -6,6 +6,7 @@ from typing import TypeVar, Union
 
 import numpy as np
 import torch
+
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.log_stats.log_stats import LogStatsLevel
@@ -54,7 +55,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
         :param policy: Multi-step policy encapsulating the policy networks
         """
-        observation = self.env.reset()
+        observation = self.reset()
 
         start_time = time.time()
 
@@ -62,17 +63,17 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
             if self.abort:
                 raise ESAbortException()
 
-            sub_step_key, actor_id = self.env.actor_id()
+            sub_step_key, actor_id = self.actor_id()
             with torch.no_grad():
                 action = policy.compute_action(observation, policy_id=sub_step_key, deterministic=False)
 
-            observation, reward, done, _ = self.env.step(convert_to_numpy(action, cast=None, in_place=False))
+            observation, reward, done, _ = self.step(convert_to_numpy(action, cast=None, in_place=False))
 
             if done:
                 break
 
         # reset makes the episode stats available
-        self.env.reset()
+        self.reset()
 
         logger.debug(f"Rollout took {(time.time() - start_time) :.1f} seconds")
 
@@ -86,7 +87,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
         self.rollout(policy)
 
         r = ESRolloutResult(is_eval=True)
-        aggregator = self.env.get_stats(LogStatsLevel.EPISODE)
+        aggregator = self.get_stats(LogStatsLevel.EPISODE)
         r.episode_stats.append(aggregator.last_stats)
 
         return r
@@ -113,7 +114,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
         params = get_flat_parameters(policy)
 
         # prepare the aggregator to receive the result statistics
-        aggregator = self.env.get_stats(LogStatsLevel.EPISODE)
+        aggregator = self.get_stats(LogStatsLevel.EPISODE)
 
         r.noise_indices.append(noise_idx)
 
