@@ -49,10 +49,15 @@ class Wrapper(Generic[EnvType], ABC):
     gym.core.Wrapper assumes the existence of certain attributes (action_space, observation_space, reward_range,
     metadata) and duplicates these attributes. This behaviour is unnecessary, because __getattr__ makes these
     members of the inner environment transparently available anyway.
+
+    :param keep_inner_hooks: Set this to True if the Wrapper calls additional step() functions, as e.g. in a frame
+                             skip scenario. In that case the hooks are not only invoked at the root of the wrapper
+                             hierarchy, but additionally also by this wrapper.
     """
 
-    def __init__(self, env: EnvType):
+    def __init__(self, env: EnvType, keep_inner_hooks=False):
         self.env = env
+        self.keep_inner_hooks = keep_inner_hooks
 
         base_classes = self._base_classes(env)
         base_classes = list(dict.fromkeys(base_classes))
@@ -81,14 +86,14 @@ class Wrapper(Generic[EnvType], ABC):
     def _register_hook(self, name: str, pre_fn: Callable) -> None:
         """Intercept the given list of methods (e.g. the "step" method) and trigger the pre function.
 
-        Pre functions are invoked only once. Therefore this must only be called on the
-        outermost Wrapper of the entire wrapper - environment stack.
+        Pre-functions are usually only invoked on the outermost Wrapper of the entire wrapper - environment stack.
+        But there is no guarantee, that hooks will be invoked exactly once per step, see the `keep_inner_hooks` flag.
 
         :param name: The method as function name, which will be overwritten by the proxy function.
         """
         # We register hooks only for the outermost wrapper. In case this wrapper was added to an existing wrapper
         # stack, we need to remove the hooks from the previous wrapper.
-        if isinstance(self.env, Wrapper):
+        if isinstance(self.env, Wrapper) and not self.keep_inner_hooks:
             self.env.unregister_hook(name)
 
         original_fn = getattr(self, name, None)

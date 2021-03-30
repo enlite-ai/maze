@@ -107,7 +107,7 @@ def test_observation_skipping_wrapper_sticky_flat():
         cum_rew += reward
 
         events = env.get_step_events()
-        assert (len([e for e in events if e.interface_method == RewardEvents.reward_original]) == n_steps)
+        assert (len([e for e in events if e.interface_method == RewardEvents.reward_original]) == 1)
 
     assert cum_rew == 6
 
