@@ -30,9 +30,6 @@ def _run_job(cfg: DictConfig) -> None:
         fp.write(config_str)
     BColors.print_colored("\n" + config_str, color=BColors.HEADER)
 
-    # switch matplotlib backend for maze runs (non-interactive)
-    matplotlib.use('Agg')
-
     # run job
     print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
     runner = Factory(base_type=Runner).instantiate(cfg.runner)
