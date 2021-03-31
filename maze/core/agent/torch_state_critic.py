@@ -26,7 +26,7 @@ class TorchStateCritic(TorchModel, StateCritic):
         TorchModel.__init__(self, device=device)
 
     @override(StateCritic)
-    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> torch.Tensor:
+    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.core.agent.state_critic.StateCritic`
         """
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=False)

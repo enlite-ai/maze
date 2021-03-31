@@ -1,7 +1,4 @@
 import pytest
-from hydra.experimental import initialize_config_module, compose
-
-from maze.maze_cli import maze_run
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 
 

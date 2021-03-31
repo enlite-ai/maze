@@ -48,7 +48,7 @@ class BCValidationEvaluator(Evaluator):
             total_loss = []
 
             for iteration, data in enumerate(self.data_loader, 0):
-                observation_dict, action_dict = data
+                observation_dict, action_dict, _ = data
                 convert_to_torch(action_dict, device=policy.device, cast=None, in_place=True)
 
                 total_loss.append(

@@ -25,7 +25,7 @@ class StateCritic(ABC):
         """
 
     @abstractmethod
-    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> torch.Tensor:
+    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> Dict[str, torch.Tensor]:
         """Query a critic that corresponds to the given ID for the state value.
 
         :param observation: Current observation of the environment

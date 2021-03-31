@@ -45,3 +45,32 @@ class ImitationEvents(ABC):
     @define_stats_grouping('step_id', "subspace_name")
     def box_mean_abs_deviation(self, step_id: Union[str, int], subspace_name: str, value: int):
         """Mean absolute deviation for box (continuous) subspaces."""
+
+
+class CriticImitationEvents(ABC):
+    """Event interface defining statistics emitted by the imitation learning trainers."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
+    def value(self, step_id: Union[str, int], value: float):
+        """Predicted value of the step critics."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
+    def critic_loss(self, step_id: Union[str, int], value: float):
+        """Optimization loss of the step critics."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
+    def critic_l2_norm(self, step_id: Union[str, int], value: float):
+        """L2 norm of the step critics."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
+    def critic_grad_norm(self, step_id: Union[str, int], value: float):
+        """Gradient norm of the step critics."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
+    def mean_abs_deviation(self, step_id: Union[str, int], value: int):
+        """Mean absolute deviation for actual value."""
