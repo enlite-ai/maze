@@ -54,6 +54,9 @@ class StructuredSpacesRecord:
     batch_shape: Optional[List[int]] = None
     """If the record is batched, this is the shape of the batch."""
 
+    discounted_returns: Optional[Dict[StepKeyType, Union[float, np.ndarray]]] = None
+    """Dictionary of (discounted) returns."""
+
     @classmethod
     def stack_records(cls, records: List['StructuredSpacesRecord']) -> StateRecord:
         """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
@@ -111,7 +114,7 @@ class StructuredSpacesRecord:
         :return: Converted spaces record.
         """
         obs = state_record.maze_state.observation if isinstance(state_record.maze_state,
-                                                                        RawState) else state_record.maze_state
+                                                                RawState) else state_record.maze_state
         action = state_record.maze_action.action if isinstance(state_record.maze_action,
                                                                RawMazeAction) else state_record.maze_action
 

@@ -60,14 +60,15 @@ class InMemoryDataset(Dataset, ABC):
         """
         return len(self.step_records)
 
-    def __getitem__(self, index: int) -> Tuple[Dict[Union[int, str], Any], Dict[Union[int, str], Any]]:
+    def __getitem__(self, index: int) \
+            -> Tuple[Dict[Union[int, str], Any], Dict[Union[int, str], Any], Dict[Union[int, str], float]]:
         """Get a record.
 
         :param index: Index of the record to get.
         :return: A tuple of (observation_dict, action_dict). Note that the dictionaries only have multiple entries
                  in structured scenarios.
         """
-        return self.step_records[index].observations, self.step_records[index].actions
+        return self.step_records[index].observations, self.step_records[index].actions, self.step_records[index].discounted_returns
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
@@ -167,6 +168,8 @@ class InMemoryDataset(Dataset, ABC):
                                                                     first_step_in_episode=step_id == 0)
 
             step_records.append(step_record)
+
+        # TODO pre-process trajectory
 
         return step_records
 
