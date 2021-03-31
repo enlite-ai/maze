@@ -1,7 +1,7 @@
 """Trainer class for behavioral cloning."""
 
 from dataclasses import dataclass
-from typing import Tuple, Dict, Any, Union, Optional
+from typing import Tuple, Dict, Any, Union
 
 import torch
 from maze.core.agent.torch_policy import TorchPolicy
@@ -46,7 +46,7 @@ class BCTrainer(Trainer):
     imitation_events: ImitationEvents = train_stats.create_event_topic(ImitationEvents)
     """Imitation-specific training events"""
 
-    def train(self, n_epochs: int, evaluator: Optional[Evaluator], eval_every_k_iterations: int = None) -> None:
+    def train(self, n_epochs: int, evaluator: Evaluator, eval_every_k_iterations: int = None) -> None:
         """Run training.
 
         :param n_epochs: How many epochs to train for
@@ -56,10 +56,9 @@ class BCTrainer(Trainer):
                                         evaluations will run on epoch end only.
         """
         for epoch in range(n_epochs):
-            # print(f"\n********** Epoch {epoch + 1} started **********")
-            if evaluator:
-                evaluator.evaluate(self.policy)
-                increment_log_step()
+            print(f"\n********** Epoch {epoch + 1} started **********")
+            evaluator.evaluate(self.policy)
+            increment_log_step()
 
             for iteration, data in enumerate(self.data_loader, 0):
                 self._run_iteration(data)
@@ -71,10 +70,9 @@ class BCTrainer(Trainer):
                     evaluator.evaluate(self.policy)
                     increment_log_step()
 
-        # print(f"\n********** Final evaluation **********")
-        if evaluator:
-            evaluator.evaluate(self.policy)
-        # increment_log_step()
+        print(f"\n********** Final evaluation **********")
+        evaluator.evaluate(self.policy)
+        increment_log_step()
 
     def load_state_dict(self, state_dict: Dict) -> None:
         """Set the model and optimizer state.
@@ -93,7 +91,7 @@ class BCTrainer(Trainer):
         self.policy.train()
         self.optimizer.zero_grad()
 
-        observation_dict, action_dict, _ = data
+        observation_dict, action_dict = data
         convert_to_torch(action_dict, device=self.policy.device, cast=None, in_place=True)
 
         total_loss = self.loss.calculate_loss(policy=self.policy, observation_dict=observation_dict,
