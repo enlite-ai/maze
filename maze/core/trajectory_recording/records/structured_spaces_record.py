@@ -1,7 +1,7 @@
 """Recording spaces (i.e., raw actions and observations) from a single environment step."""
 
 from dataclasses import dataclass
-from typing import Dict, Optional, List, Union
+from typing import Optional, List, Union
 
 import numpy as np
 import torch
@@ -11,8 +11,9 @@ from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
 from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
 from maze.core.trajectory_recording.records.state_record import StateRecord
+from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
-from maze.train.utils.train_utils import stack_numpy_dict_list
 
 StepKeyType = Union[str, int]
 
@@ -27,26 +28,7 @@ class StructuredSpacesRecord:
     in a single batch.
     """
 
-    observations: Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]
-    """Dictionary of observations available at sub-step (i.e., those available to the policy for action inferrence)."""
-
-    actions: Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]
-    """Dictionary of actions recorded during the step."""
-
-    rewards: Optional[Dict[StepKeyType, Union[float, np.ndarray, torch.Tensor]]]
-    """Dictionary of rewards recorded during the step."""
-
-    dones: Optional[Dict[StepKeyType, Union[float, bool, np.ndarray, torch.Tensor]]]
-    """Dictionary of dones recorded during the step."""
-
-    infos: Optional[Dict[StepKeyType, Dict]] = None
-    """Dictionary of info dictionaries recorded during the step."""
-
-    next_observations: Optional[Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]] = None
-    """Dictionary of observations produced at sub-step (i.e., results of the action taken in this sub-step)."""
-
-    logits: Optional[Dict[StepKeyType, Dict[str, Union[np.ndarray, torch.Tensor]]]] = None
-    """Dictionary of dones recorded during the step."""
+    substep_records: List[SpacesRecord]
 
     event_log: Optional[StepEventLog] = None
     """Log of events recorded during the whole step."""
@@ -56,12 +38,6 @@ class StructuredSpacesRecord:
 
     episode_stats: Optional[LogStats] = None
     """Aggregated statistics from the last episode. Expected to be attached only to terminal steps of episodes."""
-
-    batch_shape: Optional[List[int]] = None
-    """If the record is batched, this is the shape of the batch."""
-
-    discounted_returns: Optional[Dict[StepKeyType, Union[float, np.ndarray]]] = None
-    """Dictionary of (discounted) returns."""
 
     @classmethod
     def stack_records(cls, records: List['StructuredSpacesRecord']) -> 'StructuredSpacesRecord':
@@ -73,38 +49,24 @@ class StructuredSpacesRecord:
         :param records: Records to stack.
         :return: Single stacked record, containing all the given records, and having the corresponding batch shape.
         """
-        logits_present = records[0].logits is not None
-        next_observations_present = records[0].next_observations is not None
+        stacked_substeps = []
 
-        stacked_record = StructuredSpacesRecord(
-            observations={}, actions={}, logits={} if logits_present else None,
-            next_observations={} if next_observations_present else None,
-            rewards=stack_numpy_dict_list([r.rewards for r in records]),
-            dones=stack_numpy_dict_list([r.dones for r in records]))
+        for substep_records in zip(*[r.substep_records for r in records]):
+            stacked_substeps.append(SpacesRecord.stack(substep_records))
 
-        # Actions and observations are nested dict spaces => need to go one level down with stacking
-        for step_key in records[0].observations.keys():
-            stacked_record.actions[step_key] = stack_numpy_dict_list([r.actions[step_key] for r in records])
-            stacked_record.observations[step_key] = stack_numpy_dict_list([r.observations[step_key] for r in records])
-
-            if logits_present:
-                stacked_record.logits[step_key] = stack_numpy_dict_list([r.logits[step_key] for r in records])
-
-            if next_observations_present:
-                stacked_record.next_observations[step_key] = stack_numpy_dict_list(
-                    [r.next_observations[step_key] for r in records])
-
-        stacked_record.batch_shape = [len(records)] + records[0].batch_shape if records[0].batch_shape \
-            else [len(records)]
-
-        return stacked_record
+        return StructuredSpacesRecord(substep_records=stacked_substeps)
 
     def is_batched(self) -> bool:
         """Return whether this record is batched or not.
 
         :return: whether this record is batched or not
         """
-        return self.batch_shape is not None
+        return self.substep_records[0].batch_shape is not None
+
+    @property
+    def batch_shape(self):
+        """Return whether this record is batched or not."""
+        return self.substep_records[0].batch_shape is not None
 
     def is_done(self) -> bool:
         """Return true if the episode ended during this structured step.
@@ -112,6 +74,22 @@ class StructuredSpacesRecord:
         :return: true if the episode ended during this structured step
         """
         return np.any(list(self.dones.values()))
+
+    @property
+    def actions(self):
+        return {r.substep_key: r.action for r in self.substep_records}
+
+    @property
+    def observations(self):
+        return {r.substep_key: r.observation for r in self.substep_records}
+
+    @property
+    def rewards(self):
+        return {r.substep_key: r.reward for r in self.substep_records}
+
+    @property
+    def dones(self):
+        return {r.substep_key: r.done for r in self.substep_records}
 
     @classmethod
     def converted_from(cls, state_record: StateRecord, conversion_env: MazeEnv, first_step_in_episode: bool) \
@@ -175,3 +153,9 @@ class StructuredSpacesRecord:
             self.next_observations = convert_to_torch(self.next_observations, device=device, cast=None, in_place=True)
 
         return self
+
+    def __repr__(self):
+        repr = "Structured spaces record:"
+        for substep_record in self.substep_records:
+            repr += f"\n - {substep_record}"
+        return repr
