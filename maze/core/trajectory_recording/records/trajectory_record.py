@@ -27,11 +27,11 @@ class TrajectoryRecord(Generic[StepRecordType]):
         """Length of the trajectory"""
         return len(self.step_records)
 
-    def append(self, step_record: StepRecordType) -> 'TrajectoryRecord':
+    def append(self, step_record: StepRecordType):
         """Append a single step record."""
         self.step_records.append(step_record)
 
-    def extend(self, trajectory_record: 'TrajectoryRecord') -> 'TrajectoryRecord':
+    def extend(self, trajectory_record: 'TrajectoryRecord'):
         """Extend this trajectory with another trajectory."""
         self.step_records.extend(trajectory_record.step_records)
 

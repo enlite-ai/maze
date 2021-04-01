@@ -3,9 +3,6 @@
 from dataclasses import dataclass
 from typing import Optional, List, Union
 
-import numpy as np
-import torch
-
 from maze.core.env.maze_env import MazeEnv
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
@@ -28,7 +25,7 @@ class StructuredSpacesRecord:
     in a single batch.
     """
 
-    substep_records: List[SpacesRecord]
+    substep_records: List[SpacesRecord] = None
 
     event_log: Optional[StepEventLog] = None
     """Log of events recorded during the whole step."""
@@ -38,6 +35,14 @@ class StructuredSpacesRecord:
 
     episode_stats: Optional[LogStats] = None
     """Aggregated statistics from the last episode. Expected to be attached only to terminal steps of episodes."""
+
+    def __post_init__(self):
+        if self.substep_records is None:
+            self.substep_records = []
+
+    def append(self, substep_record: SpacesRecord) -> None:
+        """Append a sub-step record."""
+        self.substep_records.append(substep_record)
 
     @classmethod
     def stack_records(cls, records: List['StructuredSpacesRecord']) -> 'StructuredSpacesRecord':
@@ -66,14 +71,14 @@ class StructuredSpacesRecord:
     @property
     def batch_shape(self):
         """Return whether this record is batched or not."""
-        return self.substep_records[0].batch_shape is not None
+        return self.substep_records[0].batch_shape
 
     def is_done(self) -> bool:
         """Return true if the episode ended during this structured step.
 
         :return: true if the episode ended during this structured step
         """
-        return np.any(list(self.dones.values()))
+        return self.substep_records[-1].done
 
     @property
     def actions(self):
@@ -90,6 +95,10 @@ class StructuredSpacesRecord:
     @property
     def dones(self):
         return {r.substep_key: r.done for r in self.substep_records}
+
+    @property
+    def logits(self):
+        return {r.substep_key: r.logits for r in self.substep_records}
 
     @classmethod
     def converted_from(cls, state_record: StateRecord, conversion_env: MazeEnv, first_step_in_episode: bool) \
