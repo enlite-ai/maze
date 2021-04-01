@@ -21,7 +21,7 @@ It is easily possible, but not necessary, to include multiple policies in a mult
     :width: 80 %
     :align: center
 
-    Control flow within a multi-agent scenario. Note that we assume a single policy here. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
+    Control flow within a multi-agent scenario assuming a single policy. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
 When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several agents and therefore several actors - more specifically, in a setup with *n* agents we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
 

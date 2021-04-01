@@ -34,9 +34,10 @@ Control Flow
     :width: 80 %
     :align: center
 
-    Control flow within a HRL scenario. Note that we assume a single agent here. Building the task hierarchy happens implicitly in :meth:`~maze.core.env.maze_env.MazeEnv.step`. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
+    Control flow within a HRL scenario assuming a single agent. The task hierarchy is built implicitly in :meth:`~maze.core.env.maze_env.MazeEnv.step`. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
 The control flow for HRL scenarios doesn't obviously reflect the hierarchical aspect. This is because the definition and execution of the task hierarchy happens implicitly in :meth:`~maze.core.env.maze_env.MazeEnv.step`: the environment determines which task is currently active and which task should be active at the end of the current step. This allows for an arbitrarily flexible and complex task dependency graph. The possibility to implement a different :class:`ObservationConversionInterface <maze.core.env.observation_conversion.ObservationConversionInterface>` and :class:`ActionConversionInterface <maze.core.env.action_conversion.ActionConversionInterface>` for each policy enables to tailor actions and observations to the respective task.
+This control flow bears strong similarity to the one for `multi-stepping<struct_env_multistep>` - in fact, multi-stepping could be seen as a special kind of hierarchical RL with a fixed task sequence and a single level of hierarchy.
 
 Where to Go Next
 ----------------

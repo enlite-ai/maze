@@ -3,10 +3,12 @@
 Structured Environments
 =======================
 
-The basic reinforcement learning formulation assumes a single entity in an environment, enacting one policy-suggested action per step to fulfill exactly one task. We refer to this as a *flat* environment. A classic example for this is the cartpole balancing problem, in which a single entity attempts to fulfill the single task of balancing a cartpole. However, some problems incentivize or even require to generalize these assumptions:
+The basic reinforcement learning formulation assumes a single entity in an environment, enacting one action suggested by a single policy per step to fulfill exactly one task. We refer to this as a *flat* environment. A classic example for this is the cartpole balancing problem, in which a single entity attempts to fulfill the single task of balancing a cartpole. However, some problems incentivize or even require to challenge these assumptions:
 
- #. *Single entity*: Plenty of real-world scenarios motivate taking more than one acting entities into account. E.g.: `optimizing delivery with a fleet of vehicles <https://en.wikipedia.org/wiki/Vehicle_routing_problem>`_ involves emergent effects and interdependences between individual vehicles, such as that the availability and suitability of orders for any given vehicle depends on the proximity and activity of other vehicles. Treating them in isolation from each other is inefficient and detrimental to the learning process. While it is possible to have a single agent represent and coordinate all vehicles simultaneously, it can be more efficient to train multiple agents to facilitate collaborative behaviour for one vehicle each.
- #. *One action per step*: Some usecases, such as `cutting raw material according to customer specifications with as little waste as possible <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_, necessarily involve a well-defined sequence of actions. Stock-cutting involves (a) the selection of a piece of suitable size and (b) cutting it in an appropriate manner. We know that (a) is always followed by (b) and that the latter is a necessary precondition for the former. We can incorporate this information in our RL control loop to facilitate a faster learning process by enforcing that the environment should always execute two actions in a single step: Select, then cut. The sequential nature of such actions often also lends itself to :ref:`action masking<adding_masking>` to increase learning efficiency [#]_.
+ #. | *Single entity*: Plenty of real-world scenarios motivate taking more than one acting entities into account. E.g.: `optimizing delivery with a fleet of vehicles <https://en.wikipedia.org/wiki/Vehicle_routing_problem>`_ involves emergent effects and interdependences between individual vehicles, such as that the availability and suitability of orders for any given vehicle depends on the proximity and activity of other vehicles.
+    | Treating them in isolation from each other is inefficient and detrimental to the learning process. While it is possible to have a single agent represent and coordinate all vehicles simultaneously, it can be more efficient to train multiple agents to facilitate collaborative behaviour for one vehicle each.
+ #. | *One action suggested by a single policy*: Some usecases, such as `cutting raw material according to customer specifications with as little waste as possible <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_, necessarily involve a well-defined sequence of actions. Stock-cutting involves (a) the selection of a piece of suitable size and (b) cutting it in an appropriate manner. We know that (a) is always followed by (b) and that the latter is a necessary precondition for the former.
+    | We can incorporate this information in our RL control loop to facilitate a faster learning process by enforcing the execution of policies in a certain order: E.g. select, then cut. This entails that while the action is still chosen by the policy, the policy itself is chosen by the environment. The sequential nature of such actions often lends itself to :ref:`action masking<adding_masking>` to increase learning efficiency [#]_.
  #. *Exactly one task*: Occasionally, the problem we want to solve cannot be neatly formulated as a single task, but consists of a hierarchy of tasks. This is exemplified by `pick and place robots <https://6river.com/what-is-a-pick-and-place-robot/>`_. They solve a complex task, which is reflected by the associated hierarchy of goals: The overall goal requires (a) reaching the target object, (b) grasping the target object, (c) moving the target object to target location and (d) placing the target object safey in the target location. Solving this task cannot be reduced to a single goal.
 
 Maze addresses these problems by introducing :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`. We cover some of its applications and their broader context, including literature and examples, in a series of articles:
@@ -64,10 +66,9 @@ The actor concept and the mechanisms supporting it are thus capable of
 - representing an arbitrary number of agents;
 - identifying which policy should be applied for which agent via the provision of :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`;
 - representing an arbitrary number of actors with flexible lifecycles that may differ from their environment's;
-- supporting an arbitrary nesting of policies (and in further abstraction tasks);
+- supporting an arbitrary nesting of policies (and - in further abstraction - tasks);
 - selecting actions via the policy fitting the currently active actor;
-- preprocessing actions and observations w.r.t. the currently used actor/policy;
-- querying actions from policies on demand, not just after a step has been completed.
+- preprocessing actions and observations w.r.t. the currently used actor/policy.
 
 This allows to bypass the three restrictions laid out at the outset.
 
@@ -79,10 +80,10 @@ Where to Go Next
 
 Read about some of the patterns and capabilities possible with structured environments:
 
-- :ref:`Flat environments<struct_env_flat>`.
-- :ref:`Multi-stepping<struct_env_multistep>`.
-- :ref:`Multi-agent RL<struct_env_multiagent>`.
-- :ref:`Hierarchical RL<struct_env_hierarchical>`.
+- :ref:`Flat environments<struct_env_flat>`
+- :ref:`Multi-stepping<struct_env_multistep>`
+- :ref:`Multi-agent RL<struct_env_multiagent>`
+- :ref:`Hierarchical RL<struct_env_hierarchical>`
 
 The underlying communication pathways are identical for all instances of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`. Multi-stepping, multi-agent, hierarchical or other setups are all particular manifestations of structured environments and its actor mechanism. They are orthogonal to each other and can be used in any combination.
 

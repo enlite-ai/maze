@@ -10,10 +10,7 @@ Multi-Stepping
 
 We define multi-stepping as the execution of more than one action (or sub-step) in a single step. This is motivated by problem settings in which a certain sequence of actions is known a priori. In such cases incorporating this knowledge can significantly increase learning efficiency. The `stock cutting problem <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_ poses an example: It is known, independently from the specifics of the environment's state, that fulfilling a single customer order for a piece involves (a) picking a piece at least as big as the ordered item (b) cutting it to the correct size.
 
-While it is not trivial to decide which items to pick for which orders and how to cut them, the sequence of piece selection before cutting is constant - there is no advantage to letting our agent figure it out by itself. Maze permits to incorporate this sort of domain knowledge by enabling to select and execute more than one action in a single step. This is done by
-
-- utilizing the actor mechanism to instantiate more than one policy and
-- enabling to query policies on demand instead of receiving the policy output (i.e. the suggested action) as argument in :meth:`~maze.core.env.maze_env.MazeEnv.step`.
+While it is not trivial to decide which items to pick for which orders and how to cut them, the sequence of piece selection before cutting is constant - there is no advantage to letting our agent figure it out by itself. Maze permits to incorporate this sort of domain knowledge by enabling to select and execute more than one action in a single step. This is done by utilizing the actor mechanism to execute multiple policies in a fixed sequence.
 
 In the case of the stock cutting problem two policies could be considered: "select" and "cut". The piece selection action might be provided to the environment at the beginning of each step, after which the cutting policy - conditioned on the current state with the already selected piece - can be queried to produce an appropriate cutting action.
 
@@ -28,7 +25,7 @@ In general, the control flow for multi-stepping environments involve at least tw
     :width: 80 %
     :align: center
 
-    Control flow within a multi-stepping scenario. Note that we assume a single agent here. The loop inside the environment component indicates that this sequence of activities can be repeated an arbitrary number of times. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
+    Control flow within a multi-stepping scenario assuming a single agent. The environment keeps track of the active step and adjusts its policy key (via :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`) accordingly. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
 When comparing this to the control flow depicted in :ref:`the article on flat environments<control_flows_struct_envs>` you'll notice that here we consider several policies and therefore several actors - more specifically, in a setup with *n* sub-steps (or actions per step) we have at least *n* actors. Consequently the environment has to update its active actor ID, which is not necessary in flat environments.
 
@@ -36,7 +33,7 @@ When comparing this to the control flow depicted in :ref:`the article on flat en
 Relation to Hierarchical RL
 ---------------------------
 
-:ref:`Hierarchical RL (HRL) <struct_env_hierarchical>` describes a hierarchical formulation of reinforcement learning problems: tasks are broken down into (sequences of) subtasks, which are learned in a modular manner. Multi-stepping shares this property with HRL, since it also decomposes a task into a series of subtasks. It does not fit smoothly into the the latter's paradigm however due to the execution of multiple actions per step and the action sequence being fixed instead of learned.
+:ref:`Hierarchical RL (HRL) <struct_env_hierarchical>` describes a hierarchical formulation of reinforcement learning problems: tasks are broken down into (sequences of) subtasks, which are learned in a modular manner. Multi-stepping shares this property with HRL, since it also decomposes a task into a series of subtasks. Furthermorek, the multi-stepping control flow bears strong similarity to the one for `hierarchical RL<struct_env_hierarchical>` - in fact, multi-stepping could be seen as a special kind of hierarchical RL with a fixed task sequence and a single level of hierarchy.
 
 Relation to Auto-Regressive Action Distributions
 ------------------------------------------------
