@@ -214,9 +214,6 @@ class MultiStepActorCritic(Trainer, ABC):
         :return: A tuple containing the action log-probabilities and corresponding action distributions.
         """
 
-        # convert actions to torch tensors
-        actions = convert_to_torch(actions, device=self.algorithm_config.device, cast=None, in_place=True)
-
         # iterate sub-steps
         action_log_probs = dict()
         step_action_dists = dict()
@@ -272,7 +269,7 @@ class MultiStepActorCritic(Trainer, ABC):
         start_time = time.time()
         trajectory = self.rollout_generator.rollout(self.model.policy, n_steps=self.algorithm_config.n_rollout_steps)
         self.ac_events.time_rollout(value=time.time() - start_time)
-        return trajectory.stack()
+        return trajectory.stack().to_torch(device=self.algorithm_config.device)
 
     def _append_train_stats(self,
                             policy_train_stats: List[Dict[str, List[float]]],

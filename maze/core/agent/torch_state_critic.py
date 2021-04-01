@@ -100,8 +100,8 @@ class TorchStateCritic(TorchModel, StateCritic):
 
     def bootstrap_returns(self,
                           observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                          rews: np.ndarray,
-                          dones: np.ndarray,
+                          rews: torch.Tensor,
+                          dones: torch.Tensor,
                           gamma: float,
                           gae_lambda: float,
                           ) -> Tuple[Dict[Union[str, int], torch.Tensor],
@@ -140,8 +140,9 @@ class TorchStateCritic(TorchModel, StateCritic):
     def compute_return(self,
                        gamma: float,
                        gae_lambda: float,
-                       rewards: np.ndarray,
-                       values: torch.Tensor, dones: np.ndarray,
+                       rewards: torch.Tensor,
+                       values: torch.Tensor,
+                       dones: torch.Tensor,
                        deltas: torch.Tensor = None,
                        ) -> torch.Tensor:
         """Compute bootstrapped return from rewards and estimated values.
@@ -157,24 +158,21 @@ class TorchStateCritic(TorchModel, StateCritic):
         assert rewards.shape == values.shape
         assert rewards.shape == dones.shape
 
-        # get values as numpy array
-        values = values.cpu().numpy()
-
         # initialize returns
-        returns = np.zeros((rewards.shape[0], rewards.shape[1]), dtype=np.float32)
+        returns = torch.zeros((rewards.shape[0], rewards.shape[1]), dtype=torch.float32, device=self.device)
 
         # prepare end-of-episode mask
-        mask = (~dones).astype(np.float32)
+        mask = (~dones).float()
 
-        # traverse time steps in revers order
-        gae = np.zeros(rewards.shape[1], dtype=np.float32)
+        # traverse time steps in reverse order
+        gae = torch.zeros(rewards.shape[1], dtype=torch.float32, device=self.device)
         for t in reversed(range(0, len(rewards))):
 
             # bootstrap value function for last entry
             if t == len(rewards) - 1:
                 returns[t] = values[t]
                 if deltas is not None:
-                    returns[t] = values[t] + deltas[t].cpu().numpy()
+                    returns[t] = values[t] + deltas[t]
 
             # compute discounted return
             else:
@@ -186,7 +184,7 @@ class TorchStateCritic(TorchModel, StateCritic):
                 else:
                     returns[t] = rewards[t] + gamma * returns[t + 1] * mask[t]
 
-        return torch.from_numpy(returns).to(self.device)
+        return returns
 
 
 class TorchSharedStateCritic(TorchStateCritic):
