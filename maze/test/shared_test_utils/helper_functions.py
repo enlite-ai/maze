@@ -1,7 +1,9 @@
 """ Contains helper functions for unit testing """
-import inspect
-from typing import Tuple, Any, Dict, Type, List
 
+import inspect
+from typing import Tuple, Any, Dict, Type, List, Union
+
+import numpy as np
 from torch import nn
 
 from maze.core.agent.torch_policy import TorchPolicy
@@ -107,3 +109,16 @@ def flatten_concat_probabilistic_policy_for_env(env: MazeEnv):
         networks=composer.policy.networks,
         distribution_mapper=composer.distribution_mapper,
         device="cpu")
+
+
+def convert_np_array_to_tuple(arr: np.ndarray) -> Union[Tuple, np.ndarray]:
+    """
+    Recursive conversion of numpy arrays with an arbitrary number of dimensions to tuples.
+    :param arr: numpy array to convert.
+    :return: n-dimensional tuple.
+    """
+
+    try:
+        return tuple(convert_np_array_to_tuple(i) for i in arr)
+    except TypeError:
+        return arr
