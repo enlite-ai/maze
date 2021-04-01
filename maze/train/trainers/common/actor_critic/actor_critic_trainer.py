@@ -24,6 +24,7 @@ from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.common.actor_critic.actor_critic_events import MultiStepActorCriticEvents
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
@@ -51,32 +52,27 @@ class MultiStepActorCritic(Trainer, ABC):
                  initial_state: Optional[str] = None):
         self.algorithm_config = algorithm_config
         self.env = env
-        self.eval_env = eval_env
-
-        self.model_selection = model_selection
         self.initial_state = initial_state
-
-        self.step_action_keys = dict()
-        for step_id, step_space in self.env.action_spaces_dict.items():
-            self.step_action_keys[step_id] = list(step_space.spaces.keys())
 
         # initialize policies and critic
         self.model = model
         self.model.to(self.algorithm_config.device)
 
-        # infer number of env sub-steps from the number of policies given
-        self.num_env_sub_steps = len(self.model.policy.networks)
-        self.sub_step_keys = list(self.model.policy.networks.keys())
-
         # initialize rollout generator
-        self.rollout_generator = RolloutGenerator(env=self.env)
 
         # initialize optimizer
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.algorithm_config.lr)
 
         # inject statistics directly into the epoch log
         epoch_stats = env.get_stats(LogStatsLevel.EPOCH)
         self.ac_events = epoch_stats.create_event_topic(MultiStepActorCriticEvents)
+
+        # other components
+        self.rollout_generator = RolloutGenerator(env=self.env)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.algorithm_config.lr)
+        self.model_selection = model_selection
+        self.evaluator = RolloutEvaluator(eval_env=eval_env, n_episodes=self.algorithm_config.eval_repeats,
+                                          model_selection=self.model_selection,
+                                          deterministic=self.algorithm_config.deterministic_eval)
 
     def train(self) -> None:
         """Train policy using the synchronous advantage actor critic."""
@@ -115,10 +111,8 @@ class MultiStepActorCritic(Trainer, ABC):
             # compute evaluation reward
             reward = -np.inf
             if self.algorithm_config.eval_repeats > 0:
-                self.evaluate(repeats=self.algorithm_config.eval_repeats,
-                              deterministic=self.algorithm_config.deterministic_eval)
-                reward = self.eval_env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name="mean")
-            # take training reward
+                self.evaluate()
+            # take training reward and notify best model selection manually
             else:
                 if epoch > 0:
                     prev_reward = reward
@@ -127,8 +121,7 @@ class MultiStepActorCritic(Trainer, ABC):
                     except:
                         reward = prev_reward
 
-            # best model selection
-            self.model_selection.update(reward)
+                self.model_selection.update(reward)
 
             # early stopping
             if self.algorithm_config.patience and \
@@ -152,36 +145,9 @@ class MultiStepActorCritic(Trainer, ABC):
 
             print("Time required for epoch: {:.2f}s".format(epoch_time))
 
-    def evaluate(self, deterministic: bool, repeats: int) -> None:
-        """Perform evaluation on eval env.
-
-        :param deterministic: deterministic or stochastic action sampling (selection)
-        :param repeats: number of evaluation episodes to average over
-        """
-
-        dones_count = 0
-        prev_obs_1 = self.eval_env.reset()
-        dones = np.stack([False])
-        while dones_count < repeats:
-
-            # set initial observation
-            obs = prev_obs_1
-
-            # iterate environment steps
-            for step_id in self.model.policy.networks.keys():
-                sampled_action = self.model.policy.compute_action(obs, policy_id=step_id, deterministic=deterministic)
-
-                # take env step
-                obs, step_rewards, dones, infos = self.eval_env.step(sampled_action)
-
-            # the last observation of the step sequence is the first observation of the next iteration
-            prev_obs_1 = obs
-
-            if np.any(dones):
-                dones_count += np.count_nonzero(dones)
-
-        # enforce the epoch stats calculation instead of waiting for the next increment_log_step() call
-        self.eval_env.write_epoch_stats()
+    def evaluate(self) -> None:
+        """Perform evaluation on eval env."""
+        self.evaluator.evaluate(self.model.policy)
 
     def load_state_dict(self, state_dict: Dict) -> None:
         """Set the model and optimizer state.
