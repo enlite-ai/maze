@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from typing import Dict, Union, Optional, List
 
 import numpy as np
+import torch
 
 from maze.core.env.structured_env import ActorIDType
+from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list
 
 
@@ -11,16 +13,16 @@ from maze.train.utils.train_utils import stack_numpy_dict_list
 class SpacesRecord:
     actor_id: ActorIDType
 
-    observation: Optional[Dict[str, np.ndarray]] = None
+    observation: Optional[Dict[str, Union[torch.Tensor]]] = None
     """Dictionary of observations recorded during the step."""
 
-    action: Optional[Dict[str, np.ndarray]] = None
+    action: Optional[Dict[str, Union[torch.Tensor]]] = None
     """Dictionary of actions recorded during the step."""
 
-    reward: Optional[Union[float, np.ndarray]] = None
+    reward: Optional[Union[float, np.ndarray, torch.Tensor]] = None
     """Dictionary of rewards recorded during the step."""
 
-    done: Optional[bool] = None
+    done: Optional[Union[bool, np.ndarray, torch.Tensor]] = None
     """Dictionary of dones recorded during the step."""
 
     info: Optional[Dict] = None
@@ -60,6 +62,33 @@ class SpacesRecord:
     @property
     def agent_id(self) -> int:
         return self.actor_id[1]
+
+    def to_numpy(self):
+        """Convert the record to numpy."""
+        self.observation = convert_to_numpy(self.observation, cast=None, in_place=True)
+        self.action = convert_to_numpy(self.action, cast=None, in_place=True)
+        self.reward = self.reward.cpu().numpy()
+        self.done = self.done.cpu().numpy()
+
+        if self.logits is not None:
+            self.logits = convert_to_numpy(self.logits, cast=None, in_place=True)
+
+        return self
+
+    def to_torch(self, device: str):
+        """Convert the record to Torch.
+
+        :param device: Device to move the tensors to.
+        """
+        self.observation = convert_to_torch(self.observation, device=device, cast=None, in_place=True)
+        self.action = convert_to_torch(self.action, device=device, cast=None, in_place=True)
+        self.reward = torch.from_numpy(np.asarray(self.reward)).to(device)
+        self.done = torch.from_numpy(np.asarray(self.done)).to(device)
+
+        if self.logits is not None:
+            self.logits = convert_to_torch(self.logits, device=device, cast=None, in_place=True)
+
+        return self
 
     def __repr__(self):
         return f"Spaces record (batch_shape={self.batch_shape}): Actor {self.actor_id}, " \

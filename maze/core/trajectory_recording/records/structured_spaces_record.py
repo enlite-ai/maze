@@ -126,22 +126,10 @@ class StructuredSpacesRecord:
         obs, action = conversion_env.get_observation_and_action_dicts(obs, action, first_step_in_episode)
         return StructuredSpacesRecord(observations=obs, actions=action, rewards=None, dones=None)
 
-    def to_numpy(self) -> 'StructuredSpacesRecord':
-        """Convert the record to numpy.
-
-        :return: Self after conversion.
-        """
-        self.observations = convert_to_numpy(self.observations, cast=None, in_place=True)
-        self.actions = convert_to_numpy(self.actions, cast=None, in_place=True)
-        self.rewards = convert_to_numpy(self.rewards, cast=None, in_place=True)
-        self.dones = convert_to_numpy(self.dones, cast=None, in_place=True)
-
-        if self.logits is not None:
-            self.logits = convert_to_numpy(self.logits, cast=None, in_place=True)
-
-        if self.next_observations is not None:
-            self.next_observations = convert_to_numpy(self.next_observations, cast=None, in_place=True)
-
+    def to_numpy(self):
+        """Convert the record to numpy."""
+        for substep_record in self.substep_records:
+            substep_record.to_numpy()
         return self
 
     def to_torch(self, device: str) -> 'StructuredSpacesRecord':
@@ -150,17 +138,8 @@ class StructuredSpacesRecord:
         :param device: Device to move the tensors to.
         :return: Self after conversion.
         """
-        self.observations = convert_to_torch(self.observations, device=device, cast=None, in_place=True)
-        self.actions = convert_to_torch(self.actions, device=device, cast=None, in_place=True)
-        self.rewards = convert_to_torch(self.rewards, device=device, cast=None, in_place=True)
-        self.dones = convert_to_torch(self.dones, device=device, cast=None, in_place=True)
-
-        if self.logits is not None:
-            self.logits = convert_to_torch(self.logits, device=device, cast=None, in_place=True)
-
-        if self.next_observations is not None:
-            self.next_observations = convert_to_torch(self.next_observations, device=device, cast=None, in_place=True)
-
+        for substep_record in self.substep_records:
+            substep_record.to_torch(device=device)
         return self
 
     def __repr__(self):

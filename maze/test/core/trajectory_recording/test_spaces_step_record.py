@@ -17,8 +17,8 @@ def _mock_spaces_record(
 
     return SpacesRecord(
         actor_id=actor_id,
-        observation={k: value for k in keys},
-        action={"action": value},
+        observation={k: np.array(value) for k in keys},
+        action={"action": np.array(value)},
         reward=reward,
         done=done
     )
@@ -62,18 +62,18 @@ def test_record_stacking():
 
 
 def test_record_conversion():
-    r = StructuredSpacesRecord(
-        observations={0: dict(x=np.array([10, 10]), y=np.array([10, 10])),
-                      1: dict(z=np.array([[11, 11], [11, 11]]))},
-        actions={0: dict(action=np.array([10])), 1: dict(action=np.array([11, 11]))},
-        rewards={0: 1, 1: 1},
-        dones={0: False, 1: False}
-    )
+    r = _mock_structured_spaces_record(1)
 
     r.to_torch("cpu")
-
     for step_key in [0, 1]:
         for value in r.observations[step_key].values():
             assert isinstance(value, torch.Tensor)
         for value in r.actions[step_key].values():
             assert isinstance(value, torch.Tensor)
+
+    r.to_numpy()
+    for step_key in [0, 1]:
+        for value in r.observations[step_key].values():
+            assert isinstance(value, np.ndarray)
+        for value in r.actions[step_key].values():
+            assert isinstance(value, np.ndarray)
