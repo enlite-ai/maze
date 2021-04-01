@@ -29,7 +29,7 @@ The figure above collapses the concepts of policy, agent and actor into a single
     :width: 80 %
     :align: center
 
-    More accurate control flow for a flat environment in Maze, showing how the actor mechanism integrates agent and policy. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from the environment's :meth:`~maze.core.env.maze_env.MazeEnv.step`.
+    More accurate control flow for a flat environment in Maze, showing how the actor mechanism integrates agent and policy. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
 A flat environment hence always utilizes the same actor, i.e. the same policy for the same agent. Due to the lack of other actors there is no need for the environment to ever update its active actor ID.
 The concept of actors is crucial to the flexibility of Maze, since it allows to scale up the number of agents, policies or both. This enables the application of RL to a wider range of use cases and exploit properties of the respective domains more efficiently.
