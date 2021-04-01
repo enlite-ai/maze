@@ -101,8 +101,8 @@ def test_state_record_load():
     expected_structured_actions = list(map(lambda x: {0: {"action": x}}, expected))
     expected_structured_observations = list(map(lambda x: {0: {"observation": x}}, expected))
 
-    assert [rec.actions for rec in step_records] == expected_structured_actions
-    assert [rec.observations for rec in step_records] == expected_structured_observations
+    assert [rec.actions_dict for rec in step_records] == expected_structured_actions
+    assert [rec.observations_dict for rec in step_records] == expected_structured_observations
 
 
 def test_spaces_record_load():
@@ -119,8 +119,8 @@ def test_spaces_record_load():
     expected_structured_actions = list(map(lambda x: {0: {"action": x}}, expected))
     expected_structured_observations = list(map(lambda x: {0: {"observation": x}}, expected))
 
-    assert [rec.actions for rec in step_records] == expected_structured_actions
-    assert [rec.observations for rec in step_records] == expected_structured_observations
+    assert [rec.actions_dict for rec in step_records] == expected_structured_actions
+    assert [rec.observations_dict for rec in step_records] == expected_structured_observations
 
 
 def test_data_load_with_stateful_wrapper():
@@ -132,7 +132,7 @@ def test_data_load_with_stateful_wrapper():
         {0: {"observation": [0, 2]}},
         {0: {"observation": [2, 4]}}
     ]
-    assert [rec.observations for rec in step_records] == expected_observations
+    assert [rec.observations_dict for rec in step_records] == expected_observations
 
 
 def test_data_split():

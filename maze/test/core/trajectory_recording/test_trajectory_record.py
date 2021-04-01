@@ -30,9 +30,9 @@ def test_trajectory_stacking():
     stacked_trajectory = SpacesTrajectoryRecord.stack_trajectories([t1, t2, t3])
 
     # Step records should be stacked, keeping the time dimension intact
-    assert np.all(stacked_trajectory.step_records[0].observations[0]['observation'] == [11, 21, 31])
-    assert np.all(stacked_trajectory.step_records[1].observations[0]['observation'] == [12, 22, 32])
-    assert np.all(stacked_trajectory.step_records[2].observations[0]['observation'] == [13, 23, 33])
+    assert np.all(stacked_trajectory.step_records[0].observations_dict[0]['observation'] == [11, 21, 31])
+    assert np.all(stacked_trajectory.step_records[1].observations_dict[0]['observation'] == [12, 22, 32])
+    assert np.all(stacked_trajectory.step_records[2].observations_dict[0]['observation'] == [13, 23, 33])
 
     # IDs should be stacked as well
     assert np.all(stacked_trajectory.id == [1, 2, 3])
@@ -44,4 +44,4 @@ def test_trajectory_stacking():
         [12, 22, 32],
         [13, 23, 33],
     ]
-    assert np.all(stacked_record.observations[0]['observation'] == expected_obs_val)
+    assert np.all(stacked_record.observations_dict[0]['observation'] == expected_obs_val)

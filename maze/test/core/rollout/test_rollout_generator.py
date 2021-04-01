@@ -24,14 +24,14 @@ def test_standard_rollout():
 
     sub_step_keys = env.action_spaces_dict.keys()
     for record in trajectory.step_records:
-        assert sub_step_keys == record.actions.keys()
-        assert sub_step_keys == record.observations.keys()
-        assert sub_step_keys == record.rewards.keys()
+        assert sub_step_keys == record.actions_dict.keys()
+        assert sub_step_keys == record.observations_dict.keys()
+        assert sub_step_keys == record.rewards_dict.keys()
 
         assert record.batch_shape is None
         for step_key in sub_step_keys:
-            assert record.observations[step_key] in env.observation_spaces_dict[step_key]
-            assert record.actions[step_key] in env.action_spaces_dict[step_key]
+            assert record.observations_dict[step_key] in env.observation_spaces_dict[step_key]
+            assert record.actions_dict[step_key] in env.action_spaces_dict[step_key]
 
 
 def test_vectorized_rollout():
@@ -46,14 +46,14 @@ def test_vectorized_rollout():
 
     sub_step_keys = env.action_spaces_dict.keys()
     for record in trajectory.step_records:
-        assert sub_step_keys == record.actions.keys()
-        assert sub_step_keys == record.observations.keys()
-        assert sub_step_keys == record.rewards.keys()
+        assert sub_step_keys == record.actions_dict.keys()
+        assert sub_step_keys == record.observations_dict.keys()
+        assert sub_step_keys == record.rewards_dict.keys()
 
         assert record.batch_shape == [concurrency]
         # The first dimension of the observations should correspond to the distributed env concurrency
         # (We just check the very first array present in the first observation)
-        first_sub_step_obs: Dict = list(record.observations.values())[0]
+        first_sub_step_obs: Dict = list(record.observations_dict.values())[0]
         first_obs_value = list(first_sub_step_obs.values())[0]
         assert first_obs_value.shape[0] == concurrency
 
@@ -70,10 +70,10 @@ def test_standard_rollout_with_logits_and_step_stats():
     sub_step_keys = env.action_spaces_dict.keys()
     for record in trajectory.step_records:
         assert record.step_stats is not None
-        assert sub_step_keys == record.logits.keys()
+        assert sub_step_keys == record.logits_dict.keys()
 
         for step_key in sub_step_keys:
-            assert record.logits[step_key].keys() == record.actions[step_key].keys()
+            assert record.logits_dict[step_key].keys() == record.actions_dict[step_key].keys()
 
 
 def test_terminates_on_done():
@@ -127,11 +127,11 @@ def test_handles_done_in_substep_with_recorded_episode_stats():
     dones = 0
     for step_record in trajectory.step_records:
         if step_record.is_done():
-            assert [0] == list(step_record.observations.keys())
+            assert [0] == list(step_record.observations_dict.keys())
             dones += 1
             assert step_record.episode_stats is not None
         else:
-            assert [0, 1] == list(step_record.observations.keys())
+            assert [0, 1] == list(step_record.observations_dict.keys())
             assert step_record.episode_stats is None
     assert dones == 3  # Each episode is done after 5 sub-steps, i.e. 3 structured steps get recorded => 3 episodes fit
 
@@ -140,7 +140,7 @@ def test_handles_done_in_substep_with_recorded_episode_stats():
     trajectory = rollout_generator.rollout(policy, n_steps=10)
     assert len(trajectory) == 3
     assert trajectory.is_done()
-    assert [0] == list(trajectory.step_records[-1].observations.keys())
+    assert [0] == list(trajectory.step_records[-1].observations_dict.keys())
 
 
 def test_records_next_observations():

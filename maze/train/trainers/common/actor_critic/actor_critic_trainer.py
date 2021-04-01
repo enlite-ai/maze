@@ -202,11 +202,9 @@ class MultiStepActorCritic(Trainer, ABC):
         """
         raise NotImplementedError
 
-    def _action_log_probs_and_dists(self,
-                                    obs: Dict[Union[str, int], Dict[str, Union[np.ndarray, torch.Tensor]]],
-                                    actions: Dict[Union[int, str], Dict[str, Union[np.ndarray, torch.Tensor]]]) \
-            -> Tuple[Dict[Union[str, int], Dict[str, torch.Tensor]],
-                     Dict[Union[str, int], DictProbabilityDistribution]]:
+    def _action_log_probs_and_dists(self, record: StructuredSpacesRecord) \
+            -> Tuple[List[Dict[str, torch.Tensor]],
+                     List[DictProbabilityDistribution]]:
         """Computes action log probabilities and corresponding action distributions for all sub-steps and actions.
 
         :param obs: Dictionary holding the sub-step observations as tensors.
@@ -214,22 +212,20 @@ class MultiStepActorCritic(Trainer, ABC):
         :return: A tuple containing the action log-probabilities and corresponding action distributions.
         """
 
-        # iterate sub-steps
-        action_log_probs = dict()
-        step_action_dists = dict()
-        for step_id in self.sub_step_keys:
-            # predict step action logits
-            step_logits_dict = self.model.policy.compute_logits_dict(observation=obs[step_id], policy_id=step_id)
+        action_log_probs = []
+        step_action_dists = []
 
-            # prepare action distributions
-            prob_dist = self.model.policy.logits_dict_to_distribution(step_logits_dict, temperature=1.0)
+        for substep_record in record.substep_records:
+            # Predict step action logits
+            logits_dict = self.model.policy.compute_logits_dict(observation=substep_record.observation,
+                                                                policy_id=substep_record.substep_key)
 
-            # compute log probs
-            log_probs = prob_dist.log_prob(actions[step_id])
+            # Prepare action distributions & compute log probs
+            prob_dist = self.model.policy.logits_dict_to_distribution(logits_dict, temperature=1.0)
+            log_probs = prob_dist.log_prob(substep_record.action)
 
-            # book keeping
-            action_log_probs[step_id] = log_probs
-            step_action_dists[step_id] = prob_dist
+            action_log_probs.append(log_probs)
+            step_action_dists.append(prob_dist)
 
         return action_log_probs, step_action_dists
 

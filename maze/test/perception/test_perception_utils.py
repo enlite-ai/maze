@@ -4,7 +4,7 @@ import pytest
 import torch
 from gym import spaces
 
-from maze.perception.perception_utils import flat_structured_observations, observation_spaces_to_in_shapes, \
+from maze.perception.perception_utils import flatten_spaces, observation_spaces_to_in_shapes, \
     map_nested_structure, convert_to_torch, convert_to_numpy
 
 
@@ -17,7 +17,7 @@ def test_flat_structured_observations():
     structured_obs = {kk: {k: v.sample() for k, v in vv.spaces.items()} for kk, vv in obs_space.items()}
     structured_obs[0]['obs1'] = structured_obs[1]['obs1']
 
-    _ = flat_structured_observations(structured_obs)
+    _ = flatten_spaces(structured_obs.values())
     _ = observation_spaces_to_in_shapes(obs_space)
 
 

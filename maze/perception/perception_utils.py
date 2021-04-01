@@ -1,7 +1,7 @@
 """ Contains utility functions for the perception module. """
 import collections
 import copy
-from typing import Union, Dict, Any, Callable, Sequence
+from typing import Union, Dict, Any, Callable, Sequence, Iterable
 
 import gym
 import numpy as np
@@ -27,17 +27,20 @@ def observation_spaces_to_in_shapes(observation_spaces: Dict[Union[int, str], gy
     return in_shapes
 
 
-def flat_structured_observations(structured_obs: Dict[Union[str, int], Dict[str, torch.Tensor]]
-                                 ) -> Dict[str, torch.Tensor]:
-    """Compiles a flat dict from a structured observation nested dictionary.
+def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
+    """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
+    into a single dictionary containing all the items.
 
-    :param: The structured dictionary of observations.
-    :return: The flattened observation dictionary.
+    If one key is present in multiple elements, it's value will be checked to match across all the elements (and
+    it will be present only once in the resulting dictionary).
+
+    :param: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
+    :return: One flat dictionary, containing all keys and values form the elements of the iterable.
     """
     result = dict()
 
-    for sub_step_obs in structured_obs.values():
-        for key, obs in sub_step_obs.items():
+    for space in spaces:
+        for key, obs in space.items():
             # check if the heads match
             if key in result:
                 assert result[key].shape == obs.shape

@@ -52,13 +52,13 @@ def test_record_stacking():
 
     for step_key in [0, 1]:
         for obs_key, exp_value in expected_observations[step_key].items():
-            assert np.all(stacked.observations[step_key][obs_key] == exp_value)
+            assert np.all(stacked.observations_dict[step_key][obs_key] == exp_value)
 
     # Check a couple of other values
 
-    assert np.all(stacked.rewards[0] == [1, 2, 3])
-    assert np.all(stacked.dones[1] == [False, False, True])
-    assert stacked.actions[0]["action"].shape == (3, 2)
+    assert np.all(stacked.rewards_dict[0] == [1, 2, 3])
+    assert np.all(stacked.dones_dict[1] == [False, False, True])
+    assert stacked.actions_dict[0]["action"].shape == (3, 2)
 
 
 def test_record_conversion():
@@ -66,14 +66,14 @@ def test_record_conversion():
 
     r.to_torch("cpu")
     for step_key in [0, 1]:
-        for value in r.observations[step_key].values():
+        for value in r.observations_dict[step_key].values():
             assert isinstance(value, torch.Tensor)
-        for value in r.actions[step_key].values():
+        for value in r.actions_dict[step_key].values():
             assert isinstance(value, torch.Tensor)
 
     r.to_numpy()
     for step_key in [0, 1]:
-        for value in r.observations[step_key].values():
+        for value in r.observations_dict[step_key].values():
             assert isinstance(value, np.ndarray)
-        for value in r.actions[step_key].values():
+        for value in r.actions_dict[step_key].values():
             assert isinstance(value, np.ndarray)

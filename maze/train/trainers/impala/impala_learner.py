@@ -47,7 +47,7 @@ class ImpalaLearner:
         :return: A LearnerOutput names tuple consisting of (values, detached_values, actions_logits, n_critics)
         """
         # A list of dictionaries
-        obs_t: Dict[Union[str, int], Dict[str, torch.Tensor]] = actors_output.observations
+        obs_t: Dict[Union[str, int], Dict[str, torch.Tensor]] = actors_output.observations_dict
 
         # predict values of stage 2 in a regular fashion
         values, detached_values = self.model.critic.predict_values(obs_t)

@@ -14,7 +14,7 @@ from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.wrappers.observation_preprocessing.preprocessors.one_hot import OneHotPreProcessor
 from maze.perception.blocks.inference import InferenceBlock
-from maze.perception.perception_utils import flat_structured_observations, convert_to_numpy, convert_to_torch
+from maze.perception.perception_utils import flatten_spaces, convert_to_numpy, convert_to_torch
 from maze.perception.weight_init import make_module_init_normc
 from maze.utils.bcolors import BColors
 
@@ -270,8 +270,8 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
         """
 
-        flattened_observations = flat_structured_observations(observations)
-        flattened_actions = flat_structured_observations(actions)
+        flattened_observations = flatten_spaces(observations.values())
+        flattened_actions = flatten_spaces(actions.values())
 
         assert len(self.step_critic_keys) == 1
         step_id = self.step_critic_keys[0]
@@ -300,10 +300,10 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
         """
 
-        flattened_next_observations = flat_structured_observations(next_observations)
-        flattened_next_actions = flat_structured_observations(next_actions)
-        flattened_next_actions_logits = flat_structured_observations(next_actions_logits)
-        flattened_next_action_log_probs = flat_structured_observations(next_actions_log_probs)
+        flattened_next_observations = flatten_spaces(next_observations.values())
+        flattened_next_actions = flatten_spaces(next_actions.values())
+        flattened_next_actions_logits = flatten_spaces(next_actions_logits.values())
+        flattened_next_action_log_probs = flatten_spaces(next_actions_log_probs.values())
 
         assert len(self.step_critic_keys) == 1
         step_id = self.step_critic_keys[0]

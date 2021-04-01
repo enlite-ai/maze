@@ -8,7 +8,7 @@ from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.critics import SharedStateCriticComposer, StepStateCriticComposer, BaseStateCriticComposer, \
     DeltaStateCriticComposer
 from maze.perception.models.template_model_composer import TemplateModelComposer
-from maze.perception.perception_utils import convert_to_torch, flat_structured_observations
+from maze.perception.perception_utils import convert_to_torch, flatten_spaces
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env
 
 policy_composer_type = 'maze.perception.models.policies.ProbabilisticPolicyComposer'
@@ -141,8 +141,7 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
     obs_t = {step_key: convert_to_torch(step_obs.sample(), cast=None, device=None, in_place=True)
              for step_key, step_obs in env.observation_spaces_dict.items()}
     if critics_composer_type == SharedStateCriticComposer:
-        flattened_obs_t = flat_structured_observations({sub_step_key: step_obs_t
-                                                        for sub_step_key, step_obs_t in obs_t.items()})
+        flattened_obs_t = flatten_spaces(obs_t.values())
         value = default_builder.critic.networks[0](flattened_obs_t)["value"][..., 0]
     elif critics_composer_type == StepStateCriticComposer:
         for step_id in env.observation_spaces_dict.keys():

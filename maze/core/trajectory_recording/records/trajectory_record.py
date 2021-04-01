@@ -86,12 +86,12 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
     @property
     def actions(self) -> List[Dict[StepKeyType, ActionType]]:
         """Convenience access to all structured action dicts from this trajectory."""
-        return [step_record.actions for step_record in self.step_records]
+        return [step_record.actions_dict for step_record in self.step_records]
 
     @property
     def observations(self) -> List[Dict[StepKeyType, ObservationType]]:
         """Convenience access to all structured observation dicts from this trajectory."""
-        return [step_record.actions for step_record in self.step_records]
+        return [step_record.actions_dict for step_record in self.step_records]
 
     def is_done(self) -> bool:
         """Convenience method for checking whether the end of this trajectory represents also the end of an episode."""
@@ -109,5 +109,5 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         assert not self.step_records[-1].is_batched(), "cannot determine total reward for a batched trajectory."
         total_reward = 0
         for record in self.step_records:
-            total_reward += sum(record.rewards.values())
+            total_reward += sum(record.rewards_dict.values())
         return total_reward

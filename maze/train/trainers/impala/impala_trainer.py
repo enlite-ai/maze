@@ -229,7 +229,7 @@ class MultiStepIMPALA(Trainer):
         after_learner_rollout_time = time.time()
 
         # Test if Agents output is already in time major
-        for output_field in [record.logits, record.actions, record.observations,
+        for output_field in [record.logits_dict, record.actions_dict, record.observations_dict,
                              learner_output.actions_logits]:
             assert isinstance(output_field, dict) \
                    and set(output_field) == set(self.learner.sub_step_keys), "acton_output filed should be a list of " \
@@ -250,7 +250,7 @@ class MultiStepIMPALA(Trainer):
         record, learner_output = self._shift_outputs(record, learner_output)
 
         # TODO: Take into account all rewards, not just from the last sub-step
-        last_rewards = list(record.rewards.values())[-1]
+        last_rewards = list(record.rewards_dict.values())[-1]
 
         # Clip reward:
         if self.reward_clipping == 'abs_one':
@@ -259,15 +259,15 @@ class MultiStepIMPALA(Trainer):
             squeezed = torch.tanh(last_rewards / 5.0)
             clipped_rewards = torch.where(last_rewards < 0, 0.3 * squeezed, squeezed) * 5.
         else:
-            clipped_rewards = record.rewards[list(record.rewards.keys())[-1]]
+            clipped_rewards = record.rewards_dict[list(record.rewards_dict.keys())[-1]]
         # START: Loss computation --------------------------------------------------------------------------------------
         vtrace_returns = impala_vtrace.from_logits(
-            behaviour_policy_logits=record.logits,
+            behaviour_policy_logits=record.logits_dict,
             target_policy_logits=learner_output.actions_logits,
-            actions=record.actions,
+            actions=record.actions_dict,
             action_spaces=self.learner.env.action_spaces_dict,
             distribution_mapper=self.model.policy.distribution_mapper,
-            discounts=(~record.dones[list(record.dones.keys())[-1]]).float() * self.gamma,
+            discounts=(~record.dones_dict[list(record.dones_dict.keys())[-1]]).float() * self.gamma,
             rewards=clipped_rewards,
             values=learner_output.detached_values,
             bootstrap_value=bootstrap_value,

@@ -88,7 +88,7 @@ def perform_test_maze_rllib_action_distribution(batch_dim: int):
         maze_rllib_distribution = rllib_dist.maze_dist.distribution_dict[action_head]
         if hasattr(maze_distribution, 'logits'):
             assert torch.allclose(maze_distribution.logits,
-                                  maze_rllib_distribution.logits)
+                                  maze_rllib_distribution.logits_dict)
         if hasattr(maze_distribution, 'low'):
             assert torch.allclose(maze_distribution.low,
                                   maze_rllib_distribution.low)

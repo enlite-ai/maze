@@ -12,6 +12,7 @@ from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
+from maze.perception.perception_utils import convert_to_numpy
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 
 
