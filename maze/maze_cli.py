@@ -31,7 +31,6 @@ def _run_job(cfg: DictConfig) -> None:
     BColors.print_colored("\n" + config_str, color=BColors.HEADER)
 
     # run job
-    print(yaml.dump(OmegaConf.to_container(cfg, resolve=True)))
     runner = Factory(base_type=Runner).instantiate(cfg.runner)
     runner.run(cfg)
 
