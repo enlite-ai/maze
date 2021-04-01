@@ -2,14 +2,15 @@
 from abc import abstractmethod
 from typing import Mapping, Union, List, Dict, Tuple
 
-import numpy as np
 import torch
+from torch import nn
+
 from maze.core.agent.state_critic import StateCritic
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
-from maze.perception.perception_utils import convert_to_torch, flat_structured_observations
-from torch import nn
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.perception.perception_utils import convert_to_torch, flatten_spaces
 
 
 class TorchStateCritic(TorchModel, StateCritic):
@@ -98,15 +99,8 @@ class TorchStateCritic(TorchModel, StateCritic):
                 assert key in state_dict_critics, f"Could not find state dict for policy ID: {key}"
                 critic.load_state_dict(state_dict_critics[key])
 
-    def bootstrap_returns(self,
-                          observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                          rews: torch.Tensor,
-                          dones: torch.Tensor,
-                          gamma: float,
-                          gae_lambda: float,
-                          ) -> Tuple[Dict[Union[str, int], torch.Tensor],
-                                     Dict[Union[str, int], torch.Tensor],
-                                     Dict[Union[str, int], torch.Tensor]]:
+    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float,) \
+            -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
         """Bootstrap returns using the value function.
 
         Useful for example to implement PPO or A2C.
@@ -120,21 +114,21 @@ class TorchStateCritic(TorchModel, StateCritic):
         """
 
         # predict state values
-        values, detached_values = self.predict_values(observations)
+        values, detached_values = self.predict_values(record)
+
+        # TODO: Currently only reward & done from the last sub-step is considered --> consider other sub-steps as well
+        rews = record.rewards[-1]
+        dones = record.dones[-1]
 
         # reshape values to match rewards
-        for step_id in values.keys():
-            values[step_id] = torch.reshape(values[step_id], rews.shape)
-            detached_values[step_id] = torch.reshape(detached_values[step_id], rews.shape)
+        values = [torch.reshape(v, rews.shape) for v in values]
+        detached_values = [torch.reshape(dv, rews.shape) for dv in detached_values]
 
         # compute returns
-        last_step_key = list(observations.keys())[-1]
         sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                              rewards=rews, values=detached_values[last_step_key], dones=dones)
-        returns = dict()
-        for step_id in values.keys():
-            returns[step_id] = sub_step_return
+                                              rewards=rews, values=detached_values[-1], dones=dones)
 
+        returns = [sub_step_return for _ in values]
         return returns, values, detached_values
 
     def compute_return(self,
@@ -193,27 +187,27 @@ class TorchSharedStateCritic(TorchStateCritic):
     :class:`~maze.perception.models.critics.shared_state_critic_composer.SharedStateCriticComposer`.
     """
 
-    @override(StateCritic)
-    def predict_values(self, observations: Dict[Union[str, int], Dict[str, torch.Tensor]]) -> \
-            Tuple[Dict[Union[str, int], torch.Tensor], Dict[Union[str, int], torch.Tensor]]:
-        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`
-        """
-        observations = convert_to_torch(observations, device=self._device, cast=None, in_place=False)
+    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str):
+        super().__init__(networks=networks, num_policies=num_policies, device=device)
 
-        flattened_obs_t = flat_structured_observations({sub_step_key: step_obs_t
-                                                        for sub_step_key, step_obs_t in observations.items()})
-        key = list(self.networks.keys())[0]
-        value = self.networks[key](flattened_obs_t)["value"][..., 0]
-        values = {step_key: value for step_key in observations.keys()}
-        detached_values = {step_key: value.detach() for step_key in observations.keys()}
+        self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
+
+    @override(StateCritic)
+    def predict_values(self, record: StructuredSpacesRecord) -> \
+            Tuple[Dict[Union[str, int], torch.Tensor], Dict[Union[str, int], torch.Tensor]]:
+        """Predict the shared values and repeat them for each sub-step."""
+        flattened_obs_t = flatten_spaces(record.observations)
+        value = self.network(flattened_obs_t)["value"][..., 0]
+
+        values = [value for _ in record.substep_records]
+        detached_values = [value.detach() for _ in record.substep_records]
 
         return values, detached_values
 
     @property
     @override(TorchStateCritic)
     def num_critics(self) -> int:
-        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
-        """
+        """There is a single shared critic network."""
         return 1
 
 

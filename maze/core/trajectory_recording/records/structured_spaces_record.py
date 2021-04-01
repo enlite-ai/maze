@@ -82,22 +82,38 @@ class StructuredSpacesRecord:
 
     @property
     def actions(self):
-        return {r.substep_key: r.action for r in self.substep_records}
+        return [r.action for r in self.substep_records]
 
     @property
     def observations(self):
-        return {r.substep_key: r.observation for r in self.substep_records}
+        return [r.observation for r in self.substep_records]
 
     @property
     def rewards(self):
-        return {r.substep_key: r.reward for r in self.substep_records}
+        return [r.reward for r in self.substep_records]
 
     @property
     def dones(self):
+        return [r.done for r in self.substep_records]
+
+    @property
+    def actions_dict(self):
+        return {r.substep_key: r.action for r in self.substep_records}
+
+    @property
+    def observations_dict(self):
+        return {r.substep_key: r.observation for r in self.substep_records}
+
+    @property
+    def rewards_dict(self):
+        return {r.substep_key: r.reward for r in self.substep_records}
+
+    @property
+    def dones_dict(self):
         return {r.substep_key: r.done for r in self.substep_records}
 
     @property
-    def logits(self):
+    def logits_dict(self):
         return {r.substep_key: r.logits for r in self.substep_records}
 
     @classmethod

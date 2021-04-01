@@ -44,49 +44,44 @@ class MultiStepA2C(MultiStepActorCritic):
         record = self._rollout()
 
         # compute bootstrapped returns
-        returns, values, detached_values = \
-            self.model.critic.bootstrap_returns(record.observations,
-                                                # TODO: Use all rewards and dones, not from the last sub-step only
-                                                record.rewards[self.sub_step_keys[-1]],
-                                                record.dones[self.sub_step_keys[-1]],
-                                                gamma=self.algorithm_config.gamma,
-                                                gae_lambda=self.algorithm_config.gae_lambda)
+        returns, values, detached_values = self.model.critic.bootstrap_returns(
+            record=record,
+            gamma=self.algorithm_config.gamma,
+            gae_lambda=self.algorithm_config.gae_lambda)
 
         # compute action log-probabilities of actions taken
-        action_log_probs, step_action_dist = self._action_log_probs_and_dists(record.observations, record.actions)
+        action_log_probs, step_action_dist = self._action_log_probs_and_dists(record)
 
         # compute entropies
-        entropies = [action_dist.entropy().mean() for action_dist in step_action_dist.values()]
+        entropies = [action_dist.entropy().mean() for action_dist in step_action_dist]
 
         # compute advantages
-        advantages = [returns[step_id] - detached_values[step_id]
-                      for step_id in self.step_action_keys]
+        advantages = [ret - detached_val for ret, detached_val in zip(returns, detached_values)]
 
         # normalize advantages
         advantages = self._normalize_advantages(advantages)
 
         # compute value loss
-        value_losses = []
-        for step_id in range(self.model.critic.num_critics):
-            value_loss = (returns[step_id] - values[step_id]).pow(2).mean()
-            value_losses.append(value_loss)
+        if self.model.critic.num_critics == 1:
+            value_losses = [(returns[0] - values[0]).pow(2).mean()]
+        else:
+            value_losses = [(ret - val).pow(2).mean() for ret, val in zip(returns, values)]
         value_loss = sum(value_losses)
 
-        # compute policy loss
+        # compute policy loss, iterating across all sub-steps
         policy_losses = []
-        for step_id in self.step_action_keys:
+        for advantage, action_log_probs_dict in zip(advantages, action_log_probs):
 
-            # accumulate independent action losses
+            # accumulate independent action losses, iterating components of the action
             step_policy_loss = torch.tensor(0.0).to(self.algorithm_config.device)
-            for key in self.step_action_keys[step_id]:
-
+            for action_log_prob in action_log_probs_dict.values():
                 # prepare advantages
-                action_advantages = advantages[step_id].detach()
-                while action_advantages.ndim < action_log_probs[step_id][key].ndimension():
+                action_advantages = advantage.detach()
+                while action_advantages.ndim < action_log_prob.ndimension():
                     action_advantages = action_advantages.unsqueeze(dim=-1)
 
                 # compute policy gradient objective
-                step_policy_loss -= (action_advantages * action_log_probs[step_id][key]).mean()
+                step_policy_loss -= (action_advantages * action_log_prob).mean()
 
             policy_losses.append(step_policy_loss)
 

@@ -6,7 +6,7 @@ import torch
 
 from maze.core.env.structured_env import ActorIDType
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
-from maze.train.utils.train_utils import stack_numpy_dict_list
+from maze.train.utils.train_utils import stack_numpy_dict_list, stack_torch_dict_list
 
 
 @dataclass
@@ -47,7 +47,7 @@ class SpacesRecord:
         )
 
         if records[0].logits:
-            stacked_record.logits = stack_numpy_dict_list([r.logits for r in records])
+            stacked_record.logits = stack_torch_dict_list([r.logits for r in records])
 
         stacked_record.batch_shape = [len(records)]
         if records[0].batch_shape:

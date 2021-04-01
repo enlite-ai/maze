@@ -149,7 +149,7 @@ class InMemoryDataset(Dataset, ABC):
         :return: A tuple of (observation_dict, action_dict). Note that the dictionaries only have multiple entries
                  in structured scenarios.
         """
-        return self.step_records[index].observations, self.step_records[index].actions
+        return self.step_records[index].observations_dict, self.step_records[index].actions_dict
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
