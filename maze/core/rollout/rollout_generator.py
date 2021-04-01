@@ -8,6 +8,7 @@ from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.log_stats.log_stats import LogStatsLevel
+from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
@@ -79,82 +80,72 @@ class RolloutGenerator:
             self.last_observation = self.env.reset()
 
         # Step the desired number of (flat) steps
-        done = False
         step_count = 0
         while True:
-            record = StructuredSpacesRecord(observations={}, actions={}, rewards={}, dones={}, infos={},
-                                            logits={} if self.record_logits else None,
-                                            next_observations={} if self.record_next_observations else None,
-                                            batch_shape=[self.env.n_envs] if self.is_vectorized else None)
+            step_record = StructuredSpacesRecord()
 
             # Step through all sub-steps, i.e., step until the env time changes
             # Note: If the env returns done in a sub-step, this is detected as well as env time changes after reset
             current_env_time = self.env.get_env_time()
             while np.all(current_env_time == self.env.get_env_time()):
-                done = self._record_sub_step(record, policy=policy)
+                step_record.append(self._record_sub_step(observation=self.last_observation, policy=policy))
 
-            # Record episode stats
             if self.record_step_stats:
-                record.step_stats = self.env.get_stats(LogStatsLevel.STEP).last_stats
+                step_record.step_stats = self.env.get_stats(LogStatsLevel.STEP).last_stats
 
-            trajectory_record.append(record)
+            if self.record_episode_stats and not self.is_vectorized and step_record.is_done():
+                step_record.episode_stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
 
-            # limit maximum number of steps
+            trajectory_record.append(step_record)
+
+            # Limit maximum number of steps
             step_count += 1
             if n_steps and step_count >= n_steps:
                 break
 
             # End prematurely on env done if desired
-            if not self.is_vectorized and done and self.terminate_on_done:
+            if self.terminate_on_done and not self.is_vectorized and step_record.is_done():
                 break
 
         return trajectory_record
 
-    def _record_sub_step(self,
-                         record: StructuredSpacesRecord,
-                         policy: Union[Policy, TorchPolicy]) -> Union[bool, np.ndarray]:
-        """Perform one substep in the environment and record it. Return the done flag(s).
+    def _record_sub_step(self, policy: Union[Policy, TorchPolicy]) -> SpacesRecord:
+        """Perform one sub-step in the environment and return the record of it.
 
         Resets non-vectorised envs when done.
 
-        :param record: Structured spaces record to store sub-step rollout data in.
         :param policy: The policy to roll out.
-        :return: done (as returned by the environment).
+        :return: Spaces record with the data recorded during this sub-step.
         """
-        step_key, _ = self.env.actor_id()
+        record = SpacesRecord(actor_id=self.env.actor_id(),
+                              batch_shape=[self.env.n_envs] if self.is_vectorized else None)
+
         # Record copy of the observation (as by default, the policy converts and handles it in place)
-        record.observations[step_key] = self.last_observation
+        record.observation = self.last_observation
 
         # Sample action and record logits if configured
         # Note: Copy the observation (as by default, the policy converts and handles it in place)
         if self.record_logits:
-            action, logits = policy.compute_action_with_logits(self.last_observation.copy(), policy_id=step_key,
+            action, logits = policy.compute_action_with_logits(self.last_observation.copy(), policy_id=record.substep_key,
                                                                deterministic=False)
-            record.logits[step_key] = logits
+            record.logits = logits
         else:
             # Inject the MazeEnv state if desired by the policy
             maze_state = self.env.get_maze_state() if policy.needs_state() else None
-            action = policy.compute_action(self.last_observation.copy(), policy_id=step_key, maze_state=maze_state,
+            action = policy.compute_action(self.last_observation.copy(), policy_id=record.substep_key, maze_state=maze_state,
                                            deterministic=False)
-        record.actions[step_key] = action
+        record.action = action
 
         # Take the step
-        self.last_observation, reward, done, info = self.env.step(action)
-
-        record.rewards[step_key] = reward
-        record.dones[step_key] = done
-        record.infos[step_key] = info
+        self.last_observation, record.reward, record.done, record.info = self.env.step(action)
 
         # Record the resulting observation if requested
         if self.record_next_observations:
-            record.next_observations[step_key] = self.last_observation
+            record.next_observation = self.last_observation
 
         # Reset the env if done and keep the terminal observation
-        if not self.is_vectorized and done:
-            record.infos[step_key]["terminal_observation"] = self.last_observation
+        if not self.is_vectorized and record.done:
+            record.info["terminal_observation"] = self.last_observation
             self.last_observation = self.env.reset()
 
-            if self.record_episode_stats:
-                record.episode_stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
-
-        return done
+        return record

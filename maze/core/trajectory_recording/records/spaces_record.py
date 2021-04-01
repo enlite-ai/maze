@@ -11,16 +11,16 @@ from maze.train.utils.train_utils import stack_numpy_dict_list
 class SpacesRecord:
     actor_id: ActorIDType
 
-    observation: Dict[str, np.ndarray]
+    observation: Optional[Dict[str, np.ndarray]] = None
     """Dictionary of observations recorded during the step."""
 
-    action: Dict[str, np.ndarray]
+    action: Optional[Dict[str, np.ndarray]] = None
     """Dictionary of actions recorded during the step."""
 
-    reward: Union[float, np.ndarray]
+    reward: Optional[Union[float, np.ndarray]] = None
     """Dictionary of rewards recorded during the step."""
 
-    done: bool
+    done: Optional[bool] = None
     """Dictionary of dones recorded during the step."""
 
     info: Optional[Dict] = None
