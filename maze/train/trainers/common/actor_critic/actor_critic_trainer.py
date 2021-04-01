@@ -270,9 +270,10 @@ class MultiStepActorCritic(Trainer, ABC):
     def _append_train_stats(self,
                             policy_train_stats: List[Dict[str, List[float]]],
                             critic_train_stats: List[Dict[str, List[float]]],
+                            policy_ids: List,
                             policy_losses: List[torch.Tensor],
                             entropies: List[torch.Tensor],
-                            detached_values: Dict[Union[str, int], torch.Tensor],
+                            detached_values: List[torch.Tensor],
                             value_losses: List[torch.Tensor]) -> None:
         """Append logging statistics for policies and critic.
 
@@ -284,24 +285,28 @@ class MultiStepActorCritic(Trainer, ABC):
         :param value_losses: List of value losses.
         """
 
-        # policies
-        for step_id in self.sub_step_keys:
-            policy_train_stats[step_id]["policy_loss"].append(policy_losses[step_id].detach().item())
-            policy_train_stats[step_id]["policy_entropy"].append(entropies[step_id].detach().item())
+        # Policies
+        for policy_id, substep_loss, substep_entropies in zip(policy_ids, policy_losses, entropies):
+            policy_train_stats[policy_id]["policy_loss"].append(substep_loss.detach().item())
+            policy_train_stats[policy_id]["policy_entropy"].append(substep_entropies.detach().item())
 
-            grad_norm = compute_gradient_norm(self.model.policy.networks[step_id].parameters())
-            policy_train_stats[step_id]["policy_grad_norm"].append(grad_norm)
+            grad_norm = compute_gradient_norm(self.model.policy.networks[policy_id].parameters())
+            policy_train_stats[policy_id]["policy_grad_norm"].append(grad_norm)
 
-        # critic
-        for critic_id in range(self.model.critic.num_critics):
-            critic_train_stats[critic_id]["critic_value"].append(detached_values[critic_id].mean().item())
-            critic_train_stats[critic_id]["critic_value_loss"].append(value_losses[critic_id].detach().item())
+        # Critic(s)
+        #  - if there is just one critic, report only values from the first sub-step.
+        #  - otherwise, use policy IDs to identify the critics.
+        first_critic_id = list(self.model.critic.networks.keys())[-1]
+        critic_ids = [first_critic_id] if self.model.critic.num_critics == 1 else policy_ids
+        for critic_id, substep_detached_values, substep_losses in zip(critic_ids, detached_values, value_losses):
+            critic_train_stats[critic_id]["critic_value"].append(substep_detached_values.mean().item())
+            critic_train_stats[critic_id]["critic_value_loss"].append(substep_losses.detach().item())
 
             grad_norm = compute_gradient_norm(self.model.critic.networks[critic_id].parameters())
             critic_train_stats[critic_id]["critic_grad_norm"].append(grad_norm)
 
-    def _log_train_stats(self, policy_train_stats: List[Dict[str, List[float]]],
-                         critic_train_stats: List[Dict[str, List[float]]]) -> None:
+    def _log_train_stats(self, policy_train_stats: Dict[Union[str, int], Dict[str, List[float]]],
+                         critic_train_stats: Dict[Union[str, int], Dict[str, List[float]]]) -> None:
         """Fire logging events for training statistics.
 
         :param policy_train_stats: List of policy training statistics.
@@ -312,22 +317,16 @@ class MultiStepActorCritic(Trainer, ABC):
         self.ac_events.learning_rate(self.algorithm_config.lr)
 
         # policies
-        for step_id in self.sub_step_keys:
-            self.ac_events.policy_loss(step_id=step_id,
-                                       value=np.mean(policy_train_stats[step_id]["policy_loss"]))
-            self.ac_events.policy_grad_norm(step_id=step_id,
-                                            value=np.mean(policy_train_stats[step_id]["policy_grad_norm"]))
-            self.ac_events.policy_entropy(step_id=step_id,
-                                          value=np.mean(policy_train_stats[step_id]["policy_entropy"]))
+        for policy_id, stats in policy_train_stats.items():
+            self.ac_events.policy_loss(step_id=policy_id, value=np.mean(stats["policy_loss"]))
+            self.ac_events.policy_grad_norm(step_id=policy_id, value=np.mean(stats["policy_grad_norm"]))
+            self.ac_events.policy_entropy(step_id=policy_id, value=np.mean(stats["policy_entropy"]))
 
         # critic
-        for critic_id in range(self.model.critic.num_critics):
-            self.ac_events.critic_value(critic_id=critic_id,
-                                        value=np.mean(critic_train_stats[critic_id]["critic_value"]))
-            self.ac_events.critic_value_loss(critic_id=critic_id,
-                                             value=np.mean(critic_train_stats[critic_id]["critic_value_loss"]))
-            self.ac_events.critic_grad_norm(critic_id=critic_id,
-                                            value=np.mean(critic_train_stats[critic_id]["critic_grad_norm"]))
+        for critic_id, stats in critic_train_stats.items():
+            self.ac_events.critic_value(critic_id=critic_id, value=np.mean(stats["critic_value"]))
+            self.ac_events.critic_value_loss(critic_id=critic_id, value=np.mean(stats["critic_value_loss"]))
+            self.ac_events.critic_grad_norm(critic_id=critic_id, value=np.mean(stats["critic_grad_norm"]))
 
     @classmethod
     def _normalize_advantages(cls, advantages: List[torch.Tensor]) -> List[torch.Tensor]:

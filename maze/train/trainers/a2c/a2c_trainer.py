@@ -89,10 +89,10 @@ class MultiStepA2C(MultiStepActorCritic):
         self._gradient_step(policy_losses=policy_losses, entropies=entropies, value_loss=value_loss)
 
         # collect training stats for logging
-        policy_train_stats = [defaultdict(list) for _ in range(self.num_env_sub_steps)]
-        critic_train_stats = [defaultdict(list) for _ in range(self.model.critic.num_critics)]
+        policy_train_stats = defaultdict(lambda: defaultdict(list))
+        critic_train_stats = defaultdict(lambda: defaultdict(list))
         self._append_train_stats(policy_train_stats, critic_train_stats,
-                                 policy_losses, entropies, detached_values, value_losses)
+                                 record.substep_keys, policy_losses, entropies, detached_values, value_losses)
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)
