@@ -284,9 +284,9 @@ class MultiStepActorCritic(Trainer, ABC):
 
         # policies
         for policy_id, stats in policy_train_stats.items():
-            self.ac_events.policy_loss(step_id=policy_id, value=np.mean(stats["policy_loss"]))
-            self.ac_events.policy_grad_norm(step_id=policy_id, value=np.mean(stats["policy_grad_norm"]))
-            self.ac_events.policy_entropy(step_id=policy_id, value=np.mean(stats["policy_entropy"]))
+            self.ac_events.policy_loss(policy_id=policy_id, value=np.mean(stats["policy_loss"]))
+            self.ac_events.policy_grad_norm(policy_id=policy_id, value=np.mean(stats["policy_grad_norm"]))
+            self.ac_events.policy_entropy(policy_id=policy_id, value=np.mean(stats["policy_entropy"]))
 
         # critic
         for critic_id, stats in critic_train_stats.items():
