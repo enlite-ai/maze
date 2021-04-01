@@ -26,18 +26,18 @@ class MultiStepActorCriticEvents(ABC):
         """optimizer learning rate"""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id')
-    def policy_loss(self, step_id: int, value: float):
+    @define_stats_grouping('policy_id')
+    def policy_loss(self, policy_id: int, value: float):
         """optimization loss of the step policy"""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id')
-    def policy_grad_norm(self, step_id: int, value: float):
+    @define_stats_grouping('policy_id')
+    def policy_grad_norm(self, policy_id: int, value: float):
         """gradient norm of the step policies"""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id')
-    def policy_entropy(self, step_id: int, value: float):
+    @define_stats_grouping('policy_id')
+    def policy_entropy(self, policy_id: int, value: float):
         """entropy of the step policies"""
 
     @define_epoch_stats(np.nanmean)
