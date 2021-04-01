@@ -40,16 +40,12 @@ class MultiStepA2C(MultiStepActorCritic):
     def _update(self) -> None:
         """Perform policy update.
         """
-
         # collect observations
         record = self._rollout()
 
-        # convert observations to tensors
-        obs_t = convert_to_torch(record.observations, device=self.algorithm_config.device, cast=None, in_place=False)
-
         # compute bootstrapped returns
         returns, values, detached_values = \
-            self.model.critic.bootstrap_returns(obs_t,
+            self.model.critic.bootstrap_returns(record.observations,
                                                 # TODO: Use all rewards and dones, not from the last sub-step only
                                                 record.rewards[self.sub_step_keys[-1]],
                                                 record.dones[self.sub_step_keys[-1]],
@@ -57,7 +53,7 @@ class MultiStepA2C(MultiStepActorCritic):
                                                 gae_lambda=self.algorithm_config.gae_lambda)
 
         # compute action log-probabilities of actions taken
-        action_log_probs, step_action_dist = self._action_log_probs_and_dists(obs_t, record.actions)
+        action_log_probs, step_action_dist = self._action_log_probs_and_dists(record.observations, record.actions)
 
         # compute entropies
         entropies = [action_dist.entropy().mean() for action_dist in step_action_dist.values()]
