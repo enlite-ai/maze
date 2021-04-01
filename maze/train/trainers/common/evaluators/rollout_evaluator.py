@@ -28,10 +28,12 @@ class RolloutEvaluator(Evaluator):
     def __init__(self,
                  eval_env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
                  n_episodes: int,
-                 model_selection: Optional[ModelSelectionBase]):
+                 model_selection: Optional[ModelSelectionBase],
+                 deterministic: bool = False):
         self.eval_env = eval_env
         self.n_episodes = n_episodes
         self.model_selection = model_selection
+        self.deterministic = deterministic
 
     @override(Evaluator)
     def evaluate(self, policy: TorchPolicy) -> None:
@@ -48,7 +50,8 @@ class RolloutEvaluator(Evaluator):
             policy_id, _ = self.eval_env.actor_id()
 
             # Sample action and take the step
-            sampled_action = policy.compute_action(observations, policy_id=policy_id, maze_state=None)
+            sampled_action = policy.compute_action(observations, policy_id=policy_id, maze_state=None,
+                                                   deterministic=self.deterministic)
             observations, rewards, dones, infos = self.eval_env.step(sampled_action)
 
             # Count done episodes
