@@ -32,8 +32,8 @@ from maze.core.wrappers.wrapper import Wrapper
 CoreEnvType = TypeVar("CoreEnvType")
 
 
-class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, StructuredEnvSpacesMixin, EventEnvMixin, RecordableEnvMixin,
-              TimeEnvMixin):
+class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, StructuredEnvSpacesMixin, EventEnvMixin,
+              RecordableEnvMixin, TimeEnvMixin):
     """Base class for (gym style) environments wrapping a core environment and defining state and execution interfaces.
     The aim of this class is to provide reusable functionality across different gym environments.
     This functionality comprises for example the reset-function, the step-function or the render-function.

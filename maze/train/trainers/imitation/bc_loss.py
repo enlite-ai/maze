@@ -16,6 +16,9 @@ class BCLoss:
     action_spaces_dict: Dict[Union[int, str], gym.spaces.Dict]
     """Action space we are training on (used to determine appropriate loss functions)"""
 
+    entropy_coef: float
+    """Weight of entropy loss"""
+
     loss_discrete: nn.Module = nn.CrossEntropyLoss()
     """Loss function used for discrete (categorical) spaces"""
 
@@ -50,8 +53,10 @@ class BCLoss:
             losses.append(substep_losses)
 
             # Report policy entropy
-            entropy = policy.logits_dict_to_distribution(logits).entropy().mean().item()
-            events.policy_entropy(step_id=policy_id, value=entropy)
+            entropy = policy.logits_dict_to_distribution(logits).entropy().mean()
+            events.policy_entropy(step_id=policy_id, value=entropy.item())
+            if self.entropy_coef > 0:
+                losses.append(-self.entropy_coef * entropy)
 
         return sum(losses)
 
