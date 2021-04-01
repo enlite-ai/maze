@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.utils.train_utils import unstack_numpy_list_dict, stack_numpy_dict_list
+from maze.train.utils.train_utils import unstack_numpy_list_dict, stack_numpy_dict_list, stack_torch_dict_list
 
 
 def stacked_example():
@@ -31,7 +31,16 @@ def test_numpy_dict_list_stacking():
         assert np.all(v == stacked[k])
 
 
-def test_torch_dict_list_stacking():
+def test_torch_conversion():
     stacked = convert_to_torch(stack_numpy_dict_list(unstacked_example()), in_place=True, cast=None, device="cpu")
     for k, v in convert_to_torch(stacked_example(), in_place=True, cast=None, device="cpu").items():
+        assert torch.all(v == stacked[k])
+
+
+def test_torch_dict_list_stacking():
+    unstacked_ex = convert_to_torch(unstacked_example(), in_place=True, cast=None, device="cpu")
+    stacked_ex = convert_to_torch(stacked_example(), in_place=True, cast=None, device="cpu")
+
+    stacked = stack_torch_dict_list(unstacked_ex)
+    for k, v in stacked_ex.items():
         assert torch.all(v == stacked[k])
