@@ -75,7 +75,8 @@ def create_multi_binary_relative_bar_plot(value: List[Tuple[np.ndarray, int]]):
 
     # make bar plot where the frequencies of the categories are divided by the sum of the frequencies
     # in order to imitate a probability distribution
-    fig = plt.figure()
+    fig_size = (min(14, max(7, action_dim // 2)), 7)
+    fig = plt.figure(figsize=fig_size)
     plt.bar(x=range(action_dim), height=cat_counts / max_counts)
     plt.ylim([0, 1])
     return fig
@@ -103,7 +104,8 @@ def create_relative_bar_plot(value: List[Tuple[int, int]]):
             cat_dict[cat] = 0
     # make bar plot where the frequencies of the categories are divided by the sum of the frequencies
     # in order to imitate a probability distribution
-    fig = plt.figure()
+    fig_size = (min(14, max(7, action_dim // 2)), 7)
+    fig = plt.figure(figsize=fig_size)
     plt.bar(x=cat_dict.keys(), height=np.array(list(cat_dict.values())) / sum(cat_dict.values()))
     plt.ylim([0, 1])
     return fig
@@ -122,7 +124,7 @@ def create_violin_distribution(value: List[np.ndarray], **kwargs) -> None:
     # extract array
     value_array = np.stack(value)
 
-    fig_size = (7, max(7, value_array.shape[1] // 2))
+    fig_size = (min(14, max(7, value_array.shape[1] // 2)), 7)
     fig = plt.figure(figsize=fig_size)
     plt.violinplot(value_array, showmeans=True)
     plt.grid(True)

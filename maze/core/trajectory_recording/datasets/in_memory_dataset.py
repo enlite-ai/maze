@@ -22,6 +22,8 @@ class InMemoryDataset(Dataset, ABC):
 
     Provides the main functionality for parsing and appending records.
 
+    :param target_items: Target Items to be loaded
+            (see :class:`~maze.core.trajectory_recording.records.structured_spaces_record.StructuredSpacesRecord`).
     :param dir_or_file: Directory or file containing the trajectory data. If present, these data will be loaded on init.
     :param conversion_env_factory: Function for creating an environment for state and action
             conversion. For Maze envs, the environment configuration (i.e. space interfaces,
@@ -30,10 +32,12 @@ class InMemoryDataset(Dataset, ABC):
     """
 
     def __init__(self,
+                 target_items: List[str],
                  dir_or_file: Optional[Union[str, Path]] = None,
                  conversion_env_factory: Optional[Callable] = None):
         self.conversion_env_factory = conversion_env_factory
         self.conversion_env = self.conversion_env_factory() if self.conversion_env_factory else None
+        self.target_items = target_items
 
         self.step_records = []
         self.trajectory_references = []
@@ -60,15 +64,14 @@ class InMemoryDataset(Dataset, ABC):
         """
         return len(self.step_records)
 
-    def __getitem__(self, index: int) \
-            -> Tuple[Dict[Union[int, str], Any], Dict[Union[int, str], Any], Dict[Union[int, str], float]]:
+    def __getitem__(self, index: int) -> Tuple[Any, ...]:
         """Get a record.
 
         :param index: Index of the record to get.
         :return: A tuple of (observation_dict, action_dict). Note that the dictionaries only have multiple entries
                  in structured scenarios.
         """
-        return self.step_records[index].observations, self.step_records[index].actions, self.step_records[index].discounted_returns
+        return tuple([getattr(self.step_records[index], item_name) for item_name in self.target_items])
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
