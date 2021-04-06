@@ -1,7 +1,7 @@
 """Trainer class for offline critic training."""
 
 from dataclasses import dataclass
-from typing import Tuple, Dict, Any, Union
+from typing import Tuple, Dict, Any, Union, Optional
 
 import torch
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -30,7 +30,7 @@ class ActorCriticCloningTrainer(Trainer):
     and observation present in the trajectory data.
     """
 
-    train_data_loader: DataLoader
+    train_data_loader: Optional[DataLoader]
     """Data loader for loading trajectory data."""
 
     actor_critic_model: TorchActorCritic

@@ -4,10 +4,10 @@ from multiprocessing import Queue, Process
 from pathlib import Path
 from typing import Callable, List, Union, Optional
 
+from maze.core.annotations import override
 from tqdm import tqdm
 
 from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
-from maze.core.trajectory_recording.datasets.sequential_load_dataset import SequentialLoadDataset
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
 from maze.utils.exception_report import ExceptionReport
 
@@ -15,10 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class ParallelLoadDataset(InMemoryDataset):
-    """A version of the in-memory dataset that loads all data in parallel.
+    """A version of the in-memory dataset that loads all data either sequentially or in parallel depending on the
+    number of specified workers.
 
-    This significantly speeds up data loading in cases where conversion of MazeStates and MazeActions into actions
-    and observations is demanding.
+    Using multiple parallel workers significantly speeds up data loading in cases where conversion of MazeStates and
+    MazeActions into actions and observations is demanding.
 
     :param n_workers: Number of worker processes to load data in.
     :param dir_or_file: Where to load the trajectories from.
@@ -37,8 +38,26 @@ class ParallelLoadDataset(InMemoryDataset):
         self.reporting_queue = None
         super().__init__(dir_or_file, conversion_env_factory)
 
+    @override(InMemoryDataset)
     def load_data(self, dir_or_file: Union[str, Path]) -> None:
         """Load the trajectory data based on arguments provided on init."""
+        if self.n_workers == 1:
+            self._load_data_sequential(dir_or_file)
+        else:
+            self._load_data_parallel(dir_or_file)
+
+    def _load_data_sequential(self, dir_or_file: Union[str, Path]) -> None:
+        """Load data in a sequential fashion."""
+        logger.info(f"Started loading trajectory data from: {dir_or_file}")
+
+        for trajectory in self.deserialize_trajectories(dir_or_file):
+            self.append(trajectory)
+
+        logger.info(f"Loaded trajectory data from: {dir_or_file}")
+        logger.info(f"Current length is {len(self)} steps in total.")
+
+    def _load_data_parallel(self, dir_or_file: Union[str, Path]) -> None:
+        """Load data in a parallel fashion."""
         logger.info(f"Started loading trajectory data from: {dir_or_file}")
 
         if Path(dir_or_file).is_file():
@@ -120,13 +139,13 @@ class DataLoadWorker:
 
                 # If we got a file path, then deserialize, convert, and report all trajectories in it
                 if isinstance(trajectory_or_path, Path) or isinstance(trajectory_or_path, str):
-                    for trajectory in SequentialLoadDataset.deserialize_trajectories(trajectory_or_path):
-                        step_records = SequentialLoadDataset.convert_trajectory(trajectory, env)
+                    for trajectory in ParallelLoadDataset.deserialize_trajectories(trajectory_or_path):
+                        step_records = ParallelLoadDataset.convert_trajectory(trajectory, env)
                         reporting_queue.put(step_records)
 
                 # If we got an already-loaded trajectory, then just convert and report it
                 elif isinstance(trajectory_or_path, TrajectoryRecord):
-                    step_records = SequentialLoadDataset.convert_trajectory(trajectory_or_path, env)
+                    step_records = ParallelLoadDataset.convert_trajectory(trajectory_or_path, env)
                     reporting_queue.put(step_records)
 
                 else:
