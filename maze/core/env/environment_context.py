@@ -10,7 +10,7 @@ several benefits
 """
 
 import uuid
-from typing import Optional
+from typing import Optional, Callable
 
 from maze.utils.bcolors import BColors
 
@@ -38,9 +38,9 @@ class EnvironmentContext:
         self.step_id = 0
         self._episode_id = None
 
-        self.last_env_time: Optional[int] = None
         self._should_clear_events = True
 
+        self._pre_step_callbacks = []
         self._increment_env_step_warning_printed = False
 
     @property
@@ -82,6 +82,13 @@ class EnvironmentContext:
         self.event_service.clear_events()
         self.event_service.clear_pubsub()
 
+    def register_pre_step(self, callback: Callable) -> None:
+        """
+        Register a function to be called before every single step, just before the events of the
+        previous step are cleared.
+        """
+        self._pre_step_callbacks.append(callback)
+
     def pre_step(self) -> None:
         """Prepare the event system for a new step.
 
@@ -89,6 +96,9 @@ class EnvironmentContext:
         """
         if not self._should_clear_events:
             return
+
+        for callback in self._pre_step_callbacks:
+            callback()
 
         self._should_clear_events = False
         self.event_service.clear_events()
