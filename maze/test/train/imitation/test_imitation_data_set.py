@@ -18,7 +18,6 @@ from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.do
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double import \
     DoubleObservationConversion
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
-from maze.core.trajectory_recording.datasets.sequential_load_dataset import SequentialLoadDataset
 from maze.core.trajectory_recording.datasets.parallel_load_dataset import ParallelLoadDataset
 
 
@@ -89,7 +88,7 @@ def _env_factory():
 
 
 def test_state_record_load():
-    dataset = SequentialLoadDataset(conversion_env_factory=_env_factory)
+    dataset = ParallelLoadDataset(n_workers=1, conversion_env_factory=_env_factory)
     step_records = dataset.convert_trajectory(_mock_spaces_trajectory_record(5), dataset.conversion_env)
 
     # All steps should be loaded
@@ -107,7 +106,7 @@ def test_state_record_load():
 
 
 def test_spaces_record_load():
-    dataset = SequentialLoadDataset(conversion_env_factory=_env_factory)
+    dataset = ParallelLoadDataset(n_workers=1, conversion_env_factory=_env_factory)
     step_records = dataset.convert_trajectory(_mock_state_trajectory_record(5), dataset.conversion_env)
 
     # Last step should be skipped, as no maze_action is available
@@ -125,7 +124,7 @@ def test_spaces_record_load():
 
 
 def test_data_load_with_stateful_wrapper():
-    dataset = SequentialLoadDataset(conversion_env_factory=lambda: _MockObservationStackWrapper.wrap(_env_factory()))
+    dataset = ParallelLoadDataset(n_workers=1, conversion_env_factory=lambda: _MockObservationStackWrapper.wrap(_env_factory()))
     step_records = dataset.convert_trajectory(_mock_state_trajectory_record(4), dataset.conversion_env)
 
     expected_observations = [
@@ -141,7 +140,7 @@ def test_data_split():
         """Extract observation values from array of imitation samples of (obs, act) tuples"""
         return list(map(lambda sample: sample[0][0]["observation"], imitation_samples))
 
-    dataset = SequentialLoadDataset(conversion_env_factory=_env_factory)
+    dataset = ParallelLoadDataset(n_workers=1, conversion_env_factory=_env_factory)
 
     # Fill dataset with two episodes with 5 usable steps each
     for _ in range(2):

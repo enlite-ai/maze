@@ -52,7 +52,7 @@ class BCLoss:
                                                     events=events)
             losses.append(substep_losses)
 
-            # Report policy entropy
+            # Compute and report policy entropy
             entropy = policy.logits_dict_to_distribution(logits).entropy().mean()
             events.policy_entropy(step_id=policy_id, value=entropy.item())
             if self.entropy_coef > 0:
@@ -68,6 +68,7 @@ class BCLoss:
         """Iterate over the action space of a given policy and calculate the loss based on the types of the
         subspaces.
 
+        :param step_id: The step id to compute the loss for
         :param logits_dict: Logits dict output by the policy for a given substep
         :param target_dict: Target action for the given substep
         :param action_spaces_dict: Dict action space for the given substep

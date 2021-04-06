@@ -23,11 +23,11 @@ class StateCriticCloningLoss:
                        ) -> torch.Tensor:
         """Calculate and return the training loss for one step (= multiple sub-steps in structured scenarios).
 
-        :param critic: Structured critic to evaluate
+        :param critic: Structured critic to evaluate.
         :param observation_dict: Dictionary with observations identified by substep ID
-        :param step_returns: The step returns to approximate
-        :param events:
-        :return: Total loss
+        :param step_returns: The step returns to approximate.
+        :param events: Critic imitation events.
+        :return: Total loss.
         """
         losses = []
 
@@ -45,14 +45,13 @@ class StateCriticCloningLoss:
 
     def _get_substep_loss(self, step_id: str, value: torch.Tensor, step_return: torch.Tensor,
                           events: CriticImitationEvents) -> torch.Tensor:
-        """Iterate over the action space of a given policy and calculate the loss based on the types of the
-        subspaces.
+        """Calculate the critic cloning (value function) loss.
 
-        :param step_id:
-        :param value:
-        :param step_return:
-        :param events:
-        :return: Total loss for this substep.
+        :param step_id: The step id to compute the loss for.
+        :param value: The model predicted value.
+        :param step_return: The target value (discounted step return).
+        :param events: Critic imitation events.
+        :return: Total loss for this sub step.
         """
         value = value[:, 0]
         assert value.shape == step_return.shape

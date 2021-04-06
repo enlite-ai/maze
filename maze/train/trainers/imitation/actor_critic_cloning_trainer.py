@@ -1,4 +1,4 @@
-"""Trainer class for offline critic training."""
+"""Trainer class for offline actor-critic training."""
 
 from dataclasses import dataclass
 from typing import Tuple, Dict, Any, Union, Optional
@@ -26,11 +26,11 @@ class ActorCriticCloningTrainer(Trainer):
 
     Runs training on top of provided trajectory data.
 
-    In structured (multi-step) envs, all critics are trained simultaneously based on the substep rewards
+    In structured (multi-step) envs, all policies and critics are trained simultaneously based on the substep rewards
     and observation present in the trajectory data.
     """
 
-    train_data_loader: Optional[DataLoader]
+    train_data_loader: DataLoader
     """Data loader for loading trajectory data."""
 
     actor_critic_model: TorchActorCritic
@@ -74,6 +74,7 @@ class ActorCriticCloningTrainer(Trainer):
 
     def load_state_dict(self, state_dict: Dict) -> None:
         """Set the model and optimizer state.
+
         :param state_dict: The state dict.
         """
         self.actor_critic_model.load_state_dict(state_dict)
