@@ -6,5 +6,6 @@ eval_concurrency: 1
 
 # Specify the Dataset class used to load the trajectory data for training
 dataset:
-  _target_: maze.core.trajectory_recording.datasets.sequential_load_dataset.SequentialLoadDataset
+  _target_: maze.core.trajectory_recording.datasets.parallel_load_dataset.ParallelLoadDataset
+  n_workers: 1
   dir_or_file: trajectory_data

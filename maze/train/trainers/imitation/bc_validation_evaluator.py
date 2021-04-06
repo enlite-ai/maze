@@ -19,6 +19,8 @@ from maze.train.trainers.imitation.imitation_events import ImitationEvents
 class BCValidationEvaluator(Evaluator):
     """Evaluates a given policy on validation data.
 
+    Expects that the first two items returned in the dataset tuple are the observation_dict and action_dict.
+
     :param data_loader: The data used for evaluation.
     :param loss: Loss function to be used.
     :param model_selection: Model selection interface that will be notified of the recorded rewards.
@@ -27,7 +29,7 @@ class BCValidationEvaluator(Evaluator):
     def __init__(self,
                  loss: BCLoss,
                  model_selection: Optional[ModelSelectionBase],
-                 data_loader: Optional[DataLoader],
+                 data_loader: DataLoader,
                  logging_prefix: str = "eval"):
         self.loss = loss
         self.data_loader = data_loader
@@ -48,7 +50,7 @@ class BCValidationEvaluator(Evaluator):
             total_loss = []
 
             for iteration, data in enumerate(self.data_loader, 0):
-                observation_dict, action_dict, _ = data
+                observation_dict, action_dict = data[:2]
                 convert_to_torch(action_dict, device=policy.device, cast=None, in_place=True)
 
                 total_loss.append(
