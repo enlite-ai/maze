@@ -1,5 +1,4 @@
-"""Distributed actors base class. All Possible implementations should be children of the abstract class
-    BaseDistributedActorsModule"""
+"""Base class for distributed actor modules."""
 
 from abc import abstractmethod
 from typing import Tuple, Callable, Optional, Union, Dict
