@@ -71,7 +71,7 @@ class Wrapper(Generic[EnvType], ABC):
 
         # intercept the first step function call in the wrapper hierarchy for
         # a reliable place to trigger the event system reset
-        if hasattr(env, "context"):
+        if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
             assert isinstance(env.context, EnvironmentContext)
             self._register_hook("step", env.context.pre_step)
 

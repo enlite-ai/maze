@@ -4,9 +4,11 @@ from typing import Callable, Optional
 from typing import TypeVar, Union, Any, Tuple, Dict
 
 import gym
+
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
+from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
@@ -54,6 +56,11 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
 
         self.step_stats_renderer = EventStatsRenderer()
 
+        # get notified at the beginning of a step call (relevant if the step originated
+        # within the wrapper hierarchy, e.g. frame skipping)
+        if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
+            env.context.register_pre_step(self._pre_step)
+
     T = TypeVar("T")
 
     @classmethod
@@ -92,7 +99,15 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
 
         return obs, rew, done, info
 
-    def _record_events_and_stats(self):
+    def _pre_step(self) -> None:
+        """
+        Get notified of a new step method call, just before the events of the previous step are cleared by the
+        event system (see :py:meth:`~maze.core.env.environment_context.EnvironmentContext.pre_step`).
+        """
+        if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
+            self._record_events_and_stats()
+
+    def _record_events_and_stats(self) -> None:
         """Record the event log and statistics from the preceding step."""
         self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
 
