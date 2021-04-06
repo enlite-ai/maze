@@ -27,7 +27,7 @@ class BCValidationEvaluator(Evaluator):
     def __init__(self,
                  loss: BCLoss,
                  model_selection: Optional[ModelSelectionBase],
-                 data_loader: DataLoader,
+                 data_loader: Optional[DataLoader],
                  logging_prefix: str = "eval"):
         self.loss = loss
         self.data_loader = data_loader

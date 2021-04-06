@@ -48,15 +48,16 @@ class RolloutGenerator:
 
         self.rollout_counter = 0  # For generating trajectory IDs if none are supplied
 
-    def rollout(self, policy: Policy, n_steps: int, trajectory_id: Optional[Any] = None) -> SpacesTrajectoryRecord:
-        """Perform and record a rollout with given policy, for given steps.
+    def rollout(self, policy: Policy, n_steps: Optional[int], trajectory_id: Optional[Any] = None) \
+            -> SpacesTrajectoryRecord:
+        """Perform and record a rollout with given policy, for given steps or until done.
 
         Note that the env is only reset on the very first rollout with this generator, the following rollouts
         just pick up where the previous left off. If required, you can avoid the initial reset by assigning
         the last observation (which will be recorded with the first step) into `self.last_observation`.
 
         :param policy: Policy to roll out.
-        :param n_steps: How many steps to perform.
+        :param n_steps: How many steps to perform. If None, rollouts are performed until done=True.
         :param trajectory_id: Optionally, the ID of the trajectory that we are recording.
         :return: Recorded trajectory.
         """
@@ -74,7 +75,8 @@ class RolloutGenerator:
 
         # Step the desired number of (flat) steps
         done = False
-        for _ in range(n_steps):
+        step_count = 0
+        while not done:
             record = StructuredSpacesRecord(observations={}, actions={}, rewards={}, dones={}, infos={},
                                             logits={} if self.record_logits else None,
                                             batch_shape=[self.env.n_envs] if self.is_vectorized else None)
@@ -90,6 +92,11 @@ class RolloutGenerator:
                 record.step_stats = self.env.get_stats(LogStatsLevel.STEP).last_stats
 
             trajectory_record.append(record)
+
+            # limit maximum number of steps
+            step_count += 1
+            if n_steps and step_count >= n_steps:
+                break
 
             # End prematurely on env done if desired
             if not self.is_vectorized and done and self.terminate_on_done:
