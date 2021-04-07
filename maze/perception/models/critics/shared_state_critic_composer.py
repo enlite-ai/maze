@@ -6,6 +6,7 @@ from torch import nn
 
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.annotations import override
+from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.factory import Factory, ConfigType
 from maze.core.utils.structured_env_utils import flat_structured_shapes
 from maze.perception.models.critics.base_state_critic_composer import BaseStateCriticComposer
@@ -22,9 +23,10 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
     """
 
     def __init__(self,
-                 observation_spaces_dict: Dict[Union[str, int], spaces.Dict],
+                 observation_spaces_dict: Dict[StepKeyType, spaces.Dict],
+                 agent_counts_dict: Dict[StepKeyType, int],
                  networks: ConfigType):
-        super().__init__(observation_spaces_dict)
+        super().__init__(observation_spaces_dict, agent_counts_dict)
         assert len(networks) == 1
         network = networks[0]
 

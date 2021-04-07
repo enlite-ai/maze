@@ -5,6 +5,8 @@ from typing import Union, Dict
 
 import gym
 
+from maze.core.env.structured_env import StepKeyType
+
 
 class SpacesConfig:
     """Represents configuration of environment spaces (action & observation) used for model config.
@@ -13,10 +15,12 @@ class SpacesConfig:
     a trained policy for rollout.
     """
     def __init__(self,
-                 action_spaces_dict: Dict[Union[str, int], gym.spaces.Dict],
-                 observation_spaces_dict: Dict[Union[str, int], gym.spaces.Dict]):
+                 action_spaces_dict: Dict[StepKeyType, gym.spaces.Dict],
+                 observation_spaces_dict: Dict[StepKeyType, gym.spaces.Dict],
+                 agent_counts_dict: Dict[StepKeyType, int]):
         self.action_spaces_dict = action_spaces_dict
         self.observation_spaces_dict = observation_spaces_dict
+        self.agent_counts_dict = agent_counts_dict
 
     def save(self, dump_file_path: str) -> None:
         """Save the spaces config to a file.

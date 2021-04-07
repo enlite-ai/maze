@@ -115,10 +115,12 @@ class TrainingRunner(Runner):
         self.model_composer = Factory(base_type=BaseModelComposer).instantiate(
             cfg.model,
             action_spaces_dict=normalization_env.action_spaces_dict,
-            observation_spaces_dict=normalization_env.observation_spaces_dict)
+            observation_spaces_dict=normalization_env.observation_spaces_dict,
+            agent_counts_dict=normalization_env.agent_counts_dict)
 
         SpacesConfig(self.model_composer.action_spaces_dict,
-                     self.model_composer.observation_spaces_dict).save(self.spaces_config_dump_file)
+                     self.model_composer.observation_spaces_dict,
+                     self.model_composer.agent_counts_dict).save(self.spaces_config_dump_file)
 
         # Should be done after the normalization runs, otherwise stats from those will get logged as well.
         setup_logging(job_config=cfg)

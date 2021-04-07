@@ -8,6 +8,7 @@ import gym
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchStateCritic
+from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.factory import ConfigType
 from maze.core.utils.structured_env_utils import flat_structured_space
 from maze.distributions.distribution_mapper import DistributionMapper
@@ -33,11 +34,13 @@ class BaseModelComposer(ABC):
         """
 
     def __init__(self,
-                 action_spaces_dict: Dict[Union[str, int], gym.spaces.Dict],
-                 observation_spaces_dict: Dict[Union[str, int], gym.spaces.Dict],
+                 action_spaces_dict: Dict[StepKeyType, gym.spaces.Dict],
+                 observation_spaces_dict: Dict[StepKeyType, gym.spaces.Dict],
+                 agent_counts_dict: Dict[StepKeyType, int],
                  distribution_mapper_config: ConfigType):
         self.action_spaces_dict = action_spaces_dict
         self.observation_spaces_dict = observation_spaces_dict
+        self.agent_counts_dict = agent_counts_dict
 
         # initialize DistributionMapper
         flat_action_space = flat_structured_space(action_spaces_dict)
