@@ -76,7 +76,7 @@ class RolloutGenerator:
         # Step the desired number of (flat) steps
         done = False
         step_count = 0
-        while not done:
+        while True:
             record = StructuredSpacesRecord(observations={}, actions={}, rewards={}, dones={}, infos={},
                                             logits={} if self.record_logits else None,
                                             batch_shape=[self.env.n_envs] if self.is_vectorized else None)
