@@ -8,6 +8,7 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override
+from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.factory import Factory, ConfigType
 from maze.perception.models.critics import BaseStateCriticComposer
 from maze.perception.models.critics.base_state_action_critic_composer import BaseStateActionCriticComposer
@@ -41,12 +42,13 @@ class CustomModelComposer(BaseModelComposer):
                 f"Custom models expect explicit critic networks! Check the model config!"
 
     def __init__(self,
-                 action_spaces_dict: Dict[Union[str, int], gym.spaces.Dict],
-                 observation_spaces_dict: Dict[Union[str, int], gym.spaces.Dict],
+                 action_spaces_dict: Dict[StepKeyType, gym.spaces.Dict],
+                 observation_spaces_dict: Dict[StepKeyType, gym.spaces.Dict],
+                 agent_counts_dict: Dict[StepKeyType, int],
                  distribution_mapper_config: ConfigType,
                  policy: ConfigType,
                  critic: ConfigType):
-        super().__init__(action_spaces_dict, observation_spaces_dict, distribution_mapper_config)
+        super().__init__(action_spaces_dict, observation_spaces_dict, agent_counts_dict, distribution_mapper_config)
 
         # init policy composer
         self._policy_composer = Factory(BasePolicyComposer).instantiate(
@@ -62,7 +64,9 @@ class CustomModelComposer(BaseModelComposer):
             critic_type = Factory(CriticComposerInterface).type_from_name(critic['_target_'])
             if issubclass(critic_type, BaseStateCriticComposer):
                 self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
-                    critic, observation_spaces_dict=self.observation_spaces_dict
+                    critic,
+                    observation_spaces_dict=self.observation_spaces_dict,
+                    agent_counts_dict=self.agent_counts_dict
                 )
             elif issubclass(critic_type, BaseStateActionCriticComposer):
                 self._critics_composer = Factory(BaseStateActionCriticComposer).instantiate(

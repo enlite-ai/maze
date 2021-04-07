@@ -10,6 +10,7 @@ from maze.core.agent.torch_state_action_critic import TorchSharedStateActionCrit
 from maze.core.agent.torch_state_critic import TorchStateCritic, \
     TorchSharedStateCritic, TorchStepStateCritic, TorchDeltaStateCritic
 from maze.core.annotations import override
+from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.factory import ConfigType, Factory
 from maze.core.utils.structured_env_utils import flat_structured_space
 from maze.core.wrappers.observation_preprocessing.preprocessors.one_hot import OneHotPreProcessor
@@ -56,14 +57,15 @@ class TemplateModelComposer(BaseModelComposer):
                 f"Template models do not expect explicit critic networks! Check the model config!"
 
     def __init__(self,
-                 action_spaces_dict: Dict[Union[str, int], spaces.Dict],
-                 observation_spaces_dict: Dict[Union[str, int], spaces.Dict],
+                 action_spaces_dict: Dict[StepKeyType, spaces.Dict],
+                 observation_spaces_dict: Dict[StepKeyType, spaces.Dict],
+                 agent_counts_dict: Dict[StepKeyType, int],
                  distribution_mapper_config: ConfigType,
                  model_builder: Union[ConfigType, Type[BaseModelBuilder]],
                  policy: ConfigType,
                  critic: ConfigType):
 
-        super().__init__(action_spaces_dict, observation_spaces_dict, distribution_mapper_config)
+        super().__init__(action_spaces_dict, observation_spaces_dict, agent_counts_dict, distribution_mapper_config)
 
         self._policy_type = Factory(BasePolicyComposer).type_from_name(policy['_target_']) \
             if policy is not None else None
