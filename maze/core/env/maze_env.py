@@ -211,7 +211,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
     @override(StructuredEnv)
     def agent_counts_dict(self) -> Dict[StepKeyType, int]:
         """forward call to :attr:`self.core_env <core_env>`"""
-        return self.core_env.agent_counts_dict()
+        return self.core_env.agent_counts_dict
 
     @property
     def action_space(self):
