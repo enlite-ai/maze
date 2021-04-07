@@ -5,7 +5,7 @@ import torch
 from gym import spaces
 
 from maze.perception.perception_utils import flatten_spaces, observation_spaces_to_in_shapes, \
-    map_nested_structure, convert_to_torch, convert_to_numpy
+    map_nested_structure, convert_to_torch, convert_to_numpy, combine_spaces
 
 
 def test_flat_structured_observations():
@@ -19,6 +19,13 @@ def test_flat_structured_observations():
 
     _ = flatten_spaces(structured_obs.values())
     _ = observation_spaces_to_in_shapes(obs_space)
+
+
+def test_combine_spaces():
+    actor_ids = ["s0_0", "s1_0"]
+    observations = [dict(a=1, b=2), dict(x=3, y=4)]
+    expected_combined = dict(s0_0_a=1, s0_0_b=2, s1_0_x=3, s1_0_y=4)
+    assert expected_combined == combine_spaces(spaces=observations, ids=actor_ids)
 
 
 def test_map_nested_structure_mutable():

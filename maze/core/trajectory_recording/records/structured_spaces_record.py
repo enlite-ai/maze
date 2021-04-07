@@ -85,6 +85,10 @@ class StructuredSpacesRecord:
         return [r.actor_id for r in self.substep_records]
 
     @property
+    def actor_id_strings(self):
+        return [r.actor_id_string for r in self.substep_records]
+
+    @property
     def substep_keys(self):
         return [r.substep_key for r in self.substep_records]
 
