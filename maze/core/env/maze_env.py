@@ -20,7 +20,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationConversionInterface, ObservationType
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorIDType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
@@ -198,16 +198,20 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self._action_spaces = {k: act_conv.space() for k, act_conv in self.action_conversion_dict.items()}
 
     @override(StructuredEnv)
-    def actor_id(self) -> Tuple[Union[str, int], int]:
-        """forward call to :attr:`self.core_env <core_env>`
-        """
+    def actor_id(self) -> ActorIDType:
+        """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.actor_id()
 
     @override(StructuredEnv)
     def is_actor_done(self) -> bool:
-        """forward call to :attr:`self.core_env <core_env>`
-        """
+        """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.is_actor_done()
+
+    @property
+    @override(StructuredEnv)
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """forward call to :attr:`self.core_env <core_env>`"""
+        return self.core_env.agent_counts_dict()
 
     @property
     def action_space(self):
