@@ -55,6 +55,17 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch
     return result
 
 
+def combine_spaces(spaces: Iterable[Dict[str, torch.Tensor]], ids: Iterable[str]) -> Dict[str, torch.Tensor]:
+    """"""
+    result = dict()
+
+    for space_id, space in zip(ids, spaces):
+        for key, obs in space.items():
+            result[f"{space_id}_{key}"] = obs
+
+    return result
+
+
 def convert_to_torch(stats: Any, device: Union[str, None], cast: Union[torch.dtype, None],
                      in_place: Union[bool, str]):
     """Converts any struct to torch.Tensors.

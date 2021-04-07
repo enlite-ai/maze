@@ -10,7 +10,7 @@ from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
-from maze.perception.perception_utils import convert_to_torch, flatten_spaces
+from maze.perception.perception_utils import convert_to_torch, flatten_spaces, combine_spaces
 
 
 class TorchStateCritic(TorchModel, StateCritic):
@@ -99,7 +99,7 @@ class TorchStateCritic(TorchModel, StateCritic):
                 assert key in state_dict_critics, f"Could not find state dict for policy ID: {key}"
                 critic.load_state_dict(state_dict_critics[key])
 
-    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float,) \
+    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float, ) \
             -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
         """Bootstrap returns using the value function.
 
@@ -183,6 +183,11 @@ class TorchStateCritic(TorchModel, StateCritic):
 
 class TorchSharedStateCritic(TorchStateCritic):
     """One critic is shared across all sub-steps or actors (default to use for standard gym-style environments).
+
+    In multi-step and multi-agent scenarios, observations from different sub-steps are merged into one.
+    Observation keys common across multiple sub-steps are expected to have the same value and are
+    present only once in the resulting dictionary.
+
     Can be instantiated via the
     :class:`~maze.perception.models.critics.shared_state_critic_composer.SharedStateCriticComposer`.
     """
@@ -198,6 +203,41 @@ class TorchSharedStateCritic(TorchStateCritic):
         """Predict the shared values and repeat them for each sub-step."""
         flattened_obs_t = flatten_spaces(record.observations)
         value = self.network(flattened_obs_t)["value"][..., 0]
+
+        values = [value for _ in record.substep_records]
+        detached_values = [value.detach() for _ in record.substep_records]
+
+        return values, detached_values
+
+    @property
+    @override(TorchStateCritic)
+    def num_critics(self) -> int:
+        """There is a single shared critic network."""
+        return 1
+
+
+class TorchSharedCombinedStateCritic(TorchStateCritic):
+    """One critic is shared across all sub-steps or actors.
+
+    In multi-step and multi-agent scenarios, observations from different sub-steps are combined into one
+    by prefixing keys of their sub-observations with agent ID. Hence, observation keys common
+    across multiple sub-steps will be present in the resulting critic observations multiple times.
+
+    Can be instantiated via the
+    :class:`~maze.perception.models.critics.shared_state_critic_composer.SharedStateCriticComposer`.
+    """
+
+    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str):
+        super().__init__(networks=networks, num_policies=num_policies, device=device)
+
+        self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
+
+    @override(StateCritic)
+    def predict_values(self, record: StructuredSpacesRecord) -> \
+            Tuple[Dict[Union[str, int], torch.Tensor], Dict[Union[str, int], torch.Tensor]]:
+        """Predict the shared values and repeat them for each sub-step."""
+        combined_obs_t = combine_spaces(record.observations, record.actor_id_strings)
+        value = self.network(combined_obs_t)["value"][..., 0]
 
         values = [value for _ in record.substep_records]
         detached_values = [value.detach() for _ in record.substep_records]

@@ -63,6 +63,10 @@ class SpacesRecord:
     def agent_id(self) -> int:
         return self.actor_id[1]
 
+    @property
+    def actor_id_string(self) -> str:
+        return f"{str(self.substep_key)}_{self.agent_id}"
+
     def to_numpy(self):
         """Convert the record to numpy."""
         self.observation = convert_to_numpy(self.observation, cast=None, in_place=True)

@@ -39,3 +39,17 @@ def flat_structured_shapes(shapes: Dict[Union[str, int], Dict[str, Sequence[int]
             result[key] = action_space
 
     return result
+
+
+def prefixed_structured_shapes(shapes: Dict[Union[str, int], Dict[str, Sequence[int]]],
+                               agent_counts: Dict[Union[str, int], int]) \
+        -> Dict[str, Sequence[int]]:
+    """"""
+    result = dict()
+
+    for sub_step_key, sub_step_space in shapes.items():
+        for agent_id in range(agent_counts[sub_step_key]):
+            for key, action_space in sub_step_space.items():
+                result[f"{sub_step_key}_{agent_id}_{key}"] = action_space
+
+    return result
