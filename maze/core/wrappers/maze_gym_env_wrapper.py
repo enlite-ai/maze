@@ -15,6 +15,7 @@ from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationConversionInterface
+from maze.core.env.structured_env import StepKeyType
 from maze.core.events.pubsub import Subscriber
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
@@ -218,6 +219,12 @@ class GymCoreEnv(CoreEnv):
     def actor_id(self) -> Tuple[Union[str, int], int]:
         """Intercept ``CoreEnv.actor_id``"""
         return 0, 0
+
+    @property
+    @override(CoreEnv)
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """Single policy, single agent env."""
+        return {0: 1}
 
 
 class GymMazeEnv(MazeEnv, SimulatedEnvMixin):
