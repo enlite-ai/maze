@@ -59,7 +59,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 remote.close()
                 break
             elif cmd == 'get_spaces':
-                remote.send((env.observation_spaces_dict, env.action_spaces_dict))
+                remote.send((env.observation_spaces_dict, env.action_spaces_dict, env.agent_counts_dict))
             elif cmd == 'env_method':
                 method = getattr(env, data[0])
                 remote.send(method(*data[1], **data[2]))
@@ -140,12 +140,13 @@ class SubprocVectorEnv(StructuredVectorEnv):
             work_remote.close()
 
         self.remotes[0].send(('get_spaces', None))
-        observation_spaces_dict, action_spaces_dict = self.remotes[0].recv()
+        observation_spaces_dict, action_spaces_dict, agent_counts_dict = self.remotes[0].recv()
 
         super().__init__(
             n_envs=n_envs,
             action_spaces_dict=action_spaces_dict,
             observation_spaces_dict=observation_spaces_dict,
+            agent_counts_dict=agent_counts_dict,
             logging_prefix=logging_prefix
         )
 

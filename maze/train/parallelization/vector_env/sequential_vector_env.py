@@ -30,6 +30,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
             n_envs=len(env_factories),
             action_spaces_dict=self.envs[0].action_spaces_dict,
             observation_spaces_dict=self.envs[0].observation_spaces_dict,
+            agent_counts_dict=self.envs[0].agent_counts_dict,
             logging_prefix=logging_prefix
         )
 
