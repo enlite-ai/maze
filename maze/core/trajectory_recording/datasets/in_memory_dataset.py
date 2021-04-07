@@ -1,18 +1,21 @@
 """Trajectory data set for imitation learning."""
 import logging
 import pickle
-from abc import ABC, abstractmethod
+from abc import ABC
 from itertools import chain
+from multiprocessing import Queue, Process
 from pathlib import Path
-from typing import Callable, Tuple, List, Dict, Union, Any, Sequence, Optional, Generator
+from typing import Callable, List, Union, Optional
+from typing import Tuple, Dict, Any, Sequence, Generator
 
 import torch
-from torch.utils.data.dataset import Dataset, Subset
-
-from maze.core.env.structured_env import StructuredEnv
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.env.maze_env import MazeEnv
 from maze.core.trajectory_recording.records.state_record import StateRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
+from maze.utils.exception_report import ExceptionReport
+from torch.utils.data.dataset import Dataset, Subset
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -27,21 +30,24 @@ class InMemoryDataset(Dataset, ABC):
             conversion. For Maze envs, the environment configuration (i.e. space interfaces,
             wrappers etc.) determines the format of the actions and observations that will be derived
             from the recorded MazeActions and MazeStates (e.g. multi-step observations/actions etc.).
+    :param n_workers: Number of worker processes to load data in.
     """
 
     def __init__(self,
                  dir_or_file: Optional[Union[str, Path]] = None,
-                 conversion_env_factory: Optional[Callable] = None):
+                 conversion_env_factory: Optional[Callable] = None,
+                 n_workers: int = 1):
         self.conversion_env_factory = conversion_env_factory
         self.conversion_env = self.conversion_env_factory() if self.conversion_env_factory else None
+        self.n_workers = n_workers
 
         self.step_records = []
         self.trajectory_references = []
+        self.reporting_queue = None
 
         if dir_or_file is not None:
             self.load_data(dir_or_file)
 
-    @abstractmethod
     def load_data(self, dir_or_file: Union[str, Path]) -> None:
         """Load the trajectory data from the given file or directory and append it to the dataset.
 
@@ -52,6 +58,82 @@ class InMemoryDataset(Dataset, ABC):
 
         :param dir_or_file: Directory or file to load the trajectory data from.
         """
+        if self.n_workers == 1:
+            self._load_data_sequential(dir_or_file)
+        else:
+            self._load_data_parallel(dir_or_file)
+
+    def _load_data_sequential(self, dir_or_file: Union[str, Path]) -> None:
+        """Load data in a sequential fashion."""
+        logger.info(f"Started loading trajectory data from: {dir_or_file}")
+
+        for trajectory in self.deserialize_trajectories(dir_or_file):
+            self.append(trajectory)
+
+        logger.info(f"Loaded trajectory data from: {dir_or_file}")
+        logger.info(f"Current length is {len(self)} steps in total.")
+
+    def _load_data_parallel(self, dir_or_file: Union[str, Path]) -> None:
+        """Load data in a parallel fashion."""
+        logger.info(f"Started loading trajectory data from: {dir_or_file}")
+
+        if Path(dir_or_file).is_file():
+            logger.info(f"Loading single file => deserializing the file in the main process, then loading in workers")
+            paths_or_trajectories = [t for t in self.deserialize_trajectories(dir_or_file)]
+        else:
+            logger.info(f"Loading a directory => deserialization of files split across workers")
+            paths_or_trajectories = self.list_trajectory_files(dir_or_file)
+
+        # Split trajectories across workers
+        chunks = [[] for _ in range(self.n_workers)]
+        for i, trajectory in enumerate(paths_or_trajectories):
+            chunks[i % self.n_workers].append(trajectory)
+
+        # Configure and launch the processes
+        self.reporting_queue = Queue()
+        workers = []
+        for trajectories_chunk in chunks:
+            if not trajectories_chunk:
+                break
+
+            p = Process(
+                target=DataLoadWorker.run,
+                args=(self.conversion_env_factory, trajectories_chunk, self.reporting_queue),
+                daemon=True
+            )
+            p.start()
+            workers.append(p)
+
+        # Monitor the loading process
+        progress_bar = tqdm(desc="Loaded", unit=" trajectories")
+        n_workers_done = 0
+        while n_workers_done < len(workers):
+            report = self.reporting_queue.get()
+
+            # Count done workers
+            if report == DataLoadWorker.DONE_TOKEN:
+                n_workers_done += 1
+                continue
+
+            # Report exceptions in the main process
+            if isinstance(report, ExceptionReport):
+                for p in workers:
+                    p.terminate()
+                raise RuntimeError(
+                    "A worker encountered the following error:\n" + report.traceback) from report.exception
+
+            # Store loaded trajectories
+            step_records = report
+            self._store_loaded_trajectory(step_records)
+            progress_bar.update()
+
+        progress_bar.close()
+
+        for w in workers:
+            w.join()
+
+        logger.info(f"Loaded trajectory data from: {dir_or_file}")
+        logger.info(f"Current length is {len(self)} steps in total.")
 
     def __len__(self) -> int:
         """Size of the dataset.
@@ -138,7 +220,7 @@ class InMemoryDataset(Dataset, ABC):
         return file_paths
 
     @staticmethod
-    def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: Optional[StructuredEnv]) \
+    def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
             -> List[StructuredSpacesRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
@@ -239,3 +321,43 @@ class InMemoryDataset(Dataset, ABC):
             data_subsets.append(Subset(self, flat_indices))
 
         return data_subsets
+
+
+class DataLoadWorker:
+    """Data loading worker used to map states to actual observations."""
+    DONE_TOKEN = "DONE"
+
+    @staticmethod
+    def run(env_factory: Callable,
+            trajectories_or_paths: List[Union[Path, str, TrajectoryRecord]],
+            reporting_queue: Queue) -> None:
+        """Load trajectory data from the provided trajectory file paths. Report exceptions to the main process.
+
+        :param env_factory: Function for creating an environment for MazeState and MazeAction conversion.
+        :param trajectories_or_paths: Either file paths to load, or already loaded trajectories to convert.
+        :param reporting_queue: Queue for reporting loaded data and exceptions back to the main process.
+        """
+        try:
+            env = env_factory() if env_factory else None
+            for trajectory_or_path in trajectories_or_paths:
+
+                # If we got a file path, then deserialize, convert, and report all trajectories in it
+                if isinstance(trajectory_or_path, Path) or isinstance(trajectory_or_path, str):
+                    for trajectory in InMemoryDataset.deserialize_trajectories(trajectory_or_path):
+                        step_records = InMemoryDataset.convert_trajectory(trajectory, env)
+                        reporting_queue.put(step_records)
+
+                # If we got an already-loaded trajectory, then just convert and report it
+                elif isinstance(trajectory_or_path, TrajectoryRecord):
+                    step_records = InMemoryDataset.convert_trajectory(trajectory_or_path, env)
+                    reporting_queue.put(step_records)
+
+                else:
+                    raise RuntimeError(f"Expected a path or a loaded trajectory record, got {type(trajectory_or_path)}")
+
+            reporting_queue.put(DataLoadWorker.DONE_TOKEN)
+
+        except Exception as exception:
+            # Ship exception along with a traceback to the main process
+            reporting_queue.put(ExceptionReport(exception))
+            raise
