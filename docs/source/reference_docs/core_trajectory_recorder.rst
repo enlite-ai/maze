@@ -11,7 +11,6 @@ These are interfaces, classes and utility functions for recording trajectory dat
     :template: classtemplate.rst
 
     ~datasets.in_memory_dataset.InMemoryDataset
-    ~datasets.sequential_load_dataset.SequentialLoadDataset
     ~datasets.parallel_load_dataset.ParallelLoadDataset
     ~datasets.parallel_load_dataset.DataLoadWorker
 
