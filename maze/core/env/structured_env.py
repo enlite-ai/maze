@@ -1,10 +1,11 @@
 """An environment interface for multi-step, hierarchical and multi-agent environments."""
 from abc import abstractmethod
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 from maze.core.env.base_env import BaseEnv
 
-ActorIDType = Tuple[Union[str, int], int]
+StepKeyType = Union[str, int]
+ActorIDType = Tuple[StepKeyType, int]
 
 
 class StructuredEnv(BaseEnv):
@@ -60,4 +61,17 @@ class StructuredEnv(BaseEnv):
         :meth:`~maze.core.env.base_env.BaseEnv.step`.
 
         :return: True if the actor is done.
+        """
+
+    @property
+    @abstractmethod
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """Returns the maximum count of agents per sub-step that the environment features.
+
+        For example:
+          - For a vehicle-routing environment where 5 driver agents will get to act during sub-step 0,
+            this method should return {0: 5}
+          - For a two-step cutting environment where a piece is selected during sub-step 0 and then cut during
+            sub-step 1 (with just one selection and cut happening in each step),
+            this method should return {0: 1, 1: 1}
         """

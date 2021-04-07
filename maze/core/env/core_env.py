@@ -18,7 +18,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
 from maze.core.env.maze_state import MazeStateType
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorIDType
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.rendering.renderer import Renderer
@@ -98,7 +98,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, ABC):
 
     @abstractmethod
     @override(StructuredEnv)
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorIDType:
         """Returns the currently executed actor along with the policy id. The id is unique only with
         respect to the policies (every policy has its own actor 0).
 
@@ -113,4 +113,18 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, ABC):
         """Returns True if the just stepped actor is done, which is different to the done flag of the environment.
 
         :return: True if the actor is done.
+        """
+
+    @property
+    @abstractmethod
+    @override(StructuredEnv)
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """Returns the maximum count of agents per sub-step that the environment features.
+
+        For example:
+          - For a vehicle-routing environment where 5 driver agents will get to act during sub-step 0,
+            this method should return {0: 5}
+          - For a two-step cutting environment where a piece is selected during sub-step 0 and then cut during
+            sub-step 1 (with just one selection and cut happening in each step),
+            this method should return {0: 1, 1: 1}
         """
