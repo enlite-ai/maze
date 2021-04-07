@@ -5,7 +5,7 @@ import gym
 import numpy as np
 
 from maze.core.annotations import override
-from maze.core.env.structured_env import StructuredEnv, ActorIDType
+from maze.core.env.structured_env import StructuredEnv, ActorIDType, StepKeyType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
@@ -24,14 +24,16 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
 
     def __init__(self,
                  n_envs: int,
-                 action_spaces_dict: Dict[Union[int, str], gym.spaces.Space],
-                 observation_spaces_dict: Dict[Union[int, str], gym.spaces.Space],
+                 action_spaces_dict: Dict[StepKeyType, gym.spaces.Space],
+                 observation_spaces_dict: Dict[StepKeyType, gym.spaces.Space],
+                 agent_counts_dict: Dict[StepKeyType, int],
                  logging_prefix: Optional[str] = None):
         super().__init__(n_envs)
 
         # Spaces
         self._action_spaces_dict = action_spaces_dict
         self._observation_spaces_dict = observation_spaces_dict
+        self._agent_counts_dict = agent_counts_dict
 
         # Aggregate episode statistics from individual envs
         self.epoch_stats = LogStatsAggregator(LogStatsLevel.EPOCH)
@@ -50,6 +52,11 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
         """Current actor ID (should be the same for all envs, as only synchronous envs are supported)."""
         assert len(set(self._actor_ids)) == 1, "only synchronous environments are supported."
         return self._actor_ids[0]
+
+    @property
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """Return the agent counts of one of the vectorised envs."""
+        return self._agent_counts_dict
 
     @override(StructuredEnv)
     def is_actor_done(self) -> np.ndarray:
