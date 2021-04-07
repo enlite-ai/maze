@@ -34,7 +34,6 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
 
         # init action recording
         self._step_actions = dict()
-        self._record_actions = True
         self._steps_done = 0
 
     def _record_action(self, action: ActionType) -> None:
@@ -48,40 +47,33 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             self._step_actions[step_key] = copy.deepcopy(action)
         elif self.skip_mode == 'noop':
             self._step_actions[step_key] = self.env.action_conversion.noop_action()
-            assert self._step_actions[step_key] is not None,\
+            assert self._step_actions[step_key] is not None, \
                 'noop action not defined in the action_conversion interface'
 
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
 
-        # init reward accumulation
-        observation, acc_reward, done, info = None, 0, None, None
+        # record the actions given until one flat step finished
+        self._record_action(action)
+        # execute step
+        self._steps_done += 1
+        observation, reward, done, info = self.env.step(action)
+        # prepare reward accumulation
+        acc_reward = reward
 
-        # perform n_steps + 1 steps
+        # skipping is finished if the env is done
+        if done or self._steps_done >= self.n_steps:
+            self._reset_recording()
+            return observation, acc_reward, done, info
+
+        # check if all sub-steps have been executed once
+        if self.actor_id()[0] != 0:
+            # skipping not yet possible, proceed to next sub-step
+            return observation, acc_reward, done, info
+
+        # continue with replay
         while self._steps_done < self.n_steps:
             self._steps_done += 1
-
-            # If record actions is true record the actions given until one flat step finished
-            if self._record_actions:
-                # record selected action for replay
-                self._record_action(action)
-                # execute step
-                observation, reward, done, info = self.env.step(action)
-                # accumulate reward and collect events
-                acc_reward += reward
-
-                # skipping is finished if the env is done
-                if done:
-                    break
-
-                # check if all sub-steps have been executed once
-                if self.actor_id()[0] == 0 and len(self._step_actions) > 0:
-                    self._record_actions = False
-                    # continue with replay
-                    continue
-
-                # skipping not yet possible, proceed to next sub-step
-                return observation, acc_reward, done, info
 
             # actual skipping: replay recorded actions
             step_key = self.actor_id()[0]
@@ -92,16 +84,19 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             if done:
                 break
 
-        # reset action recording
-        self._record_actions = True
+        # skipping finished
+        self._reset_recording()
+        return observation, acc_reward, done, info
+
+    def _reset_recording(self) -> None:
+        """reset the action recording"""
         self._step_actions = dict()
         self._steps_done = 0
 
-        return observation, acc_reward, done, info
-
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Not implemented yet. Note: Some step skipping might be required here as well (depends on the use case)."""
         raise NotImplementedError
