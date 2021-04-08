@@ -33,7 +33,7 @@ class RandomPolicy(Policy):
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType],
                        policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
         """Sample random action from the given action space."""
-        return self.action_spaces_dict[policy_id].sample()
+        return self.action_spaces_dict[policy_id[0]].sample()
 
     @override(Policy)
     def compute_top_action_candidates(self, observation: ObservationType,

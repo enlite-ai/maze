@@ -8,6 +8,7 @@ from tqdm import tqdm
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.observation_normalization.normalization_strategies.base import StructuredStatisticsType
 
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
@@ -18,7 +19,7 @@ def estimate_observation_normalization_statistics(env: Union[ObservationNormaliz
                                                   n_samples: int) -> None:
     """Helper function estimating normalization statistics.
     :param env: The observation normalization wrapped environment.
-    :param n_samples: The number of samples to take for statistics computation.
+    :param n_samples: The number of samples (i.e., flat environment steps) to take for statistics computation.
     """
 
     # remove previous statistics dump
@@ -28,15 +29,10 @@ def estimate_observation_normalization_statistics(env: Union[ObservationNormaliz
     print(f'******* Starting to estimate observation normalization statistics for {n_samples} steps *******')
     # collect normalization statistics
     env.set_observation_collection(True)
-    obs = env.reset()
+    rollout_generator = RolloutGenerator(env)
+
     for _ in tqdm(range(n_samples)):
-        for step_key in env.action_spaces_dict.keys():
-            maze_state = env.get_maze_state() if env.sampling_policy.needs_state() else None
-            action = env.sampling_policy.compute_action(observation=obs, maze_state=maze_state,
-                                                        policy_id=step_key, deterministic=False)
-            obs, rew, done, info = env.step(action)
-            if done:
-                obs = env.reset()
+        rollout_generator.rollout(policy=env.sampling_policy, n_steps=1)
 
     # finally estimate normalization statistics
     env.estimate_statistics()

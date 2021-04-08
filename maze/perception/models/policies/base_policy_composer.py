@@ -5,6 +5,7 @@ from typing import Dict, Union
 from gym import spaces
 
 from maze.core.agent.torch_policy import TorchPolicy
+from maze.core.env.structured_env import StepKeyType
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import observation_spaces_to_in_shapes
 
@@ -18,11 +19,13 @@ class BasePolicyComposer(ABC):
     """
 
     def __init__(self,
-                 action_spaces_dict: Dict[Union[str, int], spaces.Dict],
-                 observation_spaces_dict: Dict[Union[str, int], spaces.Dict],
+                 action_spaces_dict: Dict[StepKeyType, spaces.Dict],
+                 observation_spaces_dict: Dict[StepKeyType, spaces.Dict],
+                 agent_counts_dict: Dict[StepKeyType, int],
                  distribution_mapper: DistributionMapper):
         self._action_spaces_dict = action_spaces_dict
         self._observation_spaces_dict = observation_spaces_dict
+        self._agent_counts_dict = agent_counts_dict
         self._distribution_mapper = distribution_mapper
 
         # convert to observation shapes

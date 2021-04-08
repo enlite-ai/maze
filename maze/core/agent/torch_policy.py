@@ -12,6 +12,7 @@ from torch import nn
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
+from maze.core.env.structured_env import ActorIDType
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch, convert_to_numpy
@@ -29,9 +30,11 @@ class TorchPolicy(TorchModel, Policy):
 
     def __init__(self,
                  networks: Mapping[Union[str, int], nn.Module],
+                 separated_agent_networks: bool,
                  distribution_mapper: DistributionMapper,
                  device: str):
         self.networks = networks
+        self.separated_agent_networks = separated_agent_networks
         self.distribution_mapper = distribution_mapper
 
         TorchModel.__init__(self, device=device)
@@ -43,7 +46,7 @@ class TorchPolicy(TorchModel, Policy):
 
     @override(Policy)
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                       policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+                       policy_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy`
         """
         action, _ = self.compute_action_with_logits(observation, policy_id, deterministic)
@@ -52,14 +55,14 @@ class TorchPolicy(TorchModel, Policy):
     @override(Policy)
     def compute_top_action_candidates(self, observation: ObservationType,
                                       num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                      policy_id: Union[str, int] = None,
+                                      policy_id: ActorIDType = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy`
         """
         raise NotImplementedError
 
-    def compute_action_with_logits(self, observation: Any, policy_id: Union[str, int] = None,
+    def compute_action_with_logits(self, observation: Any, policy_id: ActorIDType = None,
                                    deterministic: bool = False) -> Tuple[Any, Dict[str, torch.Tensor]]:
         """Compute action for the given observation and policy ID and return it together with the logits.
 
@@ -108,7 +111,7 @@ class TorchPolicy(TorchModel, Policy):
         logits_dict = self.compute_logits_dict(observation, policy_id)
         return self.distribution_mapper.logits_dict_to_distribution(logits_dict=logits_dict, temperature=1.0)
 
-    def compute_logits_dict(self, observation: Any, policy_id: Union[str, int] = None) -> Dict[str, torch.Tensor]:
+    def compute_logits_dict(self, observation: Any, policy_id: ActorIDType = None) -> Dict[str, torch.Tensor]:
         """Get the logits for the given observation and policy ID.
 
         :param observation: Observation to return probability distribution for
@@ -116,7 +119,11 @@ class TorchPolicy(TorchModel, Policy):
         :return: Logits dictionary
         """
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
-        return self.networks[policy_id](obs_t)
+        return self.network_for(policy_id)(obs_t)
+
+    def network_for(self, policy_id: ActorIDType) -> nn.Module:
+        network_key = policy_id if self.separated_agent_networks else policy_id[0]
+        return self.networks[network_key]
 
     def logits_dict_to_distribution(self, logits_dict: Dict[str, torch.Tensor], temperature: float = 1.0):
         """Helper function for creation of a dict probability distribution from the given logits dictionary.

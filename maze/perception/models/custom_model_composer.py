@@ -55,6 +55,7 @@ class CustomModelComposer(BaseModelComposer):
             policy,
             action_spaces_dict=self.action_spaces_dict,
             observation_spaces_dict=self.observation_spaces_dict,
+            agent_counts_dict=self.agent_counts_dict,
             distribution_mapper=self._distribution_mapper
         )
 

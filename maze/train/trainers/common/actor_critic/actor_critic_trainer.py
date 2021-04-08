@@ -184,7 +184,7 @@ class MultiStepActorCritic(Trainer, ABC):
         for substep_record in record.substep_records:
             # Predict step action logits
             logits_dict = self.model.policy.compute_logits_dict(observation=substep_record.observation,
-                                                                policy_id=substep_record.substep_key)
+                                                                policy_id=substep_record.actor_id)
 
             # Prepare action distributions & compute log probs
             prob_dist = self.model.policy.logits_dict_to_distribution(logits_dict, temperature=1.0)
@@ -256,7 +256,7 @@ class MultiStepActorCritic(Trainer, ABC):
             policy_train_stats[policy_id]["policy_loss"].append(substep_loss.detach().item())
             policy_train_stats[policy_id]["policy_entropy"].append(substep_entropies.detach().item())
 
-            grad_norm = compute_gradient_norm(self.model.policy.networks[policy_id].parameters())
+            grad_norm = compute_gradient_norm(self.model.policy.network_for(policy_id).parameters())
             policy_train_stats[policy_id]["policy_grad_norm"].append(grad_norm)
 
         # Critic(s)
