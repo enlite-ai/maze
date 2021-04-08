@@ -1,5 +1,5 @@
 """Utils for running rollouts through rollout runners in tests."""
-
+import subprocess
 from typing import Dict
 
 from hydra.core.hydra_config import HydraConfig
@@ -33,3 +33,17 @@ def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_nam
 
         # Run the rollout
         maze_run(cfg)
+
+
+def run_maze_job_through_cli(hydra_overrides: Dict[str, str], config_name: str):
+    """Runs rollout with the given config overrides using maze_run in a separate process.
+
+    Note that run this way, Hydra will create an output sub-directory.
+
+    :param hydra_overrides: Config overrides for hydra.
+    :param config_name: The name of the default config.
+    """
+
+    overrides = [key + "=" + str(val) for key, val in hydra_overrides.items()]
+    result = subprocess.run(["maze-run", "-cn", config_name] + overrides)
+    assert result.returncode == 0
