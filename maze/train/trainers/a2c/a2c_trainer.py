@@ -92,7 +92,7 @@ class MultiStepA2C(MultiStepActorCritic):
         policy_train_stats = defaultdict(lambda: defaultdict(list))
         critic_train_stats = defaultdict(lambda: defaultdict(list))
         self._append_train_stats(policy_train_stats, critic_train_stats,
-                                 record.substep_keys, policy_losses, entropies, detached_values, value_losses)
+                                 record.actor_ids, policy_losses, entropies, detached_values, value_losses)
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)

@@ -127,13 +127,13 @@ class RolloutGenerator:
         # Sample action and record logits if configured
         # Note: Copy the observation (as by default, the policy converts and handles it in place)
         if self.record_logits:
-            action, logits = policy.compute_action_with_logits(self.last_observation.copy(), policy_id=record.substep_key,
+            action, logits = policy.compute_action_with_logits(self.last_observation.copy(), policy_id=record.actor_id,
                                                                deterministic=False)
             record.logits = logits
         else:
             # Inject the MazeEnv state if desired by the policy
             maze_state = self.env.get_maze_state() if policy.needs_state() else None
-            action = policy.compute_action(self.last_observation.copy(), policy_id=record.substep_key, maze_state=maze_state,
+            action = policy.compute_action(self.last_observation.copy(), policy_id=record.actor_id, maze_state=maze_state,
                                            deterministic=False)
         record.action = action
 

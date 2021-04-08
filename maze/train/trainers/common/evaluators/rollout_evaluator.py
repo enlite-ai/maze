@@ -47,7 +47,7 @@ class RolloutEvaluator(Evaluator):
         observations = self.eval_env.reset()
 
         while n_done_episodes < self.n_episodes:
-            policy_id, _ = self.eval_env.actor_id()
+            policy_id = self.eval_env.actor_id()
 
             # Sample action and take the step
             sampled_action = policy.compute_action(observations, policy_id=policy_id, maze_state=None,
