@@ -70,7 +70,7 @@ def manipulate_hparams_logging_for_exp(exp_dir: str, metrics: List[Tuple[str, Un
 
         # Read confg.yaml file as hyperparameters
         assert os.path.exists(hydra_config_file)
-        cfg = yaml.load(open(hydra_config_file))
+        cfg = yaml.safe_load(open(hydra_config_file))
         hparam_dict = flatten(dict(cfg))
 
         # compute maximum for each given metric from the original events file
@@ -96,7 +96,7 @@ def manipulate_hparams_logging_for_exp(exp_dir: str, metrics: List[Tuple[str, Un
         summary_writer = SummaryWriter(log_dir=exp_dir, filename_suffix='_hparams')
 
         # Add hparams to the summary writer and close
-        print(f'- Adding hparams events for exp: {exp_dir}')
+        print(f'- Adding Tensorflow hparams events for runs in directory: {exp_dir}')
         summary_writer.add_hparams(hparam_dict, metrics_dict)
         summary_writer.close()
 
