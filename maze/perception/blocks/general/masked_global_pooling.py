@@ -9,9 +9,9 @@ from maze.perception.blocks.base import PerceptionBlock
 
 class MaskedGlobalPoolingBlock(PerceptionBlock):
     """A block applying global pooling with optional masking.
-    Pooling is applied wrt the mask (in_keys[1]) if given, the selected pooling function and the pooling dimension.
+    Pooling is applied w.r.t. the selected pooling function, the pooling dimension and the optional mask (in_keys[1]).
 
-    :param in_keys: One key identifying the input tensors.
+    :param in_keys: One key identifying the input tensor, and an optional second one identifying the mask tensor.
     :param out_keys: One key identifying the output tensors.
     :param in_shapes: List of input shapes.
     :param pooling_func: Options: {'mean', 'sum', 'max'}.

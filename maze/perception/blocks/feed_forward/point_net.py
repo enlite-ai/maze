@@ -70,7 +70,7 @@ class PointNetFeatureTransformNet(nn.Module):
             self.bn5 = nn.BatchNorm1d(embedding_dim // 4)
 
         # Init non linearity's
-        non_lin = Factory(base_type=nn.Module).class_type_from_name(non_lin)
+        non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
         self.non_lin_1 = non_lin()
         self.non_lin_2 = non_lin()
         self.non_lin_3 = non_lin()
@@ -189,10 +189,12 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
                          out_num_dims=2)
 
-        # Input parameter assertions
+        # Input parameter assertions: checks if the first input (X) has 2 dimensions (NN, KK).
         assert len(self.in_shapes[0]) == 2
         if len(self.in_keys) == 2:
+            # checks that the mask has only one input dimension (NN)
             assert len(self.in_shapes[1]) == 1
+            #  checks that the point dimension in X and Mask are the same
             assert self.in_shapes[0][-2] == self.in_shapes[1][-1], f'Point dimension should fit: {self.in_shapes[0]} ' \
                                                                    f'vs {self.in_shapes[1]}'
 
@@ -235,7 +237,7 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         )
 
         self.pooling_func_str = pooling_func_name
-        self.non_lin_cls = Factory(base_type=nn.Module).class_type_from_name(non_lin)
+        self.non_lin_cls = Factory(base_type=nn.Module).type_from_name(non_lin)
         self.non_lin_1 = self.non_lin_cls()
         self.non_lin_2 = self.non_lin_cls()
 
