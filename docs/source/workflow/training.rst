@@ -3,7 +3,7 @@
 Training
 ========
 
-Here, we show how to train a policy on a standard Gym or custom environment
+Here we show how to train a policy on a standard Gym or custom environment
 using algorithms and models from Maze. This guide focuses on the main mechanics of Maze
 training runs, plus also gives some pointers on how to customize the training with custom
 environments (using the tutorial Maze 2D-cutting environment as an example), models, etc.
@@ -15,7 +15,7 @@ The figure below shows a conceptual overview of the Maze training workflow.
 
 On this page:
 
-- :ref:`The first example<training-first_run>` demostrates training with the default settings.
+- :ref:`The first example<training-first_run>` demonstrates training with the default settings.
   The main purpose is to show how the Maze training pipeline works in general.
 - :ref:`The second example<training-default_run>` explains how you can customize training on standard
   Gym and Maze environments (for which configuration files are already provided by Maze).
@@ -52,7 +52,7 @@ Such a training run consists of these main stages,
 loaded based on the default configuration provided by Maze:
 
 1. The full configuration is assembled via Hydra based on the config files available, the defaults
-   set in root config, and the overrides you provide via CLI (see `Hydra overview<hydra-overview>`
+   set in root config, and the overrides you provide via CLI (see :ref:`Hydra overview<hydra-overview>`
    to understand more about this process).
 2. Hydra creates the output directory where all output files will be stored.
 3. The full configuration of the job is logged: (1) to standard output,
