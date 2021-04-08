@@ -17,7 +17,7 @@ or for inspecting the policy behavior more closely using
 
 On this page:
 
-- :ref:`The First Rollout<rollouts-first_rollout>` demostrates the main mechanics of running a rollout.
+- :ref:`The First Rollout<rollouts-first_rollout>` demonstrates the main mechanics of running a rollout.
 - :ref:`Rollout Runner Configuration<rollouts-runner_config>` explains how to configure the rollout runners.
 - :ref:`Environment and Agent Configuration<rollouts-env_and_agent>` shows how to configure different environments
   and agents.
