@@ -27,22 +27,23 @@ def observation_spaces_to_in_shapes(observation_spaces: Dict[Union[int, str], gy
     return in_shapes
 
 
-def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
+def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]], strict: bool = True) -> Dict[str, torch.Tensor]:
     """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
     into a single dictionary containing all the items.
 
-    If one key is present in multiple elements, it's value will be checked to match across all the elements (and
-    it will be present only once in the resulting dictionary).
+    If one key is present in multiple elements, it will be present only once in the resulting dictionary.
+    If strict is set to true, all values for such key will be checked for a match.
 
     :param: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
+    :param strict: If true, will check that keys present in multiple spaces have the same values.
     :return: One flat dictionary, containing all keys and values form the elements of the iterable.
     """
     result = dict()
 
     for space in spaces:
         for key, obs in space.items():
-            # check if the heads match
-            if key in result:
+            # check if the heads match if strict mode
+            if strict and key in result:
                 assert result[key].shape == obs.shape
                 if isinstance(obs, np.ndarray):
                     assert np.allclose(result[key], obs)

@@ -25,11 +25,13 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
     def __init__(self,
                  observation_spaces_dict: Dict[StepKeyType, spaces.Dict],
                  agent_counts_dict: Dict[StepKeyType, int],
-                 networks: ConfigType):
+                 networks: ConfigType,
+                 strict_observation_flattening: bool):
         super().__init__(observation_spaces_dict, agent_counts_dict)
         assert len(networks) == 1
         network = networks[0]
 
+        self.strict_observation_flattening = strict_observation_flattening
         obs_shapes_flat = flat_structured_shapes(self._obs_shapes)
 
         # initialize critic
@@ -41,4 +43,5 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
     def critic(self) -> TorchSharedStateCritic:
         """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
         """
-        return TorchSharedStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu")
+        return TorchSharedStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu",
+                                      strict_observation_flattening=self.strict_observation_flattening)
