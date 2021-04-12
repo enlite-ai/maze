@@ -129,22 +129,18 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
     def reset(self) -> Any:
         """Reset the environment and trigger the episode statistics calculation of the previous run.
         """
-        if hasattr(self.env, "context") and isinstance(self.env.context, EnvironmentContext):
-            assert isinstance(self.env.context, EnvironmentContext)
-            self.env.context.reset_env_episode()
-
         # generate the episode stats from the previous rollout
         self._calculate_kpis()
         self.episode_stats.reduce()
 
         # first reset, then reset episode log
         # (to ensure that the episode log has correct episode ID of the new episode)
-        self._reset_episode_log()
-        self.step_event_log = StepEventLog(self.last_env_time)
         observation = self.env.reset()
+        self._reset_episode_log()
 
         # reset timing data and initialize new step event log for the first step
         self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
+        self.step_event_log = StepEventLog(self.last_env_time)
         return observation
 
     @override(BaseEnv)

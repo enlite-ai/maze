@@ -123,6 +123,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         :return: the initial observation after resetting.
         """
+        self.core_env.context.reset_env_episode()
         maze_state = self.core_env.reset()
 
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
