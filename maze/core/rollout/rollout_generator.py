@@ -132,8 +132,11 @@ class RolloutGenerator:
         else:
             # Inject the MazeEnv state if desired by the policy
             maze_state = self.env.get_maze_state() if policy.needs_state() else None
-            action = policy.compute_action(self.last_observation.copy(), actor_id=record.actor_id,
+            env = self.env if policy.needs_env() else None
+            action = policy.compute_action(self.last_observation.copy(),
+                                           actor_id=record.actor_id,
                                            maze_state=maze_state,
+                                           env=env,
                                            deterministic=False)
         record.action = action
 
