@@ -1,3 +1,5 @@
+"""Test rollouts in different settings using the rollout generator component."""
+
 from typing import Dict, Any, Tuple
 
 import numpy as np
@@ -12,6 +14,7 @@ from maze.train.parallelization.vector_env.sequential_vector_env import Sequenti
 
 
 def test_standard_rollout():
+    """Rollout with a single structured env."""
     env = build_dummy_structured_env()
     rollout_generator = RolloutGenerator(env=env)
     policy = RandomPolicy(env.action_spaces_dict)
@@ -25,13 +28,14 @@ def test_standard_rollout():
         assert sub_step_keys == record.observations.keys()
         assert sub_step_keys == record.rewards.keys()
 
-        assert record.batch_shape == None
+        assert record.batch_shape is None
         for step_key in sub_step_keys:
             assert record.observations[step_key] in env.observation_spaces_dict[step_key]
             assert record.actions[step_key] in env.action_spaces_dict[step_key]
 
 
-def test_distributed_rollout():
+def test_vectorized_rollout():
+    """Rollout with a vector env."""
     concurrency = 3
     env = SequentialVectorEnv([build_dummy_structured_env] * concurrency)
     rollout_generator = RolloutGenerator(env=env)
@@ -55,6 +59,7 @@ def test_distributed_rollout():
 
 
 def test_standard_rollout_with_logits_and_step_stats():
+    """Recording logits and step statistics."""
     env = build_dummy_structured_env()
     rollout_generator = RolloutGenerator(env=env, record_step_stats=True, record_logits=True)
     policy = flatten_concat_probabilistic_policy_for_env(env)  # We need a torch policy to be able to record logits
@@ -72,6 +77,7 @@ def test_standard_rollout_with_logits_and_step_stats():
 
 
 def test_terminates_on_done():
+    """Resetting the env or terminating rollout early when the env is done."""
     env = build_dummy_maze_env()
     env = TimeLimitWrapper.wrap(env, max_episode_steps=5)
     policy = RandomPolicy(env.action_spaces_dict)
@@ -87,24 +93,27 @@ def test_terminates_on_done():
     assert len(trajectory) == 5
 
 
+class _FiveSubstepsLimitWrapper(TimeLimitWrapper):
+    """Returns done after 5 sub-steps (not flat env steps!)"""
+
+    def __init__(self, env: BaseEnv):
+        super().__init__(env)
+        self.elapsed_sub_steps = 0
+
+    def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+        """Return done after 5 sub-steps"""
+        observation, reward, done, info = self.env.step(action)
+        self.elapsed_sub_steps += 1
+        return observation, reward, done or self.elapsed_sub_steps >= 5, info
+
+    def reset(self) -> Any:
+        """Reset substep counter"""
+        self.elapsed_sub_steps = 0
+        return self.env.reset()
+
+
 def test_handles_done_in_substep_with_recorded_episode_stats():
-    class _FiveSubstepsLimitWrapper(TimeLimitWrapper):
-        """Returns done after 5 sub-steps (not flat env steps!)"""
-
-        def __init__(self, env: BaseEnv):
-            super().__init__(env)
-            self.elapsed_sub_steps = 0
-
-        def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
-            """Return done after 5 sub-steps"""
-            observation, reward, done, info = self.env.step(action)
-            self.elapsed_sub_steps += 1
-            return observation, reward, done or self.elapsed_sub_steps >= 5, info
-
-        def reset(self) -> Any:
-            self.elapsed_sub_steps = 0
-            return self.env.reset()
-
+    """Recording episode stats and handling environments that return done during a (non-last) sub-step."""
     env = build_dummy_structured_env()
     env = _FiveSubstepsLimitWrapper.wrap(env)
     policy = RandomPolicy(env.action_spaces_dict)
@@ -135,6 +144,7 @@ def test_handles_done_in_substep_with_recorded_episode_stats():
 
 
 def test_records_next_observations():
+    """Recording next observations."""
     env = build_dummy_structured_env()
     rollout_generator = RolloutGenerator(env=env, record_next_observations=True)
     policy = RandomPolicy(env.action_spaces_dict)
@@ -147,7 +157,7 @@ def test_records_next_observations():
     for record in trajectory.step_records:
         assert sub_step_keys == record.observations.keys()
         assert sub_step_keys == record.next_observations.keys()
-        assert record.batch_shape == None
+        assert record.batch_shape is None
 
         for step_key in sub_step_keys:
             curr_obs = record.observations[step_key]
