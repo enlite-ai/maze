@@ -1,3 +1,5 @@
+"""General interface for performing and recording policy rollouts during training."""
+
 from typing import Union, Optional, Any
 
 import numpy as np
@@ -5,7 +7,6 @@ import numpy as np
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
@@ -23,10 +24,12 @@ class RolloutGenerator:
     :param record_logits: Whether to record the policy logits.
     :param record_step_stats: Whether to record step statistics.
     :param record_episode_stats: Whether to record episode stats (happens only when an episode is done).
+    :param record_next_observations: Whether to record next observation (i.e. observation following the action taken).
     :param terminate_on_done: Whether to end the rollout when the env is done (by default resets the env and continues
                               until the desired number of steps has been recorded). Only applicable in non-vectorized
                               scenarios.
     """
+
     def __init__(self,
                  env: Union[MazeEnv, StructuredVectorEnv],
                  record_logits: bool = False,
@@ -113,6 +116,10 @@ class RolloutGenerator:
         """Perform one substep in the environment and record it. Return the done flag(s).
 
         Resets non-vectorised envs when done.
+
+        :param record: Structured spaces record to store sub-step rollout data in.
+        :param policy: The policy to roll out.
+        :return: done (as returned by the environment).
         """
         step_key, _ = self.env.actor_id()
         # Record copy of the observation (as by default, the policy converts and handles it in place)

@@ -1,3 +1,5 @@
+"""Recording spaces (i.e., raw actions and observations) from a single environment step."""
+
 from dataclasses import dataclass
 from typing import Dict, Optional, List, Union
 
@@ -97,12 +99,18 @@ class StructuredSpacesRecord:
 
         return stacked_record
 
-    def is_batched(self):
-        """Return whether this record is batched or not."""
+    def is_batched(self) -> bool:
+        """Return whether this record is batched or not.
+
+        :return: whether this record is batched or not
+        """
         return self.batch_shape is not None
 
     def is_done(self) -> bool:
-        """Return true if the episode ended during this structured step."""
+        """Return true if the episode ended during this structured step.
+
+        :return: true if the episode ended during this structured step
+        """
         return np.any(list(self.dones.values()))
 
     @classmethod
@@ -131,8 +139,11 @@ class StructuredSpacesRecord:
         obs, action = conversion_env.get_observation_and_action_dicts(obs, action, first_step_in_episode)
         return StructuredSpacesRecord(observations=obs, actions=action, rewards=None, dones=None)
 
-    def to_numpy(self):
-        """Convert the record to numpy."""
+    def to_numpy(self) -> 'StructuredSpacesRecord':
+        """Convert the record to numpy.
+
+        :return: Self after conversion.
+        """
         self.observations = convert_to_numpy(self.observations, cast=None, in_place=True)
         self.actions = convert_to_numpy(self.actions, cast=None, in_place=True)
         self.rewards = convert_to_numpy(self.rewards, cast=None, in_place=True)
@@ -146,10 +157,11 @@ class StructuredSpacesRecord:
 
         return self
 
-    def to_torch(self, device: str):
+    def to_torch(self, device: str) -> 'StructuredSpacesRecord':
         """Convert the record to Torch.
 
         :param device: Device to move the tensors to.
+        :return: Self after conversion.
         """
         self.observations = convert_to_torch(self.observations, device=device, cast=None, in_place=True)
         self.actions = convert_to_torch(self.actions, device=device, cast=None, in_place=True)
