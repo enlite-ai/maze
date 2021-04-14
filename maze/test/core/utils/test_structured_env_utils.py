@@ -31,11 +31,11 @@ def test_stacked_shapes():
     agent_counts = {0: 1, 1: 3}
     shapes = {
         0: dict(a=(1,), b=(1, 2)),
-        1: dict(c=(1,), d=(1, 2))
+        1: dict(c=(1,), d=(2, 2))
     }
     expected_stacked_shapes = {
         0: dict(a=(1,), b=(1, 2)),
-        1: dict(c=(3, 1), d=(3, 1, 2))
+        1: dict(c=(3, 1), d=(3, 2, 2))
     }
 
     assert expected_stacked_shapes == stacked_shapes(shapes, agent_counts)
