@@ -9,6 +9,7 @@ from maze.core.agent.policy import Policy
 from maze.core.agent_integration.agent_integration import AgentIntegration
 from maze.core.agent_integration.maze_action_candidates import MazeActionCandidates
 from maze.core.env.action_conversion import ActionType
+from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
@@ -72,13 +73,20 @@ def test_handles_multiple_policies():
             """This policy does not require the state() object to compute the action."""
             return False
 
-        def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                           actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
+        def compute_action(self,
+                           observation: ObservationType,
+                           maze_state: Optional[MazeStateType] = None,
+                           env: Optional[BaseEnv] = None,
+                           actor_id: ActorIDType = None,
+                           deterministic: bool = False) -> ActionType:
             """Return the set static action"""
             return self.static_action[actor_id[0]]
 
-        def compute_top_action_candidates(self, observation: Any,
-                                          num_candidates: int, maze_state: Optional[MazeStateType] = None,
+        def compute_top_action_candidates(self,
+                                          observation: Any,
+                                          num_candidates: int,
+                                          maze_state: Optional[MazeStateType] = None,
+                                          env: Optional[BaseEnv] = None,
                                           actor_id: ActorIDType = None,
                                           deterministic: bool = False) -> Tuple[Sequence[Any], Sequence[float]]:
             """Not used"""
@@ -221,8 +229,13 @@ def test_gets_maze_action_candidates():
     class StaticPolicy(DummyGreedyPolicy):
         """Mock policy, returns static action candidates (careful, always three of them)."""
 
-        def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int,
-                                          actor_id: ActorIDType = None, deterministic: bool = False) \
+        def compute_top_action_candidates(self,
+                                          observation: ObservationType,
+                                          num_candidates: int,
+                                          maze_state: Optional[MazeStateType] = None,
+                                          env: Optional[BaseEnv] = None,
+                                          actor_id: ActorIDType = None,
+                                          deterministic: bool = False) \
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Return static action candidates"""
 
@@ -255,14 +268,22 @@ def test_propagates_exceptions_to_main_thread():
     class FailingPolicy(DummyGreedyPolicy):
         """Mock policy, throws an error every time."""
 
-        def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                           actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
+        def compute_action(self,
+                           observation: ObservationType,
+                           maze_state: Optional[MazeStateType] = None,
+                           env: Optional[BaseEnv] = None,
+                           actor_id: ActorIDType = None,
+                           deterministic: bool = False) -> ActionType:
             """Throw an error."""
             raise RuntimeError("Test error.")
 
-        def compute_top_action_candidates(self, observation: ObservationType,
-                                          num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                          actor_id: Union[str, int] = None, deterministic: bool = False) \
+        def compute_top_action_candidates(self,
+                                          observation: ObservationType,
+                                          num_candidates: int,
+                                          maze_state: Optional[MazeStateType] = None,
+                                          env: Optional[BaseEnv] = None,
+                                          actor_id: ActorIDType = None,
+                                          deterministic: bool = False) \
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Not used"""
 

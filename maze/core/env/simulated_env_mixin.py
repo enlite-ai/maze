@@ -1,11 +1,9 @@
 """Environment interface for simulated environments (used e.g. by Monte Carlo Tree Search)."""
 from abc import ABC, abstractmethod
-from typing import Any, Tuple, Dict, Optional
+from typing import Any, Tuple, Dict
 
 from maze.core.env.action_conversion import ActionType
-from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import StructuredEnv
 
 
@@ -19,7 +17,7 @@ class SimulatedEnvMixin(ABC):
     def clone_from(self, env: MazeEnv) -> None:
         """
         Clone an environment by resetting the simulation to its current state.
-        :param maze_state: State to clone.
+        :param env: The environment to clone.
         """
 
     def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:

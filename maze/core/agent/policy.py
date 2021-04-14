@@ -27,6 +27,14 @@ class Policy(ABC):
         """
 
     def needs_env(self) -> bool:
+        """Similar to `needs_state`, the policy implementation declares if it operates solely on observations
+        (needs_state returns False) or if it also requires the env object in order to compute the action.
+
+        Requiring the env should be regarded as anti-pattern, but is supported for special cases like the MCTS policy,
+        which requires cloning support from the environment.
+
+        :return Per default policies return False.
+        """
         return False
 
     @abstractmethod
@@ -36,7 +44,9 @@ class Policy(ABC):
         Query a policy that corresponds to the given actor ID for action.
 
         :param observation: Current observation of the environment
-        :param maze_state: Current state representation of the environment (only provided if `needs_state()` returns True)
+        :param maze_state: Current state representation of the environment
+                           (only provided if `needs_state()` returns True)
+        :param env: The environment instance (only provided if `needs_env()` returns True)
         :param actor_id: ID of the actor to query policy for
                          (does not have to be provided if there is only one actor and one policy in this environment)
         :param deterministic: Specify if the action should be computed deterministically
@@ -53,7 +63,9 @@ class Policy(ABC):
 
         :param observation: Current observation of the environment
         :param num_candidates: The number of actions that should be returned
-        :param maze_state: Current state representation of the environment (only provided if `needs_state()` returns True)
+        :param maze_state: Current state representation of the environment
+                           (only provided if `needs_state()` returns True)
+        :param env: The environment instance (only provided if `needs_env()` returns True)
         :param actor_id: ID of actor to query policy for
                          (does not have to be provided if policies dict contains only 1 policy)
         :param deterministic: Specify if the action should be computed deterministically

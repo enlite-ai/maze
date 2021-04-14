@@ -112,8 +112,10 @@ class RolloutRunner(Runner, ABC):
             done = False
             while not done:
                 # inject the MazeEnv state if desired by the policy
-                maze_state = env.get_maze_state() if agent.needs_state() else None
-                action = agent.compute_action(observation=obs, actor_id=env.actor_id(), maze_state=maze_state)
+                action = agent.compute_action(observation=obs,
+                                              actor_id=env.actor_id(),
+                                              maze_state=env.get_maze_state() if agent.needs_state() else None,
+                                              env=env if agent.needs_env() else None)
 
                 obs, rew, done, info = env.step(action)
 

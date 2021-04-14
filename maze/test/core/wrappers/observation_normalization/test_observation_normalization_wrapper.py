@@ -26,7 +26,7 @@ def random_env_steps(env: ObservationNormalizationWrapper, steps: int) -> np.nda
     obs = env.reset()
     observations.append(obs["observation"])
     for _ in range(steps):
-        action = env.sampling_policy.compute_action(obs, maze_state=None, actor_id=(0, 0), deterministic=False)
+        action = env.sampling_policy.compute_action(obs, maze_state=None, env=env, actor_id=(0, 0), deterministic=False)
         obs, rew, done, info = env.step(action)
         observations.append(obs["observation"])
         if done:

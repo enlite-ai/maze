@@ -248,19 +248,19 @@ class GymMazeEnv(MazeEnv, SimulatedEnvMixin):
             observation_conversion_dict={0: GymObservationConversion(env=env)})
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, maze_state: MazeStateType) -> None:
+    def clone_from(self, env: MazeEnv) -> None:
         """Reset this gym environment to the given state by creating a deep copy of the `env.state` instance variable"""
         # explicit reset to handle e.g time limit wrappers
         self.reset()
 
-        env = self.env
-        while hasattr(env, "env"):
-            env = env.env
+        target_env = self.env
+        while hasattr(target_env, "env"):
+            target_env = target_env.env
 
-        assert hasattr(env, "state"), "This default implementation of the clone_from() method works only for " \
-                                      "gym envs exposing their state as 'env.state'"
+        assert hasattr(target_env, "state"), "This default implementation of the clone_from() method works only for " \
+                                             "gym envs exposing their state as 'env.state'"
 
-        env.state = deepcopy(maze_state)
+        target_env.state = deepcopy(env.get_maze_state())
 
 
 def make_gym_maze_env(name: str) -> GymMazeEnv:
