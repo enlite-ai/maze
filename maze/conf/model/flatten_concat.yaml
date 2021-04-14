@@ -11,6 +11,7 @@ policy:
     - _target_: maze.perception.models.built_in.flatten_concat.FlattenConcatPolicyNet
       non_lin: torch.nn.Tanh
       hidden_units: [256, 256]
+  separated_agent_networks: False
 
 critic:
   _target_: maze.perception.models.critics.StateCriticComposer
