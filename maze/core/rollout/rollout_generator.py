@@ -89,7 +89,7 @@ class RolloutGenerator:
             # Note: If the env returns done in a sub-step, this is detected as well as env time changes after reset
             current_env_time = self.env.get_env_time()
             while np.all(current_env_time == self.env.get_env_time()):
-                step_record.append(self._record_sub_step(observation=self.last_observation, policy=policy))
+                step_record.append(self._record_sub_step(policy=policy))
 
             if self.record_step_stats:
                 step_record.step_stats = self.env.get_stats(LogStatsLevel.STEP).last_stats
