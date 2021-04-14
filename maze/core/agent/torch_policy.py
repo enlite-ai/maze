@@ -2,10 +2,13 @@
 from typing import Mapping, Union, Any, List, Dict, Tuple, Sequence, Optional
 
 import torch
+from torch import nn
+
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
+from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from torch import nn
@@ -16,7 +19,6 @@ from maze.core.env.structured_env import ActorIDType, StepKeyType
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch, convert_to_numpy
-from torch import nn
 
 
 class TorchPolicy(TorchModel, Policy):
@@ -49,15 +51,23 @@ class TorchPolicy(TorchModel, Policy):
         return False
 
     @override(Policy)
-    def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                       actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
-        """implementation of :class:`~maze.core.agent.policy.Policy`"""
-        action, _ = self.compute_action_with_logits(observation, actor_id, deterministic)
+    def compute_action(self,
+                       observation: ObservationType,
+                       maze_state: Optional[MazeStateType] = None,
+                       env: Optional[BaseEnv] = None,
+                       actor_id: ActorIDType = None,
+                       deterministic: bool = False) -> ActionType:
+        """implementation of :class:`~maze.core.agent.policy.Policy`
+        """
+        action, _ = self.compute_action_with_logits(observation, policy_id, deterministic)
         return action
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType,
-                                      num_candidates: int, maze_state: Optional[MazeStateType] = None,
+    def compute_top_action_candidates(self,
+                                      observation: ObservationType,
+                                      num_candidates: int,
+                                      maze_state: Optional[MazeStateType] = None,
+                                      env: Optional[BaseEnv] = None,
                                       actor_id: ActorIDType = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:

@@ -5,6 +5,7 @@ import numpy as np
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
+from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.utils.factory import Factory, ConfigType
@@ -62,9 +63,13 @@ class GreedyPolicy(Policy):
         return False
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType,
-                                      num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                      actor_id: Union[str, int] = None, deterministic: bool = False) \
+    def compute_top_action_candidates(self,
+                                      observation: ObservationType,
+                                      num_candidates: int,
+                                      maze_state: Optional[MazeStateType] = None,
+                                      env: Optional[BaseEnv] = None,
+                                      actor_id: Optional[ActorIDType] = None,
+                                      deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface
         """
@@ -72,15 +77,9 @@ class GreedyPolicy(Policy):
 
     @override(Policy)
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                       actor_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
-        """
-        Next action to take.
-
-        :param observation: Environment observation.
-        :param maze_state: Current MazeState of the environment (will always be None as `needs_state()` returns False)
-        :param actor_id: ID of the policy to query (not required here -- the environment should be flat).
-        :param deterministic: Specify if the action should be computed deterministically.
-        :return: Next action to take.
+                       env: Optional[BaseEnv] = None, actor_id: Optional[ActorIDType] = None,
+                       deterministic: bool = False) -> ActionType:
+        """implementation of :class:`~maze.core.agent.policy.Policy` interface
         """
         candidates = self.get_candidate_pieces(observation)
 
