@@ -68,9 +68,16 @@ class StructuredEnv(BaseEnv):
     def agent_counts_dict(self) -> Dict[StepKeyType, int]:
         """Returns the maximum count of agents per sub-step that the environment features.
 
+        If the agent count for a particular sub-step is dynamic (unknown upfront), then returns -1 for this sub-step.
+        This then limits available training configurations (e.g. with a dynamic number of agents, only
+        a shared policy can be trained -- not multiple separate per-agent policies, as their count is not
+        known upfront).
+
         For example:
-          - For a vehicle-routing environment where 5 driver agents will get to act during sub-step 0,
+          - For a vehicle-routing environment where max 5 driver agents will get to act during sub-step 0,
             this method should return {0: 5}
+          - For a vehicle routing environment where a dynamic number of agents will get to act during sub-step 0,
+            this method should return {0: -1}
           - For a two-step cutting environment where a piece is selected during sub-step 0 and then cut during
             sub-step 1 (with just one selection and cut happening in each step),
             this method should return {0: 1, 1: 1}
