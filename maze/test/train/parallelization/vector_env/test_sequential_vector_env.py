@@ -16,5 +16,5 @@ def test_vectorized_rollout():
     observation = vectorized_env.reset()
     for _ in range(3):
         policy_id, _ = vectorized_env.actor_id()
-        action = policy.compute_action(observation, policy_id=policy_id, maze_state=None)
+        action = policy.compute_action(observation, actor_id=policy_id, maze_state=None)
         observation, reward, done, info = vectorized_env.step(action)

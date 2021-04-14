@@ -184,7 +184,7 @@ class MultiStepActorCritic(Trainer, ABC):
         for substep_record in record.substep_records:
             # Predict step action logits
             logits_dict = self.model.policy.compute_logits_dict(observation=substep_record.observation,
-                                                                policy_id=substep_record.actor_id)
+                                                                actor_id=substep_record.actor_id)
 
             # Prepare action distributions & compute log probs
             prob_dist = self.model.policy.logits_dict_to_distribution(logits_dict, temperature=1.0)
