@@ -98,17 +98,17 @@ def flatten_concat_probabilistic_policy_for_env(env: MazeEnv):
     composer = CustomModelComposer(
         action_spaces_dict=env.action_spaces_dict,
         observation_spaces_dict=env.observation_spaces_dict,
+        agent_counts_dict=env.agent_counts_dict,
         distribution_mapper_config={},
         policy=dict(
             _target_=ProbabilisticPolicyComposer,
-            networks=[dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps
+            networks=[dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps,
+            separated_agent_networks=False
         ),
         critic=None
     )
-    return TorchPolicy(
-        networks=composer.policy.networks,
-        distribution_mapper=composer.distribution_mapper,
-        device="cpu")
+
+    return composer.policy
 
 
 def convert_np_array_to_tuple(arr: np.ndarray) -> Union[Tuple, np.ndarray]:

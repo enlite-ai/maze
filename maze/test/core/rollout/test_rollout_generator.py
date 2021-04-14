@@ -155,12 +155,12 @@ def test_records_next_observations():
     sub_step_keys = env.action_spaces_dict.keys()
     last_next_obs = None
     for record in trajectory.step_records:
-        assert sub_step_keys == record.observations.keys()
-        assert sub_step_keys == record.next_observations.keys()
+        assert sub_step_keys == record.observations_dict.keys()
+        assert sub_step_keys == record.next_observations_dict.keys()
         assert record.batch_shape is None
 
         for step_key in sub_step_keys:
-            curr_obs = record.observations[step_key]
+            curr_obs = record.observations_dict[step_key]
 
             # Next obs from the previous sub-step should be equal to the current observation
             if last_next_obs:
@@ -168,4 +168,4 @@ def test_records_next_observations():
                 for obs_key in curr_obs.keys():
                     assert np.all(curr_obs[obs_key] == last_next_obs[obs_key])
 
-            last_next_obs = record.next_observations[step_key]
+            last_next_obs = record.next_observations_dict[step_key]
