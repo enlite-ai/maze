@@ -7,6 +7,7 @@ import gym
 import numpy as np
 
 from maze.core.env.core_env import CoreEnv
+from maze.core.env.structured_env import StepKeyType
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
 from maze.core.utils.seeding import set_random_states
@@ -101,3 +102,8 @@ class DummyCoreEnvironment(CoreEnv):
         :return: False
         """
         return False
+
+    @property
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """Single-step, single agent env."""
+        return {0: 1}

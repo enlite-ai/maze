@@ -1,4 +1,5 @@
 """ Contains utility functions for the perception module. """
+import collections
 import copy
 from collections import defaultdict
 from typing import Union, Dict, Any, Callable, Sequence, Iterable
