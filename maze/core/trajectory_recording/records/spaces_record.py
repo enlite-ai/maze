@@ -12,24 +12,31 @@ from maze.train.utils.train_utils import stack_numpy_dict_list, stack_torch_dict
 @dataclass
 class SpacesRecord:
     actor_id: ActorIDType
+    """ID of the actor for this step."""
 
     observation: Optional[Dict[str, Union[torch.Tensor]]] = None
-    """Dictionary of observations recorded during the step."""
+    """Observation recorded during the step."""
 
     action: Optional[Dict[str, Union[torch.Tensor]]] = None
-    """Dictionary of actions recorded during the step."""
+    """Action recorded during the step."""
 
     reward: Optional[Union[float, np.ndarray, torch.Tensor]] = None
-    """Dictionary of rewards recorded during the step."""
+    """Reward recorded during the step."""
 
     done: Optional[Union[bool, np.ndarray, torch.Tensor]] = None
-    """Dictionary of dones recorded during the step."""
+    """Done flag recorded during the step."""
 
     info: Optional[Dict] = None
-    """Dictionary of info dictionaries recorded during the step."""
+    """Info dictionary recorded during the step."""
+
+    next_observation: Optional[Dict[str, Union[torch.Tensor]]] = None
+    """Observation obtained after this step (i.e., results of the action taken in this step)."""
 
     logits: Optional[Dict[str, np.ndarray]] = None
-    """Dictionary of dones recorded during the step."""
+    """Action logits recorded during the step."""
+
+    discounted_return: Optional[Union[float, np.ndarray]] = None
+    """Discounted return for this step."""
 
     batch_shape: Optional[List[int]] = None
     """If the record is batched, this is the shape of the batch."""
@@ -45,6 +52,9 @@ class SpacesRecord:
             reward=np.stack([r.reward for r in records]),
             done=np.stack([r.done for r in records])
         )
+
+        if records[0].next_observation:
+            stacked_record.next_observation = stack_numpy_dict_list([r.next_observation for r in records])
 
         if records[0].logits:
             stacked_record.logits = stack_torch_dict_list([r.logits for r in records])
@@ -74,6 +84,9 @@ class SpacesRecord:
         self.reward = self.reward.cpu().numpy()
         self.done = self.done.cpu().numpy()
 
+        if self.next_observation is not None:
+            self.next_observation = convert_to_numpy(self.next_observation, cast=None, in_place=True)
+
         if self.logits is not None:
             self.logits = convert_to_numpy(self.logits, cast=None, in_place=True)
 
@@ -88,6 +101,9 @@ class SpacesRecord:
         self.action = convert_to_torch(self.action, device=device, cast=None, in_place=True)
         self.reward = torch.from_numpy(np.asarray(self.reward)).to(device)
         self.done = torch.from_numpy(np.asarray(self.done)).to(device)
+
+        if self.next_observation is not None:
+            self.next_observation = convert_to_torch(self.next_observation, device=device, cast=None, in_place=True)
 
         if self.logits is not None:
             self.logits = convert_to_torch(self.logits, device=device, cast=None, in_place=True)
