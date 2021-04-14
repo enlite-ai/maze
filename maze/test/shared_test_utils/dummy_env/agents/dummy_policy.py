@@ -10,6 +10,7 @@ from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorIDType
 
 
 class DummyGreedyPolicy(Policy):
@@ -25,7 +26,7 @@ class DummyGreedyPolicy(Policy):
     @override(Policy)
     def compute_top_action_candidates(self, observation: ObservationType,
                                       num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                      policy_id: Union[str, int] = None, deterministic: bool = False) \
+                                      actor_id: ActorIDType = None, deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """
         Not implemented.
@@ -34,7 +35,7 @@ class DummyGreedyPolicy(Policy):
 
     @override(Policy)
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                       policy_id: Union[str, int] = None,
+                       actor_id: ActorIDType = None,
                        deterministic: bool = False) -> ActionType:
         """
         Returns next action to take.

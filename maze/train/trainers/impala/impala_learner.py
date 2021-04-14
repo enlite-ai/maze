@@ -55,7 +55,7 @@ class ImpalaLearner:
         # compute action log-probabilities of actions taken
         actions_logits = dict()
         for step_key in self.sub_step_keys:
-            actions_logits[step_key] = self.model.policy.compute_logits_dict(obs_t[step_key], policy_id=step_key)
+            actions_logits[step_key] = self.model.policy.compute_logits_dict(obs_t[step_key], actor_id=step_key)
 
         return LearnerOutput(values, detached_values, actions_logits)
 
@@ -73,7 +73,7 @@ class ImpalaLearner:
 
             # iterate environment steps
             for step_key in self.sub_step_keys:
-                sampled_action = self.model.policy.compute_action(obs, policy_id=step_key, deterministic=deterministic)
+                sampled_action = self.model.policy.compute_action(obs, actor_id=step_key, deterministic=deterministic)
                 obs, step_rewards, dones, infos = self.env.step(sampled_action)
 
             if np.any(dones):

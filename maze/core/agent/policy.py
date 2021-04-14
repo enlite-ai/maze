@@ -6,6 +6,7 @@ from typing import Union, Tuple, Sequence, Optional
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorIDType
 
 
 class Policy(ABC):
@@ -26,14 +27,14 @@ class Policy(ABC):
 
     @abstractmethod
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType],
-                       policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+                       actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
         """
         Query a policy that corresponds to the given ID for action.
 
         :param observation: Current observation of the environment
         :param maze_state: Current state representation of the environment (only provided if `needs_state()` returns True)
-        :param policy_id: ID of the policy to query
-                          (does not have to be provided if policies dict contains only 1 policy)
+        :param actor_id: ID of actor to query policy for
+                         (does not have to be provided if policies dict contains only 1 policy)
         :param deterministic: Specify if the action should be computed deterministically
         :return: Next action to take
         """
@@ -41,7 +42,7 @@ class Policy(ABC):
     @abstractmethod
     def compute_top_action_candidates(self, observation: ObservationType,
                                       num_candidates: int, maze_state: Optional[MazeStateType],
-                                      policy_id: Union[str, int] = None, deterministic: bool = False) \
+                                      actor_id: ActorIDType = None, deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """
         Get the top :num_candidates actions as well as the probabilities, q-values, .. leading to the decision.
@@ -49,8 +50,8 @@ class Policy(ABC):
         :param observation: Current observation of the environment
         :param num_candidates: The number of actions that should be returned
         :param maze_state: Current state representation of the environment (only provided if `needs_state()` returns True)
-        :param policy_id: ID of the policy to query
-                          (does not have to be provided if policies dict contains only 1 policy)
+        :param actor_id: ID of actor to query policy for
+                         (does not have to be provided if policies dict contains only 1 policy)
         :param deterministic: Specify if the action should be computed deterministically
         :return: a tuple of sequences, where the first sequence corresponds to the possible actions, the other sequence
                  to the associated scores (e.g, probabilities or Q-values).

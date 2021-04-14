@@ -64,7 +64,7 @@ class GreedyPolicy(Policy):
     @override(Policy)
     def compute_top_action_candidates(self, observation: ObservationType,
                                       num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                      policy_id: Union[str, int] = None, deterministic: bool = False) \
+                                      actor_id: Union[str, int] = None, deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface
         """
@@ -72,13 +72,13 @@ class GreedyPolicy(Policy):
 
     @override(Policy)
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                       policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+                       actor_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
         """
         Next action to take.
 
         :param observation: Environment observation.
         :param maze_state: Current MazeState of the environment (will always be None as `needs_state()` returns False)
-        :param policy_id: ID of the policy to query (not required here -- the environment should be flat).
+        :param actor_id: ID of the policy to query (not required here -- the environment should be flat).
         :param deterministic: Specify if the action should be computed deterministically.
         :return: Next action to take.
         """

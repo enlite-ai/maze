@@ -29,11 +29,11 @@ def test_default_policy():
     """ unit tests """
     default_policy = DefaultPolicy({"policy_0": DummyFlatPolicy("action_0"),
                                               "policy_1": DummyFlatPolicy("action_1")})
-    action = default_policy.compute_action(observation={}, policy_id="policy_0", deterministic=True)
+    action = default_policy.compute_action(observation={}, actor_id="policy_0", deterministic=True)
     assert "action_0" in action
-    action = default_policy.compute_action(observation={}, policy_id="policy_1", deterministic=True)
+    action = default_policy.compute_action(observation={}, actor_id="policy_1", deterministic=True)
     assert "action_1" in action
 
     default_policy = DefaultPolicy({"policy_0": DummyFlatPolicy("action_0")})
-    action = default_policy.compute_action(observation={}, policy_id=None, deterministic=True)
+    action = default_policy.compute_action(observation={}, actor_id=None, deterministic=True)
     assert "action_0" in action

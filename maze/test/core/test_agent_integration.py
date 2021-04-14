@@ -12,6 +12,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorIDType
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
@@ -72,13 +73,13 @@ def test_handles_multiple_policies():
             return False
 
         def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                           policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+                           actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
             """Return the set static action"""
-            return self.static_action[policy_id]
+            return self.static_action[actor_id[0]]
 
         def compute_top_action_candidates(self, observation: Any,
                                           num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                          policy_id: Union[str, int] = None,
+                                          actor_id: ActorIDType = None,
                                           deterministic: bool = False) -> Tuple[Sequence[Any], Sequence[float]]:
             """Not used"""
             raise NotImplementedError
@@ -221,7 +222,7 @@ def test_gets_maze_action_candidates():
         """Mock policy, returns static action candidates (careful, always three of them)."""
 
         def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int,
-                                          policy_id: Union[str, int] = None, deterministic: bool = False) \
+                                          actor_id: ActorIDType = None, deterministic: bool = False) \
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Return static action candidates"""
 
@@ -255,13 +256,13 @@ def test_propagates_exceptions_to_main_thread():
         """Mock policy, throws an error every time."""
 
         def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                           policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+                           actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
             """Throw an error."""
             raise RuntimeError("Test error.")
 
         def compute_top_action_candidates(self, observation: ObservationType,
                                           num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                          policy_id: Union[str, int] = None, deterministic: bool = False) \
+                                          actor_id: Union[str, int] = None, deterministic: bool = False) \
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Not used"""
 

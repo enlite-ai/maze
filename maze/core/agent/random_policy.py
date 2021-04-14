@@ -9,6 +9,7 @@ from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorIDType
 from maze.core.utils.config_utils import make_env
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
@@ -31,14 +32,14 @@ class RandomPolicy(Policy):
 
     @override(Policy)
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType],
-                       policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+                       actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
         """Sample random action from the given action space."""
-        return self.action_spaces_dict[policy_id[0]].sample()
+        return self.action_spaces_dict[actor_id[0]].sample()
 
     @override(Policy)
     def compute_top_action_candidates(self, observation: ObservationType,
                                       num_candidates: int, maze_state: Optional[MazeStateType] = None,
-                                      policy_id: Union[str, int] = None, deterministic: bool = False) \
+                                      actor_id: ActorIDType = None, deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """Random policy does not provide top action candidates."""
 
@@ -52,14 +53,15 @@ class DistributedRandomPolicy(RandomPolicy):
     :param action_spaces_dict: The action_spaces dict of the env (will sample from it)
     :param concurrency: How many actions to sample at once. Should correspond to concurrency of the distributed env.
     """
+
     def __init__(self, action_spaces_dict: Dict[Union[str, int], spaces.Space], concurrency: int):
         super().__init__(action_spaces_dict)
         self.concurrency = concurrency
 
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType],
-                       policy_id: Union[str, int] = None, deterministic: bool = False) -> ActionType:
+                       actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
         """Sample multiple actions together."""
-        return stack_numpy_dict_list([self.action_spaces_dict[policy_id].sample() for _ in range(self.concurrency)])
+        return stack_numpy_dict_list([self.action_spaces_dict[actor_id[0]].sample() for _ in range(self.concurrency)])
 
 
 def random_policy_from_config(env_config: DictConfig, wrappers_config: DictConfig) -> RandomPolicy:

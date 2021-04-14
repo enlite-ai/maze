@@ -40,17 +40,15 @@ class AgentExecution:
             # We need to reset first, otherwise no observation is available
             observation = self.env.reset()
             while not self.rollout_done_event.is_set():
-                policy_id, _ = self.env.actor_id()
-
                 # Get either a single action or multiple candidates wrapped in action candidates object
                 if self.num_candidates > 1:
                     action = ActionCandidates(self.policy.compute_top_action_candidates(observation,
                                                                                         self.num_candidates,
-                                                                                        policy_id))
+                                                                                        self.env.actor_id()))
                 else:
                     maze_state = self.env.get_maze_state() if self.policy.needs_state() else None
                     action = self.policy.compute_action(observation=observation, maze_state=maze_state,
-                                                        policy_id=policy_id, deterministic=True)
+                                                        actor_id=self.env.actor_id(), deterministic=True)
 
                 observation, _, done, _ = self.env.step(action)
             # Final reset required to notify all wrappers.
