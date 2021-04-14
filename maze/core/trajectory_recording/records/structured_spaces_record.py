@@ -26,6 +26,7 @@ class StructuredSpacesRecord:
     """
 
     substep_records: List[SpacesRecord] = None
+    """Records for individual sub-steps (containing individual observations, action etc.)"""
 
     event_log: Optional[StepEventLog] = None
     """Log of events recorded during the whole step."""
@@ -109,6 +110,10 @@ class StructuredSpacesRecord:
         return [r.done for r in self.substep_records]
 
     @property
+    def next_observations(self):
+        return [r.next_observation for r in self.substep_records]
+
+    @property
     def actions_dict(self):
         return {r.substep_key: r.action for r in self.substep_records}
 
@@ -123,6 +128,10 @@ class StructuredSpacesRecord:
     @property
     def dones_dict(self):
         return {r.substep_key: r.done for r in self.substep_records}
+
+    @property
+    def next_observations_dict(self):
+        return {r.substep_key: r.next_observation for r in self.substep_records}
 
     @property
     def logits_dict(self):
@@ -154,7 +163,7 @@ class StructuredSpacesRecord:
         obs, action = conversion_env.get_observation_and_action_dicts(obs, action, first_step_in_episode)
         return StructuredSpacesRecord(observations=obs, actions=action, rewards=None, dones=None)
 
-    def to_numpy(self):
+    def to_numpy(self) -> 'StructuredSpacesRecord':
         """Convert the record to numpy."""
         for substep_record in self.substep_records:
             substep_record.to_numpy()
@@ -170,7 +179,7 @@ class StructuredSpacesRecord:
             substep_record.to_torch(device=device)
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         repr = "Structured spaces record:"
         for substep_record in self.substep_records:
             repr += f"\n - {substep_record}"
