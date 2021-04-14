@@ -1,10 +1,11 @@
 """Encapsulates state critic and queries them for values according to the provided policy ID."""
 
 from abc import ABC, abstractmethod
-from typing import Union, Dict, Tuple
+from typing import Union, Dict, Tuple, List
 
 import torch
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
 
 class StateCritic(ABC):
@@ -15,13 +16,11 @@ class StateCritic(ABC):
     """
 
     @abstractmethod
-    def predict_values(self, observations: Dict[Union[str, int], ObservationType]) -> \
-            Tuple[Dict[Union[str, int], torch.Tensor],
-                  Dict[Union[str, int], torch.Tensor]]:
+    def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
         """Query a critic that corresponds to the given ID for the state value.
 
-        :param observations: Current observation of the environment
-        :return: Tuple containing the values and detached values
+        :param record: Record of a structured step containing keys and observations for the individual sub-steps
+        :return: Tuple containing lists of values and detached values for individual sub-steps
         """
 
     @abstractmethod

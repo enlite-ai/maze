@@ -105,9 +105,7 @@ class TorchStateCritic(TorchModel, StateCritic):
 
         Useful for example to implement PPO or A2C.
         
-        :param observations: Sub-step observations as tensor dictionary.
-        :param rews: Array holding the per step rewards.
-        :param dones: Array indicating if a step is a done step.
+        :param record: Record of a structured step containing observations, rewards, and dones
         :param gamma: Discounting factor
         :param gae_lambda: Bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
         :return: Tuple containing the computed returns, the predicted values and the detached predicted values.
@@ -202,8 +200,7 @@ class TorchSharedStateCritic(TorchStateCritic):
         self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
 
     @override(StateCritic)
-    def predict_values(self, record: StructuredSpacesRecord) -> \
-            Tuple[Dict[Union[str, int], torch.Tensor], Dict[Union[str, int], torch.Tensor]]:
+    def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
         """Predict the shared values and repeat them for each sub-step."""
         if self.concat_observations:
             flattened_obs_t = stack_and_flatten_spaces(record.observations)
@@ -230,16 +227,13 @@ class TorchStepStateCritic(TorchStateCritic):
     """
 
     @override(StateCritic)
-    def predict_values(self, observations: Dict[Union[str, int], Dict[str, torch.Tensor]]) -> \
-            Tuple[Dict[Union[str, int], torch.Tensor], Dict[Union[str, int], torch.Tensor]]:
-        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`
-        """
-        observations = convert_to_torch(observations, device=self._device, cast=None, in_place=False)
-
-        values, detached_values = dict(), dict()
-        for step_id in observations.keys():
-            values[step_id] = self.networks[step_id](observations[step_id])["value"][..., 0]
-            detached_values[step_id] = values[step_id].detach()
+    def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`"""
+        values, detached_values = [], []
+        for substep_record in record.substep_records:
+            value = self.networks[substep_record.substep_key](substep_record.observation)["value"][..., 0]
+            values.append(value)
+            detached_values.append(value.detach())
 
         return values, detached_values
 

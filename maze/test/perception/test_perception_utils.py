@@ -21,7 +21,7 @@ def test_flat_structured_observations():
     _ = observation_spaces_to_in_shapes(obs_space)
 
 
-def test_concat_spaces():
+def test_stack_and_flatten_spaces():
     observations = [dict(a=torch.ones(3), b=torch.ones(3)), dict(b=torch.ones(3), c=torch.ones(3))]
     expected_shapes = dict(a=(3, ), b=(2, 3), c=(3,))
 
