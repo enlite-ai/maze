@@ -8,7 +8,7 @@ import gym
 import numpy as np
 
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env import StructuredEnv, StepKeyType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import Wrapper
 
@@ -120,6 +120,11 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
     def is_actor_done(self) -> bool:
         """Actors are never destroyed in this env."""
         return False
+
+    @property
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """Two-step, single agent env."""
+        return {0: 1, 1: 1}
 
     def close(self) -> None:
         """Performs any necessary cleanup.
