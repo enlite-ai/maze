@@ -1,7 +1,10 @@
 """Contains utility functions for structured environments."""
-from typing import Dict, Union, Tuple, Sequence
+from collections import defaultdict
+from typing import Dict, Union, Sequence
 
 from gym import spaces
+
+from maze.core.env.structured_env import StepKeyType
 
 
 def flat_structured_space(structured_space_dict: Dict[Union[int, str], spaces.Dict]) -> spaces.Dict:
@@ -22,7 +25,7 @@ def flat_structured_space(structured_space_dict: Dict[Union[int, str], spaces.Di
     return spaces.Dict(spaces=flat_dict)
 
 
-def flat_structured_shapes(shapes: Dict[Union[str, int], Dict[str, Sequence[int]]]) -> Dict[str, Sequence[int]]:
+def flat_structured_shapes(shapes: Dict[StepKeyType, Dict[str, Sequence[int]]]) -> Dict[str, Sequence[int]]:
     """Flatten a dict of shape dicts to a single dict
 
     :param shapes: Collection of shape dict.
@@ -41,15 +44,26 @@ def flat_structured_shapes(shapes: Dict[Union[str, int], Dict[str, Sequence[int]
     return result
 
 
-def prefixed_structured_shapes(shapes: Dict[Union[str, int], Dict[str, Sequence[int]]],
-                               agent_counts: Dict[Union[str, int], int]) \
-        -> Dict[str, Sequence[int]]:
-    """"""
-    result = dict()
+def stacked_shapes(shapes: Dict[StepKeyType, Dict[str, Sequence[int]]],
+                   agent_counts_dict: Dict[StepKeyType, int]) -> Dict[str, Sequence[int]]:
+    """Adopt shapes dict for stacked multi-agent scenario. (Mainly for observation stacking.)
 
-    for sub_step_key, sub_step_space in shapes.items():
-        for agent_id in range(agent_counts[sub_step_key]):
-            for key, action_space in sub_step_space.items():
-                result[f"{sub_step_key}_{agent_id}_{key}"] = action_space
+    Takes a dict of shapes for a structured step. Augments shapes for sub-steps that have multiple agents
+    by the agent dimension, so the observations from multiple agents can be concatenated.
+    """
+    shapes = shapes.copy()
 
-    return result
+    for sub_step_key, agent_count in agent_counts_dict.items():
+        # Dynamic number of agents is not supported
+        assert agent_count != -1, "for observation concatenation, the number of agents " \
+                                  "needs to be known upfront"
+
+        # Single-agent spaces are left as-is
+        if agent_count == 1:
+            continue
+
+        # Multi-agent spaces are stacked
+        for obs_name, original_shape in shapes[sub_step_key].items():
+            shapes[sub_step_key][obs_name] = (agent_count, *original_shape)
+
+    return shapes

@@ -1,7 +1,8 @@
 """ Contains unit tests for maze core utility functions. """
 from gym import spaces
 
-from maze.core.utils.structured_env_utils import flat_structured_space, flat_structured_shapes
+from maze.core.utils.structured_env_utils import flat_structured_space, flat_structured_shapes, \
+    stacked_shapes
 
 
 def test_flat_structured_space_and_shapes():
@@ -24,3 +25,17 @@ def test_flat_structured_space_and_shapes():
     assert isinstance(flat_shapes, dict)
     assert flat_shapes["discrete"] == (5,)
     assert flat_shapes["binary"] == (5,)
+
+
+def test_stacked_shapes():
+    agent_counts = {0: 1, 1: 3}
+    shapes = {
+        0: dict(a=(1,), b=(1, 2)),
+        1: dict(c=(1,), d=(1, 2))
+    }
+    expected_stacked_shapes = {
+        0: dict(a=(1,), b=(1, 2)),
+        1: dict(c=(3, 1), d=(3, 1, 2))
+    }
+
+    assert expected_stacked_shapes == stacked_shapes(shapes, agent_counts)

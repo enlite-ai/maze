@@ -1,6 +1,6 @@
 """ Contains utility functions for the perception module. """
-import collections
 import copy
+from collections import defaultdict
 from typing import Union, Dict, Any, Callable, Sequence, Iterable
 
 import gym
@@ -27,15 +27,14 @@ def observation_spaces_to_in_shapes(observation_spaces: Dict[Union[int, str], gy
     return in_shapes
 
 
-def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]], strict: bool = True) -> Dict[str, torch.Tensor]:
+def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
     """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
     into a single dictionary containing all the items.
 
-    If one key is present in multiple elements, it will be present only once in the resulting dictionary.
-    If strict is set to true, all values for such key will be checked for a match.
+    If one key is present in multiple elements, its value will be present only once in the resulting dictionary,
+    and all values for such key will be checked for a match.
 
     :param: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
-    :param strict: If true, will check that keys present in multiple spaces have the same values.
     :return: One flat dictionary, containing all keys and values form the elements of the iterable.
     """
     result = dict()
@@ -43,7 +42,7 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]], strict: bool = Tru
     for space in spaces:
         for key, obs in space.items():
             # check if the heads match if strict mode
-            if strict and key in result:
+            if key in result:
                 assert result[key].shape == obs.shape
                 if isinstance(obs, np.ndarray):
                     assert np.allclose(result[key], obs)
@@ -56,15 +55,31 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]], strict: bool = Tru
     return result
 
 
-def combine_spaces(spaces: Iterable[Dict[str, torch.Tensor]], ids: Iterable[str]) -> Dict[str, torch.Tensor]:
-    """"""
-    result = dict()
+def stack_and_flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
+    """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
+    into a single dictionary containing all the items.
 
-    for space_id, space in zip(ids, spaces):
+    If one key is present in multiple elements, all its values will be concatenated in the resulting dictionary.
+
+    :param: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
+    :return: One flat dictionary, containing all keys and values form the elements of the iterable.
+    """
+    result = defaultdict(list)
+
+    # Collect observations in flat dict
+    for space in spaces:
         for key, obs in space.items():
-            result[f"{space_id}_{key}"] = obs
+            result[key].append(obs)
 
-    return result
+    # Concatenate all at once for efficiency
+    for obs_name, observations in result.items():
+        if len(observations) == 1:
+            result[obs_name] = observations[0]
+        else:
+            result[obs_name] = torch.stack(observations)
+
+    # Return an ordinary dict, not default dict
+    return dict(result)
 
 
 def convert_to_torch(stats: Any, device: Union[str, None], cast: Union[torch.dtype, None],
