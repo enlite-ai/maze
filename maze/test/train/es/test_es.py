@@ -30,6 +30,7 @@ def train_setup(n_epochs: int) -> Tuple[TorchPolicy, StructuredEnv, ESTrainer]:
     # initialize optimizer
     policy = TorchPolicy(networks=policies,
                          distribution_mapper=distribution_mapper,
+                         separated_agent_networks=False,
                          device="cpu")
 
     # reduce the noise table size to speed up testing
