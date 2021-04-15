@@ -72,6 +72,7 @@ def main(n_epochs: int, rnn_steps: int) -> None:
     template_builder = TemplateModelComposer(
         action_spaces_dict=envs.action_spaces_dict,
         observation_spaces_dict=envs.observation_spaces_dict,
+        agent_counts_dict=envs.agent_counts_dict,
         distribution_mapper_config={},
         model_builder=ConcatModelBuilder(modality_config, obs_modalities_mappings),
         policy={'_target_': 'maze.perception.models.policies.ProbabilisticPolicyComposer'},
@@ -110,7 +111,7 @@ def main(n_epochs: int, rnn_steps: int) -> None:
 
     # final evaluation run
     print("Final Evaluation Run:")
-    a2c.evaluate(deterministic=False, repeats=100)
+    a2c.evaluate()
 
 
 if __name__ == "__main__":

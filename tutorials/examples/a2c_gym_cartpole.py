@@ -74,7 +74,7 @@ def main(n_epochs: int) -> None:
 
     # final evaluation run
     print("Final Evaluation Run:")
-    a2c.evaluate(deterministic=False, repeats=100)
+    a2c.evaluate()
 
 
 if __name__ == "__main__":

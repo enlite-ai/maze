@@ -109,6 +109,15 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
         """
         return self._sub_step_key, 0
 
+    @property
+    def agent_counts_dict(self) -> Dict[Union[str, int], int]:
+        """Returns the count of agents for individual sub-steps (or -1 for dynamic agent count).
+
+        This env has two sub-steps (0 and 1), in each of which one agent gets to act. Hence, we return
+        {0: 1, 1: 1}.
+        """
+        return {0: 1, 1: 1}
+
     def is_actor_done(self) -> bool:
         """Returns True if the just stepped actor is done, which is different to the done flag of the environment."""
         return False
