@@ -45,6 +45,10 @@ class StructuredSpacesRecord:
         """Append a sub-step record."""
         self.substep_records.append(substep_record)
 
+    def __len__(self) -> int:
+        """Return count of sub-step records."""
+        return len(self.substep_records)
+
     @classmethod
     def stack_records(cls, records: List['StructuredSpacesRecord']) -> 'StructuredSpacesRecord':
         """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
