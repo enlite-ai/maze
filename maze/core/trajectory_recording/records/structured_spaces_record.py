@@ -150,6 +150,9 @@ class StructuredSpacesRecord:
         This is useful e.g. for behavioral cloning, when we have recorded Maze states and actions from teacher runs,
         and now need to convert these into raw actions and observations to be fed to a model.
 
+        Note that multi-agent scenarios are not supported yet (the conversion only support a single
+        action-observation pair per sub-step key).
+
         :param state_record: State record to convert.
         :param conversion_env: Environment to use for the conversion. Determines the format of the resulting spaces.
         :param first_step_in_episode: Flag whether this is the first step in an episode (to resets stateful wrapper)
@@ -161,7 +164,16 @@ class StructuredSpacesRecord:
                                                                RawMazeAction) else state_record.maze_action
 
         obs, action = conversion_env.get_observation_and_action_dicts(obs, action, first_step_in_episode)
-        return StructuredSpacesRecord(observations=obs, actions=action, rewards=None, dones=None)
+
+        substep_records = [SpacesRecord(
+            actor_id=(substep_key, 0),
+            observation=obs[substep_key],
+            action=action[substep_key],
+            reward=None,
+            done=None
+        ) for substep_key in obs.keys()]
+
+        return StructuredSpacesRecord(substep_records=substep_records)
 
     def to_numpy(self) -> 'StructuredSpacesRecord':
         """Convert the record to numpy."""

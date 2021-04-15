@@ -59,7 +59,8 @@ class BCRunner(TrainingRunner):
 
         policy = TorchPolicy(networks=self.model_composer.policy.networks,
                              distribution_mapper=self.model_composer.distribution_mapper,
-                             device=cfg.algorithm.device)
+                             device=cfg.algorithm.device,
+                             separated_agent_networks=False)
 
         model_selection = BestModelSelection(self.state_dict_dump_file, policy)
         optimizer = Factory(Optimizer).instantiate(cfg.algorithm.optimizer, params=policy.parameters())

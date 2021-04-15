@@ -45,16 +45,16 @@ class BCLoss:
         losses = []
 
         # Iterate over all substeps
-        for policy_id, observation in observation_dict.items():
-            target = action_dict[policy_id]
-            logits = policy.compute_logits_dict(observation, policy_id)
-            substep_losses = self._get_substep_loss(policy_id, logits, target, self.action_spaces_dict[policy_id],
+        for substep_key, observation in observation_dict.items():
+            target = action_dict[substep_key]
+            logits = policy.compute_logits_dict(observation, actor_id=(substep_key, 0))
+            substep_losses = self._get_substep_loss(substep_key, logits, target, self.action_spaces_dict[substep_key],
                                                     events=events)
             losses.append(substep_losses)
 
             # Compute and report policy entropy
             entropy = policy.logits_dict_to_distribution(logits).entropy().mean()
-            events.policy_entropy(step_id=policy_id, value=entropy.item())
+            events.policy_entropy(step_id=substep_key, value=entropy.item())
             if self.entropy_coef > 0:
                 losses.append(-self.entropy_coef * entropy)
 
