@@ -48,10 +48,8 @@ class ProbabilisticPolicyComposer(BasePolicyComposer):
     def policy(self) -> TorchPolicy:
         """implementation of :class:`~maze.perception.models.policies.base_policy_composer.BasePolicyComposer`
         """
-        return TorchPolicy(networks=self._policies,
-                           distribution_mapper=self._distribution_mapper,
-                           separated_agent_networks=self._separated_agent_networks,
-                           device='cpu')
+        return TorchPolicy(networks=self._policies, separated_agent_networks=self._separated_agent_networks,
+                           distribution_mapper=self._distribution_mapper, device='cpu')
 
     def _network_for_substep_key(self, key: StepKeyType):
         return Factory(nn.Module).instantiate(self._networks[key],

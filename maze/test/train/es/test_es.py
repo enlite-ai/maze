@@ -28,9 +28,7 @@ def train_setup(n_epochs: int) -> Tuple[TorchPolicy, StructuredEnv, ESTrainer]:
     policies = {0: FlattenConcatPolicyNet({'observation': (4,)}, {'action': (2,)}, hidden_units=[16], non_lin=nn.Tanh)}
 
     # initialize optimizer
-    policy = TorchPolicy(networks=policies,
-                         distribution_mapper=distribution_mapper,
-                         separated_agent_networks=False,
+    policy = TorchPolicy(networks=policies, separated_agent_networks=False, distribution_mapper=distribution_mapper,
                          device="cpu")
 
     # reduce the noise table size to speed up testing

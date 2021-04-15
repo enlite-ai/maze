@@ -35,9 +35,8 @@ def main(max_epochs) -> None:
                           non_lin=nn.SELU)]
 
     # initialize optimizer
-    policy = TorchPolicy(networks=list_to_dict(policies),
-                         distribution_mapper=distribution_mapper,
-                         device="cpu")
+    policy = TorchPolicy(networks=list_to_dict(policies), separated_agent_networks=False,
+                         distribution_mapper=distribution_mapper, device="cpu")
 
     shared_noise = SharedNoiseTable(count=1_000_000)
 
