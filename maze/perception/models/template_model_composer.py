@@ -254,6 +254,7 @@ class TemplateModelComposer(BaseModelComposer):
 
             return TorchPolicy(networks=networks,
                                distribution_mapper=self.distribution_mapper,
+                               separated_agent_networks=False,
                                device="cpu")
 
         else:
@@ -273,6 +274,7 @@ class TemplateModelComposer(BaseModelComposer):
             critics = {0: self.template_value_net(observation_space)}
             return TorchSharedStateCritic(networks=critics,
                                           num_policies=len(self.action_spaces_dict),
+                                          concat_observations=False,
                                           device="cpu")
 
         elif issubclass(self._critic_type, StepStateCriticComposer):

@@ -44,7 +44,9 @@ class MazeRLlibBaseModel(ABC):
         self.model_composer = Factory(BaseModelComposer).instantiate(
             maze_model_composer_config,
             action_spaces_dict={0: action_space},
-            observation_spaces_dict={0: observation_space})
+            observation_spaces_dict={0: observation_space},
+            agent_counts_dict={0: 1}
+        )
 
         # Obtain action order from distribution mapper (this has to be in the same order as the attribute
         #   self.action_heads in the MazeRLlibActionDistribution
@@ -52,7 +54,8 @@ class MazeRLlibBaseModel(ABC):
 
         # Initialize space config, and dump it to file
         SpacesConfig(self.model_composer.action_spaces_dict,
-                     self.model_composer.observation_spaces_dict).save(spaces_config_dump_file)
+                     self.model_composer.observation_spaces_dict,
+                     self.model_composer.agent_counts_dict).save(spaces_config_dump_file)
 
         # Assert that only one network is used for policy
         assert len(self.model_composer.policy.networks) == 1
