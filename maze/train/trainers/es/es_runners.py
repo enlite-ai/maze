@@ -35,9 +35,8 @@ class ESMasterRunner(TrainingRunner):
         shared_noise = SharedNoiseTable(count=self.shared_noise_table_size)
 
         # --- initialize policies ---
-        policy = TorchPolicy(networks=self.model_composer.policy.networks,
-                             distribution_mapper=self.model_composer.distribution_mapper,
-                             device="cpu")
+        policy = TorchPolicy(networks=self.model_composer.policy.networks, separated_agent_networks=False,
+                             distribution_mapper=self.model_composer.distribution_mapper, device="cpu")
 
         print("********** Trainer Setup **********")
         trainer = ESTrainer(algorithm_config=cfg.algorithm,

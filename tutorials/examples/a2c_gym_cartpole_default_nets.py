@@ -95,9 +95,8 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         device="cpu")
 
     model = TorchActorCritic(
-        policy=TorchPolicy(networks=template_builder.policy.networks,
-                           distribution_mapper=template_builder.distribution_mapper,
-                           device=algorithm_config.device),
+        policy=TorchPolicy(networks=template_builder.policy.networks, separated_agent_networks=False,
+                           distribution_mapper=template_builder.distribution_mapper, device=algorithm_config.device),
         critic=template_builder.critic,
         device=algorithm_config.device)
 

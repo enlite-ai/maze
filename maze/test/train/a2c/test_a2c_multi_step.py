@@ -55,9 +55,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepA2C:
 
     # initialize actor critic model
     model = TorchActorCritic(
-        policy=TorchPolicy(networks=policies,
-                           distribution_mapper=distribution_mapper,
-                           separated_agent_networks=False,
+        policy=TorchPolicy(networks=policies, separated_agent_networks=False, distribution_mapper=distribution_mapper,
                            device=algorithm_config.device),
         critic=TorchSharedStateCritic(networks=critics,
                                       num_policies=1,

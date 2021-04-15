@@ -252,10 +252,8 @@ class TemplateModelComposer(BaseModelComposer):
                     observation_space=self.observation_spaces_dict[sub_step_key],
                     action_space=self.action_spaces_dict[sub_step_key])
 
-            return TorchPolicy(networks=networks,
-                               distribution_mapper=self.distribution_mapper,
-                               separated_agent_networks=False,
-                               device="cpu")
+            return TorchPolicy(networks=networks, separated_agent_networks=False,
+                               distribution_mapper=self.distribution_mapper, device="cpu")
 
         else:
             raise ValueError(f"Policy type {self._policy_type} not supported by the template model composer!")
