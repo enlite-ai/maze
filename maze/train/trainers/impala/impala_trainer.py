@@ -182,15 +182,14 @@ class MultiStepIMPALA(Trainer):
 
         :return: The shifted actor and learner output
         """
-        for name in ['rewards', 'dones']:
-            field = getattr(step_record, name)
-            for step_idx, value in field.items():
-                getattr(step_record, name)[step_idx] = value[:-1]
-        for name in ['observations', 'actions', 'logits']:
-            field = getattr(step_record, name)
-            for step_idx in field.keys():
-                for key, value in field[step_idx].items():
-                    getattr(step_record, name)[step_idx][key] = value[:-1]
+        for substep_record in step_record.substep_records:
+            substep_record.reward = substep_record.reward[:-1]
+            substep_record.done = substep_record.done[:-1]
+
+            for name in ['observation', 'action', 'logits']:
+                field = getattr(substep_record, name)
+                for key, value in field.items():
+                    getattr(substep_record, name)[key] = value[:-1]
 
         new_learner_output = {}
         for name in ['values', 'detached_values', 'actions_logits']:
