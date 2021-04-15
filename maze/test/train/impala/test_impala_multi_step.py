@@ -25,11 +25,13 @@ def _policy(env: GymMazeEnv):
 
     policy = TorchPolicy(networks=policies,
                          distribution_mapper=distribution_mapper,
-                         device="cpu")
+                         device="cpu",
+                         separated_agent_networks=False)
 
     critic = TorchSharedStateCritic(networks=critics,
                                     num_policies=1,
-                                    device="cpu")
+                                    device="cpu",
+                                    concat_observations=False)
 
     return TorchActorCritic(policy=policy, critic=critic, device="cpu")
 

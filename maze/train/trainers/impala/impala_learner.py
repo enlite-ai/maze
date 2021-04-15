@@ -46,16 +46,20 @@ class ImpalaLearner:
 
         :return: A LearnerOutput names tuple consisting of (values, detached_values, actions_logits, n_critics)
         """
-        # A list of dictionaries
-        obs_t: Dict[Union[str, int], Dict[str, torch.Tensor]] = actors_output.observations_dict
 
         # predict values of stage 2 in a regular fashion
-        values, detached_values = self.model.critic.predict_values(obs_t)
+        values, detached_values = self.model.critic.predict_values(actors_output)
 
         # compute action log-probabilities of actions taken
-        actions_logits = dict()
-        for step_key in self.sub_step_keys:
-            actions_logits[step_key] = self.model.policy.compute_logits_dict(obs_t[step_key], actor_id=step_key)
+        actions_logits = []
+        for record in actors_output.substep_records:
+            substep_logits = self.model.policy.compute_logits_dict(record.observation, actor_id=record.actor_id)
+            actions_logits.append(substep_logits)
+
+        # convert logits and values into dicts keyed by sub-step ID
+        values = {r.substep_key: v for r, v in zip(actors_output.substep_records, values)}
+        detached_values = {r.substep_key: dv for r, dv in zip(actors_output.substep_records, detached_values)}
+        actions_logits = {r.substep_key: al for r, al in zip(actors_output.substep_records, actions_logits)}
 
         return LearnerOutput(values, detached_values, actions_logits)
 
@@ -73,7 +77,7 @@ class ImpalaLearner:
 
             # iterate environment steps
             for step_key in self.sub_step_keys:
-                sampled_action = self.model.policy.compute_action(obs, actor_id=step_key, deterministic=deterministic)
+                sampled_action = self.model.policy.compute_action(obs, actor_id=(step_key, 0), deterministic=deterministic)
                 obs, step_rewards, dones, infos = self.env.step(sampled_action)
 
             if np.any(dones):
