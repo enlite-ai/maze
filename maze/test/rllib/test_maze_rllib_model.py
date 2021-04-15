@@ -76,7 +76,9 @@ def build_default_cartpole_model(gym_env: str, maze_rllib_model_cls: Union[type(
     maze_model_composer = Factory(base_type=BaseModelComposer).instantiate(
         model_composer_config,
         action_spaces_dict={0: action_space},
-        observation_spaces_dict={0: observation_space})
+        observation_spaces_dict={0: observation_space},
+        agent_counts_dict={0: 1}
+    )
 
     return rllib_model, maze_model_composer, observation_space, action_space
 
