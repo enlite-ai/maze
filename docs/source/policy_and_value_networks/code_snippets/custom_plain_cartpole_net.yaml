@@ -17,6 +17,7 @@ policy:
     hidden_layer_0: 16
     hidden_layer_1: 32
     use_bias: True
+  separated_agent_networks: False
 
 
 critic:

@@ -15,6 +15,7 @@ policy:
     # specify the parameters of our model
     non_lin: torch.nn.ReLU
     hidden_units: [128]
+  separated_agent_networks: False
 
 critic:
   # first specify the critic type (single step in this example)

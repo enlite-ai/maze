@@ -51,4 +51,5 @@ def test_cartpole_model_composer():
     model_composer = Factory(base_type=BaseModelComposer).instantiate(
         yaml.load(open(path_to_model_config, 'r')),
         action_spaces_dict=env.action_spaces_dict,
-        observation_spaces_dict=env.observation_spaces_dict)
+        observation_spaces_dict=env.observation_spaces_dict,
+        agent_counts_dict=env.agent_counts_dict)
