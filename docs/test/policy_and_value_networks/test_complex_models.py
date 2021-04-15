@@ -13,22 +13,31 @@ from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.perception_utils import observation_spaces_to_in_shapes
 
-observation_spaces_dict = {0: spaces.Dict({'observation_inventory': spaces.Box(0, 1, shape=(8, 16,)),
-                                           'observation_screen': spaces.Box(0, 1, shape=(8, 3, 64, 64))})}
-action_spaces_dict = {0: spaces.Dict({'action_move': spaces.Discrete(4),
-                                      'action_use': spaces.MultiBinary(16)})}
+
+def _mock_observation_spaces_dict():
+    return {0: spaces.Dict({'observation_inventory': spaces.Box(0, 1, shape=(8, 16,)),
+                            'observation_screen': spaces.Box(0, 1, shape=(8, 3, 64, 64))})}
+
+
+def _mock_action_spaces_dict():
+    return {0: spaces.Dict({'action_move': spaces.Discrete(4),
+                            'action_use': spaces.MultiBinary(16)})}
+
+
+def _mock_agent_counts_dict():
+    return {0: 1}
 
 
 def test_cartpole_policy_model():
-    flat_action_space = flat_structured_space(action_spaces_dict)
+    flat_action_space = flat_structured_space(_mock_action_spaces_dict())
     distribution_mapper = DistributionMapper(action_space=flat_action_space,
                                              distribution_mapper_config={})
 
     action_logits_shapes = {step_key: {action_head: distribution_mapper.required_logits_shape(action_head)
-                                       for action_head in action_spaces_dict[step_key].spaces.keys()}
-                            for step_key in action_spaces_dict.keys()}
+                                       for action_head in _mock_action_spaces_dict()[step_key].spaces.keys()}
+                            for step_key in _mock_action_spaces_dict().keys()}
 
-    obs_shapes = observation_spaces_to_in_shapes(observation_spaces_dict)
+    obs_shapes = observation_spaces_to_in_shapes(_mock_observation_spaces_dict())
 
     policy = CustomComplexPolicyNet(obs_shapes[0], action_logits_shapes[0], non_lin='torch.nn.ReLU',
                                     hidden_units=[128])
@@ -36,7 +45,7 @@ def test_cartpole_policy_model():
     critic = CustomComplexCriticNet(obs_shapes[0], non_lin='torch.nn.ReLU',
                                     hidden_units=[128])
 
-    obs_np = observation_spaces_dict[0].sample()
+    obs_np = _mock_observation_spaces_dict()[0].sample()
     obs = {k: torch.from_numpy(v) for k, v in obs_np.items()}
 
     actions = policy(obs)
@@ -52,5 +61,6 @@ def test_cartpole_model_composer():
 
     model_composer = Factory(base_type=BaseModelComposer).instantiate(
         yaml.load(open(path_to_model_config, 'r')),
-        action_spaces_dict=action_spaces_dict,
-        observation_spaces_dict=observation_spaces_dict)
+        action_spaces_dict=_mock_action_spaces_dict(),
+        observation_spaces_dict=_mock_observation_spaces_dict(),
+        agent_counts_dict=_mock_agent_counts_dict())
