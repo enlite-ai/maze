@@ -60,9 +60,8 @@ def main(n_epochs: int) -> None:
     model = TorchActorCritic(
         policy=TorchPolicy(networks=policies, separated_agent_networks=False, distribution_mapper=distribution_mapper,
                            device=algorithm_config.device),
-        critic=TorchSharedStateCritic(networks=critics,
-                                      num_policies=1,
-                                      device=algorithm_config.device),
+        critic=TorchSharedStateCritic(networks=critics, num_policies=1, device=algorithm_config.device,
+                                      concat_observations=False),
         device=algorithm_config.device)
 
     a2c = MultiStepA2C(env=envs, eval_env=eval_env, algorithm_config=algorithm_config, model=model,
