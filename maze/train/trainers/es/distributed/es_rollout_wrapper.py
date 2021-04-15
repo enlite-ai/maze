@@ -63,9 +63,8 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
             if self.abort:
                 raise ESAbortException()
 
-            sub_step_key, actor_id = self.actor_id()
             with torch.no_grad():
-                action = policy.compute_action(observation, actor_id=sub_step_key, deterministic=False)
+                action = policy.compute_action(observation, actor_id=self.actor_id(), deterministic=False)
 
             observation, reward, done, _ = self.step(convert_to_numpy(action, cast=None, in_place=False))
 

@@ -57,10 +57,12 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepA2C:
     model = TorchActorCritic(
         policy=TorchPolicy(networks=policies,
                            distribution_mapper=distribution_mapper,
+                           separated_agent_networks=False,
                            device=algorithm_config.device),
         critic=TorchSharedStateCritic(networks=critics,
                                       num_policies=1,
-                                      device=algorithm_config.device),
+                                      device=algorithm_config.device,
+                                      concat_observations=False),
         device=algorithm_config.device)
 
     a2c = MultiStepA2C(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,
