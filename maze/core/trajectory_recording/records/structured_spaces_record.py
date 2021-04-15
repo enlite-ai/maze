@@ -141,6 +141,10 @@ class StructuredSpacesRecord:
     def logits_dict(self):
         return {r.substep_key: r.logits for r in self.substep_records}
 
+    @property
+    def discounted_returns_dict(self):
+        return {r.substep_key: r.discounted_return for r in self.substep_records}
+
     @classmethod
     def converted_from(cls, state_record: StateRecord, conversion_env: MazeEnv, first_step_in_episode: bool) \
             -> 'StructuredSpacesRecord':
