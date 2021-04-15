@@ -22,7 +22,8 @@ def test_custom_model_composer():
         "networks": [{"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
                       "non_lin": "torch.nn.SELU"},
                      {"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
-                      "non_lin": "torch.nn.SELU"}]
+                      "non_lin": "torch.nn.SELU"}],
+        "separated_agent_networks": False
     }
 
     # check if model config is fine
@@ -31,6 +32,7 @@ def test_custom_model_composer():
     # no critic
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,
+                                   agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
                                    critic=None)
@@ -42,7 +44,8 @@ def test_custom_model_composer():
     shared_critic = {
         "_target_": "maze.perception.models.critics.SharedStateCriticComposer",
         "networks": [{"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
-                      "non_lin": "torch.nn.SELU"}]
+                      "non_lin": "torch.nn.SELU"}],
+        "stack_observations": False
     }
 
     # check if model config is fine
@@ -50,6 +53,7 @@ def test_custom_model_composer():
 
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,
+                                   agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
                                    critic=shared_critic)
@@ -75,6 +79,7 @@ def test_custom_model_composer():
 
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,
+                                   agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
                                    critic=step_critic)
@@ -110,6 +115,7 @@ def test_custom_model_composer():
 
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,
+                                   agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
                                    critic=step_critic)

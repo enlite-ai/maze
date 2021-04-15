@@ -13,7 +13,8 @@ def test_space_config():
 
     # init space config
     space_config = SpacesConfig(action_spaces_dict=env.action_spaces_dict,
-                                observation_spaces_dict=env.observation_spaces_dict)
+                                observation_spaces_dict=env.observation_spaces_dict,
+                                agent_counts_dict=env.agent_counts_dict)
 
     # dump and reload
     dump_file = "tmp_space_config.pkl"

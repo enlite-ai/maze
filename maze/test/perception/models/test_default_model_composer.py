@@ -42,6 +42,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
     # initialize default model builder
     default_builder = TemplateModelComposer(action_spaces_dict={0: action_space},
                                             observation_spaces_dict={0: observation_space},
+                                            agent_counts_dict={0: 1},
                                             distribution_mapper_config={},
                                             model_builder=model_builder,
                                             policy={'_target_': policy_composer_type},
@@ -118,6 +119,7 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
     default_builder = TemplateModelComposer(
         action_spaces_dict=env.action_spaces_dict,
         observation_spaces_dict=env.observation_spaces_dict,
+        agent_counts_dict=env.agent_counts_dict,
         distribution_mapper_config={},
         model_builder=model_builder,
         policy={'_target_': policy_composer_type},

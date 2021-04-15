@@ -90,7 +90,9 @@ def check_env_and_model_instantiation(config_module: str, config: str, overrides
         model_composer = Factory(BaseModelComposer).instantiate(
             cfg.model,
             action_spaces_dict=env.action_spaces_dict,
-            observation_spaces_dict=env.observation_spaces_dict)
+            observation_spaces_dict=env.observation_spaces_dict,
+            agent_counts_dict=env.agent_counts_dict
+        )
         for pp in model_composer.policy.networks.values():
             assert isinstance(pp, nn.Module)
 
