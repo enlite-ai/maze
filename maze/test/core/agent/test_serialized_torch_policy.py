@@ -21,7 +21,8 @@ def test_serialized_torch_policy():
             "networks": [{"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
                           "non_lin": "torch.nn.SELU"},
                          {"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
-                          "non_lin": "torch.nn.SELU"}]
+                          "non_lin": "torch.nn.SELU"}],
+            "separated_agent_networks": False
         },
         "critic": None
     }
@@ -29,6 +30,7 @@ def test_serialized_torch_policy():
     # no critic
     composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
                                    observation_spaces_dict=env.observation_spaces_dict,
+                                   agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=model_config["policy"],
                                    critic=model_config["critic"])
@@ -38,11 +40,12 @@ def test_serialized_torch_policy():
     torch.save(state_dict, "state_dict.pt")
 
     SpacesConfig(composer.action_spaces_dict,
-                 composer.observation_spaces_dict).save("spaces_config.pkl")
+                 composer.observation_spaces_dict,
+                 composer.agent_counts_dict).save("spaces_config.pkl")
 
     # init policy
     policy = SerializedTorchPolicy(model=model_config, state_dict_file="state_dict.pt",
                                    spaces_dict_file="spaces_config.pkl", device="cpu")
 
-    action = policy.compute_action(observation=env.observation_space.sample(), actor_id=0)
+    action = policy.compute_action(observation=env.observation_space.sample(), actor_id=(0, 0))
     assert isinstance(action, dict)

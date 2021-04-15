@@ -11,6 +11,7 @@ from maze.core.env.core_env import CoreEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.structured_env import StepKeyType
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.rendering.renderer import Renderer
@@ -125,6 +126,12 @@ class ExternalCoreEnv(CoreEnv):
     def is_actor_done(self) -> bool:
         """Whether last actor is done, as set by the agent integration."""
         return self._is_actor_done
+
+    @property
+    @override(CoreEnv)
+    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+        """Agent counts are not known and not needed, as this env is not used for training or any other setup."""
+        raise NotImplementedError
 
     # --- The rest of core env methods ---
 

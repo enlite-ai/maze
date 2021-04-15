@@ -29,11 +29,13 @@ class SerializedTorchPolicy(TorchPolicy):
         model_composer = Factory(base_type=BaseModelComposer).instantiate(
             model,
             action_spaces_dict=spaces_config.action_spaces_dict,
-            observation_spaces_dict=spaces_config.observation_spaces_dict
+            observation_spaces_dict=spaces_config.observation_spaces_dict,
+            agent_counts_dict=spaces_config.agent_counts_dict
         )
 
         super().__init__(networks=model_composer.policy.networks,
                          distribution_mapper=model_composer.distribution_mapper,
+                         separated_agent_networks=model_composer.policy.separated_agent_networks,
                          device=device)
 
         state_dict = torch.load(state_dict_file, map_location=torch.device(self._device))

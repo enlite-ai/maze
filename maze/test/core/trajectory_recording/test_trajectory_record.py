@@ -2,17 +2,21 @@ from typing import List
 
 import numpy as np
 
+from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 
 
 def _mock_space_record(value: int):
-    return StructuredSpacesRecord(
-        observations={0: dict(observation=np.array(value))},
-        actions={0: dict(action=np.array(value))},
-        rewards={0: value},
-        dones={0: value > 0}
+    substep_record = SpacesRecord(
+        actor_id=(0, 0),
+        observation=dict(observation=np.array(value)),
+        action=dict(action=np.array(value)),
+        reward=value,
+        done=value > 0
     )
+
+    return StructuredSpacesRecord(substep_records=[substep_record])
 
 
 def _mock_trajectory_record(id: int, values: List[int]):
