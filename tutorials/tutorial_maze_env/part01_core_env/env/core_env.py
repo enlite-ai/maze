@@ -113,3 +113,6 @@ class Cutting2DCoreEnvironment(CoreEnv):
 
     def actor_id(self) -> Tuple[Union[str, int], int]:
         pass
+
+    def agent_counts_dict(self) -> Dict[Union[str, int], int]:
+        pass
