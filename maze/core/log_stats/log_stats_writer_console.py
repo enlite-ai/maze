@@ -18,7 +18,7 @@ class LogStatsWriterConsole(LogStatsWriter):
 
         # print run directory
         exp_dir = os.path.abspath(".")
-        print("Run directory: {}".format(exp_dir))
+        print("Output directory: {}".format(exp_dir))
 
         # print stats
         print("{0:>5}|{1:<88}|{2:>20}".format("step", "path", "value"))
