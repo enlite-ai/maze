@@ -135,8 +135,8 @@ class TrainingRunner(Runner):
         """
         with SwitchWorkingDirectoryToInput(input_dir):
             if os.path.exists(state_dict_dump_file):
-                BColors.print_colored(f"Model initialized from '{state_dict_dump_file}' of '{input_dir}'!",
+                BColors.print_colored(f"Model initialized from '{state_dict_dump_file}' of run '{input_dir}'!",
                                       BColors.OKGREEN)
                 trainer.load_state(state_dict_dump_file)
             else:
-                BColors.print_colored("Model initialized with random parameters! ", BColors.OKGREEN)
+                BColors.print_colored("Model initialized with random weights! ", BColors.OKGREEN)
