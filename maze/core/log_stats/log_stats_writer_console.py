@@ -1,4 +1,5 @@
 """Implementation of stdout console output for the logging statistics system."""
+import os
 from typing import Optional, Callable, List
 
 import numpy as np
@@ -14,6 +15,12 @@ class LogStatsWriterConsole(LogStatsWriter):
 
     def write(self, path: str, step: int, stats: LogStats) -> None:
         """see LogStatsWriter.write"""
+
+        # print run directory
+        exp_dir = os.path.abspath(".")
+        print("Run directory: {}".format(exp_dir))
+
+        # print stats
         print("{0:>5}|{1:<88}|{2:>20}".format("step", "path", "value"))
         print("{0:>5}|{1:<88}|{2:>20}".format("="*5, "="*88, "="*20))
 
