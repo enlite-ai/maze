@@ -1,4 +1,5 @@
 """Implements the Maze command line interface for running rollouts, trainings and else."""
+import os
 import glob
 from typing import Optional
 
@@ -17,13 +18,21 @@ from maze.utils.log_stats_utils import clear_global_state
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
 
+def set_matplotlib_backend() -> None:
+    """Switch matplotlib backend for maze runs on headless machines to Agg (non-interactive).
+    """
+    if not os.environ.get('MPLBACKEND') and not os.environ.get('DISPLAY'):
+        BColors.print_colored(f"INFO: No display detected! Switching matplotlib to headless backend Agg!",
+                              color=BColors.OKBLUE)
+        matplotlib.use('Agg')
+
+
 def _run_job(cfg: DictConfig) -> None:
     """Runs a regular maze job.
 
     :param cfg: Hydra configuration for the rollout.
     """
-    # switch matplotlib backend for maze runs (non-interactive)
-    matplotlib.use('Agg')
+    set_matplotlib_backend()
 
     # print and log config
     config_str = yaml.dump(OmegaConf.to_container(cfg, resolve=True))
