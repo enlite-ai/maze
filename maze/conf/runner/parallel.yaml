@@ -1,4 +1,4 @@
-# @package _group_
+# @package runner
 _target_: maze.core.rollout.parallel_rollout_runner.ParallelRolloutRunner
 
 # Number of processes to run the rollouts in concurrently

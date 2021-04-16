@@ -1,4 +1,4 @@
-# @package _group_
+# @package runner
 _target_: maze.core.rollout.sequential_rollout_runner.SequentialRolloutRunner
 
 # Total number of episodes to run
