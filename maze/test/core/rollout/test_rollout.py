@@ -7,6 +7,7 @@ import pytest
 from maze.core.agent.dummy_cartpole_policy import DummyCartPolePolicy
 from maze.core.rollout.parallel_rollout_runner import ParallelRolloutRunner
 from maze.core.rollout.sequential_rollout_runner import SequentialRolloutRunner
+from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.monitoring_wrapper import MazeEnvMonitoringWrapper
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
@@ -37,6 +38,7 @@ def test_rollouts_from_python():
         record_trajectory=False,
         record_event_logs=False,
         render=False)
+    sequential.maze_seeding = MazeSeeding(1234, 4321, False)
     sequential.run_with(env=env, wrappers={}, agent=agent)
 
     parallel = ParallelRolloutRunner(
@@ -45,6 +47,7 @@ def test_rollouts_from_python():
         record_trajectory=False,
         record_event_logs=False,
         n_processes=2)
+    parallel.maze_seeding = MazeSeeding(1234, 4321, False)
     # Test with a wrapper config as well
     parallel.run_with(
         env=env,
@@ -62,4 +65,5 @@ def test_sequential_rollout_with_rendering():
         record_trajectory=True,
         record_event_logs=False,
         render=True)
+    sequential.maze_seeding = MazeSeeding(1234, 4321, False)
     sequential.run_with(env=env, wrappers={}, agent=agent)

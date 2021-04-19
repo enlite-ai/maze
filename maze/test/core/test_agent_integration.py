@@ -1,6 +1,6 @@
 """Agent integration tests."""
 
-from typing import Any, Union, Tuple, Sequence, Optional
+from typing import Any, Tuple, Sequence, Optional
 
 import numpy as np
 import pytest
@@ -8,6 +8,7 @@ import pytest
 from maze.core.agent.policy import Policy
 from maze.core.agent_integration.agent_integration import AgentIntegration
 from maze.core.agent_integration.maze_action_candidates import MazeActionCandidates
+from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
@@ -72,6 +73,11 @@ def test_handles_multiple_policies():
         def needs_state(self) -> bool:
             """This policy does not require the state() object to compute the action."""
             return False
+
+        @override(Policy)
+        def seed(self, seed: int) -> None:
+            """Not applicable since heuristic is deterministic"""
+            pass
 
         def compute_action(self,
                            observation: ObservationType,

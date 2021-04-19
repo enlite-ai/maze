@@ -10,4 +10,4 @@ def test_actor_id_is_optional_for_single_network_policies():
 
     obs = env.reset()
     action = policy.compute_action(obs)  # No actor ID provided
-    assert action in env.action_space
+    assert all([key in env.action_space.spaces for key in action.keys()])

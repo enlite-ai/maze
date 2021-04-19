@@ -3,7 +3,6 @@ from typing import Union, Tuple, Dict, Any
 import numpy as np
 
 from maze.core.env.core_env import CoreEnv
-from maze.core.utils.seeding import set_random_states
 
 from .maze_state import Cutting2DMazeState
 from .maze_action import Cutting2DMazeAction
@@ -102,7 +101,8 @@ class Cutting2DCoreEnvironment(CoreEnv):
 
     def seed(self, seed: int) -> None:
         """Seed random state of environment."""
-        set_random_states(seed)
+        # No randomness in the env at this point
+        pass
 
     def get_renderer(self) -> Cutting2DRenderer:
         """Cutting 2D renderer module."""

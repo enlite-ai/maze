@@ -1,9 +1,11 @@
 """Example of how to train a policy with ES for the gym CartPole environment."""
-
+import numpy as np
 import torch.nn as nn
 
+from examples.cartpole_custom_net import PolicyNet
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.utils.config_utils import list_to_dict
+from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import observation_spaces_to_in_shapes
@@ -13,8 +15,6 @@ from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_trainer import ESTrainer
 from maze.train.trainers.es.optimizers.adam import Adam
 from maze.utils.log_stats_utils import setup_logging
-
-from examples.cartpole_custom_net import PolicyNet
 
 
 def main(n_epochs) -> None:
@@ -55,10 +55,14 @@ def main(n_epochs) -> None:
 
     setup_logging(job_config=None)
 
+    maze_rng = np.random.RandomState(None)
+
     # run with pseudo-distribution, without worker processes
     trainer.train(ESDummyDistributedRollouts(env=env,
                                              n_eval_rollouts=10,
-                                             shared_noise=shared_noise), model_selection=None)
+                                             shared_noise=shared_noise,
+                                             agent_instance_seed=MazeSeeding.generate_seed_from_random_state(maze_rng)),
+                                             model_selection=None)
 
 
 if __name__ == "__main__":

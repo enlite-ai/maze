@@ -15,10 +15,12 @@ from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 class ESDummyDistributedRollouts(ESDistributedRollouts):
     """Implementation of the ES distribution by running the rollouts synchronously in the same process."""
 
-    def __init__(self, env: StructuredEnv, n_eval_rollouts: int, shared_noise: SharedNoiseTable):
+    def __init__(self, env: StructuredEnv, n_eval_rollouts: int, shared_noise: SharedNoiseTable,
+                 agent_instance_seed: int):
         env = TimeLimitWrapper.wrap(env)
         env = LogStatsWrapper.wrap(env)
-        self.env = ESRolloutWorkerWrapper.wrap(env=env, shared_noise=shared_noise)
+        self.env = ESRolloutWorkerWrapper.wrap(env=env, shared_noise=shared_noise,
+                                               agent_instance_seed=agent_instance_seed)
 
         self.n_eval_rollouts = n_eval_rollouts
 

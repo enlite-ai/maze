@@ -15,9 +15,7 @@ from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.log_stats.log_stats_writer_tensorboard import LogStatsWriterTensorboard
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
-from maze.core.utils.seeding import set_random_states
 from maze.utils.bcolors import BColors
-
 
 class SimpleStatsLoggingSetup:
     """
@@ -51,7 +49,6 @@ class SimpleStatsLoggingSetup:
 
 def clear_global_state():
     """Resets the seed and global state to ensure that consecutive tests run under the same preconditions."""
-    set_random_states(1234)
     # ensure that there are no left-overs from previous runs
     LogEventsWriterRegistry.writers = []  # clear writers
     TrajectoryWriterRegistry.writers = []  # clear writers

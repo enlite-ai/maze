@@ -22,6 +22,10 @@ class DummyCartPolePolicy(Policy):
     def __init__(self):
         self.action_space = gym.make("CartPole-v0").action_space
 
+    def seed(self, seed: int) -> None:
+        """Not applicable since heuristic is deterministic"""
+        pass
+
     @override(Policy)
     def needs_state(self) -> bool:
         """This policy does not require the state() object to compute the action."""

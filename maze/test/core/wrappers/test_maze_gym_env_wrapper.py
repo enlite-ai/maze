@@ -2,7 +2,10 @@
 import gym
 import numpy as np
 
+from maze.core.agent.dummy_cartpole_policy import DummyCartPolePolicy
+from maze.core.agent.random_policy import RandomPolicy
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
+from maze.test.shared_test_utils.test_seeding import perform_seeding_test
 
 
 def test_maze_gym_env_wrapper():
@@ -37,3 +40,19 @@ def test_gets_formatted_actions_and_observations():
     assert np.all(gym_obs.astype(np.float32) == obs_dict[0]["observation"])
     assert np.all(gym_act == act_dict[0]["action"])
     wrapped_env.close()
+
+
+def test_random_sampling_seeding():
+    """Test the seeding with a random env version and random sampling (fully stochastic)"""
+    env = GymMazeEnv(env="CartPole-v0")
+    policy = RandomPolicy(env.action_spaces_dict)
+
+    perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=False)
+
+
+def test_heuristic_sampling():
+    """Test the seeding with a deterministic env and deterministic heuristic"""
+    env = GymMazeEnv(env="CartPole-v0")
+    policy = DummyCartPolePolicy()
+
+    perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=True)

@@ -1,6 +1,6 @@
 """Interfaces for vectorised environments."""
 from abc import ABC, abstractmethod
-from typing import Iterable, Any, Tuple, Dict
+from typing import Iterable, Any, Tuple, Dict, List
 
 import numpy as np
 
@@ -47,7 +47,7 @@ class VectorEnv(BaseEnv, ABC):
         """
 
     @abstractmethod
-    def seed(self, seed: int = None) -> None:
+    def seed(self, seeds: List[Any]) -> None:
         """Sets the seed for this vectorised env's random number generator(s) and its contained parallel envs."""
 
     def _get_indices(self, indices):

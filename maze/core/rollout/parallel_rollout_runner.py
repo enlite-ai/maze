@@ -68,22 +68,27 @@ class ParallelRolloutWorker:
             max_episode_steps: int,
             record_trajectory: bool,
             input_directory: str,
-            reporting_queue: Queue) -> None:
+            reporting_queue: Queue,
+            env_instance_seed: int,
+            agent_instance_seed: int) -> None:
         """Build the environment and run the rollout for the specified number of episodes.
 
         :param env_config: Hydra configuration of the environment to instantiate.
         :param wrapper_config: Hydra configuration of environment wrappers.
         :param agent_config: Hydra configuration of agent's policies.
-        :param n_episodes: Number of episodes to run (in total, will be split across processes)
+        :param n_episodes: Number of episodes to run (in total, will be split across processes).
         :param max_episode_steps: Max number of steps per episode to perform
-                                    (episode might end earlier if env returns done)
+                                    (episode might end earlier if env returns done).
         :param record_trajectory: Whether to record trajectory data.
         :param input_directory: Directory to load the model from.
-        :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode
+        :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode.
+        :param env_instance_seed: The seed for this particular env.
+        :param agent_instance_seed: The seed for this particular agent.
         """
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
-                                                          agent_config, input_directory)
+                                                          agent_config, input_directory, env_instance_seed,
+                                                          agent_instance_seed)
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
             RolloutRunner.run_interaction_loop(
@@ -184,7 +189,9 @@ class ParallelRolloutRunner(RolloutRunner):
                 target=ParallelRolloutWorker.run,
                 args=(env, wrappers, agent,
                       n_process_episodes, self.max_episode_steps,
-                      self.record_trajectory, self.input_dir, self.reporting_queue),
+                      self.record_trajectory, self.input_dir, self.reporting_queue,
+                      self.maze_seeding.generate_env_instance_seed(),
+                      self.maze_seeding.generate_agent_instance_seed()),
                 daemon=True
             )
             p.start()

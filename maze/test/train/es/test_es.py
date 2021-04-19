@@ -6,12 +6,12 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
+from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet
 from maze.train.trainers.es.distributed.es_dummy_distributed_rollouts import ESDummyDistributedRollouts
 from maze.train.trainers.es.es_algorithm_config import ESAlgorithmConfig
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_trainer import ESTrainer
 from maze.train.trainers.es.optimizers.adam import Adam
-from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet
 
 
 def train_setup(n_epochs: int) -> Tuple[TorchPolicy, StructuredEnv, ESTrainer]:
@@ -56,4 +56,5 @@ def test_es():
     policy, env, trainer = train_setup(n_epochs=2)
 
     trainer.train(
-        ESDummyDistributedRollouts(env=env, n_eval_rollouts=2, shared_noise=trainer.shared_noise), model_selection=None)
+        ESDummyDistributedRollouts(env=env, n_eval_rollouts=2, shared_noise=trainer.shared_noise,
+                                   agent_instance_seed=1234), model_selection=None)

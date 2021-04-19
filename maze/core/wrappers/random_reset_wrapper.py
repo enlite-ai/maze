@@ -10,6 +10,7 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.wrapper import Wrapper, EnvType
 
 
@@ -31,13 +32,26 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         self.min_skip_steps = min_skip_steps
         self.max_skip_steps = max_skip_steps
 
+        self.wrapper_rng = None
+
+    @override(StructuredEnv)
+    def seed(self, seed: int) -> None:
+        """Apply seed to wrappers rng, and pass the seed forward to the env
+        """
+        # Create new random state for sampling the random steps
+        self.wrapper_rng = np.random.RandomState(seed)
+        # Set seed of action space for sampling actions
+        self.action_space.seed(MazeSeeding.generate_seed_from_random_state(self.wrapper_rng))
+
+        return self.env.seed(seed)
+
     @override(BaseEnv)
     def reset(self) -> Any:
         """Override BaseEnv.reset to reset the step count.
         """
 
         # sample number of steps to skip and reset env
-        skip_steps = np.random.randint(self.min_skip_steps, self.max_skip_steps + 1)
+        skip_steps = self.wrapper_rng.randint(self.min_skip_steps, self.max_skip_steps + 1)
         obs = self.env.reset()
 
         # skip steps
@@ -49,7 +63,8 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
 
         return obs
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """This wrapper does not modify observations and actions."""

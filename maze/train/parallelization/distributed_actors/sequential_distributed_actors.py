@@ -19,14 +19,18 @@ from maze.utils.bcolors import BColors
 
 class SequentialDistributedActors(DistributedActors):
     """Dummy implementation of distributed actors creates the actors as a list. Once the outputs are to
-        be collected, it simply rolls them out in a loop until is has enough to be returned."""
+        be collected, it simply rolls them out in a loop until is has enough to be returned.
+
+    :param actor_env_seeds: A list of seeds for each actors' env.
+    """
 
     def __init__(self,
                  env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
                  policy: TorchPolicy,
                  n_rollout_steps: int,
                  n_actors: int,
-                 batch_size: int):
+                 batch_size: int,
+                 actor_env_seeds: List[int]):
         super().__init__(env_factory, policy, n_rollout_steps, n_actors, batch_size)
 
         self.broadcasting_container = BroadcastingContainer()
@@ -35,8 +39,10 @@ class SequentialDistributedActors(DistributedActors):
         self.actors: List[RolloutGenerator] = []
         self.policy_version_counter = 0
 
-        for _ in range(self.n_actors):
-            actor = RolloutGenerator(env=env_factory(), record_logits=True, record_episode_stats=True)
+        for env_seed in actor_env_seeds:
+            env = env_factory()
+            env.seed(env_seed)
+            actor = RolloutGenerator(env=env, record_logits=True, record_episode_stats=True)
             self.actors.append(actor)
 
         if self.n_actors > self.batch_size:

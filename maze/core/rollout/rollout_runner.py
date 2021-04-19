@@ -10,6 +10,7 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.utils.config_utils import EnvFactory, SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
+from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.runner import Runner
@@ -20,11 +21,11 @@ class RolloutRunner(Runner, ABC):
 
     Offers general structure, plus a couple of helper methods for env instantiation and performing the rollout.
 
-    :param n_episodes: Count of episodes to run
+    :param n_episodes: Count of episodes to run.
     :param max_episode_steps: Count of steps to run in each episode (if environment returns done, the episode
-                                will be finished earlier though)
-    :param record_trajectory: Whether to record trajectory data
-    :param record_event_logs: Whether to record event logs
+                                will be finished earlier though).
+    :param record_trajectory: Whether to record trajectory data.
+    :param record_event_logs: Whether to record event logs.
     """
 
     def __init__(self,
@@ -51,6 +52,10 @@ class RolloutRunner(Runner, ABC):
         self._cfg = cfg
         self.input_dir = cfg.input_dir
 
+        # Generate a random state used for sampling random seeds for the envs and agents
+        self.maze_seeding = MazeSeeding(cfg.seeding.env_base_seed, cfg.seeding.agent_base_seed,
+                                        cfg.seeding.cudnn_determinism_flag)
+
     @override(Runner)
     def run(self) -> None:
         """Parse the supplied Hydra config and perform the run."""
@@ -73,9 +78,9 @@ class RolloutRunner(Runner, ABC):
         their own stats and event writers (so you might get duplicate stats) and order of operations sometimes
         matters (especially with parallel rollouts, where we do not want to carry the writers into child processes).
 
-        :param env: Env config or object
-        :param wrappers: Wrappers config (see :class:`~maze.core.wrappers.wrapper_factory.WrapperFactory`)
-        :param agent: Agent config or object
+        :param env: Env config or object.
+        :param wrappers: Wrappers config (see :class:`~maze.core.wrappers.wrapper_factory.WrapperFactory`).
+        :param agent: Agent config or object.
         """
 
     @staticmethod
@@ -83,15 +88,20 @@ class RolloutRunner(Runner, ABC):
                            wrappers_config: CollectionOfConfigType,
                            max_episode_steps: int,
                            agent_config: DictConfig,
-                           input_dir: str) -> (BaseEnv, Policy):
+                           input_dir: str,
+                           env_instance_seed: int,
+                           agent_instance_seed: int) -> (BaseEnv, Policy):
         """Build the environment (including wrappers) and agent according to given configuration.
 
-        :param env_config: Environment config
-        :param wrappers_config: Wrapper config
-        :param max_episode_steps: Max number of steps per episode to limit the env for
-        :param agent_config: Policies config
-        :param input_dir: Directory to load the model from
-        :return: Tuple of (instantiated environment, instantiated agent)
+        :param env_config: Environment config.
+        :param wrappers_config: Wrapper config.
+        :param max_episode_steps: Max number of steps per episode to limit the env for.
+        :param agent_config: Policies config.
+        :param input_dir: Directory to load the model from.
+        :param env_instance_seed: The seed for this particular env.
+        :param agent_instance_seed: The seed for this particular agent.
+
+        :return: Tuple of (instantiated environment, instantiated agent).
         """
 
         with SwitchWorkingDirectoryToInput(input_dir):
@@ -99,8 +109,10 @@ class RolloutRunner(Runner, ABC):
             if not isinstance(env, TimeLimitWrapper):
                 env = TimeLimitWrapper.wrap(env)
             env.set_max_episode_steps(max_episode_steps)
+            env.seed(env_instance_seed)
 
             agent = Factory(base_type=Policy).instantiate(agent_config)
+            agent.seed(agent_instance_seed)
 
         return env, agent
 
@@ -110,11 +122,11 @@ class RolloutRunner(Runner, ABC):
         """Helper function for running the agent-environment interaction loop for specified number of steps
         and episodes.
 
-        :param env: Environment to run
-        :param agent: Agent to use
-        :param n_episodes: Count of episodes to perform
-        :param render: Whether to render the environment after every step
-        :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer
+        :param env: Environment to run.
+        :param agent: Agent to use.
+        :param n_episodes: Count of episodes to perform.
+        :param render: Whether to render the environment after every step.
+        :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer.
         """
         obs = env.reset()
 

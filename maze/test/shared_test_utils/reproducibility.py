@@ -2,12 +2,14 @@
 Auxiliary routines for reproducibility tests.
 """
 
-import numpy as np
 import base64
 import hashlib
 from typing import Any, Tuple, Callable, List
 
+import numpy as np
+
 from maze.core.env.maze_env import MazeEnv
+from maze.core.env.observation_conversion import ObservationType
 
 
 def hash_deterministically(obj: Any) -> str:
@@ -54,6 +56,7 @@ def conduct_env_reproducibility_test(env: MazeEnv, pick_action: Callable, n_step
     :param n_steps: Number of steps to run.
     :return: State hash.
     """
+    env.seed(1234)
 
     # seed the ActionConversion spaces
     act_conv_spaces = dict()
@@ -66,7 +69,7 @@ def conduct_env_reproducibility_test(env: MazeEnv, pick_action: Callable, n_step
         act_conv_spaces[policy_id] = policy_space
 
     # Store hashed step states.
-    observations: List[tuple] = []
+    observations: List[ObservationType] = list()
 
     for step in range(n_steps):
         policy_id, actor_id = env.actor_id()

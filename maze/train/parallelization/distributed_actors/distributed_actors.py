@@ -17,11 +17,11 @@ class DistributedActors:
     Distributed actors run rollouts independently. Rollouts are recorded and made available in batches
     to be used during training. When a new policy version is made available, it is distributed to all actors.
 
-    :param env_factory: Factory function for envs to run rollouts on
-    :param policy: Structured policy to sample actions from
-    :param n_rollout_steps: Number of rollouts steps to record in one rollout
-    :param n_actors: Number of distributed actors to run simultaneously
-    :param batch_size: Size of the batch the rollouts are collected in
+    :param env_factory: Factory function for envs to run rollouts on.
+    :param policy: Structured policy to sample actions from.
+    :param n_rollout_steps: Number of rollouts steps to record in one rollout.
+    :param n_actors: Number of distributed actors to run simultaneously.
+    :param batch_size: Size of the batch the rollouts are collected in.
     """
 
     def __init__(self,

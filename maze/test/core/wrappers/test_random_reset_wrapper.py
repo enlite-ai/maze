@@ -7,4 +7,5 @@ def test_random_reset_wrapper():
     """ random reset wrapper unit tests """
     env = build_dummy_maze_env()
     env = RandomResetWrapper.wrap(env, min_skip_steps=2, max_skip_steps=3)
+    env.seed(1234)
     env.reset()

@@ -18,6 +18,16 @@ class Policy(ABC):
     """
 
     @abstractmethod
+    def seed(self, seed: int) -> None:
+        """Seed the policy to be used.
+        Here the given seed should be used to initialize any random number generator or random state used to sample from
+        distributions or any other form of randomness in the policy. This ensures that when the policy is explicit
+        seeded it is reproducible.
+
+        :param seed: The seed to use for all random state objects withing the policy.
+        """
+
+    @abstractmethod
     def needs_state(self) -> bool:
         """The policy implementation declares if it operates solely on observations (needs_state returns False) or
         if it also requires the state object in order to compute the action.

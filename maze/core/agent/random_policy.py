@@ -1,6 +1,7 @@
 """Implements the default random policy for structured envs by sampling from the action_space."""
 from typing import Union, Dict, Tuple, Sequence, Optional
 
+import numpy as np
 from gym import spaces
 from omegaconf import DictConfig
 
@@ -12,6 +13,7 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorIDType
 from maze.core.utils.config_utils import make_env
+from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
 from maze.train.utils.train_utils import stack_numpy_dict_list
@@ -20,11 +22,19 @@ from maze.train.utils.train_utils import stack_numpy_dict_list
 class RandomPolicy(Policy):
     """Implements a random structured policy.
 
-    :param action_spaces_dict: The action_spaces dict of the env (will sample from it)
+    :param action_spaces_dict: The action_spaces dict of the env (will sample from it).
     """
 
     def __init__(self, action_spaces_dict: Dict[Union[str, int], spaces.Space]):
         self.action_spaces_dict = dict(action_spaces_dict)
+
+    @override(Policy)
+    def seed(self, seed: int) -> None:
+        """Seed the policy by setting the action space seeds."""
+        rng = np.random.RandomState(seed)
+        for key, action_space in self.action_spaces_dict.items():
+            action_space.seed(MazeSeeding.generate_seed_from_random_state(rng))
+        pass
 
     @override(Policy)
     def needs_state(self) -> bool:

@@ -106,6 +106,7 @@ class MultiStepIMPALA(Trainer):
             eval_repeats = self.algorithm_config.eval_repeats
 
         try:
+            self.distributed_actors.broadcast_updated_policy(self.model.state_dict())
             self.distributed_actors.start()
             self.train_async(n_epochs, epoch_length, deterministic_eval, eval_repeats, patience, model_selection)
             self.distributed_actors.stop()

@@ -4,12 +4,12 @@ from typing import Dict
 
 from hydra.core.hydra_config import HydraConfig
 from hydra.experimental import initialize_config_module, compose
-from omegaconf import open_dict
+from omegaconf import open_dict, DictConfig
 
 from maze.maze_cli import maze_run
 
 
-def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_name: str):
+def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_name: str) -> DictConfig:
     """Runs rollout with the given config overrides using maze_run.
 
     :param hydra_overrides: Config overrides for hydra.
@@ -33,6 +33,8 @@ def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_nam
 
         # Run the rollout
         maze_run(cfg)
+
+    return cfg
 
 
 def run_maze_job_through_cli(hydra_overrides: Dict[str, str], config_name: str):

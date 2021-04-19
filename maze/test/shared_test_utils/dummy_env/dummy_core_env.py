@@ -10,7 +10,6 @@ from maze.core.env.core_env import CoreEnv
 from maze.core.env.structured_env import StepKeyType
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
-from maze.core.utils.seeding import set_random_states
 from maze.test.shared_test_utils.dummy_env.dummy_renderer import DummyMatplotlibRenderer
 from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator, DummyEnvEvents
 
@@ -77,7 +76,8 @@ class DummyCoreEnvironment(CoreEnv):
         Sets the seed for the environment
         :param seed: The given seed
         """
-        set_random_states(seed)
+        # No randomness in the env
+        pass
 
     def get_serializable_components(self) -> Dict[str, Any]:
         """

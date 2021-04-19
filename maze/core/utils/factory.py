@@ -69,7 +69,7 @@ class Factory(Generic[BaseType]):
 
         assert not isinstance(config, str), f"instantiation from string not supported, please pass as '_target_' arg"
         assert hasattr(config, "__getitem__"), f"unexpected type {type(config)}"
-        assert config["_target_"], f"Can't instantiate, field '_target_' is missing, config={config}"
+        assert "_target_" in config, f"Can't instantiate, field '_target_' is missing, config={config}"
 
         if "_" in config:
             config = copy.deepcopy(config)
