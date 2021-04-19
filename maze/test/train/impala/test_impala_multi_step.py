@@ -1,4 +1,5 @@
 import torch.nn as nn
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
@@ -71,7 +72,8 @@ def test_impala_multi_step_dummy():
     train_actors = SequentialDistributedActors(_env_factory, _policy(_env_factory()).policy,
                                                n_rollout_steps=algorithm_config.n_rollout_steps,
                                                n_actors=algorithm_config.num_actors,
-                                               batch_size=algorithm_config.actors_batch_size)
+                                               batch_size=algorithm_config.actors_batch_size,
+                                               actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)])
     impala = _train_function(train_actors, algorithm_config)
     assert isinstance(impala, MultiStepIMPALA)
 
@@ -83,7 +85,9 @@ def test_impala_multi_step_distributed():
                                             n_actors=algorithm_config.num_actors,
                                             batch_size=algorithm_config.actors_batch_size,
                                             queue_out_of_sync_factor=algorithm_config.queue_out_of_sync_factor,
-                                            start_method="forkserver")
+                                            start_method="forkserver",
+                                            actor_agent_seeds=[4321 for _ in range(algorithm_config.num_actors)],
+                                            actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)])
     with Timeout(seconds=30):
         impala = _train_function(train_actors, algorithm_config)
     assert isinstance(impala, MultiStepIMPALA)

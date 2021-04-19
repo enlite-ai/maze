@@ -65,12 +65,12 @@ class SharedNoiseTable(object):
         # stack the parts together
         return np.concatenate(noise)
 
-    def sample_index(self, random_state: np.random.RandomState) -> int:
+    def sample_index(self, rng: np.random.RandomState) -> int:
         """Sample a random index within the table, taking into account the size of the noise vector.
 
-        :param random_state: random generator to be used
+        :param rng: Maze random number generator to be used.
 
         :return: A noise index to be passed to
                  :meth:`maze.train.trainers.es.es_shared_noise_table.SharedNoiseTable.get`.
         """
-        return random_state.randint(0, len(self.noise))
+        return rng.randint(0, len(self.noise))

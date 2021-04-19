@@ -24,6 +24,11 @@ class GreedyPolicy(Policy):
         super().__init__()
         self.action_conversion = Factory(base_type=BaseActionConversion).instantiate(action_conversion)
 
+    @override(Policy)
+    def seed(self, seed: int) -> None:
+        """Not applicable since heuristic is deterministic"""
+        pass
+
     def get_candidate_pieces(self, observation: Dict) -> Sequence[Cutting2DMazeAction]:
         """
         Go through all of the pieces in inventory and select all possible candidates,

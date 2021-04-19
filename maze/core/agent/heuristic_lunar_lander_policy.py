@@ -33,6 +33,11 @@ class HeuristicLunarLanderPolicy(Policy):
         return False
 
     @override(Policy)
+    def seed(self, seed: int) -> None:
+        """Not applicable since heuristic is deterministic"""
+        pass
+
+    @override(Policy)
     def compute_action(self,
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType] = None,

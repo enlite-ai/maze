@@ -3,12 +3,14 @@ from typing import List, Callable, Iterable, Any, Tuple, Dict, Optional
 
 import numpy as np
 
+from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
 
 
@@ -82,11 +84,12 @@ class SequentialVectorEnv(StructuredVectorEnv):
 
         return stack_numpy_dict_list(observations)
 
-    def seed(self, seed: int = None) -> None:
+    @override(VectorEnv)
+    def seed(self, seeds: List[Any]) -> None:
         """VectorEnv implementation"""
-        for env in self.envs:
+        assert len(seeds) == len(self.envs)
+        for env, seed in zip(self.envs, seeds):
             env.seed(seed)
-            seed += 1
 
     def close(self) -> None:
         """VectorEnv implementation"""

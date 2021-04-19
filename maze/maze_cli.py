@@ -1,6 +1,6 @@
 """Implements the Maze command line interface for running rollouts, trainings and else."""
-import os
 import glob
+import os
 from typing import Optional
 
 import hydra
@@ -12,6 +12,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from maze.core.log_stats.hparam_writer_tensorboard import manipulate_hparams_logging_for_exp
 from maze.core.utils.factory import Factory
+from maze.core.utils.seeding import MazeSeeding
 from maze.runner import Runner
 from maze.utils.bcolors import BColors
 from maze.utils.log_stats_utils import clear_global_state
@@ -33,6 +34,13 @@ def _run_job(cfg: DictConfig) -> None:
     :param cfg: Hydra configuration for the rollout.
     """
     set_matplotlib_backend()
+
+    # If no env or agent base seed is given generate the seeds randomly and add them to the resolved hydra config
+    if cfg.seeding.env_base_seed is None:
+        cfg.seeding.env_base_seed = MazeSeeding.generate_seed_from_random_state(np.random.RandomState(None))
+    if cfg.seeding.agent_base_seed is None:
+        cfg.seeding.agent_base_seed = MazeSeeding.generate_seed_from_random_state(np.random.RandomState(None))
+
 
     # print and log config
     config_str = yaml.dump(OmegaConf.to_container(cfg, resolve=True))

@@ -28,6 +28,11 @@ class DefaultPolicy(Policy):
         return False
 
     @override(Policy)
+    def seed(self, seed: int) -> None:
+        """Not applicable since Global seed should already be set before initializing the models"""
+        pass
+
+    @override(Policy)
     def compute_action(self,
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType] = None,

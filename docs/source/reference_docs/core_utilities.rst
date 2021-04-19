@@ -12,7 +12,8 @@ These are general interfaces, classes and utility functions:
 
     ~annotations.override
     ~annotations.unused
-    ~utils.seeding.set_random_states
+    ~utils.seeding.set_seeds_globally
+    ~utils.seeding.MazeSeeding
     ~utils.structured_env_utils.flat_structured_space
     ~utils.structured_env_utils.flat_structured_shapes
     ~utils.config_utils.read_config

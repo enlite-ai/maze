@@ -91,6 +91,13 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
         self._normalization_strategies: Dict[str, ObservationNormalizationStrategy] = defaultdict()
         self._initialize_normalization_strategies()
 
+    @override(StructuredEnv)
+    def seed(self, seed: int) -> None:
+        """Apply seed to wrappers rng, and pass the seed forward to the env
+        """
+        self.sampling_policy.seed(seed)
+        return self.env.seed(seed)
+
     @override(ObservationWrapper)
     def observation(self, observation: Any) -> Any:
         """Collect observations for statistics computation or normalize them.

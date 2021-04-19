@@ -42,6 +42,11 @@ class TorchPolicy(TorchModel, Policy):
         TorchModel.__init__(self, device=device)
 
     @override(Policy)
+    def seed(self, seed: int) -> None:
+        """This is done globally"""
+        pass
+
+    @override(Policy)
     def needs_state(self) -> bool:
         """This policy does not require the state() object to compute the action."""
         return False

@@ -285,8 +285,8 @@ class ActorCritic(Trainer, ABC):
                          critic_train_stats: Dict[Union[str, int], Dict[str, List[float]]]) -> None:
         """Fire logging events for training statistics.
 
-        :param policy_train_stats: List of policy training statistics.
-        :param critic_train_stats: List of critic training statistics.
+        :param policy_train_stats: Dict of policy training statistics.
+        :param critic_train_stats: Dict of critic training statistics.
         """
 
         # log current learning rate

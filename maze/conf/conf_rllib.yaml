@@ -34,6 +34,16 @@ defaults:
   #   to ensure that the right array segments are mapped to right actions/observations.
   - rllib/wrappers_common
 
+# Maze seeding. If no seeds are given they are generated and the seeds used are documented in
+# the hydra_config.yaml file in order to reproduce experiments.
+seeding:
+  # Base seed for creating env seeds
+  env_base_seed: ~
+  # Base seed for creating agent seeds
+  agent_base_seed: ~
+  # Specify whether to set the cudnn determinism flag, this will ensure guaranty when working on the gpu, however some
+  # torch modules will raise runtime errors, and the processing speed will be decreased.
+  cudnn_determinism_flag: false
 
 project:
   name: ???

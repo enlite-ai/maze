@@ -12,6 +12,7 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.config_utils import EnvFactory, SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.normalization_strategies.base import StructuredStatisticsType
+from maze.core.utils.seeding import set_seeds_globally, MazeSeeding
 from maze.core.wrappers.observation_normalization.observation_normalization_utils import \
     obtain_normalization_statistics, make_normalized_env_factory
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
@@ -61,6 +62,10 @@ class TrainingRunner(Runner):
 
         self._cfg = cfg
 
+        # Generate a random state used for sampling random seeds for the envs and agents
+        self.maze_seeding = MazeSeeding(cfg.seeding.env_base_seed, cfg.seeding.agent_base_seed,
+                                        cfg.seeding.cudnn_determinism_flag)
+
         with SwitchWorkingDirectoryToInput(cfg.input_dir):
             assert isinstance(cfg.env, DictConfig) or isinstance(cfg.env, Callable)
             wrapper_cfg = cfg.wrappers if "wrappers" in cfg else {}
@@ -72,6 +77,7 @@ class TrainingRunner(Runner):
                 self._env_factory = lambda: WrapperFactory.wrap_from_config(cfg.env(), wrapper_cfg)
 
             normalization_env = self._env_factory()
+            normalization_env.seed(self.maze_seeding.generate_env_instance_seed())
 
         # Observation normalization
         self._normalization_statistics = obtain_normalization_statistics(normalization_env,
@@ -81,6 +87,10 @@ class TrainingRunner(Runner):
             # dump statistics to current working directory
             assert isinstance(normalization_env, ObservationNormalizationWrapper)
             normalization_env.dump_statistics()
+
+        # Generate an agent seed and set the seed globally for the model initialization
+        set_seeds_globally(self.maze_seeding.agent_global_seed, self.maze_seeding.cudnn_determinism_flag,
+                           info_txt=f'training runner (Pid:{os.getpid()})')
 
         # init model composer
         composer_type = Factory(base_type=BaseModelComposer).type_from_name(cfg.model['_target_'])

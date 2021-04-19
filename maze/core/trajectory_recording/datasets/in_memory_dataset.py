@@ -9,13 +9,15 @@ from typing import Callable, List, Union, Optional
 from typing import Tuple, Dict, Any, Sequence, Generator
 
 import torch
+from torch.utils.data.dataset import Dataset, Subset
+from tqdm import tqdm
+
 from maze.core.env.maze_env import MazeEnv
 from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
+from maze.utils.bcolors import BColors
 from maze.utils.exception_report import ExceptionReport
-from torch.utils.data.dataset import Dataset, Subset
-from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 

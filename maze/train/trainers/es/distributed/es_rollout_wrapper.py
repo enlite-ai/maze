@@ -30,13 +30,14 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
     def __init__(self,
                  env: Union[StructuredEnv, LogStatsEnv],
-                 shared_noise: SharedNoiseTable):
+                 shared_noise: SharedNoiseTable,
+                 agent_instance_seed: int):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
         super().__init__(env)
 
         self.shared_noise = shared_noise
         self.abort = False
-        self.random_state = np.random.RandomState()
+        self.wrapper_rng = np.random.RandomState(agent_instance_seed)
 
     def set_abort(self):
         """Abort the rollout (intended to be called from a thread)."""
@@ -104,7 +105,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
         r = ESRolloutResult(is_eval=False)
 
         # generate a random noise vector
-        noise_idx = self.shared_noise.sample_index(self.random_state)
+        noise_idx = self.shared_noise.sample_index(self.wrapper_rng)
 
         v = noise_stddev * self.shared_noise.get(noise_idx, policy.num_params)
         v = torch.from_numpy(v).to(policy._device)

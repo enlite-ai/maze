@@ -10,13 +10,13 @@ from ray.rllib.models import ModelCatalog, MODEL_DEFAULTS
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
+from maze.core.utils.seeding import MazeSeeding
 from maze.rllib.maze_rllib_action_distribution import MazeRLlibActionDistribution
 from maze.rllib.maze_rllib_callback_logging import MazeRLlibLoggingCallbacks
 from maze.rllib.maze_rllib_env import build_maze_rllib_env_factory
 from maze.rllib.maze_rllib_models.maze_rllib_base_model import MazeRLlibBaseModel
 from maze.rllib.maze_tune_callback_save_model import MazeRLlibSaveModelCallback
 from maze.runner import Runner
-
 
 @dataclass
 class MazeRLlibRunner(Runner):
@@ -73,6 +73,9 @@ class MazeRLlibRunner(Runner):
 
         :param cfg: Full Hydra run job config
         """
+        # Generate a random state used for sampling random seeds for the envs and agents
+        self.maze_seeding = MazeSeeding(cfg.seeding.env_base_seed, cfg.seeding.agent_base_seed,
+                                        cfg.seeding.cudnn_determinism_flag)
 
         self._cfg = cfg
 
@@ -124,6 +127,9 @@ class MazeRLlibRunner(Runner):
                                             'be dynamically written'
         assert self.num_workers == rllib_config['num_workers']
         rllib_config.update(maze_rllib_config)
+
+        if rllib_config['seed'] is None:
+            rllib_config['seed'] = self.maze_seeding.generate_env_instance_seed()
 
         # Initialize ray with the passed ray_config parameters
         ray_config: Dict = OmegaConf.to_container(self.ray_config, resolve=True)

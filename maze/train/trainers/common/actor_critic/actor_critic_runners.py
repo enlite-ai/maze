@@ -10,9 +10,9 @@ from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.factory import Factory
-from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import ActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
@@ -41,12 +41,15 @@ class ACRunner(TrainingRunner):
 
         # initialize distributed env
         envs = self.create_distributed_env(self._env_factory, self.concurrency, logging_prefix="train")
+        train_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in range(self.concurrency)]
+        envs.seed(train_env_instance_seeds)
 
         # initialize the env and enable statistics collection
         eval_env = None
         if cfg.algorithm.eval_repeats > 0:
             eval_env = self.create_distributed_env(self._env_factory, self.concurrency, logging_prefix="eval")
-
+            eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in range(self.concurrency)]
+            eval_env.seed(eval_env_instance_seeds)
         # initialize actor critic model
         model = TorchActorCritic(
             policy=self._model_composer.policy,

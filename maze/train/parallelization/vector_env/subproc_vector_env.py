@@ -5,12 +5,14 @@ import cloudpickle
 import matplotlib
 import numpy as np
 
+from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.parallelization.vector_env.vector_env_utils import disable_epoch_level_stats
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
 
@@ -178,10 +180,11 @@ class SubprocVectorEnv(StructuredVectorEnv):
 
         return stack_numpy_dict_list(obs)
 
-    def seed(self, seed=None) -> None:
+    @override(VectorEnv)
+    def seed(self, seeds: List[Any]) -> None:
         """VectorEnv implementation"""
-        for idx, remote in enumerate(self.remotes):
-            remote.send(('seed', seed + idx))
+        for (remote, seed) in zip(self.remotes, seeds):
+            remote.send(('seed', seed))
 
     def close(self) -> None:
         """VectorEnv implementation"""

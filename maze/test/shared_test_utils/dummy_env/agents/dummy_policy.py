@@ -25,6 +25,11 @@ class DummyGreedyPolicy(Policy):
         return False
 
     @override(Policy)
+    def seed(self, seed: int) -> None:
+        """Not applicable since heuristic is deterministic"""
+        pass
+
+    @override(Policy)
     def compute_top_action_candidates(self,
                                       observation: ObservationType,
                                       num_candidates: int,

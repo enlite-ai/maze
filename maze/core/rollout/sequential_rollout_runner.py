@@ -44,7 +44,9 @@ class SequentialRolloutRunner(RolloutRunner):
     @override(RolloutRunner)
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType):
         """Run the rollout sequentially in the main process."""
-        env, agent = self.init_env_and_agent(env, wrappers, self.max_episode_steps, agent, self.input_dir)
+        env, agent = self.init_env_and_agent(env, wrappers, self.max_episode_steps, agent, self.input_dir,
+                                             self.maze_seeding.generate_env_instance_seed(),
+                                             self.maze_seeding.generate_agent_instance_seed())
 
         # Set up the wrappers
         # Hydra handles working directory

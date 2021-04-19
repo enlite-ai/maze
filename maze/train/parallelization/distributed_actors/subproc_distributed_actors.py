@@ -2,7 +2,7 @@
 
 import time
 from multiprocessing.managers import BaseManager
-from typing import Callable, Union, Tuple, Dict
+from typing import Callable, Union, Tuple, Dict, List
 
 import cloudpickle
 from torch import multiprocessing
@@ -31,10 +31,12 @@ class SubprocDistributedActors(DistributedActors):
 
     :param queue_out_of_sync_factor: this factor multiplied by the actor_batch_size gives the size of the queue.
         Therefore if the all rollouts computed can be  at most
-        (queue_out_of_sync_factor + num_agents/actor_batch_size) out of sync with learner policy
+        (queue_out_of_sync_factor + num_agents/actor_batch_size) out of sync with learner policy.
     :param start_method: Method used to start the subprocesses.
        Must be one of the methods returned by multiprocessing.get_all_start_methods().
        Defaults to 'forkserver' on available platforms, and 'spawn' otherwise.
+    :param actor_env_seeds: A list of seeds for each actors' env.
+    :param actor_agent_seeds: A list of seed for each actors' policy.
     """
 
     def __init__(self,
@@ -44,7 +46,9 @@ class SubprocDistributedActors(DistributedActors):
                  n_actors: int,
                  batch_size: int,
                  queue_out_of_sync_factor: float,
-                 start_method: str):
+                 start_method: str,
+                 actor_env_seeds: List[int],
+                 actor_agent_seeds: List[int]):
         super().__init__(env_factory, policy, n_rollout_steps, n_actors, batch_size)
 
         self.queue_out_of_sync_factor = queue_out_of_sync_factor
@@ -59,11 +63,11 @@ class SubprocDistributedActors(DistributedActors):
         self.broadcasting_container = manager.BroadcastingContainer()
 
         self.actors = []
-        for _ in range(self.n_actors):
+        for env_seed, agent_seed in zip(actor_env_seeds, actor_agent_seeds):
             pickled_env_factory = cloudpickle.dumps(env_factory)
             pickled_policy = cloudpickle.dumps(self.policy)
             args = (pickled_env_factory, pickled_policy, n_rollout_steps,
-                    self.actor_output_queue, self.broadcasting_container)
+                    self.actor_output_queue, self.broadcasting_container, env_seed, agent_seed)
             self.actors.append(ctx.Process(target=_actor_worker, args=args))
 
     @override(DistributedActors)
@@ -144,7 +148,7 @@ class SubprocDistributedActors(DistributedActors):
 
 def _actor_worker(pickled_env_factory: bytes, pickled_policy: bytes,
                   n_rollout_steps: int, actor_output_queue: multiprocessing.Queue,
-                  broadcasting_container: BroadcastingContainer):
+                  broadcasting_container: BroadcastingContainer, env_seed: int, agent_seed: int):
     """Worker function for the actors. This Method is called with a new process. Its task is to initialize the,
         before going into a loop - updating its policy if necessary, computing a rollout and putting the result into
         the shared queue.
@@ -154,13 +158,19 @@ def _actor_worker(pickled_env_factory: bytes, pickled_policy: bytes,
     :param n_rollout_steps: the number of rollout steps to be computed for each rollout
     :param actor_output_queue: the queue to put the computed rollouts in
     :param broadcasting_container: the shared container, where actors can retrieve the newest version of the policies
+    :param env_seed: The env seed to be used.
+    :param agent_seed: The agent seed to be used.
     """
     try:
         env_factory = cloudpickle.loads(pickled_env_factory)
-        policy: TorchPolicy = cloudpickle.loads(pickled_policy)
-        policy_version_counter = 0
+        env = env_factory()
+        env.seed(env_seed)
 
-        rollout_generator = RolloutGenerator(env=env_factory(), record_logits=True, record_episode_stats=True)
+        policy: TorchPolicy = cloudpickle.loads(pickled_policy)
+        policy.seed(agent_seed)
+        policy_version_counter = -1
+
+        rollout_generator = RolloutGenerator(env=env, record_logits=True, record_episode_stats=True)
 
         while not broadcasting_container.stop_flag():
             # Update the policy if new version is available

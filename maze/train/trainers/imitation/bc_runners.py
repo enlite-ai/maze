@@ -58,14 +58,19 @@ class BCRunner(TrainingRunner):
 
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
-        validation, train = self._split_dataset(dataset, cfg.algorithm.validation_percentage)
+        validation, train = self._split_dataset(dataset, cfg.algorithm.validation_percentage,
+                                                self.maze_seeding.generate_env_instance_seed())
 
         # Create data loaders
-        train_data_loader = DataLoader(train, shuffle=True, batch_size=cfg.algorithm.batch_size)
-        validation_data_loader = DataLoader(validation, batch_size=cfg.algorithm.batch_size)
+        torch_generator = torch.Generator().manual_seed(self.maze_seeding.generate_env_instance_seed())
+        train_data_loader = DataLoader(train, shuffle=True, batch_size=cfg.algorithm.batch_size,
+                                       generator=torch_generator)
+        validation_data_loader = DataLoader(validation, batch_size=cfg.algorithm.batch_size,
+                                            generator=torch_generator)
 
         policy = TorchPolicy(networks=self._model_composer.policy.networks,
                              distribution_mapper=self._model_composer.distribution_mapper, device=cfg.algorithm.device)
+        policy.seed(self.maze_seeding.agent_global_seed)
 
         self._model_selection = BestModelSelection(self.state_dict_dump_file, policy)
         optimizer = Factory(Optimizer).instantiate(cfg.algorithm.optimizer, params=policy.parameters())
@@ -93,6 +98,9 @@ class BCRunner(TrainingRunner):
         if cfg.algorithm.n_eval_episodes > 0:
             eval_env = self.create_distributed_eval_env(self._env_factory, self.eval_concurrency,
                                                         logging_prefix="eval-rollout")
+            eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
+                                       range(self.eval_concurrency)]
+            eval_env.seed(eval_env_instance_seeds)
             self.evaluators += [
                 RolloutEvaluator(eval_env, n_episodes=cfg.algorithm.n_eval_episodes, model_selection=None)
             ]
@@ -123,12 +131,15 @@ class BCRunner(TrainingRunner):
         )
 
     @staticmethod
-    def _split_dataset(dataset: Dataset, validation_percentage: float) -> Tuple[Subset, Subset]:
+    def _split_dataset(dataset: Dataset, validation_percentage: float,
+                       env_seed: int) -> Tuple[Subset, Subset]:
         """
         Split the given dataset into validation and training set based on the runner configuration.
 
-        :param dataset: Dataset to split
-        :return: Tuple of subsets: (validation, train)
+        :param dataset: Dataset to split.
+        :param env_seed: Seed for splitting the dataset.
+
+        :return: Tuple of subsets: (validation, train).
         """
         validation_size = int(np.round(validation_percentage * len(dataset) / 100))
 
@@ -139,7 +150,7 @@ class BCRunner(TrainingRunner):
             return torch.utils.data.random_split(
                 dataset=dataset,
                 lengths=[validation_size, len(dataset) - validation_size],
-                generator=torch.Generator().manual_seed(1234))
+                generator=torch.Generator().manual_seed(env_seed))
 
     @classmethod
     @abstractmethod
