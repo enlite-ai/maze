@@ -10,11 +10,11 @@ from maze.distributions.distribution_mapper import DistributionMapper
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
-from maze.train.trainers.ppo.ppo_trainer import MultiStepPPO
+from maze.train.trainers.ppo.ppo_trainer import PPO
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 
 
-def train_function(n_epochs: int, distributed_env_cls) -> MultiStepPPO:
+def train_function(n_epochs: int, distributed_env_cls) -> PPO:
     """Trains the cart pole environment with the multi-step ppo implementation.
     """
 
@@ -64,8 +64,8 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepPPO:
                                       concat_observations=False),
         device=algorithm_config.device)
 
-    ppo = MultiStepPPO(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,
-                       model_selection=None)
+    ppo = PPO(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,
+              model_selection=None)
 
     # train agent
     ppo.train()
@@ -76,13 +76,13 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepPPO:
 def test_ppo_multi_step():
     """ ppo unit tests """
     ppo = train_function(n_epochs=2, distributed_env_cls=SequentialVectorEnv)
-    assert isinstance(ppo, MultiStepPPO)
+    assert isinstance(ppo, PPO)
 
     ppo = train_function(n_epochs=2, distributed_env_cls=SequentialVectorEnv)
-    assert isinstance(ppo, MultiStepPPO)
+    assert isinstance(ppo, PPO)
 
 
 def test_ppo_multi_step_distributed():
     """ ppo unit tests """
     ppo = train_function(n_epochs=2, distributed_env_cls=SubprocVectorEnv)
-    assert isinstance(ppo, MultiStepPPO)
+    assert isinstance(ppo, PPO)

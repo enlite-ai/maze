@@ -1,22 +1,22 @@
-"""Multi-step A2C implementation."""
+"""Multi-step multi-agent A2C implementation."""
 from collections import defaultdict
 from typing import Union, Optional
 
 import torch
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
-from maze.train.trainers.common.actor_critic.actor_critic_trainer import MultiStepActorCritic
+from maze.train.trainers.common.actor_critic.actor_critic_trainer import ActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 
 
-class MultiStepA2C(MultiStepActorCritic):
-    """Multi step advantage actor critic.
+class A2C(ActorCritic):
+    """Advantage Actor Critic. Suitable for multi-step and multi-agent scenarios.
 
     :param algorithm_config: Algorithm parameters.
     :param env: Distributed structured environment
@@ -36,7 +36,7 @@ class MultiStepA2C(MultiStepActorCritic):
         super().__init__(algorithm_config=algorithm_config, env=env, eval_env=eval_env, model=model,
                          model_selection=model_selection, initial_state=initial_state)
 
-    @override(MultiStepActorCritic)
+    @override(ActorCritic)
     def _update(self) -> None:
         """Perform policy update.
         """

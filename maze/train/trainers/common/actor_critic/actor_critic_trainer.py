@@ -20,7 +20,6 @@ from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.distributions.dict import DictProbabilityDistribution
-from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.common.actor_critic.actor_critic_events import MultiStepActorCriticEvents
@@ -32,8 +31,8 @@ from maze.train.utils.train_utils import compute_gradient_norm
 from maze.utils.bcolors import BColors
 
 
-class MultiStepActorCritic(Trainer, ABC):
-    """Base class for multi step actor critic.
+class ActorCritic(Trainer, ABC):
+    """Base class for actor critic trainers. Suitable for multi-step and multi-agent training.
 
     :param algorithm_config: Algorithm parameters.
     :param env: Distributed structured environment
@@ -173,8 +172,7 @@ class MultiStepActorCritic(Trainer, ABC):
                      List[DictProbabilityDistribution]]:
         """Computes action log probabilities and corresponding action distributions for all sub-steps and actions.
 
-        :param obs: Dictionary holding the sub-step observations as tensors.
-        :param actions: Dictionary holding the sub-step actions as tensors.
+        :param record: Structured spaces record holding the actions and observations for individual sub-steps.
         :return: A tuple containing the action log-probabilities and corresponding action distributions.
         """
 
