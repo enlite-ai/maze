@@ -1,5 +1,4 @@
 """Contains utility functions for structured environments."""
-from collections import defaultdict
 from typing import Dict, Union, Sequence
 
 from gym import spaces
