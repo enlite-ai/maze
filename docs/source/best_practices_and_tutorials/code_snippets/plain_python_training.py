@@ -12,7 +12,7 @@ from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.general.torch_model_block import TorchModelBlock
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
-from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
+from maze.train.trainers.a2c.a2c_trainer import A2C
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.utils.log_stats_utils import setup_logging
 
@@ -176,8 +176,8 @@ def train(n_epochs):
     # Initialize best model selection.
     model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)
 
-    a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
-                               model=actor_critic_model, model_selection=model_selection)
+    a2c_trainer = A2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
+                      model=actor_critic_model, model_selection=model_selection)
 
     # Train the Agent
     # ===============

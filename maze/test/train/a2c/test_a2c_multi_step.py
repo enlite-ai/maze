@@ -10,11 +10,11 @@ from maze.distributions.distribution_mapper import DistributionMapper
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
-from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
+from maze.train.trainers.a2c.a2c_trainer import A2C
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 
 
-def train_function(n_epochs: int, distributed_env_cls) -> MultiStepA2C:
+def train_function(n_epochs: int, distributed_env_cls) -> A2C:
     """Trains the cart pole environment with the multi-step a2c implementation.
     """
 
@@ -61,8 +61,8 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepA2C:
                                       concat_observations=False),
         device=algorithm_config.device)
 
-    a2c = MultiStepA2C(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,
-                       model_selection=None)
+    a2c = A2C(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,
+              model_selection=None)
 
     # train agent
     a2c.train()
@@ -73,13 +73,13 @@ def train_function(n_epochs: int, distributed_env_cls) -> MultiStepA2C:
 def test_a2c_multi_step():
     """ A2C unit tests """
     a2c = train_function(n_epochs=2, distributed_env_cls=SequentialVectorEnv)
-    assert isinstance(a2c, MultiStepA2C)
+    assert isinstance(a2c, A2C)
 
     a2c = train_function(n_epochs=2, distributed_env_cls=SequentialVectorEnv)
-    assert isinstance(a2c, MultiStepA2C)
+    assert isinstance(a2c, A2C)
 
 
 def test_a2c_multi_step_distributed():
     """ A2C unit tests """
     a2c = train_function(n_epochs=2, distributed_env_cls=SubprocVectorEnv)
-    assert isinstance(a2c, MultiStepA2C)
+    assert isinstance(a2c, A2C)

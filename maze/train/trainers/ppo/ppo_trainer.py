@@ -1,9 +1,10 @@
-"""Multi-step PPO implementation."""
+"""Multi-step multi-agent PPO implementation."""
 from collections import defaultdict
 from typing import Union, Dict, Optional, List
 
 import numpy as np
 import torch
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
@@ -11,15 +12,14 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
-from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
-from maze.train.trainers.common.actor_critic.actor_critic_trainer import MultiStepActorCritic
+from maze.train.trainers.common.actor_critic.actor_critic_trainer import ActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 
 
-class MultiStepPPO(MultiStepActorCritic):
-    """Multi step Proximal Policy Optimization.
+class PPO(ActorCritic):
+    """Proximal Policy Optimization trainer. Suitable for multi-step and multi-agent scenarios.
 
     :param algorithm_config: Algorithm parameters.
     :param env: Distributed structured environment
@@ -39,7 +39,7 @@ class MultiStepPPO(MultiStepActorCritic):
         super().__init__(algorithm_config=algorithm_config, env=env, eval_env=eval_env, model=model,
                          model_selection=model_selection, initial_state=initial_state)
 
-    @override(MultiStepActorCritic)
+    @override(ActorCritic)
     def _update(self) -> None:
         """Perform ppo policy update.
         """
@@ -178,4 +178,3 @@ class MultiStepPPO(MultiStepActorCritic):
         for substep_dict in step_items:
             for key in substep_dict.keys():
                 substep_dict[key] = torch.flatten(substep_dict[key], start_dim=0, end_dim=1)
-

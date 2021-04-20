@@ -8,7 +8,7 @@ from maze.perception.builders import ConcatModelBuilder
 from maze.perception.models.template_model_composer import TemplateModelComposer
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
-from maze.train.trainers.a2c.a2c_trainer import MultiStepA2C
+from maze.train.trainers.a2c.a2c_trainer import A2C
 from maze.utils.log_stats_utils import setup_logging
 
 
@@ -101,8 +101,8 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         critic=template_builder.critic,
         device=algorithm_config.device)
 
-    a2c = MultiStepA2C(env=envs, eval_env=eval_env, algorithm_config=algorithm_config, model=model,
-                       model_selection=None)
+    a2c = A2C(env=envs, eval_env=eval_env, algorithm_config=algorithm_config, model=model,
+              model_selection=None)
 
     setup_logging(job_config=None)
 
