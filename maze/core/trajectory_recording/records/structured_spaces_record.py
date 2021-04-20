@@ -1,16 +1,19 @@
 """Recording spaces (i.e., raw actions and observations) from a single environment step."""
 
 from dataclasses import dataclass
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 
+import numpy as np
+
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_env import MazeEnv
+from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorIDType
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
 from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
-from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.state_record import StateRecord
-from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 
 StepKeyType = Union[str, int]
 
@@ -65,85 +68,6 @@ class StructuredSpacesRecord:
             stacked_substeps.append(SpacesRecord.stack(substep_records))
 
         return StructuredSpacesRecord(substep_records=stacked_substeps)
-
-    def is_batched(self) -> bool:
-        """Return whether this record is batched or not.
-
-        :return: whether this record is batched or not
-        """
-        return self.substep_records[0].batch_shape is not None
-
-    @property
-    def batch_shape(self):
-        """Return whether this record is batched or not."""
-        return self.substep_records[0].batch_shape
-
-    def is_done(self) -> bool:
-        """Return true if the episode ended during this structured step.
-
-        :return: true if the episode ended during this structured step
-        """
-        return self.substep_records[-1].done
-
-    @property
-    def actor_ids(self):
-        return [r.actor_id for r in self.substep_records]
-
-    @property
-    def actor_id_strings(self):
-        return [r.actor_id_string for r in self.substep_records]
-
-    @property
-    def substep_keys(self):
-        return [r.substep_key for r in self.substep_records]
-
-    @property
-    def actions(self):
-        return [r.action for r in self.substep_records]
-
-    @property
-    def observations(self):
-        return [r.observation for r in self.substep_records]
-
-    @property
-    def rewards(self):
-        return [r.reward for r in self.substep_records]
-
-    @property
-    def dones(self):
-        return [r.done for r in self.substep_records]
-
-    @property
-    def next_observations(self):
-        return [r.next_observation for r in self.substep_records]
-
-    @property
-    def actions_dict(self):
-        return {r.substep_key: r.action for r in self.substep_records}
-
-    @property
-    def observations_dict(self):
-        return {r.substep_key: r.observation for r in self.substep_records}
-
-    @property
-    def rewards_dict(self):
-        return {r.substep_key: r.reward for r in self.substep_records}
-
-    @property
-    def dones_dict(self):
-        return {r.substep_key: r.done for r in self.substep_records}
-
-    @property
-    def next_observations_dict(self):
-        return {r.substep_key: r.next_observation for r in self.substep_records}
-
-    @property
-    def logits_dict(self):
-        return {r.substep_key: r.logits for r in self.substep_records}
-
-    @property
-    def discounted_returns_dict(self):
-        return {r.substep_key: r.discounted_return for r in self.substep_records}
 
     @classmethod
     def converted_from(cls, state_record: StateRecord, conversion_env: MazeEnv, first_step_in_episode: bool) \
@@ -200,7 +124,110 @@ class StructuredSpacesRecord:
         return self
 
     def __repr__(self) -> str:
-        repr = "Structured spaces record:"
+        repr_str = "Structured spaces record:"
         for substep_record in self.substep_records:
-            repr += f"\n - {substep_record}"
-        return repr
+            repr_str += f"\n - {substep_record}"
+        return repr_str
+
+    # -- Convenience accessors --
+
+    def is_batched(self) -> bool:
+        """Return whether this record is batched or not.
+
+        :return: whether this record is batched or not
+        """
+        return self.substep_records[0].batch_shape is not None
+
+    @property
+    def batch_shape(self):
+        """Return whether this record is batched or not."""
+        return self.substep_records[0].batch_shape
+
+    def is_done(self) -> bool:
+        """Return true if the episode ended during this structured step.
+
+        :return: true if the episode ended during this structured step
+        """
+        return self.substep_records[-1].done
+
+    @property
+    def actor_ids(self) -> List[ActorIDType]:
+        """List of actor IDs for the individual sub-steps."""
+        return [r.actor_id for r in self.substep_records]
+
+    @property
+    def substep_keys(self) -> List[StepKeyType]:
+        """List of sub-step keys for the individual sub-steps."""
+        return [r.substep_key for r in self.substep_records]
+
+    @property
+    def actions(self) -> List[ActionType]:
+        """List of actions from the individual sub-steps."""
+        return [r.action for r in self.substep_records]
+
+    @property
+    def observations(self) -> List[ObservationType]:
+        """List of observations from the individual sub-steps."""
+        return [r.observation for r in self.substep_records]
+
+    @property
+    def rewards(self) -> List[Union[float, np.ndarray]]:
+        """List of rewards from the individual sub-steps."""
+        return [r.reward for r in self.substep_records]
+
+    @property
+    def dones(self) -> List[bool]:
+        """List of dones from the individual sub-steps."""
+        return [r.done for r in self.substep_records]
+
+    @property
+    def next_observations(self) -> List[ObservationType]:
+        """List of next observations from the individual sub-steps."""
+        return [r.next_observation for r in self.substep_records]
+
+    @property
+    def logits(self) -> List[Dict[str, np.ndarray]]:
+        """List of logits from the individual sub-steps."""
+        return [r.logits for r in self.substep_records]
+
+    @property
+    def discounted_returns(self) -> List[Union[float, np.ndarray]]:
+        """List of discounted returns from the individual sub-steps."""
+        return [r.discounted_return for r in self.substep_records]
+
+    @property
+    def actions_dict(self) -> Dict[StepKeyType, ActionType]:
+        """Dict of actions from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.action for r in self.substep_records}
+
+    @property
+    def observations_dict(self) -> Dict[StepKeyType, ObservationType]:
+        """Dict of observations from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.observation for r in self.substep_records}
+
+    @property
+    def rewards_dict(self) -> Dict[StepKeyType, Union[float, np.ndarray]]:
+        """Dict of rewards from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.reward for r in self.substep_records}
+
+    @property
+    def dones_dict(self) -> Dict[StepKeyType, bool]:
+        """Dict of dones from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.done for r in self.substep_records}
+
+    @property
+    def next_observations_dict(self) -> Dict[StepKeyType, ObservationType]:
+        """Dict of next observations from the sub-steps, keyed by the sub-step ID
+        (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.next_observation for r in self.substep_records}
+
+    @property
+    def logits_dict(self) -> Dict[StepKeyType, Dict[str, np.ndarray]]:
+        """Dict of logits from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.logits for r in self.substep_records}
+
+    @property
+    def discounted_returns_dict(self) -> Dict[StepKeyType, Union[float, np.ndarray]]:
+        """Dict of discounted returns from the sub-steps, keyed by the sub-step ID
+        (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.discounted_return for r in self.substep_records}

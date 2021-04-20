@@ -1,3 +1,5 @@
+"""Record of spaces (i.e., raw action, observation, and associated data) from a single sub-step."""
+
 from dataclasses import dataclass
 from typing import Dict, Union, Optional, List
 
@@ -11,6 +13,8 @@ from maze.train.utils.train_utils import stack_numpy_dict_list, stack_torch_dict
 
 @dataclass
 class SpacesRecord:
+    """Record of spaces (i.e., raw action, observation, and associated data) from a single sub-step."""
+
     actor_id: ActorIDType
     """ID of the actor for this step."""
 
@@ -43,6 +47,15 @@ class SpacesRecord:
 
     @classmethod
     def stack(cls, records: List['SpacesRecord']) -> 'SpacesRecord':
+        """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
+
+        All the records should be in numpy and have the same structure of the spaces (i.e. come from the same
+        environment etc.).
+
+        :param records: Records to stack.
+        :return: Single stacked record, containing all the given records, and having the corresponding batch shape.
+        """
+
         assert len(set([r.substep_key for r in records])) == 1, "Cannot batch records for different sub-step keys."
 
         stacked_record = SpacesRecord(
@@ -67,17 +80,15 @@ class SpacesRecord:
 
     @property
     def substep_key(self) -> Union[str, int]:
+        """Sub-step key (i.e., the first part of the Actor ID) for this step."""
         return self.actor_id[0]
 
     @property
     def agent_id(self) -> int:
+        """Sub-step key (i.e., the second part of the Actor ID) for this step."""
         return self.actor_id[1]
 
-    @property
-    def actor_id_string(self) -> str:
-        return f"{str(self.substep_key)}_{self.agent_id}"
-
-    def to_numpy(self):
+    def to_numpy(self) -> 'SpacesRecord':
         """Convert the record to numpy."""
         self.observation = convert_to_numpy(self.observation, cast=None, in_place=True)
         self.action = convert_to_numpy(self.action, cast=None, in_place=True)
@@ -92,7 +103,7 @@ class SpacesRecord:
 
         return self
 
-    def to_torch(self, device: str):
+    def to_torch(self, device: str) -> 'SpacesRecord':
         """Convert the record to Torch.
 
         :param device: Device to move the tensors to.
