@@ -38,6 +38,8 @@ class ProbabilisticPolicyComposer(BasePolicyComposer):
             # Build a separate network for each sub-step and agent
             self._policies = {}
             for substep_key in self._networks.keys():
+                assert agent_counts_dict[substep_key] != -1, "for separated agent policies, the agent count needs to " \
+                                                             "be known upfront"
                 for agent_id in range(agent_counts_dict[substep_key]):
                     self._policies[(substep_key, agent_id)] = self._network_for_substep_key(substep_key)
         else:
