@@ -22,7 +22,7 @@ def test_serialized_torch_policy():
                           "non_lin": "torch.nn.SELU"},
                          {"_target_": "maze.test.shared_test_utils.dummy_models.actor_model.DummyPolicyNet",
                           "non_lin": "torch.nn.SELU"}],
-            "separated_agent_networks": False
+            "substeps_with_separate_agent_nets": []
         },
         "critic": None
     }

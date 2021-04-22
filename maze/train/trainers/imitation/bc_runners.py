@@ -57,7 +57,7 @@ class BCRunner(TrainingRunner):
         train_data_loader = DataLoader(train, shuffle=True, batch_size=cfg.algorithm.batch_size)
         validation_data_loader = DataLoader(validation, batch_size=cfg.algorithm.batch_size)
 
-        policy = TorchPolicy(networks=self.model_composer.policy.networks, separated_agent_networks=False,
+        policy = TorchPolicy(networks=self.model_composer.policy.networks,
                              distribution_mapper=self.model_composer.distribution_mapper, device=cfg.algorithm.device)
 
         model_selection = BestModelSelection(self.state_dict_dump_file, policy)

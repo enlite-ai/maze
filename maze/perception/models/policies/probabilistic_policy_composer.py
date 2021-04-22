@@ -1,5 +1,5 @@
 """Composer for probabilistic policy (actor) networks."""
-from typing import Dict
+from typing import Dict, List
 
 from gym import spaces
 from torch import nn
@@ -25,33 +25,35 @@ class ProbabilisticPolicyComposer(BasePolicyComposer):
                  action_spaces_dict: Dict[StepKeyType, spaces.Dict],
                  observation_spaces_dict: Dict[StepKeyType, spaces.Dict],
                  agent_counts_dict: Dict[StepKeyType, int],
-                 separated_agent_networks: bool,
                  distribution_mapper: DistributionMapper,
-                 networks: CollectionOfConfigType):
+                 networks: CollectionOfConfigType,
+                 substeps_with_separate_agent_nets: List[StepKeyType]):
         super().__init__(action_spaces_dict, observation_spaces_dict, agent_counts_dict, distribution_mapper)
-        self._separated_agent_networks = separated_agent_networks
+        self._substeps_with_separate_agent_nets = substeps_with_separate_agent_nets
 
         # initialize policies
         self._networks = list_to_dict(networks)
 
-        if self._separated_agent_networks:
-            # Build a separate network for each sub-step and agent
-            self._policies = {}
-            for substep_key in self._networks.keys():
+        self._policies = {}
+        for substep_key in self._networks.keys():
+
+            # Build a separate network for each agent if configured
+            if substep_key in substeps_with_separate_agent_nets:
                 assert agent_counts_dict[substep_key] != -1, "for separated agent policies, the agent count needs to " \
                                                              "be known upfront"
                 for agent_id in range(agent_counts_dict[substep_key]):
                     self._policies[(substep_key, agent_id)] = self._network_for_substep_key(substep_key)
-        else:
-            # Build a network for each sub-steps, with all agents for this sub-step sharing it
-            self._policies = {key: self._network_for_substep_key(key) for key in self._networks.keys()}
+
+            # Or a shared network common for all agents in this sub-step
+            else:
+                self._policies[substep_key] = self._network_for_substep_key(substep_key)
 
     @property
     def policy(self) -> TorchPolicy:
         """implementation of :class:`~maze.perception.models.policies.base_policy_composer.BasePolicyComposer`
         """
-        return TorchPolicy(networks=self._policies, separated_agent_networks=self._separated_agent_networks,
-                           distribution_mapper=self._distribution_mapper, device='cpu')
+        return TorchPolicy(networks=self._policies, distribution_mapper=self._distribution_mapper, device='cpu',
+                           substeps_with_separate_agent_nets=self._substeps_with_separate_agent_nets)
 
     def _network_for_substep_key(self, key: StepKeyType):
         return Factory(nn.Module).instantiate(self._networks[key],
