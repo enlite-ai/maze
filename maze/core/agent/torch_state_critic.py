@@ -114,8 +114,7 @@ class TorchStateCritic(TorchModel, StateCritic):
         # predict state values
         values, detached_values = self.predict_values(record)
 
-        # TODO: Currently only reward & done from the last sub-step is considered --> consider other sub-steps as well
-        rews = record.rewards[-1]
+        rews = torch.stack(record.rewards).sum(dim=0)
         dones = record.dones[-1]
 
         # reshape values to match rewards
