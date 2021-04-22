@@ -5,17 +5,16 @@ from typing import Union, Optional, Callable
 
 from tqdm import tqdm
 
-from maze.core.env.base_env import BaseEnv
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.observation_normalization.normalization_strategies.base import StructuredStatisticsType
-
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
 
 
-def estimate_observation_normalization_statistics(env: Union[ObservationNormalizationWrapper, StructuredEnvSpacesMixin],
+def estimate_observation_normalization_statistics(env: Union[MazeEnv, ObservationNormalizationWrapper],
                                                   n_samples: int) -> None:
     """Helper function estimating normalization statistics.
     :param env: The observation normalization wrapped environment.
@@ -38,7 +37,7 @@ def estimate_observation_normalization_statistics(env: Union[ObservationNormaliz
     env.estimate_statistics()
 
 
-def obtain_normalization_statistics(env: Union[BaseEnv, ObservationNormalizationWrapper], n_samples: int) \
+def obtain_normalization_statistics(env: Union[MazeEnv, ObservationNormalizationWrapper], n_samples: int) \
         -> Optional[StructuredStatisticsType]:
     """Obtain the normalization statistics of a given environment.
 
