@@ -103,7 +103,7 @@ def flatten_concat_probabilistic_policy_for_env(env: MazeEnv):
         policy=dict(
             _target_=ProbabilisticPolicyComposer,
             networks=[dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps,
-            separated_agent_networks=False
+            substeps_with_separate_agent_nets=[]
         ),
         critic=None
     )
