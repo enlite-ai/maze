@@ -252,28 +252,25 @@ class TorchDeltaStateCritic(TorchStateCritic):
     """
 
     @override(StateCritic)
-    def predict_values(self, observations: Dict[Union[str, int], Dict[str, torch.Tensor]]) -> \
-            Tuple[Dict[Union[str, int], torch.Tensor], Dict[Union[str, int], torch.Tensor]]:
-        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`
-        """
-        observations = convert_to_torch(observations, device=self._device, cast=None, in_place=False)
+    def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`"""
 
-        sub_step_keys = list(observations.keys())
+        # predict values for the first state
+        key_0 = record.substep_keys[0]
+        values = [self.networks[key_0](record.observations[0])["value"][..., 0]]
+        detached_values = [values[0].detach()]
 
-        # predict values for first state
-        key_0 = sub_step_keys[0]
-        values = {key_0: self.networks[key_0](observations[key_0])["value"][..., 0]}
-        detached_values = {key_0: values[0].detach()}
-
-        for i, step_id in enumerate(sub_step_keys[1:], start=1):
+        for substep_record in record.substep_records[1:]:
             # compute value 2 as delta of value 1
-            prev_values = detached_values[sub_step_keys[i - 1]]
-            observations[step_id].update({'prev_value': prev_values.unsqueeze(-1)})
-            value_delta = self.networks[step_id](observations[step_id])["value"][..., 0]
-            next_values = detached_values[sub_step_keys[i - 1]] + value_delta
+            prev_values = detached_values[-1]
+            obs = substep_record.observation.copy()
+            obs['prev_value'] = prev_values.unsqueeze(-1)
 
-            values[step_id] = next_values
-            detached_values[step_id] = values[step_id].detach()
+            value_delta = self.networks[substep_record.substep_key](obs)["value"][..., 0]
+            next_values = detached_values[-1] + value_delta
+
+            values.append(next_values)
+            detached_values.append(next_values.detach())
 
         return values, detached_values
 
