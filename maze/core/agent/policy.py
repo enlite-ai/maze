@@ -27,13 +27,13 @@ class Policy(ABC):
 
     @abstractmethod
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType],
-                       actor_id: ActorIDType = None, deterministic: bool = False) -> ActionType:
+                       actor_id: Optional[ActorIDType] = None, deterministic: bool = False) -> ActionType:
         """
-        Query a policy that corresponds to the given ID for action.
+        Query a policy that corresponds to the given actor ID for action.
 
         :param observation: Current observation of the environment
         :param maze_state: Current state representation of the environment (only provided if `needs_state()` returns True)
-        :param actor_id: ID of actor to query policy for
+        :param actor_id: ID of the actor to query policy for
                          (does not have to be provided if policies dict contains only 1 policy)
         :param deterministic: Specify if the action should be computed deterministically
         :return: Next action to take
