@@ -97,8 +97,8 @@ To do so we simply provide the trajectory data as an argument and run:
 .. code-block:: console
 
     maze-run -cn conf_train env.name=LunarLander-v2 model=vector_obs wrappers=vector_obs \
-    algorithm=bc runner.validation_percentage=50 \
-    runner.dataset.trajectory_data_dir=<absolute_experiment_path>/trajectory_data
+    algorithm=bc algorithm.validation_percentage=50 \
+    runner.dataset.dir_or_file=<absolute_experiment_path>/trajectory_data
 
 .. code-block:: console
 
