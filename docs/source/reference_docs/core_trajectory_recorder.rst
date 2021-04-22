@@ -13,9 +13,10 @@ These are interfaces, classes and utility functions for recording trajectory dat
     ~datasets.in_memory_dataset.InMemoryDataset
     ~datasets.in_memory_dataset.DataLoadWorker
 
-    ~records.state_record.StateRecord
+    ~records.spaces_record.SpacesRecord
     ~records.structured_spaces_record.StepKeyType
     ~records.structured_spaces_record.StructuredSpacesRecord
+    ~records.state_record.StateRecord
     ~records.trajectory_record.TrajectoryRecord
     ~records.trajectory_record.StateTrajectoryRecord
     ~records.trajectory_record.SpacesTrajectoryRecord
