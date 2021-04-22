@@ -13,7 +13,7 @@ from typing.io import BinaryIO
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env import StructuredEnv, ActorIDType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
@@ -22,7 +22,7 @@ from maze.core.trajectory_recording.records.structured_spaces_record import Stru
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
-from maze.train.trainers.common.actor_critic.actor_critic_events import MultiStepActorCriticEvents
+from maze.train.trainers.common.actor_critic.actor_critic_events import ActorCriticEvents
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.trainer import Trainer
@@ -63,7 +63,7 @@ class ActorCritic(Trainer, ABC):
 
         # inject statistics directly into the epoch log
         epoch_stats = env.get_stats(LogStatsLevel.EPOCH)
-        self.ac_events = epoch_stats.create_event_topic(MultiStepActorCriticEvents)
+        self.ac_events = epoch_stats.create_event_topic(ActorCriticEvents)
 
         # other components
         self.rollout_generator = RolloutGenerator(env=self.env)
@@ -234,7 +234,7 @@ class ActorCritic(Trainer, ABC):
     def _append_train_stats(self,
                             policy_train_stats: List[Dict[str, List[float]]],
                             critic_train_stats: List[Dict[str, List[float]]],
-                            policy_ids: List,
+                            actor_ids: List[ActorIDType],
                             policy_losses: List[torch.Tensor],
                             entropies: List[torch.Tensor],
                             detached_values: List[torch.Tensor],
@@ -250,18 +250,18 @@ class ActorCritic(Trainer, ABC):
         """
 
         # Policies
-        for policy_id, substep_loss, substep_entropies in zip(policy_ids, policy_losses, entropies):
-            policy_train_stats[policy_id]["policy_loss"].append(substep_loss.detach().item())
-            policy_train_stats[policy_id]["policy_entropy"].append(substep_entropies.detach().item())
+        for actor_id, substep_loss, substep_entropies in zip(actor_ids, policy_losses, entropies):
+            policy_train_stats[actor_id[0]]["policy_loss"].append(substep_loss.detach().item())
+            policy_train_stats[actor_id[0]]["policy_entropy"].append(substep_entropies.detach().item())
 
-            grad_norm = compute_gradient_norm(self.model.policy.network_for(policy_id).parameters())
-            policy_train_stats[policy_id]["policy_grad_norm"].append(grad_norm)
+            grad_norm = compute_gradient_norm(self.model.policy.network_for(actor_id).parameters())
+            policy_train_stats[actor_id[0]]["policy_grad_norm"].append(grad_norm)
 
         # Critic(s)
         #  - if there is just one critic, report only values from the first sub-step.
-        #  - otherwise, use policy IDs to identify the critics.
+        #  - otherwise, use sub-step keys to identify the critics.
         first_critic_id = list(self.model.critic.networks.keys())[-1]
-        critic_ids = [first_critic_id] if self.model.critic.num_critics == 1 else policy_ids
+        critic_ids = [first_critic_id] if self.model.critic.num_critics == 1 else list(map(lambda x: x[0], actor_ids))
         for critic_id, substep_detached_values, substep_losses in zip(critic_ids, detached_values, value_losses):
             critic_train_stats[critic_id]["critic_value"].append(substep_detached_values.mean().item())
             critic_train_stats[critic_id]["critic_value_loss"].append(substep_losses.detach().item())
@@ -281,10 +281,10 @@ class ActorCritic(Trainer, ABC):
         self.ac_events.learning_rate(self.algorithm_config.lr)
 
         # policies
-        for policy_id, stats in policy_train_stats.items():
-            self.ac_events.policy_loss(policy_id=policy_id, value=np.mean(stats["policy_loss"]))
-            self.ac_events.policy_grad_norm(policy_id=policy_id, value=np.mean(stats["policy_grad_norm"]))
-            self.ac_events.policy_entropy(policy_id=policy_id, value=np.mean(stats["policy_entropy"]))
+        for substep_key, stats in policy_train_stats.items():
+            self.ac_events.policy_loss(substep_key=substep_key, value=np.mean(stats["policy_loss"]))
+            self.ac_events.policy_grad_norm(substep_key=substep_key, value=np.mean(stats["policy_grad_norm"]))
+            self.ac_events.policy_entropy(substep_key=substep_key, value=np.mean(stats["policy_entropy"]))
 
         # critic
         for critic_id, stats in critic_train_stats.items():

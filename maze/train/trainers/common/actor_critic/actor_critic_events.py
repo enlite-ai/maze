@@ -6,7 +6,7 @@ import numpy as np
 from maze.core.log_stats.event_decorators import define_stats_grouping, define_epoch_stats
 
 
-class MultiStepActorCriticEvents(ABC):
+class ActorCriticEvents(ABC):
     """Event interface, defining statistics emitted by the A2CTrainer."""
 
     @define_epoch_stats(np.mean)
@@ -26,18 +26,18 @@ class MultiStepActorCriticEvents(ABC):
         """optimizer learning rate"""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('policy_id')
-    def policy_loss(self, policy_id: int, value: float):
+    @define_stats_grouping('substep_key')
+    def policy_loss(self, substep_key: int, value: float):
         """optimization loss of the step policy"""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('policy_id')
-    def policy_grad_norm(self, policy_id: int, value: float):
+    @define_stats_grouping('substep_key')
+    def policy_grad_norm(self, substep_key: int, value: float):
         """gradient norm of the step policies"""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('policy_id')
-    def policy_entropy(self, policy_id: int, value: float):
+    @define_stats_grouping('substep_key')
+    def policy_entropy(self, substep_key: int, value: float):
         """entropy of the step policies"""
 
     @define_epoch_stats(np.nanmean)

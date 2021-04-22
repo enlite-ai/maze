@@ -92,7 +92,7 @@ def maze_run(cfg: DictConfig) -> Optional[float]:
 
     # check if we are currently in a --multirun
     instance = HydraConfig.instance()
-    is_multi_run = instance.cfg.hydra.job.get("num") is not None
+    is_multi_run = instance.cfg is not None and instance.cfg.hydra.job.get("num") is not None
 
     # regular single runs
     if not is_multi_run:
