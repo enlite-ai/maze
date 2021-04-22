@@ -44,7 +44,7 @@ def flat_structured_shapes(shapes: Dict[StepKeyType, Dict[str, Sequence[int]]]) 
 
 
 def stacked_shapes(shapes: Dict[StepKeyType, Dict[str, Sequence[int]]],
-                   agent_counts_dict: Dict[StepKeyType, int]) -> Dict[str, Sequence[int]]:
+                   agent_counts_dict: Dict[StepKeyType, int]) -> Dict[StepKeyType, Dict[str, Sequence[int]]]:
     """Adopt shapes dict for stacked multi-agent scenario. (Mainly for observation stacking.)
 
     Takes a dict of shapes for a structured step. Augments shapes for sub-steps that have multiple agents

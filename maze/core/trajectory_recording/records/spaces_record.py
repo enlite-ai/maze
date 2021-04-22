@@ -18,10 +18,10 @@ class SpacesRecord:
     actor_id: ActorIDType
     """ID of the actor for this step."""
 
-    observation: Optional[Dict[str, Union[torch.Tensor]]] = None
+    observation: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None
     """Observation recorded during the step."""
 
-    action: Optional[Dict[str, Union[torch.Tensor]]] = None
+    action: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None
     """Action recorded during the step."""
 
     reward: Optional[Union[float, np.ndarray, torch.Tensor]] = None
@@ -33,7 +33,7 @@ class SpacesRecord:
     info: Optional[Dict] = None
     """Info dictionary recorded during the step."""
 
-    next_observation: Optional[Dict[str, Union[torch.Tensor]]] = None
+    next_observation: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None
     """Observation obtained after this step (i.e., results of the action taken in this step)."""
 
     logits: Optional[Dict[str, np.ndarray]] = None
