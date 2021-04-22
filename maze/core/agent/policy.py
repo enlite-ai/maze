@@ -34,7 +34,7 @@ class Policy(ABC):
         :param observation: Current observation of the environment
         :param maze_state: Current state representation of the environment (only provided if `needs_state()` returns True)
         :param actor_id: ID of the actor to query policy for
-                         (does not have to be provided if policies dict contains only 1 policy)
+                         (does not have to be provided if there is only one actor and one policy in this environment)
         :param deterministic: Specify if the action should be computed deterministically
         :return: Next action to take
         """
