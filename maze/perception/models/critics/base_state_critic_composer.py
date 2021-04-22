@@ -1,6 +1,6 @@
 """Composer for critic (value function) networks."""
 from abc import abstractmethod
-from typing import Dict, Union
+from typing import Dict
 
 from gym import spaces
 
