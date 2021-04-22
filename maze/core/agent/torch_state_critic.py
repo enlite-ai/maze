@@ -194,15 +194,15 @@ class TorchSharedStateCritic(TorchStateCritic):
                  networks: Mapping[Union[str, int], nn.Module],
                  num_policies: int,
                  device: str,
-                 concat_observations: bool):
+                 stack_observations: bool):
         super().__init__(networks=networks, num_policies=num_policies, device=device)
-        self.concat_observations = concat_observations
+        self.stack_observations = stack_observations
         self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
 
     @override(StateCritic)
     def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
         """Predict the shared values and repeat them for each sub-step."""
-        if self.concat_observations:
+        if self.stack_observations:
             flattened_obs_t = stack_and_flatten_spaces(record.observations)
         else:
             flattened_obs_t = flatten_spaces(record.observations)

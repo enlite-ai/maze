@@ -60,7 +60,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
     model = TorchActorCritic(
         policy=TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device=algorithm_config.device),
         critic=TorchSharedStateCritic(networks=critics, num_policies=1, device=algorithm_config.device,
-                                      concat_observations=False),
+                                      stack_observations=False),
         device=algorithm_config.device)
 
     ppo = PPO(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,

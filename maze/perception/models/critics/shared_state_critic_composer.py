@@ -47,4 +47,4 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
         """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
         """
         return TorchSharedStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu",
-                                      concat_observations=self.stack_observations)
+                                      stack_observations=self.stack_observations)
