@@ -56,13 +56,13 @@ Actor-Critics (AC)
     ~common.actor_critic.actor_critic_runners.ACRunner
     ~common.actor_critic.actor_critic_runners.ACDevRunner
     ~common.actor_critic.actor_critic_runners.ACLocalRunner
-    ~common.actor_critic.actor_critic_trainer.MultiStepActorCritic
-    ~common.actor_critic.actor_critic_events.MultiStepActorCriticEvents
+    ~common.actor_critic.actor_critic_trainer.ActorCritic
+    ~common.actor_critic.actor_critic_events.ActorCriticEvents
 
-    ~a2c.a2c_trainer.MultiStepA2C
+    ~a2c.a2c_trainer.A2C
     ~a2c.a2c_algorithm_config.A2CAlgorithmConfig
 
-    ~ppo.ppo_trainer.MultiStepPPO
+    ~ppo.ppo_trainer.PPO
     ~ppo.ppo_algorithm_config.PPOAlgorithmConfig
 
     ~impala.impala_trainer.MultiStepIMPALA

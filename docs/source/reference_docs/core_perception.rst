@@ -191,7 +191,8 @@ These are some helper functions when working with the perception module:
     :template: classtemplate.rst
 
     observation_spaces_to_in_shapes
-    flat_structured_observations
+    flatten_spaces
+    stack_and_flatten_spaces
     convert_to_torch
     convert_to_numpy
 
