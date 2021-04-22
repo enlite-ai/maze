@@ -140,7 +140,7 @@ def train(n_epochs):
     # Instantiate the Value Function
     # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     torch_critic = TorchSharedStateCritic(networks=value_networks, num_policies=1, device='cpu',
-                                          concat_observations=False)
+                                          stack_observations=False)
 
     # Initializing the ActorCritic Model.
     # -----------------------------------

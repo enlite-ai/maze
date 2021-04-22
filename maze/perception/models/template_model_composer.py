@@ -270,7 +270,7 @@ class TemplateModelComposer(BaseModelComposer):
             observation_space = flat_structured_space(self.observation_spaces_dict)
             critics = {0: self.template_value_net(observation_space)}
             return TorchSharedStateCritic(networks=critics, num_policies=len(self.action_spaces_dict), device="cpu",
-                                          concat_observations=False)
+                                          stack_observations=False)
 
         elif issubclass(self._critic_type, StepStateCriticComposer):
             critics = dict()
