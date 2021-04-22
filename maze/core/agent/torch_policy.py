@@ -12,7 +12,7 @@ from torch import nn
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorIDType, StepKeyType
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch, convert_to_numpy
@@ -30,12 +30,16 @@ class TorchPolicy(TorchModel, Policy):
 
     def __init__(self,
                  networks: Mapping[Union[str, int], nn.Module],
-                 separated_agent_networks: bool,
                  distribution_mapper: DistributionMapper,
-                 device: str):
+                 device: str,
+                 substeps_with_separate_agent_nets: Optional[List[StepKeyType]] = None):
         self.networks = networks
-        self.separated_agent_networks = separated_agent_networks
         self.distribution_mapper = distribution_mapper
+
+        if substeps_with_separate_agent_nets is not None:
+            self.substeps_with_separate_agent_nets = set(substeps_with_separate_agent_nets)
+        else:
+            self.substeps_with_separate_agent_nets = set()
 
         TorchModel.__init__(self, device=device)
 
@@ -131,7 +135,7 @@ class TorchPolicy(TorchModel, Policy):
         :param actor_id: Actor ID to get a network for
         :return: Network corresponding to the given policy ID.
         """
-        network_key = actor_id if self.separated_agent_networks else actor_id[0]
+        network_key = actor_id if actor_id[0] in self.substeps_with_separate_agent_nets else actor_id[0]
         return self.networks[network_key]
 
     def logits_dict_to_distribution(self, logits_dict: Dict[str, torch.Tensor], temperature: float = 1.0):

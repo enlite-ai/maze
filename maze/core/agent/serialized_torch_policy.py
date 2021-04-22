@@ -34,8 +34,9 @@ class SerializedTorchPolicy(TorchPolicy):
         )
 
         super().__init__(networks=model_composer.policy.networks,
-                         separated_agent_networks=model_composer.policy.separated_agent_networks,
-                         distribution_mapper=model_composer.distribution_mapper, device=device)
+                         distribution_mapper=model_composer.distribution_mapper,
+                         device=device,
+                         substeps_with_separate_agent_nets=model_composer.policy.substeps_with_separate_agent_nets)
 
         state_dict = torch.load(state_dict_file, map_location=torch.device(self._device))
 

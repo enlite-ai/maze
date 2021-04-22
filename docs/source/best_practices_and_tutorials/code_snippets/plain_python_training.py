@@ -121,8 +121,7 @@ def train(n_epochs):
 
     # Instantiating the Policy
     # ^^^^^^^^^^^^^^^^^^^^^^^^
-    torch_policy = TorchPolicy(networks=policy_networks, separated_agent_networks=False,
-                               distribution_mapper=distribution_mapper, device='cpu')
+    torch_policy = TorchPolicy(networks=policy_networks, distribution_mapper=distribution_mapper, device='cpu')
 
     # Value Function Setup
     # --------------------

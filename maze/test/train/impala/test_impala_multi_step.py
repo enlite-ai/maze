@@ -23,8 +23,7 @@ def _policy(env: GymMazeEnv):
     policies = {0: FlattenConcatPolicyNet({'observation': (4,)}, {'action': (2,)}, hidden_units=[16], non_lin=nn.Tanh)}
     critics = {0: FlattenConcatStateValueNet({'observation': (4,)}, hidden_units=[16], non_lin=nn.Tanh)}
 
-    policy = TorchPolicy(networks=policies, separated_agent_networks=False, distribution_mapper=distribution_mapper,
-                         device="cpu")
+    policy = TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device="cpu")
 
     critic = TorchSharedStateCritic(networks=critics, num_policies=1, device="cpu", concat_observations=False)
 
