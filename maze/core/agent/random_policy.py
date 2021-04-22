@@ -23,7 +23,7 @@ class RandomPolicy(Policy):
     """
 
     def __init__(self, action_spaces_dict: Dict[Union[str, int], spaces.Space]):
-        self.action_spaces_dict = action_spaces_dict
+        self.action_spaces_dict = dict(action_spaces_dict)
 
     @override(Policy)
     def needs_state(self) -> bool:

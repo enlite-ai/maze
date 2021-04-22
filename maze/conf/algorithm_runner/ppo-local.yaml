@@ -2,7 +2,7 @@
 _target_: "maze.train.trainers.common.actor_critic.actor_critic_runners.ACLocalRunner"
 
 # model class used for policy and critic updates
-trainer_class: maze.train.trainers.ppo.ppo_trainer.MultiStepPPO
+trainer_class: maze.train.trainers.ppo.ppo_trainer.PPO
 
 # Number of concurrently executed environments
 concurrency: 8
