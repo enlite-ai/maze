@@ -12,7 +12,6 @@ from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.perception.perception_utils import convert_to_numpy
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 
 
@@ -133,7 +132,8 @@ class RolloutGenerator:
         else:
             # Inject the MazeEnv state if desired by the policy
             maze_state = self.env.get_maze_state() if policy.needs_state() else None
-            action = policy.compute_action(self.last_observation.copy(), actor_id=record.actor_id, maze_state=maze_state,
+            action = policy.compute_action(self.last_observation.copy(), actor_id=record.actor_id,
+                                           maze_state=maze_state,
                                            deterministic=False)
         record.action = action
 
