@@ -1,7 +1,7 @@
 """Encapsulates policies and queries them for actions according to the provided policy ID."""
 
 from abc import ABC, abstractmethod
-from typing import Union, Tuple, Sequence, Optional
+from typing import Tuple, Sequence, Optional
 
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv

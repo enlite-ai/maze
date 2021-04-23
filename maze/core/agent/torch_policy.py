@@ -11,10 +11,6 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from torch import nn
-
-from maze.core.agent.policy import Policy
-from maze.core.annotations import override
 from maze.core.env.structured_env import ActorIDType, StepKeyType
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
@@ -59,7 +55,7 @@ class TorchPolicy(TorchModel, Policy):
                        deterministic: bool = False) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy`
         """
-        action, _ = self.compute_action_with_logits(observation, policy_id, deterministic)
+        action, _ = self.compute_action_with_logits(observation, actor_id, deterministic)
         return action
 
     @override(Policy)
