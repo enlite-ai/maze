@@ -34,7 +34,7 @@ ENV PATH /opt/conda/envs/env/bin:$PATH
 # execute the Maze installation exactly as described in README.md
 RUN pip install -e .[testing]
 # install RLLib
-RUN pip install ray[rllib] tensorflow
+RUN pip install "ray[rllib]<1.3" tensorflow
 
 FROM scratch as maze_core_code
 # Copy code
