@@ -57,9 +57,8 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
         self._preprocessors = dict()
         for step_key, only_discrete in self.only_discrete_spaces.items():
             if not only_discrete:
-                discrete_spaces_keys = list(filter(lambda key: isinstance(action_spaces_dict[step_key][key],
-                                                                          spaces.Discrete),
-                                                   action_spaces_dict[step_key]))
+                discrete_spaces_keys = [key for key, value in action_spaces_dict[step_key].spaces.items()
+                                        if isinstance(value, spaces.Discrete)]
                 for action_key in discrete_spaces_keys:
                     for critic_key in [step_key, (step_key, self.target_key)]:
                         if critic_key not in self._preprocessors:

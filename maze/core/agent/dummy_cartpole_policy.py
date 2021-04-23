@@ -1,6 +1,6 @@
 """Dummy structured policy for the CartPole env."""
 
-from typing import Union, Sequence, Tuple, Optional
+from typing import Sequence, Tuple, Optional
 
 import gym
 
