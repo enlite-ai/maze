@@ -71,7 +71,12 @@ setup(name="maze-rl",
 
           # train
           "redis",
-          "cloudpickle"
+          "cloudpickle",
+
+          # testing
+          "pytest >= 6.0.0",
+          "pytest-timeout",
+          "pytest-redis"
       ],
       extras_require={
           "testing": [
