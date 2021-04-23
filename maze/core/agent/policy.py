@@ -28,7 +28,7 @@ class Policy(ABC):
 
     def needs_env(self) -> bool:
         """Similar to `needs_state`, the policy implementation declares if it operates solely on observations
-        (needs_state returns False) or if it also requires the env object in order to compute the action.
+        (needs_env returns False) or if it also requires the env object in order to compute the action.
 
         Requiring the env should be regarded as anti-pattern, but is supported for special cases like the MCTS policy,
         which requires cloning support from the environment.
