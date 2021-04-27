@@ -97,7 +97,6 @@ Supported Algorithms
 * `Deep Q Networks (DQN, Rainbow, Parametric DQN) <https://docs.ray.io/en/latest/rllib-algorithms.html#dqn>`_
 * `Importance Weighted Actor-Learner Architecture (IMPALA) <https://docs.ray.io/en/latest/rllib-algorithms.html#impala>`_
 * `Model-Agnostic Meta-Learning (MAML) <https://docs.ray.io/en/latest/rllib-algorithms.html#maml>`_
-* `Policy Gradients (PG) <https://docs.ray.io/en/latest/rllib-algorithms.html#pg>`_
 * `Proximal Policy Optimization (PPO) <https://docs.ray.io/en/latest/rllib-algorithms.html#ppo>`_
 * `Asynchronous Proximal Policy Optimization (APPO) <https://docs.ray.io/en/latest/rllib-algorithms.html#appo>`_
 
