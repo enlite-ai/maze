@@ -34,7 +34,7 @@ class MazeRLlibLoggingCallbacks(DefaultCallbacks):
         self.epoch_stats.register_consumer(get_stats_logger("train"))
 
         # Initialize Tensorboard and console writers
-        register_log_stats_writer(LogStatsWriterTensorboard(log_dir='../../maze_rllib', tensorboard_render_figure=True))
+        register_log_stats_writer(LogStatsWriterTensorboard(log_dir='.', tensorboard_render_figure=True))
         register_log_stats_writer(LogStatsWriterConsole())
 
     def on_train_result(self, trainer: Trainer, result: dict, **kwargs) -> None:

@@ -89,7 +89,6 @@ config:
   "momentum": 0.0
   "epsilon": 0.1
 
-
   # balancing the three losses
   "vf_loss_coeff": 0.5
   "entropy_coeff": 0.01
@@ -98,9 +97,3 @@ config:
   # Callback for APPO to use to update KL, target network periodically.
   # The input to the callback is the learner fetches dict.
   "after_train_step": ~
-
-  # This has to be set to true, since RLLib overloads the model config with some random values (even if a custom model
-  # is used. And these random values include traj_view_framestacks=0 (instead of the normal default: 'auto') which
-  # raises a value error if _use_trajectory_view_api is set to false.. Thus _use_trajectory_view_api has to be True for
-  # this algorithm.
-  "_use_trajectory_view_api": true

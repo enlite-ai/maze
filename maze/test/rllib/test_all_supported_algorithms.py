@@ -34,7 +34,6 @@ import pytest
 from maze.test.shared_test_utils.hydra_helper_functions import run_maze_from_str
 
 trainings = [
-    {"rllib/algorithm": "pg"},
     {"rllib/algorithm": "a2c"},
     {"rllib/algorithm": "a3c"},
     {"rllib/algorithm": "appo"},

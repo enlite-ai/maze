@@ -53,6 +53,7 @@ def check_stored_model_multiple_check_points(hydra_args: Dict[str, str]):
     base_dir = os.path.join(cfg.algorithm.algorithm, trial_dir)
     for root, dirs, files in os.walk(base_dir):
         if base_dir == root:
+            dirs.remove('DEPRECATED_VALUE')
             assert len(dirs) == cfg.runner.tune_config.keep_checkpoints_num, dirs
             for dir in dirs:
                 assert 'checkpoint_' in dir
@@ -71,8 +72,7 @@ def check_stored_model_multiple_check_points(hydra_args: Dict[str, str]):
             # Since only one trial is started the statistics file should be deleted
             assert cfg.wrappers["maze.core.wrappers.observation_normalization.observation_normalization_wrapper.ObservationNormalizationWrapper"].statistics_dump not in os.listdir('.')
 
-            for idx, checkpoint_dir in enumerate(dirs):
-                idx = int(checkpoint_dir.split('_')[-1])
+            for checkpoint_dir in dirs:
                 check_checkpoint_dir(os.path.join(root, checkpoint_dir), checkpoint_dir, cfg)
 
             assert cfg['runner']['state_dict_dump_file'] in files
@@ -83,7 +83,8 @@ def check_stored_model_multiple_check_points(hydra_args: Dict[str, str]):
 def check_checkpoint_dir(checkpoint_path: str, checkpoint_name: str, cfg: DictConfig):
     """Check the directory structure of checkpoints"""
 
-    checkpoint_name = checkpoint_name.replace('_', '-')
+    checkpoint_name, checkpoint_id = checkpoint_name.split("_")
+    checkpoint_name = checkpoint_name + "-" + checkpoint_id.lstrip("0")
     assert len(os.listdir(checkpoint_path)) == 4
     assert '.is_checkpoint' in os.listdir(checkpoint_path)
     assert checkpoint_name in os.listdir(checkpoint_path)

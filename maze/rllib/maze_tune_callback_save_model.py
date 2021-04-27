@@ -27,6 +27,11 @@ class MazeRLlibSaveModelCallback(Callback):
         :param info: Kwargs dict for forward compatibility.
         """
 
+        # Copy .hydra directory to experiment subdirectory
+        if os.path.exists(".hydra"):
+            shutil.move(".hydra", trial.logdir)
+        shutil.move("hydra_config.yaml", trial.logdir)
+
         # Copy the statistics file to the trial directory and delete the file if there is only one trial
         if 'wrappers' in trial.config['env_config']:
             if 'ObservationNormalizationWrapper' in trial.config['env_config']['wrappers']:

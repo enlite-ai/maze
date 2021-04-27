@@ -46,7 +46,3 @@ config:
   # training with batch sizes much larger than can fit in GPU memory.
   # To enable, set this to a value less than the train batch size.
   "microbatch_size": ~
-
-  # Switch on Trajectory View API for A2/3C by default.
-  # NOTE: Only supported for PyTorch so far.
-  "_use_trajectory_view_api": true

@@ -69,9 +69,3 @@ config:
   # === Parallelism ==================================================================================================
   # Prevent iterations from going lower than this time span
   "min_iter_time_s": 1
-
-  # This has to be set to true, since RLLib overloads the model config with some random values (even if a custom model
-  # is used. And these random values include traj_view_framestacks=0 (instead of the normal default: 'auto') which
-  # raises a value error if _use_trajectory_view_api is set to false.. Thus _use_trajectory_view_api has to be True for
-  # this algorithm.
-  "_use_trajectory_view_api": true
