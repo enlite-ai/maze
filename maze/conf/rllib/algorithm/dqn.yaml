@@ -5,7 +5,7 @@ algorithm: 'DQN'
 model_cls: maze.rllib.maze_rllib_models.maze_rllib_q_model.MazeRLlibQModel
 
 config:
-  # === Model ==========================================================================================================
+  # === Model ===
   # Number of atoms for representing the distribution of return. When
   # this is greater than 1, distributional Q-learning is used.
   # the discrete supports are bounded by v_min and v_max
@@ -32,7 +32,7 @@ config:
   # N-step Q learning
   "n_step": 1
 
-  # === Exploration Settings ===========================================================================================
+  # === Exploration Settings ===
   "exploration_config":
     # The Exploration class to use.
     "type": "EpsilonGreedy"
@@ -59,10 +59,14 @@ config:
   # Update the target network every `target_network_update_freq` steps.
   "target_network_update_freq": 500
 
-  # === Replay buffer ==================================================================================================
+  # === Replay buffer ===
   # Size of the replay buffer. Note that if async_updates is set, then
   # each worker will have a replay buffer of this size.
   "buffer_size": 50000
+
+  # The number of contiguous environment steps to replay at once. This may
+  # be set to greater than 1 to support recurrent models.
+  "replay_sequence_length": 1
 
   # If true prioritized replay buffer will be used.
   "prioritized_replay": true
@@ -94,7 +98,7 @@ config:
   # determined by (train_batch_size / rollout_fragment_length).
   "training_intensity": ~
 
-  # === Optimization ===================================================================================================
+  # === Optimization ===
   # Learning rate for adam optimizer
   "lr": 5e-4
 
@@ -119,16 +123,15 @@ config:
   # batch of this size.
   "train_batch_size": 32
 
-  # === Parallelism ====================================================================================================
+  # === Parallelism ===
+
+  # Number of workers for collecting samples with. This only makes sense
+  # to increase if your environment is particularly slow to sample, or if
+  # you"re using the Async or Ape-X optimizers.
+  "num_workers": ${runner.num_workers}
 
   # Whether to compute priorities on workers.
   "worker_side_prioritization": false
 
   # Prevent iterations from going lower than this time span
   "min_iter_time_s": 1
-
-  # This has to be set to true, since RLLib overloads the model config with some random values (even if a custom model
-  # is used. And these random values include traj_view_framestacks=0 (instead of the normal default: 'auto') which
-  # raises a value error if _use_trajectory_view_api is set to false.. Thus _use_trajectory_view_api has to be True for
-  # this algorithm.
-  "_use_trajectory_view_api": true

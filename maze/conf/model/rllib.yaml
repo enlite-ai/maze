@@ -1,83 +1,89 @@
 # @package model
 
-# === Built-in options =============================================================================================
-
-# Number of hidden layers for fully connected net
-"fcnet_hiddens": [ 256, 256 ]
-
-# Nonlinearity for fully connected net (tanh, relu)
+# === Built-in options ===
+# FullyConnectedNetwork (tf and torch): rllib.models.tf|torch.fcnet.py
+# These are used if no custom model is specified and the input space is 1D.
+# Number of hidden layers to be used.
+"fcnet_hiddens": [256, 256]
+# Activation function descriptor.
+# Supported values are: "tanh", "relu", "swish" (or "silu"),
+# "linear" (or None).
 "fcnet_activation": "tanh"
 
-# Filter config. List of [out_channels, kernel, stride] for each filter
+# VisionNetwork (tf and torch): rllib.models.tf|torch.visionnet.py
+# These are used if no custom model is specified and the input space is 2D.
+# Filter config: List of [out_channels, kernel, stride] for each filter.
+# Example:
+# Use None for making RLlib try to find a default filter setup given the
+# observation space.
 "conv_filters": ~
-
-# Nonlinearity for built-in convnet
+# Activation function descriptor.
+# Supported values are: "tanh", "relu", "swish" (or "silu"),
+# "linear" (or ~).
 "conv_activation": "relu"
+
+# Some default models support a final FC stack of n Dense layers with given
+# activation:
+# - Complex observation spaces: Image components are fed through
+#   VisionNets, flat Boxes are left as-is, Discrete are one-hot'd, then
+#   everything is concated and pushed through this final FC stack.
+# - VisionNets (CNNs), e.g. after the CNN stack, there may be
+#   additional Dense layers.
+# - FullyConnectedNetworks will have this additional FCStack as well
+# (that's why it's empty by default).
+"post_fcnet_hiddens": []
+"post_fcnet_activation": "relu"
 
 # For DiagGaussian action distributions, make the second half of the model
 # outputs floating bias variables instead of state-dependent. This only
 # has an effect is using the default fully connected net.
 "free_log_std": false
-
 # Whether to skip the final linear layer used to resize the hidden layer
 # outputs to size `num_outputs`. If true, then the last hidden layer
 # should already match num_outputs.
 "no_final_linear": false
-
 # Whether layers should be shared for the value function.
 "vf_share_layers": true
 
-
-# == LSTM ==========================================================================================================
-
+# == LSTM ==
 # Whether to wrap the model with an LSTM.
 "use_lstm": false
-
 # Max seq len for training the LSTM, defaults to 20.
 "max_seq_len": 20
-
 # Size of the LSTM cell.
 "lstm_cell_size": 256
-
 # Whether to feed a_{t-1} to LSTM (one-hot encoded if discrete).
 "lstm_use_prev_action": false
-
-# Whether to feed a_{t-1}, r_{t-1} to LSTM.
+# Whether to feed r_{t-1} to LSTM.
 "lstm_use_prev_reward": false
-
-# Experimental (only works with `_use_trajectory_view_api`=true):
 # Whether the LSTM is time-major (TxBx..) or batch-major (BxTx..).
 "_time_major": false
-
 
 # == Attention Nets (experimental: torch-version is untested) ==
 # Whether to use a GTrXL ("Gru transformer XL"; attention net) as the
 # wrapper Model around the default Model.
 "use_attention": false
-
 # The number of transformer units within GTrXL.
 # A transformer unit in GTrXL consists of a) MultiHeadAttention module and
 # b) a position-wise MLP.
 "attention_num_transformer_units": 1
-
 # The input and output size of each transformer unit.
 "attention_dim": 64
-
 # The number of attention heads within the MultiHeadAttention units.
 "attention_num_heads": 1
-
 # The dim of a single head (within the MultiHeadAttention units).
 "attention_head_dim": 32
-
 # The memory sizes for inference and training.
 "attention_memory_inference": 50
 "attention_memory_training": 50
-
 # The output dim of the position-wise MLP.
 "attention_position_wise_mlp_dim": 32
-
 # The initial bias values for the 2 GRU gates within a transformer unit.
 "attention_init_gru_gate_bias": 2.0
+# Whether to feed a_{t-n:t-1} to GTrXL (one-hot encoded if discrete).
+"attention_use_n_prev_actions": 0
+# Whether to feed r_{t-n:t-1} to GTrXL.
+"attention_use_n_prev_rewards": 0
 
 # == Atari ==
 # Which framestacking size to use for Atari envs.
@@ -91,37 +97,29 @@
 # Use the deprecated `framestack=True`, to disable the above behavor and to
 # enable legacy stacking behavior (w/o trajectory view API) instead.
 "num_framestacks": "auto"
-
 # Final resized frame dimension
 "dim": 84
-
 # (deprecated) Converts ATARI frame to 1 Channel Grayscale image
 "grayscale": false
-
 # (deprecated) Changes frame to range from [-1, 1] if true
 "zero_mean": true
 
-# === Options for custom models ====================================================================================
-
+# === Options for custom models ===
 # Name of a custom model to use
 "custom_model": ~
-
 # Extra options to pass to the custom classes. These will be available to
 # the Model's constructor in the model_config field. Also, they will be
 # attempted to be passed as **kwargs to ModelV2 models. For an example,
 # see rllib/models/[tf|torch]/attention_net.py.
-"custom_model_config": { }
-
+"custom_model_config": {}
 # Name of a custom action distribution to use.
 "custom_action_dist": ~
-
 # Custom preprocessors are deprecated. Please use a wrapper class around
 # your environment instead to preprocess observations.
 "custom_preprocessor": ~
 
 # Deprecated keys:
 # Use `lstm_use_prev_action` or `lstm_use_prev_reward` instead.
-"lstm_use_prev_action_reward": -1
-
+"lstm_use_prev_action_reward": DEPRECATED_VALUE
 # Use `num_framestacks` (int) instead.
 "framestack": true
