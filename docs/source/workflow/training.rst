@@ -160,6 +160,44 @@ To use a different algorithm, e.g. PPO with a shared critic, we just need to add
 To see all the configuration files available out-of-the-box, check out the ``maze/conf`` package.
 
 
+.. _training-resume_run:
+
+Example 3: Resuming Previous Training Runs
+------------------------------------------
+
+In case a training run fails (e.g. because your server goes down) there is no need to restart training
+entirely from scratch. You can simply pass a previous experiment as an ``input_dir`` and the Maze trainers will
+initialize the model weights including all other relevant artifacts such as normalization statistics from the provided
+directory. Below you find a few examples where this might be useful.
+
+This is the initial training run:
+
+.. code-block:: console
+
+  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo
+
+Once already trained we can resume this run with:
+
+.. code-block:: console
+
+  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo \
+    input_dir=outputs/<experiment-dir>
+
+We could also resume training with a refine learning rate:
+
+.. code-block:: console
+
+  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo \
+    algorithm.lr=0.0001 input_dir=outputs/<experiment-dir>
+
+or even with a different (compatible) trainer such as a2c:
+
+.. code-block:: console
+
+  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=a2c \
+    input_dir=outputs/<experiment-dir>
+
+
 .. _training-custom_run:
 
 Training in Your Custom Project
