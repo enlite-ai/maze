@@ -91,11 +91,7 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         # record the reward
         self.step_event_log.append(EventRecord(BaseEnvEvents, BaseEnvEvents.reward, dict(value=rew)))
 
-        # Recording of event logs and stats happens:
-        #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
-        #  - for other envs: Every step
-        if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
-            self._record_events_and_stats()
+        self._record_stats_if_ready()
 
         return obs, rew, done, info
 
@@ -104,11 +100,28 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         Get notified of a new step method call, just before the events of the previous step are cleared by the
         event system (see :py:meth:`~maze.core.env.environment_context.EnvironmentContext.pre_step`).
         """
-        if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
-            self._record_events_and_stats()
+        self._record_stats_if_ready()
 
-    def _record_events_and_stats(self) -> None:
-        """Record the event log and statistics from the preceding step."""
+    def _record_stats_if_ready(self) -> None:
+        """Record the event log and statistics from the preceding step, if these are available and ready to record.
+
+        - If the episode event log has not been initialized yet (just after env reset), just performs the initialization
+        - Otherwise, checks if stats are ready to record based on env time (for structured envs, we wait till the end
+          of the whole structured step) and if so, does the recording
+        """
+        # If not yet initialized, reset timing data and initialize new step event log for the first step
+        if self.episode_event_log is None:
+            self.episode_event_log = self._build_episode_event_log()
+            self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
+            self.step_event_log = StepEventLog(self.last_env_time)
+            return
+
+        # Recording of event logs and stats happens:
+        #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
+        #  - for other envs: Every step
+        if isinstance(self.env, TimeEnvMixin) and self.env.get_env_time() == self.last_env_time:
+            return
+
         self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
 
         if isinstance(self.env, EventEnvMixin):
@@ -129,22 +142,14 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
     def reset(self) -> Any:
         """Reset the environment and trigger the episode statistics calculation of the previous run.
         """
-        if hasattr(self.env, "context") and isinstance(self.env.context, EnvironmentContext):
-            assert isinstance(self.env.context, EnvironmentContext)
-            self.env.context.reset_env_episode()
-
         # generate the episode stats from the previous rollout
         self._calculate_kpis()
         self.episode_stats.reduce()
 
-        # first reset, then reset episode log
-        # (to ensure that the episode log has correct episode ID of the new episode)
-        self._reset_episode_log()
-        self.step_event_log = StepEventLog(self.last_env_time)
+        self._write_episode_event_log()
         observation = self.env.reset()
+        self._record_stats_if_ready()
 
-        # reset timing data and initialize new step event log for the first step
-        self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
         return observation
 
     @override(BaseEnv)
@@ -166,7 +171,8 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
             self._calculate_kpis()
             self.episode_stats.reduce()
         self.epoch_stats.reduce()
-        self._reset_episode_log()
+        self._write_episode_event_log()
+        self.episode_event_log = self._build_episode_event_log()
 
     @override(LogStatsEnv)
     def get_stats_value(self,
@@ -218,12 +224,12 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
             self.episode_stats.add_event(event_record)  # Add the events to episode aggregator
             self.episode_event_log.step_event_logs[-1].events.append(event_record)  # Log the events
 
-    def _reset_episode_log(self):
-        """Send the episode event log to writers and create a new log from the current episode ID."""
+    def _write_episode_event_log(self):
+        """Send the episode event log to writers."""
         if len(self.episode_event_log.step_event_logs) > 0:
             LogEventsWriterRegistry.record_event_logs(self.episode_event_log)
 
-        self.episode_event_log = self._build_episode_event_log()
+        self.episode_event_log = None
 
     def _build_episode_event_log(self) -> EpisodeEventLog:
         """Build a new episode record with episode ID from the env (if provided) or generated one (if not provided)."""
