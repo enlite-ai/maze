@@ -183,7 +183,7 @@ Once trained we can resume this run with:
   $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo \
     input_dir=outputs/<experiment-dir>
 
-We could also resume training with a refine learning rate:
+We could also resume training with a refined learning rate:
 
 .. code-block:: console
 
