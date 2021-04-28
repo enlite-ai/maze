@@ -68,8 +68,21 @@ Maze: Applied Reinforcement Learning with Python
    </div>
    </embed>
 
-Getting Started | |github| |
-----------------------------
+.. raw:: html
+
+   <embed>
+   <div class="container" style="text-align:center; vertical-align:middle">
+      <table style="width:100%">
+      <tr>
+         <td style="text-align:right; width:50%; vertical-align:middle"><a class="reference external" href="https://github.com/enlite-ai/maze"><img alt="github" class="inline-figure" src="_images/GitHub_Logo1.png" style="width: 55px;" /></a></td>
+         <td style="text-align:left; width:50%; vertical-align:middle"><a class="github-button" href="https://github.com/enlite-ai/maze" data-size="large" data-show-count="true" aria-label="Star enlite-ai/maze on GitHub">Star</a></td>
+      </tr>
+      </table>
+   </div>
+   </embed>
+
+Getting Started
+---------------
 
 .. toctree::
    :hidden:
