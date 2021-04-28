@@ -176,7 +176,7 @@ This is the initial training run:
 
   $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo
 
-Once already trained we can resume this run with:
+Once trained we can resume this run with:
 
 .. code-block:: console
 
