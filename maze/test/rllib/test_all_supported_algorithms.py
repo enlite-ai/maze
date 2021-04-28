@@ -56,7 +56,6 @@ training_defaults = {'rllib/runner': 'local', 'configuration': 'test',
 trainings = [pytest.param({**training_defaults, **t}, id="-".join(t.values())) for t in trainings]
 
 
-@pytest.mark.timeout(9 * 30)
 @pytest.mark.parametrize("hydra_overrides", trainings)
 def test_rllib_algorithms(hydra_overrides: Dict[str, str], tmpdir: str):
     # set working directory to temp path
