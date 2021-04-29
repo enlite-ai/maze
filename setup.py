@@ -68,6 +68,7 @@ setup(name="maze-rl",
           "matplotlib",
           "seaborn",
           "tqdm",
+          "imageio",
 
           # train
           "redis",
