@@ -20,11 +20,15 @@ from maze.core.wrappers.wrapper import Wrapper
 class ExportGifWrapper(Wrapper[MazeEnv]):
     """Dumps step renderings of environments as .gif files.
 
-    To convert the gif into a mp4 video run:
+    Make sure to activate this only for rollouts and disable it during training (e.g. set export=False).
+    Otherwise it will dump a lot off rollout GIFs to your disk.
+
+    To convert the GIF into a mp4 video run:
     ffmpeg -r 1 -i <file-path>.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" <file-path>.mp4
 
     :param env: The environment to wrap.
     :param duration: Duration in seconds between consecutive image frames.
+    :param export: Only if set to True a GIF is exported.
     """
 
     def __init__(self, env: MazeEnv, export: bool, duration: float):
@@ -33,12 +37,9 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         self._export = export
         self._duration = duration
         self._events = None
-
-        self._is_gym_env = False
-        if isinstance(self.env, gym.Env):
-            self._is_gym_env = True
-
         self._writer = None
+
+        self._is_gym_env = isinstance(self.env, gym.Env)
 
     @override(BaseEnv)
     def step(self, action: MazeActionType) -> Tuple[ObservationType, Any, bool, Dict[Any, Any]]:
@@ -75,7 +76,7 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         return observation
 
     def _render(self) -> None:
-        """Render state to rgb image and append stack.
+        """Render state to rgb image and append image stack.
         """
 
         # Gym style rendering
