@@ -6,3 +6,4 @@ dependencies:
   - python=3.7
   - pytorch
   - pygraphviz
+  - imageio
