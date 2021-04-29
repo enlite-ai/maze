@@ -21,7 +21,7 @@ def run_cartpole(hydra_args: Dict[str, str]):
 
 
 def test_stored_model_multiple_check_points_max_att():
-    check_stored_model_multiple_check_points({'runner.num_workers': '2',
+    check_stored_model_multiple_check_points({'runner.num_workers': '1',
                                               'runner.ray_config.local_mode': 'False',
                                               'runner.tune_config.keep_checkpoints_num': '2',
                                               'runner.ray_config.ignore_reinit_error': 'True',
