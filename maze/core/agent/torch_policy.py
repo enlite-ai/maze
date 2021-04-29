@@ -134,13 +134,17 @@ class TorchPolicy(TorchModel, Policy):
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
         return self.network_for(actor_id)(obs_t)
 
-    def network_for(self, actor_id: ActorIDType) -> nn.Module:
+    def network_for(self, actor_id: Optional[ActorIDType]) -> nn.Module:
         """Helper function for returning a network for the given policy ID (using either just the sub-step ID
         or the full Actor ID as key, depending on the separated agent networks mode.
 
         :param actor_id: Actor ID to get a network for
         :return: Network corresponding to the given policy ID.
         """
+        if actor_id is None:
+            assert len(self.networks) == 1, "multiple networks are available, please specify the actor ID explicitly"
+            return list(self.networks.values())[0]
+
         network_key = actor_id if actor_id[0] in self.substeps_with_separate_agent_nets else actor_id[0]
         return self.networks[network_key]
 
