@@ -19,6 +19,7 @@ On this page:
   The main purpose is to show how the Maze training pipeline works in general.
 - :ref:`The second example<training-default_run>` explains how you can customize training on standard
   Gym and Maze environments (for which configuration files are already provided by Maze).
+- :ref:`The third example<training-resume_run>` explains how you can resume previous training runs.
 - The following section then explains what you need to
   :ref:`customize training for your own project<training-custom_run>`, including
   custom components and configuration files.
