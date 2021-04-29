@@ -1,5 +1,6 @@
 """ Contains inference blocks. """
 import os
+import pickle
 from typing import Union, List, Dict, Optional, Sequence, Tuple
 
 import networkx as nx
@@ -145,18 +146,25 @@ class InferenceGraph:
         self._total_num_of_params = self._get_num_of_parameters()
         self._build_inference_graph(out_keys=out_keys)
 
-    def save(self, name: str, save_path: str) -> str:
+    def save(self, name: str, save_path: str, save_pickle_figure: bool) -> str:
         """Construct the network and save it as a pdf.
 
         :param name: The name of the network to be drawn (used in the tile only).
         :param save_path: The path the figure should be saved.
-        :return: Returns the full absolute save path of the pdf.
+        :param save_pickle_figure: Specify whether to save the image of the model as a png also.
+
+        :return: Returns the full absolute save path of the png if specifyied otherwise the pdf.
         """
         self._draw(name=name, figure_size=(18, 12))
         full_save_path = os.path.join(save_path, name + '.pdf')
         if not os.path.exists(full_save_path):
             print(f'Graphical depiction of the model \'{name}\' saved at: {os.path.abspath(full_save_path)}')
         plt.savefig(full_save_path, transparent=True)
+        # If specifies pickle the figure and store it to be loaded and added to tensorboard at a later point in time.
+        if save_pickle_figure:
+            full_save_path = full_save_path.replace('.pdf', '_net_figure.pkl')
+            pickle.dump(plt.gcf(), open(full_save_path, 'wb'))
+
         plt.clf()
         plt.close()
 

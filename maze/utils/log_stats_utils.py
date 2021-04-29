@@ -2,8 +2,10 @@
 
 Especially for demo snippets that require only basic console logging.
 """
+import os
+import pickle
 import sys
-from typing import Union
+from typing import Union, Optional, Dict
 
 from omegaconf import DictConfig, OmegaConf
 
@@ -61,11 +63,13 @@ def clear_global_state():
     GlobalLogState.global_log_stats_writers = []
 
 
-def setup_logging(job_config: Union[DictConfig, str, None], log_dir: str = ".") -> None:
+def setup_logging(job_config: Union[DictConfig, str, None], log_dir: str = ".",
+                  network_image_paths: Optional[Dict[str, Dict[str, str]]] = None) -> None:
     """Setup tensorboard logging, derive the logging directory from the script name.
 
-    :param job_config: Configuration written as text to tensorboard (experiment config)
-    :param log_dir: log_dir for TensorBoard
+    :param job_config: Configuration written as text to tensorboard (experiment config).
+    :param log_dir: log_dir for TensorBoard.
+    :param network_image_paths: The paths for the pickled network images.
     """
     # hydra handles the working directory
     writer = LogStatsWriterTensorboard(log_dir=log_dir, tensorboard_render_figure=True)
@@ -98,3 +102,11 @@ def setup_logging(job_config: Union[DictConfig, str, None], log_dir: str = ".") 
         job_config = job_config.replace(" ", "&nbsp;")
 
         summary_writer.add_text("job_config", job_config)
+
+    # Load the figures from the given files and add them to tensorboard.
+    if network_image_paths is not None:
+        for network_type, nets in network_image_paths.items():
+            for network_name, net_image_path in nets.items():
+                fig = pickle.load(open(net_image_path, 'rb'))
+                summary_writer.add_figure(f'{network_type}_{network_name}', fig, close=True)
+                os.remove(net_image_path)

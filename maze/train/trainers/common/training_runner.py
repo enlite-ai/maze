@@ -111,7 +111,7 @@ class TrainingRunner(Runner):
                      self._model_composer.agent_counts_dict).save(self.spaces_config_dump_file)
 
         # Should be done after the normalization runs, otherwise stats from those will get logged as well.
-        setup_logging(job_config=cfg)
+        setup_logging(job_config=cfg, network_image_paths=self.model_composer.network_image_paths)
 
         # close normalization env
         normalization_env.close()

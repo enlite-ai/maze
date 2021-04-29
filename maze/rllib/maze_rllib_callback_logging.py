@@ -1,5 +1,9 @@
 """ Contains callbacks that enable maze logging capabilities. """
+import os
+import pickle
+import pprint
 from collections import defaultdict
+from typing import Dict, Any
 
 from ray.rllib.agents import Trainer
 from ray.rllib.agents.callbacks import DefaultCallbacks
@@ -17,7 +21,7 @@ class MazeRLlibLoggingCallbacks(DefaultCallbacks):
         super().__init__()
         self.epoch_stats = None
 
-    def init_logging(self) -> None:
+    def init_logging(self, trainer_config: Dict[str, Any]) -> None:
         """Initialize logging.
 
         This needs to be done here as the on_train_result is not called in the main process, but in a worker process.
@@ -34,8 +38,26 @@ class MazeRLlibLoggingCallbacks(DefaultCallbacks):
         self.epoch_stats.register_consumer(get_stats_logger("train"))
 
         # Initialize Tensorboard and console writers
-        register_log_stats_writer(LogStatsWriterTensorboard(log_dir='.', tensorboard_render_figure=True))
+        writer = LogStatsWriterTensorboard(log_dir='.', tensorboard_render_figure=True)
+        register_log_stats_writer(writer)
         register_log_stats_writer(LogStatsWriterConsole())
+
+        summary_writer = writer.summary_writer
+
+        # Add config to tensorboard
+        yaml_config = pprint.pformat(trainer_config)
+        # prepare config text for tensorboard
+        yaml_config = yaml_config.replace("\n", "</br>")
+        yaml_config = yaml_config.replace(" ", "&nbsp;")
+        summary_writer.add_text("job_config", yaml_config)
+
+        # Load the figures from the given files and add them to tensorboard.
+        network_files = filter(lambda x: x.endswith('_net_figure.pkl'), os.listdir('.'))
+        for network_path in network_files:
+            network_name = network_path.split('/')[-1].replace('_net_figure.pkl', '')
+            fig = pickle.load(open(network_path, 'rb'))
+            summary_writer.add_figure(f'{network_name}', fig, close=True)
+            os.remove(network_path)
 
     def on_train_result(self, trainer: Trainer, result: dict, **kwargs) -> None:
         """Aggregates stats of all rollouts in one local aggregator and then writes them out.
@@ -50,7 +72,7 @@ class MazeRLlibLoggingCallbacks(DefaultCallbacks):
         # Initialize the logging for this process if not done yet
         if self.epoch_stats is None:
             print("Initializing logging of train results")
-            self.init_logging()
+            self.init_logging(trainer.config)
 
         # The main local aggregator should be empty
         #  - No stats should be collected here until we manually add them
