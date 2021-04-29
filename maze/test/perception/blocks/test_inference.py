@@ -45,7 +45,7 @@ def test_inference_block():
         # draw inference graph
         graph = InferenceGraph(inference_block=net)
         graph.show(name='my_test_net', block_execution=False)
-        save_path = graph.save(name='my_test_net', save_path='/')
-        os.remove(save_path)
+        save_path = graph.save(name='my_test_net', save_path='/', save_pickle_figure=True)
+        assert os.path.exists(save_path)
     except ImportError:
         pass
