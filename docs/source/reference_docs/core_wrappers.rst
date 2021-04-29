@@ -60,6 +60,7 @@ Below you find the reference documentation for  environment wrappers.
     ~random_reset_wrapper.RandomResetWrapper
     ~sorted_spaces_wrapper.SortedSpacesWrapper
     ~no_dict_spaces_wrapper.NoDictSpacesWrapper
+    ~export_gif_wrapper.ExportGifWrapper
 
 **ObservationWrappers**:
 

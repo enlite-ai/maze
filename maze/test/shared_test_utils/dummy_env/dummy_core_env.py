@@ -11,6 +11,7 @@ from maze.core.env.structured_env import StepKeyType
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
 from maze.core.utils.seeding import set_random_states
+from maze.test.shared_test_utils.dummy_env.dummy_renderer import DummyMatplotlibRenderer
 from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator, DummyEnvEvents
 
 
@@ -31,6 +32,9 @@ class DummyCoreEnvironment(CoreEnv):
         self.pubsub.register_subscriber(self.reward_aggregator)
 
         self.observation_space = observation_space
+
+        # initialize rendering
+        self.renderer = DummyMatplotlibRenderer()
 
     def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
         """
@@ -87,7 +91,7 @@ class DummyCoreEnvironment(CoreEnv):
         Not implemented
         :return: None
         """
-        return None
+        return self.renderer
 
     def actor_id(self) -> Tuple[Union[str, int], int]:
         """
