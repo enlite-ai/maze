@@ -1,7 +1,7 @@
 """This file holds the rllib runner, which uses the maze model-builder as well as the maze distribution
     mapper in order to train the maze env with RLlib algorithms"""
 from dataclasses import dataclass
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 
 import ray
 from omegaconf import DictConfig, OmegaConf
@@ -63,12 +63,19 @@ class MazeRLlibRunner(Runner):
         self.model_composer = None
         self.normalization_statistics = None
 
-    def _init_from_cfg(self, cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+        self._cfg: Optional[DictConfig] = None
+        self.rllib_config: Optional[Dict[str, Any]] = None
+        self.tune_config: Optional[Dict[str, Any]] = None
+
+    def setup(self, cfg: DictConfig):
         """
         This method initializes and registers all necessary maze components with RLlib
 
         :param cfg: Full Hydra run job config
         """
+
+        self._cfg = cfg
+
         # Initialize env factory (with rllib monkey patches)
         self.env_factory = build_maze_rllib_env_factory(cfg)
 
@@ -129,24 +136,22 @@ class MazeRLlibRunner(Runner):
         assert 'config' not in tune_config, 'The config should be removed from the default yaml files since it will ' \
                                             'be dynamically written'
 
-        return ray_config, rllib_config, tune_config
+        self.ray_config = ray_config
+        self.rllib_config = rllib_config
+        self.tune_config = tune_config
 
     @override(Runner)
-    def run(self, cfg: DictConfig) -> None:
+    def run(self) -> None:
         """
         This method initializes and registers all necessary maze components with RLlib before initializing ray and
         starting a tune.run with the config parameters.
-
-        :param cfg: Full Hydra run job config
         """
-        # Build runner from conf
-        ray_config, rllib_config, tune_config = self._init_from_cfg(cfg)
 
         # Init ray
-        ray.init(**ray_config)
+        ray.init(**self.ray_config)
 
         # Run tune
-        tune.run(cfg.algorithm.algorithm, config=rllib_config, **tune_config)
+        tune.run(self._cfg.algorithm.algorithm, config=self.rllib_config, **self.tune_config)
 
         # Shutdown ray
         ray.shutdown()

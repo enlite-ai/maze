@@ -137,6 +137,7 @@ nitpick_ignore = [
     ('py:class', 'maze.train.trainers.imitation.parallel_loaded_im_data_set.ActionTuple'),
     ('py:class', 'maze.train.trainers.imitation.parallel_loaded_im_data_set.ExceptionReport'),
     ('py:class', 'maze.train.trainers.common.distributed.redis_clients.Task'),
+    ('py:class', '_AlgorithmConfigType'),
 
     ('py:class', 'BinaryIO'),
 

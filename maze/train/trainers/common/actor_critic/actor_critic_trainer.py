@@ -42,14 +42,17 @@ class ActorCritic(Trainer, ABC):
     :param model_selection: Optional model selection class, receives model evaluation results.
     """
 
-    def __init__(self,
-                 algorithm_config: Union[A2CAlgorithmConfig, PPOAlgorithmConfig],
-                 env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
-                 eval_env: Optional[Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
-                 model: TorchActorCritic,
-                 model_selection: Optional[BestModelSelection],
-                 initial_state: Optional[str] = None):
-        self.algorithm_config = algorithm_config
+    def __init__(
+        self,
+        algorithm_config: Union[A2CAlgorithmConfig, PPOAlgorithmConfig],
+        env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+        eval_env: Optional[Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+        model: TorchActorCritic,
+        model_selection: Optional[BestModelSelection],
+        initial_state: Optional[str] = None
+    ):
+        super().__init__(algorithm_config)
+
         self.env = env
         self.initial_state = initial_state
 
@@ -73,8 +76,17 @@ class ActorCritic(Trainer, ABC):
                                           model_selection=self.model_selection,
                                           deterministic=self.algorithm_config.deterministic_eval)
 
-    def train(self) -> None:
-        """Train policy using the synchronous advantage actor critic."""
+        if self.algorithm_config.n_epochs <= 0:
+            self.algorithm_config.n_epochs = sys.maxsize
+
+    @override(Trainer)
+    def train(self, n_epochs: Optional[int] = None) -> None:
+        """
+        Train policy using the synchronous advantage actor critic.
+        :param n_epochs: Number of epochs to train.
+        """
+
+        n_epochs = self.algorithm_config.n_epochs if n_epochs is None else n_epochs
 
         # init minimum best model selection for early stopping
         if self.model_selection is None:
@@ -90,10 +102,10 @@ class ActorCritic(Trainer, ABC):
         entropy_coef = self.algorithm_config.entropy_coef
 
         # run training epochs
-        if self.algorithm_config.n_epochs <= 0:
-            self.algorithm_config.n_epochs = sys.maxsize
+        if n_epochs <= 0:
+            n_epochs = sys.maxsize
 
-        for epoch in range(self.algorithm_config.n_epochs):
+        for epoch in range(n_epochs):
             start = time.time()
             print("Update epoch - {}".format(epoch))
 

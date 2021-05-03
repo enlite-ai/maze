@@ -42,7 +42,8 @@ def _run_job(cfg: DictConfig) -> None:
 
     # run job
     runner = Factory(base_type=Runner).instantiate(cfg.runner)
-    runner.run(cfg)
+    runner.setup(cfg)
+    runner.run()
 
 
 def _run_multirun_job(cfg: DictConfig) -> float:

@@ -24,7 +24,7 @@ trainings = [
     [180, {"algorithm": "impala", "algorithm.n_epochs": "4", "algorithm.eval_repeats": "0",
            "env": "gym_env", "env.name": "CartPole-v0"}],
     # ES
-    [180, {"algorithm": "es", "algorithm.max_epochs": "100",
+    [180, {"algorithm": "es", "algorithm.n_epochs": "100",
            "env": "gym_env", "env.name": "CartPole-v0"}],
 ]
 

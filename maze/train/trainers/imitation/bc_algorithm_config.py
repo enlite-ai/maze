@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from maze.train.trainers.common.training_runner import AlgorithmConfig
+from maze.train.trainers.common.config_classes import AlgorithmConfig
 
 
 @dataclass

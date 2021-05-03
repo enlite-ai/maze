@@ -24,9 +24,9 @@ These are general interfaces, classes and utility functions for trainers and tra
 
     ~common.trainer.Trainer
     ~common.training_runner.TrainingRunner
-    ~common.training_runner.TrainConfig
-    ~common.training_runner.ModelConfig
-    ~common.training_runner.AlgorithmConfig
+    ~common.config_classes.TrainConfig
+    ~common.config_classes.ModelConfig
+    ~common.config_classes.AlgorithmConfig
 
     ~common.model_selection.model_selection_base.ModelSelectionBase
     ~common.model_selection.best_model_selection.BestModelSelection

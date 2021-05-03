@@ -1,6 +1,6 @@
 # @package _global_
 algorithm:
-  max_epochs: 2
+  n_epochs: 2
   n_rollouts_per_update: 2
 
 runner:

@@ -40,7 +40,8 @@ def train_setup(n_epochs: int) -> Tuple[TorchPolicy, StructuredEnv, ESTrainer]:
         optimizer=Adam(step_size=0.01),
         l2_penalty=0.005,
         noise_stddev=0.02,
-        max_epochs=n_epochs)
+        n_epochs=n_epochs
+    )
 
     # train agent
     trainer = ESTrainer(algorithm_config=algorithm_config,

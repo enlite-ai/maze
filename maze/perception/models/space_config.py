@@ -1,9 +1,10 @@
 """Configuration of environment spaces (action & observation) used for model config."""
 
 import pickle
-from typing import Union, Dict
+from typing import Union, Dict, Any
 
 import gym
+from omegaconf import DictConfig
 
 from maze.core.env.structured_env import StepKeyType
 
@@ -40,3 +41,19 @@ class SpacesConfig:
         with open(in_file_path, "rb") as in_f:
             spaces_config = pickle.load(in_f)
         return spaces_config
+
+    def __getstate__(self) -> Dict[str, Any]:
+        """
+        Return internal state for serialization.
+        This is a workaround for unpickle-able objects in DictConfig's _parent node. Ideally this should be made
+        redundant by having .instantiate return dicts instead of DictConfigs or any other standardized approach to
+        converting DictConfigs as returned from Factory.instantiate() to native dicts.
+        :return: Internal state as dictionary.
+        """
+
+        # Use Hydra's __get__() to return actual spaces as state instead of Hydra's DictConfig/Node objecs.
+        return {
+            "action_spaces_dict": {key: val for key, val in self.action_spaces_dict.items()},
+            "observation_spaces_dict": {key: val for key, val in self.observation_spaces_dict.items()},
+            "agent_counts_dict": {key: val for key, val in self.agent_counts_dict.items()},
+        }

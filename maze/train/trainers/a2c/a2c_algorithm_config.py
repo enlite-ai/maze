@@ -1,7 +1,7 @@
 """Algorithm parameters for multi-step A2C model."""
 from dataclasses import dataclass
 
-from maze.train.trainers.common.training_runner import AlgorithmConfig
+from maze.train.trainers.common.config_classes import AlgorithmConfig
 
 
 @dataclass
