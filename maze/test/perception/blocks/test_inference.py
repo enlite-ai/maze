@@ -1,5 +1,5 @@
 """ Unit tests for inference blocks. """
-import os
+import glob
 
 from torch import nn as nn
 
@@ -45,7 +45,7 @@ def test_inference_block():
         # draw inference graph
         graph = InferenceGraph(inference_block=net)
         graph.show(name='my_test_net', block_execution=False)
-        save_path = graph.save(name='my_test_net', save_path='/', save_pickle_figure=True)
-        assert os.path.exists(save_path)
+        graph.save(name='my_test_net', save_path='.')
+        assert len(glob.glob('*my_test_net*')) == 2
     except ImportError:
         pass
