@@ -52,9 +52,9 @@ class MazeRLlibLoggingCallbacks(DefaultCallbacks):
         summary_writer.add_text("job_config", yaml_config)
 
         # Load the figures from the given files and add them to tensorboard.
-        network_files = filter(lambda x: x.endswith('_net_figure.pkl'), os.listdir('.'))
+        network_files = filter(lambda x: x.endswith('.figure.pkl'), os.listdir('.'))
         for network_path in network_files:
-            network_name = network_path.split('/')[-1].replace('_net_figure.pkl', '')
+            network_name = network_path.split('/')[-1].replace('.figure.pkl', '')
             fig = pickle.load(open(network_path, 'rb'))
             summary_writer.add_figure(f'{network_name}', fig, close=True)
             os.remove(network_path)

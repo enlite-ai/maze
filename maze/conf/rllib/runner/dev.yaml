@@ -17,7 +17,7 @@ tune_config:
   checkpoint_freq: 1
   keep_checkpoints_num: 3
 
-  verbose: 2
+  verbose: 3
 
 ray_config:
   # Whether to start ray in local model or not

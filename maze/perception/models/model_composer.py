@@ -46,7 +46,6 @@ class BaseModelComposer(ABC):
         flat_action_space = flat_structured_space(action_spaces_dict)
         self._distribution_mapper = DistributionMapper(action_space=flat_action_space,
                                                        distribution_mapper_config=distribution_mapper_config)
-        self._network_image_paths = None
 
     @property
     @abstractmethod
@@ -63,28 +62,20 @@ class BaseModelComposer(ABC):
         """The DistributionMapper, mapping the action heads to distributions."""
         return self._distribution_mapper
 
-    @property
-    def network_image_paths(self) -> Optional[Dict[str, Dict[str, str]]]:
-        """The paths of the individual pickled network images figures."""
-        return self._network_image_paths
-
     def save_models(self) -> None:
         """Save the policies and critics as pdfs."""
 
-        def plot_inference_graphs(nets_type, nets) -> Dict[str, str]:
+        def plot_inference_graphs(nets_type, nets):
             """Draw inference graphs."""
-            saved_models = dict()
             for net_name, net_model in nets.items():
                 if not os.path.exists(f'{nets_type}_{net_name}'):
                     if isinstance(net_model, InferenceBlock):
-                        path = InferenceGraph(net_model).save(f'{nets_type}_{net_name}', './', save_pickle_figure=True)
-                        saved_models[net_name] = path
+                        InferenceGraph(net_model).save(f'{nets_type}_{net_name}', './')
                     else:
                         children = net_model.children()
                         inference_blocks = list(filter(lambda cc: isinstance(cc, InferenceBlock), children))
                         if len(inference_blocks) == 1:
-                            path = InferenceGraph(inference_blocks[0]).save(f'{nets_type}_{net_name}', './', True)
-                            saved_models[net_name] = path
+                            InferenceGraph(inference_blocks[0]).save(f'{nets_type}_{net_name}', './')
                         elif len(inference_blocks) > 1:
                             BColors.print_colored(f'More than one inference block was found for'
                                                   f' {nets_type}-{net_name}, please revisit the model and make '
@@ -93,14 +84,12 @@ class BaseModelComposer(ABC):
                             BColors.print_colored(f'No inference block could be found in '
                                                   f'{nets_type}-{net_name}, thus no visual representation '
                                                   f'(of the model) could be created or saved', BColors.WARNING)
-            return saved_models
 
-        self._network_image_paths = dict()
         try:
             if self.policy:
-                self._network_image_paths['policy'] = plot_inference_graphs("policy", self.policy.networks)
+                plot_inference_graphs("policy", self.policy.networks)
             if self.critic:
-                self._network_image_paths['critic'] = plot_inference_graphs("critic", self.critic.networks)
+                plot_inference_graphs("critic", self.critic.networks)
         except ImportError as e:
             BColors.print_colored(f'Models graphical representation could not be saved: {e}',
                                   BColors.WARNING)
