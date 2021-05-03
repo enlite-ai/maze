@@ -1,13 +1,14 @@
 """Algorithm parameters for evolution strategies model."""
 from dataclasses import dataclass
 from typing import Any
-
-from maze.train.trainers.common.training_runner import AlgorithmConfig
+from maze.train.trainers.common.config_classes import AlgorithmConfig
 
 
 @dataclass
 class ESAlgorithmConfig(AlgorithmConfig):
-    """ Algorithm parameters for evolution strategies model.
+    """
+    Algorithm parameters for evolution strategies model.
+    Note: Pass 0 to n_epochs to train indefinitely.
     """
 
     n_rollouts_per_update: int
@@ -18,9 +19,6 @@ class ESAlgorithmConfig(AlgorithmConfig):
        The training iteration is only finished, once the given number of episodes
        AND the given number of steps has been reached. One of the two parameters
        can be set to 0."""
-
-    max_epochs: int
-    """The number of epochs to train before termination. Pass 0 to train indefinitely."""
 
     max_steps: int
     """Limit the episode rollouts to a maximum number of steps. Set to 0 to disable this option."""

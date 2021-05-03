@@ -1,14 +1,17 @@
 """Trainer class for behavioral cloning."""
 
 from dataclasses import dataclass
-from typing import Tuple, Dict, Any, Union
+from typing import Tuple, Dict, Any, Union, Optional
 
 import torch
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, increment_log_step
 from maze.perception.perception_utils import convert_to_torch
+from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.trainer import Trainer
+from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
@@ -46,15 +49,38 @@ class BCTrainer(Trainer):
     imitation_events: ImitationEvents = train_stats.create_event_topic(ImitationEvents)
     """Imitation-specific training events"""
 
-    def train(self, n_epochs: int, evaluator: Evaluator, eval_every_k_iterations: int = None) -> None:
-        """Run training.
+    def __init__(
+        self,
+        algorithm_config: BCAlgorithmConfig,
+        data_loader: DataLoader,
+        policy: TorchPolicy,
+        optimizer: Optimizer,
+        loss: BCLoss
+    ):
+        super().__init__(algorithm_config)
 
-        :param n_epochs: How many epochs to train for
-        :param evaluator: Evaluator to use for evaluation rollouts
-        :param eval_every_k_iterations: Number of iterations after which to run evaluation (in addition to evaluations
-                                        at the end of each epoch, which are run automatically). If set to None,
-                                        evaluations will run on epoch end only.
+        self.data_loader = data_loader
+        self.policy = policy
+        self.optimizer = optimizer
+        self.loss = loss
+
+    @override(Trainer)
+    def train(
+        self, evaluator: Evaluator, n_epochs: Optional[int] = None, eval_every_k_iterations: Optional[int] = None
+    ) -> None:
         """
+        Run training.
+        :param evaluator: Evaluator to use for evaluation rollouts
+        :param n_epochs: How many epochs to train for
+        :param eval_every_k_iterations: Number of iterations after which to run evaluation (in addition to evaluations
+        at the end of each epoch, which are run automatically). If set to None, evaluations will run on epoch end only.
+        """
+
+        if n_epochs is None:
+            n_epochs = self.algorithm_config.n_epochs
+        if eval_every_k_iterations is None:
+            eval_every_k_iterations = self.algorithm_config.eval_every_k_iterations
+
         for epoch in range(n_epochs):
             print(f"\n********** Epoch {epoch + 1} started **********")
             evaluator.evaluate(self.policy)

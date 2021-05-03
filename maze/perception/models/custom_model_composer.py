@@ -32,11 +32,13 @@ class CustomModelComposer(BaseModelComposer):
         """Asserts the provided model config for consistency.
         :param model_config: The model config to check.
         """
-        if 'policy' in model_config:
+        if 'policy' in model_config and not isinstance(model_config["policy"], BasePolicyComposer):
             assert '_target_' in model_config['policy']
             assert 'networks' in model_config['policy'], \
                 f"Custom models expect explicit policy networks! Check the model config!"
-        if 'critic' in model_config and model_config["critic"]:
+        if 'critic' in model_config and model_config["critic"] and not isinstance(
+            model_config["critic"], CriticComposerInterface
+        ):
             assert '_target_' in model_config['critic']
             assert 'networks' in model_config['critic'], \
                 f"Custom models expect explicit critic networks! Check the model config!"

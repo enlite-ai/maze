@@ -41,6 +41,8 @@ class MultiStepIMPALA(Trainer):
     def __init__(self, model: TorchActorCritic, rollout_actors: DistributedActors,
                  eval_env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
                  options: ImpalaAlgorithmConfig):
+        super().__init__(options)
+
         self.distributed_actors = rollout_actors
         self.model = model
 
@@ -76,8 +78,16 @@ class MultiStepIMPALA(Trainer):
         """
         self.learner.evaluate(deterministic, repeats)
 
-    def train(self, n_epochs: int, epoch_length: int, deterministic_eval: bool, eval_repeats: int,
-              patience: Optional[int], model_selection: Optional[BestModelSelection]) -> None:
+    @override(Trainer)
+    def train(
+        self,
+        n_epochs: Optional[int] = None,
+        epoch_length: Optional[int] = None,
+        deterministic_eval: Optional[bool] = None,
+        eval_repeats: Optional[int] = None,
+        patience: Optional[int] = None,
+        model_selection: Optional[BestModelSelection] = None
+    ) -> None:
         """Train function that wraps normal train function in order to close all processes properly
 
         :param n_epochs: number of epochs to train.
@@ -87,6 +97,14 @@ class MultiStepIMPALA(Trainer):
         :param patience: number of steps used for early stopping
         :param model_selection: Optional model selection class, receives model evaluation results
         """
+
+        if epoch_length is None:
+            epoch_length = self.algorithm_config.epoch_length
+        if deterministic_eval is None:
+            deterministic_eval = self.algorithm_config.deterministic_eval
+        if eval_repeats is None:
+            eval_repeats = self.algorithm_config.eval_repeats
+
         try:
             self.distributed_actors.start()
             self.train_async(n_epochs, epoch_length, deterministic_eval, eval_repeats, patience, model_selection)
@@ -96,8 +114,15 @@ class MultiStepIMPALA(Trainer):
             self.distributed_actors.stop()
             raise e
 
-    def train_async(self, n_epochs: int, epoch_length: int, deterministic_eval: bool, eval_repeats: int,
-                    patience: Optional[int], model_selection: Optional[BestModelSelection]) -> None:
+    def train_async(
+        self,
+        n_epochs: Optional[int] = None,
+        epoch_length: Optional[int] = None,
+        deterministic_eval: Optional[bool] = None,
+        eval_repeats: Optional[int] = None,
+        patience: Optional[int] = None,
+        model_selection: Optional[BestModelSelection] = None
+    ) -> None:
         """Train policy using the synchronous advantage actor critic.
 
         :param n_epochs: number of epochs to train.
@@ -108,6 +133,12 @@ class MultiStepIMPALA(Trainer):
         :param model_selection: Optional model selection class, receives model evaluation results
         """
 
+        if epoch_length is None:
+            epoch_length = self.algorithm_config.epoch_length
+        if deterministic_eval is None:
+            deterministic_eval = self.algorithm_config.deterministic_eval
+        if eval_repeats is None:
+            eval_repeats = self.algorithm_config.eval_repeats
         # init minimum best model selection for early stopping
         if model_selection is None:
             model_selection = BestModelSelection(dump_file=None, model=None)

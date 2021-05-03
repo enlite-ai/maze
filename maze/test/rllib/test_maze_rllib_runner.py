@@ -33,7 +33,8 @@ def test_init_cartpole_rllib_model():
     cfg = load_hydra_config('maze.conf', 'conf_rllib', hydra_overrides)
 
     runner = Factory(base_type=MazeRLlibRunner).instantiate(cfg.runner)
-    ray_config, rllib_config, tune_config = runner._init_from_cfg(cfg)
+    runner.setup(cfg)
+    ray_config, rllib_config, tune_config = runner.ray_config, runner.rllib_config, runner.tune_config
 
     assert isinstance(runner.env_factory(), CartPoleEnv)
 
@@ -62,7 +63,8 @@ def test_init_cartpole_maze_model():
     cfg = load_hydra_config('maze.conf', 'conf_rllib', hydra_overrides)
 
     runner = Factory(base_type=MazeRLlibRunner).instantiate(cfg.runner)
-    ray_config, rllib_config, tune_config = runner._init_from_cfg(cfg)
+    runner.setup(cfg)
+    ray_config, rllib_config, tune_config = runner.ray_config, runner.rllib_config, runner.tune_config
 
     assert isinstance(runner.env_factory(), CartPoleEnv)
 

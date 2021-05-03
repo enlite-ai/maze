@@ -17,7 +17,7 @@ from maze.utils.log_stats_utils import setup_logging
 from examples.cartpole_custom_net import PolicyNet
 
 
-def main(max_epochs) -> None:
+def main(n_epochs) -> None:
     """Trains the cart pole environment with the ES implementation.
     """
 
@@ -46,7 +46,7 @@ def main(max_epochs) -> None:
         optimizer=Adam(step_size=0.01),
         l2_penalty=0.005,
         noise_stddev=0.02,
-        max_epochs=max_epochs)
+        n_epochs=n_epochs)
 
     trainer = ESTrainer(algorithm_config=algorithm_config,
                         policy=policy,
@@ -63,4 +63,4 @@ def main(max_epochs) -> None:
 
 if __name__ == "__main__":
     """ main """
-    main(max_epochs=100)
+    main(n_epochs=100)

@@ -1,7 +1,7 @@
 """Runner implementations for Behavioral Cloning."""
 from abc import abstractmethod
-from dataclasses import dataclass
-from typing import Tuple, Callable, Union
+import dataclasses
+from typing import Tuple, Callable, Union, Optional, List
 
 import numpy as np
 import torch
@@ -16,6 +16,7 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
+from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
@@ -28,26 +29,32 @@ from maze.train.trainers.imitation.bc_trainer import BCTrainer
 from maze.train.trainers.imitation.bc_validation_evaluator import BCValidationEvaluator
 
 
-@dataclass
+@dataclasses.dataclass
 class BCRunner(TrainingRunner):
-    """Dev runner for imitation learning.
-
+    """
+    Dev runner for imitation learning.
     Loads the given trajectory data and trains a policy on top of it using supervised learning.
     """
-    dataset: DictConfig
-    """Specify the Dataset class used to load the trajectory data for training"""
 
+    dataset: DictConfig
+    """Specify the Dataset class used to load the trajectory data for training."""
     eval_concurrency: int
-    """Number of concurrent evaluation envs"""
+    """Number of concurrent evaluation envs."""
+
+    evaluators: Optional[List[BCValidationEvaluator]] = dataclasses.field(default=None, init=False)
 
     @override(TrainingRunner)
-    def run(self, cfg: DictConfig) -> None:
-        """Run the training master node."""
-        super().run(cfg)
-        env = self.env_factory()
+    def setup(self, cfg: DictConfig) -> None:
+        """
+        See :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.setup`.
+        """
+
+        super().setup(cfg)
+
+        env = self._env_factory()
 
         with SwitchWorkingDirectoryToInput(cfg.input_dir):
-            dataset = Factory(base_type=Dataset).instantiate(self.dataset, conversion_env_factory=self.env_factory)
+            dataset = Factory(base_type=Dataset).instantiate(self.dataset, conversion_env_factory=self._env_factory)
 
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
@@ -57,39 +64,63 @@ class BCRunner(TrainingRunner):
         train_data_loader = DataLoader(train, shuffle=True, batch_size=cfg.algorithm.batch_size)
         validation_data_loader = DataLoader(validation, batch_size=cfg.algorithm.batch_size)
 
-        policy = TorchPolicy(networks=self.model_composer.policy.networks,
-                             distribution_mapper=self.model_composer.distribution_mapper, device=cfg.algorithm.device)
+        policy = TorchPolicy(networks=self._model_composer.policy.networks,
+                             distribution_mapper=self._model_composer.distribution_mapper, device=cfg.algorithm.device)
 
-        model_selection = BestModelSelection(self.state_dict_dump_file, policy)
+        self._model_selection = BestModelSelection(self.state_dict_dump_file, policy)
         optimizer = Factory(Optimizer).instantiate(cfg.algorithm.optimizer, params=policy.parameters())
         loss = BCLoss(action_spaces_dict=env.action_spaces_dict, entropy_coef=cfg.algorithm.entropy_coef)
 
-        trainer = BCTrainer(
+        self._trainer = BCTrainer(
+            algorithm_config=self._cfg.algorithm,
             data_loader=train_data_loader,
             policy=policy,
             optimizer=optimizer,
             loss=loss)
 
         # initialize model from input_dir
-        self._init_trainer_from_input_dir(trainer=trainer, state_dict_dump_file=self.state_dict_dump_file,
-                                          input_dir=cfg.input_dir)
+        self._init_trainer_from_input_dir(
+            trainer=self._trainer, state_dict_dump_file=self.state_dict_dump_file, input_dir=cfg.input_dir
+        )
 
         # evaluate using the validation set
-        evaluators = [BCValidationEvaluator(
+        self.evaluators = [BCValidationEvaluator(
             data_loader=validation_data_loader, loss=loss, logging_prefix="eval-validation",
-            model_selection=model_selection  # use the validation set evaluation to select the best model
+            model_selection=self._model_selection  # use the validation set evaluation to select the best model
         )]
 
         # if evaluation episodes are set, perform additional evaluation by policy rollout
         if cfg.algorithm.n_eval_episodes > 0:
-            eval_env = self.create_distributed_eval_env(self.env_factory, self.eval_concurrency,
+            eval_env = self.create_distributed_eval_env(self._env_factory, self.eval_concurrency,
                                                         logging_prefix="eval-rollout")
-            evaluators += [RolloutEvaluator(eval_env, n_episodes=cfg.algorithm.n_eval_episodes, model_selection=None)]
+            self.evaluators += [
+                RolloutEvaluator(eval_env, n_episodes=cfg.algorithm.n_eval_episodes, model_selection=None)
+            ]
 
-        trainer.train(
-            n_epochs=cfg.algorithm.n_epochs,
-            evaluator=MultiEvaluator(evaluators),
-            eval_every_k_iterations=cfg.algorithm.eval_every_k_iterations)
+    @override(TrainingRunner)
+    def run(
+        self,
+        n_epochs: Optional[int] = None,
+        evaluator: Optional[Evaluator] = None,
+        eval_every_k_iterations: Optional[int] = None
+    ) -> None:
+        """
+        Run the training master node.
+        See :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.run`.
+        :param evaluator: Evaluator to use for evaluation rollouts
+        :param n_epochs: How many epochs to train for
+        :param eval_every_k_iterations: Number of iterations after which to run evaluation (in addition to evaluations
+        at the end of each epoch, which are run automatically). If set to None, evaluations will run on epoch end only.
+        """
+
+        self._trainer.train(
+            n_epochs=self._cfg.algorithm.n_epochs if n_epochs is None else n_epochs,
+            eval_every_k_iterations=(
+                self._cfg.algorithm.eval_every_k_iterations
+                if eval_every_k_iterations is None else eval_every_k_iterations
+            ),
+            evaluator=MultiEvaluator(self.evaluators) if evaluator is None else evaluator
+        )
 
     @staticmethod
     def _split_dataset(dataset: Dataset, validation_percentage: float) -> Tuple[Subset, Subset]:
@@ -110,8 +141,9 @@ class BCRunner(TrainingRunner):
                 lengths=[validation_size, len(dataset) - validation_size],
                 generator=torch.Generator().manual_seed(1234))
 
+    @classmethod
     @abstractmethod
-    def create_distributed_eval_env(self,
+    def create_distributed_eval_env(cls,
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
@@ -119,29 +151,33 @@ class BCRunner(TrainingRunner):
         """The individual runners implement the setup of the distributed eval env"""
 
 
-@dataclass
+@dataclasses.dataclass
 class BCDevRunner(BCRunner):
     """Runner for single-threaded training, based on SequentialVectorEnv."""
 
-    def create_distributed_eval_env(self,
-                                    env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
-                                    eval_concurrency: int,
-                                    logging_prefix: str
-                                    ) -> SequentialVectorEnv:
+    @classmethod
+    @override(BCRunner)
+    def create_distributed_eval_env(
+        cls,
+        env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+        eval_concurrency: int,
+        logging_prefix: str
+    ) -> SequentialVectorEnv:
         """create single-threaded env distribution"""
-        return SequentialVectorEnv([env_factory for _ in range(eval_concurrency)],
-                                   logging_prefix=logging_prefix)
+        return SequentialVectorEnv([env_factory for _ in range(eval_concurrency)], logging_prefix=logging_prefix)
 
 
-@dataclass
+@dataclasses.dataclass
 class BCLocalRunner(BCRunner):
     """Runner for locally distributed training, based on SubprocVectorEnv."""
 
-    def create_distributed_eval_env(self,
-                                    env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
-                                    eval_concurrency: int,
-                                    logging_prefix: str
-                                    ) -> SubprocVectorEnv:
+    @classmethod
+    @override(BCRunner)
+    def create_distributed_eval_env(
+        cls,
+        env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+        eval_concurrency: int,
+        logging_prefix: str
+    ) -> SubprocVectorEnv:
         """create multi-process env distribution"""
-        return SubprocVectorEnv([env_factory for _ in range(eval_concurrency)],
-                                logging_prefix=logging_prefix)
+        return SubprocVectorEnv([env_factory for _ in range(eval_concurrency)], logging_prefix=logging_prefix)

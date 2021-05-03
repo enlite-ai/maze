@@ -13,8 +13,14 @@ class Runner(ABC):
     """
 
     @abstractmethod
-    def run(self, cfg: DictConfig) -> None:
-        """Perform the run.
-
+    def setup(self, cfg: DictConfig) -> None:
+        """
+        Sets up runner.
         :param cfg: Config of the hydra job.
+        """
+
+    @abstractmethod
+    def run(self, **kwargs) -> None:
+        """Perform the run.
+        :param kwargs: Runner-specific arguments.
         """

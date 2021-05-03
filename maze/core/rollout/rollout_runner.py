@@ -1,6 +1,6 @@
 """Abstract class for rollout runners."""
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Optional
 
 from omegaconf import DictConfig
 
@@ -36,21 +36,31 @@ class RolloutRunner(Runner, ABC):
         self.max_episode_steps = max_episode_steps
         self.record_trajectory = record_trajectory
         self.record_event_logs = record_event_logs
+        self._cfg: Optional[DictConfig] = None
 
         # keep track of the input directory
         self.input_dir = None
 
     @override(Runner)
-    def run(self, cfg: DictConfig) -> None:
+    def setup(self, cfg: DictConfig) -> None:
+        """
+        Sets up prerequisites to rollouts.
+        :param cfg: DictConfig defining components to initialize.
+        """
+
+        self._cfg = cfg
+        self.input_dir = cfg.input_dir
+
+    @override(Runner)
+    def run(self) -> None:
         """Parse the supplied Hydra config and perform the run."""
         # If this is run from command line using Hydra, Hydra is by default configured to create
         # a fresh output directory for each run.
         # However, to ensure model states, normalization stats and else are loaded from expected
         # locations, we will change the dir back to the original working dir for the initialization
         # (and then change it back so that all later script output lands in the hydra output dir as expected)
-        self.input_dir = cfg.input_dir
 
-        self.run_with(cfg.env, cfg.wrappers if "wrappers" in cfg else {}, cfg.policy)
+        self.run_with(self._cfg.env, self._cfg.wrappers if "wrappers" in self._cfg else {}, self._cfg.policy)
 
     @abstractmethod
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType) -> None:

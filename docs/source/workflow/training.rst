@@ -258,10 +258,16 @@ Usually, the run method does roughly the following:
 - Instantiates the trainer and any other components needed for training
 - Launches the training
 
-For example, this is the run method taken directly from the evolution strategies runner:
+:meth:`TrainingRunner <maze.train.trainers.common.training_runner.TrainingRunner.setup>` initializes the runner and :meth:`TrainingRunner <maze.train.trainers.common.training_runner.TrainingRunner.run>` runs the training.
+
+For example, these are the ``setup`` and ``run`` methods taken directly from the evolution strategies runner:
 
 .. literalinclude:: ../../../maze/train/trainers/es/es_runners.py
-   :pyobject: ESMasterRunner.run
+   :pyobject: ESMasterRunner.setup
+   :language: python
+
+.. literalinclude:: ../../../maze/train/trainers/es/es_runners.py
+   :pyobject: ESDevRunner.run
    :language: python
 
 

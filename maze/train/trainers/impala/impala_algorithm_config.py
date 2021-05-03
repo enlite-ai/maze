@@ -2,15 +2,12 @@
 
 from dataclasses import dataclass
 
-from maze.train.trainers.common.training_runner import AlgorithmConfig
+from maze.train.trainers.common.config_classes import AlgorithmConfig
 
 
 @dataclass
 class ImpalaAlgorithmConfig(AlgorithmConfig):
     """Algorithm parameters for Impala."""
-
-    n_epochs: int
-    """number of epochs to train"""
 
     epoch_length: int
     """number of updates per epoch"""

@@ -16,6 +16,7 @@ from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.log_stats.log_stats_writer_tensorboard import LogStatsWriterTensorboard
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.utils.seeding import set_random_states
+from maze.utils.bcolors import BColors
 
 
 class SimpleStatsLoggingSetup:
@@ -81,7 +82,19 @@ def setup_logging(job_config: Union[DictConfig, str, None], log_dir: str = ".") 
     if job_config is not None:
         # log run settings
         if isinstance(job_config, DictConfig):
-            job_config = OmegaConf.to_yaml(job_config)
+            if job_config.__dict__["_metadata"].flags.get("allow_objects", False):
+                # Hydra was instructed to allow objects. This was done by the Python training API, hence we might have
+                # Python objects in our config, which makes logging the config to file not possible.
+                # todo Making this work for the Python training API would require reversing the Hydra instantiaton, i.e.
+                #  generate a Hydra configuration from Python objects (at least partially).
+                BColors.print_colored(
+                    "Logging run configurations with injected non-primitives is not supported yet. For now please don't"                    
+                    " inject non-primitives if you wish to log the configuration of your run.",
+                    BColors.WARNING
+                )
+                return
+            else:
+                job_config = OmegaConf.to_yaml(job_config)
 
         # prepare config text for tensorboard
         job_config = job_config.replace("\n", "</br>")

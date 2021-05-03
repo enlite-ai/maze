@@ -39,8 +39,7 @@ class ESTrainer(Trainer):
                  policy: TorchPolicy,
                  shared_noise: SharedNoiseTable,
                  normalization_stats: Optional[Dict[str, Tuple[np.ndarray, np.ndarray]]]) -> None:
-        # --- options ---
-        self.algorithm_config = algorithm_config
+        super().__init__(algorithm_config)
 
         # --- training setup ---
         self.model_selection: Optional[ModelSelectionBase] = None
@@ -58,17 +57,26 @@ class ESTrainer(Trainer):
         # injection of ES-specific events
         self.es_events = self.train_stats.create_event_topic(ESEvents)
 
-    def train(self, distributed_rollouts: ESDistributedRollouts, model_selection: Optional[ModelSelectionBase]) -> None:
-        """Run the ES training loop.
-
+    @override(Trainer)
+    def train(
+        self,
+        distributed_rollouts: ESDistributedRollouts,
+        n_epochs: Optional[int] = None,
+        model_selection: Optional[ModelSelectionBase] = None
+    ) -> None:
+        """
+        Run the ES training loop.
         :param distributed_rollouts: The distribution interface for experience collection.
+        :param n_epochs: Number of epochs to train.
         :param model_selection: Optional model selection class, receives model evaluation results.
         """
+
+        n_epochs = self.algorithm_config.n_epochs if n_epochs is None else n_epochs
         self.model_selection = model_selection
 
         for epoch in itertools.count():
             # check if we reached the max number of epochs
-            if self.algorithm_config.max_epochs and epoch >= self.algorithm_config.max_epochs:
+            if epoch == n_epochs:
                 break
 
             print('********** Iteration {} **********'.format(epoch))

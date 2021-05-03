@@ -10,7 +10,7 @@ n_rollouts_per_update: 10
 n_timesteps_per_update: 0
 
 # The number of epochs to train before termination. Pass 0 to train indefinitely
-max_epochs: 0
+n_epochs: 0
 
 # Limit the episode rollouts to a maximum number of steps. Set to 0 to disable this option.
 max_steps: 0
