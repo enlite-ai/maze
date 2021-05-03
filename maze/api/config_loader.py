@@ -89,8 +89,24 @@ class ConfigLoader:
                 # 3. Resolve proxy arguments in-place.
                 self._resolve_proxy_arguments(cfg)
 
-                # 4. Set up and return runner.
+                # 4. Postprocess loaded configuration.
+                self._postprocess_config(cfg)
+
+                # 5. Set up and return runner.
                 OmegaConf.set_struct(cfg, True)
+
+    def _postprocess_config(self, cfg: omegaconf.DictConfig) -> None:
+        """
+        Postprocesses configuration.
+        :param cfg: Loaded configuration object.
+        """
+
+        # Ensure environment is wrapped by LogStatsWrapper.
+        ls_wrapper_cls_name = "maze.core.wrappers.log_stats_wrapper.LogStatsWrapper"
+        if ls_wrapper_cls_name not in cfg["wrappers"]:
+            cfg["wrappers"][ls_wrapper_cls_name] = {
+                "logging_prefix": "train" if self._run_mode == RunMode.TRAINING else "rollout"
+            }
 
     def _load_hydra_config(self) -> None:
         """

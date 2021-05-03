@@ -74,23 +74,6 @@ class ConfigurationAuditor:
         if run_dir is not None:
             overrides["hydra.run.dir"] = run_dir
 
-        # Ensure environment is wrapped by LogStatsWrapper.
-        ls_wrapper_cls_name = "maze.core.wrappers.log_stats_wrapper.LogStatsWrapper"
-        if not kwargs["wrappers"]:
-            kwargs["wrappers"] = {}
-        # Define log stats wrapper, if not done yet.
-        if not (
-            # Defined in kwargs with wrappers={'class_type': {...}}.
-            ls_wrapper_cls_name in kwargs["wrappers"] or
-            # Defined in overrides with overrides={'wrappers.class_type': {...}}.
-            "wrappers.{lsw_cls}".format(lsw_cls=ls_wrapper_cls_name) in overrides or
-            # Defined in overrides with overrides={'wrappers': {'class_type': {...}}}.
-            "wrappers" in overrides and ls_wrapper_cls_name in overrides["wrappers"]
-        ):
-            kwargs["wrappers"][ls_wrapper_cls_name] = {
-                "logging_prefix": "train" if self._run_mode == RunMode.TRAINING else "rollout"
-            }
-
         # Exclude properties incompatible with specific run modes.
         kwargs = self._filter_run_mode_incompatible_args(kwargs)
         overrides = self._filter_run_mode_incompatible_args(overrides)
