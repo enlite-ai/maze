@@ -1,6 +1,7 @@
 """Contains an interface for trainers."""
+import dataclasses
 from abc import ABC, abstractmethod
-from typing import Union, Optional, TypeVar
+from typing import Union, Optional, TypeVar, ClassVar
 
 from typing.io import BinaryIO
 
@@ -8,17 +9,18 @@ from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.common.config_classes import AlgorithmConfig
 
 
+@dataclasses.dataclass
 class Trainer(ABC):
     """
     Interface for trainers.
-    :param config: Algorithm configuration including all parameter expected in .train().
     """
 
-    _AlgorithmConfigType = TypeVar("_AlgorithmConfigType", bound=AlgorithmConfig)
+    _AlgorithmConfigType: ClassVar[TypeVar] = TypeVar("_AlgorithmConfigType", bound=AlgorithmConfig)
 
-    def __init__(self, config: _AlgorithmConfigType):
-        self.model: Optional[TorchModel] = None
-        self.algorithm_config: Trainer._AlgorithmConfigType = config
+    algorithm_config: _AlgorithmConfigType
+    """Algorithm configuration including all parameter expected in .train()."""
+    model: Optional[TorchModel] = dataclasses.field(init=False, default=None)
+    """Model to train."""
 
     @abstractmethod
     def load_state(self, file_path: Union[str, BinaryIO]) -> None:
