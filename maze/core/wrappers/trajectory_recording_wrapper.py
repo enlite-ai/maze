@@ -10,28 +10,30 @@ from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
+from maze.core.env.maze_env import MazeEnv
+from maze.core.env.maze_state import MazeStateType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
-from maze.core.env.maze_state import MazeStateType
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
+from maze.core.rendering.keyboard_controlled_trajectory_viewer import KeyboardControlledTrajectoryViewer
 from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.records.state_record import StateRecord
+from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.wrapper import Wrapper
 
 
-class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
+class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
     """A trajectory recording wrapper. Supports both standard gym envs and BaseEnvs, as well as environments
-    that provide more access -- SerializableEnvMixin for access to environment components & RecordableEnvMixin for access
-    to MazeState and MazeExecution objects.
+    that provide more access -- SerializableEnvMixin for access to environment components
+    and RecordableEnvMixin for access to MazeState and MazeExecution objects.
 
     :param env: the environment to wrap.
     """
 
-    def __init__(self, env: Union[gym.Env, BaseEnv]):
+    def __init__(self, env: Union[gym.Env, MazeEnv]):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
         # BaseEnv is a subset of gym.Env
         super().__init__(env)
@@ -53,14 +55,16 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
         #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
         #  - for other envs: Every step
         if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
-            self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
+            self.last_env_time = self.env.get_env_time() if isinstance(self.env,
+                                                                       TimeEnvMixin) else self.last_env_time + 1
 
             # Collect the MazeAction
             maze_action = deepcopy(self.env.get_maze_action()) if isinstance(self.env, RecordableEnvMixin) \
                 else RawMazeAction(action)
 
             # Collect step events
-            event_collection = EventCollection(self.env.get_step_events() if isinstance(self.env, EventEnvMixin) else [])
+            event_collection = EventCollection(
+                self.env.get_step_events() if isinstance(self.env, EventEnvMixin) else [])
             step_event_log = StepEventLog(self.last_env_time, events=event_collection)
 
             # Record trajectory data
@@ -161,8 +165,9 @@ class TrajectoryRecordingWrapper(Wrapper[BaseEnv]):
 
         return StateTrajectoryRecord(episode_id, renderer)
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool)\
+    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
+                                         maze_action: Optional[MazeActionType],
+                                         first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
