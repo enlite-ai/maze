@@ -3,9 +3,11 @@
 from typing import TypeVar, Union, Dict, Tuple, Any, Optional
 
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.wrappers.wrapper import Wrapper, EnvType
 
@@ -84,8 +86,20 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
         """
         return self.env.close()
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool)\
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """This wrapper does not modify observations and actions."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'TimeLimitWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self._elapsed_steps = env._elapsed_steps
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(action)

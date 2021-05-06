@@ -26,6 +26,8 @@ class EventRecord(object):
         :param argument_name: event argument name
         :return: event argument value for the given argument_name
         """
+        if argument_name == "__deepcopy__":
+            return None
         return self.attributes[argument_name]
 
     # Pickle support

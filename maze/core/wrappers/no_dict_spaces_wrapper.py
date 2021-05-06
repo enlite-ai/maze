@@ -4,9 +4,11 @@ from typing import Union, Dict, Any, Tuple, Optional
 import gym
 import numpy as np
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import EnvType, Wrapper
 
@@ -60,7 +62,6 @@ class NoDictSpacesWrapper(Wrapper[Union[EnvType, StructuredEnvSpacesMixin]]):
         """
         return observation[self.observation_key]
 
-
     def action(self, action: np.ndarray) -> Dict[str, np.ndarray]:
         """Implementation of :class:`~maze.core.wrappers.wrapper.ActionWrapper` interface.
         """
@@ -97,3 +98,13 @@ class NoDictSpacesWrapper(Wrapper[Union[EnvType, StructuredEnvSpacesMixin]]):
             obs_dict = {policy_id: self.observation(obs) for policy_id, obs in obs_dict.items()}
 
         return obs_dict, act_dict
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'NoDictSpacesWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(action)

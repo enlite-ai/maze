@@ -1,6 +1,8 @@
 """ Contains tests for the time limit wrapper. """
+from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_base_env, build_dummy_maze_env
+from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
 
 def test_time_limit_wrapper():
@@ -52,3 +54,14 @@ def test_time_limit_wrapper_time_env():
         if i >= 4:
             assert done
     env.close()
+
+
+def test_time_limit_wrapper_clone_from():
+    """ time limit wrapper unit tests """
+
+    def make_env():
+        env = GymMazeEnv("CartPole-v0")
+        env = TimeLimitWrapper.wrap(env, max_episode_steps=5)
+        return env
+
+    assert_wrapper_clone_from(make_env, assert_member_list=["_elapsed_steps"])

@@ -9,6 +9,7 @@ from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironmen
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
+from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
 
 def build_dummy_structured_environment() -> DummyStructuredEnvironment:
@@ -130,3 +131,14 @@ def test_skipping_wrapper_and_reward_aggregation():
         obs, reward, done, info = env.step(action)
 
         assert(reward == n_steps*10)
+
+
+def test_skipping_wrapper_clone_from():
+    """ time limit wrapper unit tests """
+
+    def make_env():
+        env = GymMazeEnv("CartPole-v0")
+        env = StepSkipWrapper.wrap(env, n_steps=2, skip_mode="sticky")
+        return env
+
+    assert_wrapper_clone_from(make_env, assert_member_list=["_step_actions", "_steps_done"])

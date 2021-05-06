@@ -5,6 +5,7 @@ import gym
 import numpy as np
 
 from maze.core.annotations import override
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.structured_env_utils import flat_structured_space
@@ -163,3 +164,8 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
                 new_action[org_action_name] = org_action
 
         return new_action
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'DiscretizeActionsWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self.env.clone_from(env)

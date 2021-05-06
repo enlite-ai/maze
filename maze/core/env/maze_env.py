@@ -8,6 +8,7 @@ RL training algorithms require a more rigid representation. To that end :class:`
 gym-compatible environment in a reusable form, by utilizing mappings from the MazeState to the observations space and
 from the MazeAction to the action space.
 """
+import copy
 from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
 import gym
@@ -20,6 +21,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationConversionInterface, ObservationType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorIDType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
@@ -89,31 +91,12 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :return: observation, reward, done, info
         """
 
-        # compile action object
-        maze_state = self.core_env.get_maze_state()
-        maze_action = self.action_conversion.space_to_maze(action, maze_state)
-
-        # take environment step
-        maze_state, reward, done, info = self.core_env.step(maze_action)
+        # first, take step without observation
+        reward, done, info = self._step_core_env(action)
 
         # convert state to observation
+        maze_state = self.core_env.get_maze_state()
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
-
-        # aggregate to scalar reward (if necessary)
-        if self.core_env.reward_aggregator:
-            reward = self.core_env.reward_aggregator.to_scalar_reward(reward)
-
-        # reward captured immediately after the reward aggregation
-        self.reward_events.reward_original(value=reward)
-
-        # record the last MazeAction
-        self.last_maze_action = maze_action
-
-        # schedule a new environment step (the event logs are reset at the beginning of the next step)
-        self.core_env.context.increment_env_step()
-
-        # ensure that all reward aggregator are cleared
-        self.core_env.context.event_service.clear_pubsub()
 
         return observation, reward, done, info
 
@@ -239,6 +222,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         policy_id, actor_id = self.core_env.actor_id()
         return self.observation_conversion_dict[policy_id]
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType], first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
@@ -252,16 +236,59 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         if maze_state is not None:
             observation_dict = {
-                policy_id: obs_conv.maze_to_space(maze_state) for policy_id, obs_conv in self.observation_conversion_dict.items()
+                policy_id: obs_conv.maze_to_space(maze_state)
+                for policy_id, obs_conv in self.observation_conversion_dict.items()
             }
         else:
             observation_dict = None
 
         if maze_action is not None:
             action_dict = {
-                policy_id: act_conv.maze_to_space(maze_action) for policy_id, act_conv in self.action_conversion_dict.items()
+                policy_id: act_conv.maze_to_space(maze_action)
+                for policy_id, act_conv in self.action_conversion_dict.items()
             }
         else:
             action_dict = None
 
         return observation_dict, action_dict
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'MazeEnv') -> None:
+        """Reset this gym environment to the given state by creating a deep copy of the `env.state` instance variable"""
+        self.core_env.clone_from(env.core_env)
+
+        self.core_env.context.clone_from(env.core_env.context)
+        self.core_env.reward_aggregator = copy.deepcopy(env.core_env.reward_aggregator)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self._step_core_env(action)
+
+    def _step_core_env(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
+        """Step core """
+
+        # compile action object
+        maze_state = self.core_env.get_maze_state()
+        maze_action = self.action_conversion.space_to_maze(action, maze_state)
+
+        # take environment step
+        maze_state, reward, done, info = self.core_env.step(maze_action)
+
+        # aggregate to scalar reward (if necessary)
+        if self.core_env.reward_aggregator:
+            reward = self.core_env.reward_aggregator.to_scalar_reward(reward)
+
+        # reward captured immediately after the reward aggregation
+        self.reward_events.reward_original(value=reward)
+
+        # record the last MazeAction
+        self.last_maze_action = maze_action
+
+        # schedule a new environment step (the event logs are reset at the beginning of the next step)
+        self.core_env.context.increment_env_step()
+
+        # ensure that all reward aggregator are cleared
+        self.core_env.context.event_service.clear_pubsub()
+
+        return reward, done, info
