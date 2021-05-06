@@ -31,11 +31,15 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    "sphinx_autodoc_typehints",
 ]
 
 # build the templated autosummary files
 autosummary_generate = True
+
+# Type hints
+set_type_checking_flag = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
