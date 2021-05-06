@@ -28,7 +28,6 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, ABC):
     """
 
     def __init__(self):
-        # TODO clone env context!
         self.context = EnvironmentContext()
         self.reward_aggregator: Optional[RewardAggregatorInterface] = None
 

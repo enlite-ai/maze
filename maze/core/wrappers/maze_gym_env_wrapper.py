@@ -227,7 +227,7 @@ class GymCoreEnv(CoreEnv):
 
     @override(SimulatedEnvMixin)
     def clone_from(self, env: 'GymCoreEnv') -> None:
-        """Reset this gym environment to the given state by creating a deep copy of the `env.state` instance variable"""
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
 
         # clone core env maze state
         self._maze_state = deepcopy(env._maze_state)

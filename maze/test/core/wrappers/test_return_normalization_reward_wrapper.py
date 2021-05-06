@@ -25,7 +25,7 @@ def test_return_normalization_wrapper():
 
 
 def test_return_normalization_wrapper_clone_from():
-    """ time limit wrapper unit tests """
+    """ Unit tests """
 
     def make_env():
         env = GymMazeEnv("CartPole-v0")

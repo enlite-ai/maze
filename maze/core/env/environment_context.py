@@ -63,7 +63,6 @@ class EnvironmentContext:
         """
         This must be called after the env step execution, to notify the services about the start of a new step.
         """
-        print(f"_should_clear_events {self._should_clear_events}")
         if self._should_clear_events and not self._increment_env_step_warning_printed:
             BColors.print_colored("Events have not been cleared at the start of the current step!"
                                   "If you called the step function inside a wrapper, look into the "
@@ -95,7 +94,6 @@ class EnvironmentContext:
 
         Checks internally if this has already been done for the current env step, in this case nothing happens.
         """
-        print(" -- > pre_step")
         if not self._should_clear_events:
             return
 
@@ -106,7 +104,10 @@ class EnvironmentContext:
         self.event_service.clear_events()
 
     def clone_from(self, context: 'EnvironmentContext') -> None:
-        """ TODO """
+        """ Clone environment by resetting to the provided context.
+
+        :param context: The environment context to clone.
+        """
         self.event_service = copy.deepcopy(context.event_service)
         self.step_id = context.step_id
         self._episode_id = context._episode_id

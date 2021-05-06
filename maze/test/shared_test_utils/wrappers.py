@@ -6,7 +6,11 @@ from maze.core.env.maze_env import MazeEnv
 
 
 def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_list: List[str] = None):
-    """ time limit wrapper unit tests """
+    """ Asserts that the clone_from and step_without_observation functions work properly for wrappers.
+
+    :param make_env: Instantiates a MazeEnv.
+    :param assert_member_list: A list of member variables that should be asserted for equality.
+    """
 
     if not assert_member_list:
         assert_member_list = list()

@@ -254,7 +254,12 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
     @override(SimulatedEnvMixin)
     def clone_from(self, env: 'MazeEnv') -> None:
-        """Reset this gym environment to the given state by creating a deep copy of the `env.state` instance variable"""
+        """Reset the maze env to the state of the provided env.
+
+        Note, that it also clones the CoreEnv and its member variables including environment context.
+
+        :param env: The environment to clone from.
+        """
         self.core_env.clone_from(env.core_env)
 
         self.core_env.context.clone_from(env.core_env.context)
@@ -266,7 +271,11 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return self._step_core_env(action)
 
     def _step_core_env(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
-        """Step core """
+        """Take environment step without converting the state into and observation.
+
+        :param action: the action the agent wants to take.
+        :return: reward, done, info.
+        """
 
         # compile action object
         maze_state = self.core_env.get_maze_state()
