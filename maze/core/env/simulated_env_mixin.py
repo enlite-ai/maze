@@ -1,13 +1,9 @@
 """Environment interface for simulated environments (used e.g. by Monte Carlo Tree Search)."""
 from abc import ABC, abstractmethod
-from typing import Any, Tuple, Dict, TYPE_CHECKING
+from typing import Any, Tuple, Dict
 
 from maze.core.env.action_conversion import ActionType
-
 from maze.core.env.structured_env import StructuredEnv
-
-if TYPE_CHECKING:
-    from maze.core.env.maze_env import MazeEnv
 
 
 class SimulatedEnvMixin(ABC):
@@ -17,7 +13,7 @@ class SimulatedEnvMixin(ABC):
     This interface is used by Monte Carlo Tree Search."""
 
     @abstractmethod
-    def clone_from(self, env: 'MazeEnv') -> None:
+    def clone_from(self, env: StructuredEnv) -> None:
         """Clone an environment by resetting the simulation to its current state.
 
         :param env: The environment to clone.
