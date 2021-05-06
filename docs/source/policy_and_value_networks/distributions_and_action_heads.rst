@@ -44,6 +44,8 @@ Maze so far supports the following action space - probability distribution combi
 +------------------+-------------------------------------------------------+
 | Dict             | DictProbabilityDistribution (default)                 |
 +------------------+-------------------------------------------------------+
+| MultiDiscrete    | MultiCategoricalProbabilityDistribution (default)     |
++------------------+-------------------------------------------------------+
 
 The DictProbabilityDistribution combines any of the other action spaces and distributions into a joint action space
 in case you agent has to interact with the environment via different action space types at the same time.
