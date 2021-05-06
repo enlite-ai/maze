@@ -18,8 +18,8 @@ class SimulatedEnvMixin(ABC):
 
     @abstractmethod
     def clone_from(self, env: 'MazeEnv') -> None:
-        """
-        Clone an environment by resetting the simulation to its current state.
+        """Clone an environment by resetting the simulation to its current state.
+
         :param env: The environment to clone.
         """
 

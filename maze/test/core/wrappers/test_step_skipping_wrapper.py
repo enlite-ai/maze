@@ -114,6 +114,7 @@ def test_observation_skipping_wrapper_sticky_flat():
 
 
 def test_skipping_wrapper_and_reward_aggregation():
+    """ Step skipping unit test """
     observation_conversion = ObservationConversion()
 
     env = DummyEnvironment(
@@ -134,7 +135,7 @@ def test_skipping_wrapper_and_reward_aggregation():
 
 
 def test_skipping_wrapper_clone_from():
-    """ time limit wrapper unit tests """
+    """ Step skipping unit test """
 
     def make_env():
         env = GymMazeEnv("CartPole-v0")

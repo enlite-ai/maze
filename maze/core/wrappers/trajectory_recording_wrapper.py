@@ -13,7 +13,6 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.maze_state import MazeStateType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
 from maze.core.env.maze_state import MazeStateType
@@ -180,9 +179,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
     @override(SimulatedEnvMixin)
     def clone_from(self, env: 'TrajectoryRecordingWrapper') -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        warnings.warn("Try to avoid wrappers such as the 'TrajectoryRecordingWrapper'"
-                      "when working with simulated envs to reduce overhead.")
-        self.env.clone_from(env)
+        raise RuntimeError("Cloning the TrajectoryRecordingWrapper is not supported.")
 
     @override(SimulatedEnvMixin)
     def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:

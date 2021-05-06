@@ -26,8 +26,11 @@ class EventRecord(object):
         :param argument_name: event argument name
         :return: event argument value for the given argument_name
         """
+
+        # this is required for deep copying the env context e.g., when calling clone_from on a CoreEnv.
         if argument_name == "__deepcopy__":
             return None
+
         return self.attributes[argument_name]
 
     # Pickle support
