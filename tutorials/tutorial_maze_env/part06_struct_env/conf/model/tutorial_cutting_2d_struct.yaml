@@ -12,6 +12,7 @@ policy:
   - _target_: tutorial_maze_env.part06_struct_env.models.actor.CuttingPolicyNet
     non_lin: torch.nn.ReLU
     with_mask: false
+  substeps_with_separate_agent_nets: []
 
 critic:
   _target_: maze.perception.models.critics.StepStateCriticComposer
