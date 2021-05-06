@@ -41,12 +41,12 @@ def _run_job(cfg: DictConfig) -> None:
     if cfg.seeding.agent_base_seed is None:
         cfg.seeding.agent_base_seed = MazeSeeding.generate_seed_from_random_state(np.random.RandomState(None))
 
-
     # print and log config
     config_str = yaml.dump(OmegaConf.to_container(cfg, resolve=True))
     with open("hydra_config.yaml", "w") as fp:
-        fp.write(config_str)
-    BColors.print_colored("\n" + config_str, color=BColors.HEADER)
+        fp.write("\n" + config_str)
+    BColors.print_colored(config_str, color=BColors.HEADER)
+    print("Output directory: {}\n".format(os.path.abspath(".")))
 
     # run job
     runner = Factory(base_type=Runner).instantiate(cfg.runner)

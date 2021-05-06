@@ -7,11 +7,13 @@ import gym
 import imageio
 import matplotlib.pyplot as plt
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.wrappers.maze_gym_env_wrapper import GymCoreEnv
 from maze.core.wrappers.wrapper import Wrapper
@@ -97,7 +99,18 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         # append image stack
         self._writer.append_data(img[:, :, :3])
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType], first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         raise NotImplementedError
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'ExportGifWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        raise RuntimeError("Cloning the 'ExportGifWrapper' is not supported.")
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        raise RuntimeError("Stepping the 'ExportGifWrapper' without observations is not supported.")

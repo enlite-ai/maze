@@ -1,8 +1,10 @@
 """Contains a dictionary-space removal observation wrapper."""
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, Tuple
 
 import gym
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import ObservationWrapper, EnvType
 
@@ -38,3 +40,13 @@ class NoDictObservationWrapper(ObservationWrapper[Union[EnvType, StructuredEnvSp
         """Implementation of :class:`~maze.core.wrappers.wrapper.ObservationWrapper` interface.
         """
         return observation[self.observation_key]
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'NoDictObservationWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(action)

@@ -19,7 +19,6 @@ from maze.core.env.structured_env import StepKeyType
 from maze.core.events.pubsub import Subscriber
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
-from maze.utils.bcolors import BColors
 
 
 class GymActionConversion(ActionConversionInterface):
@@ -226,8 +225,19 @@ class GymCoreEnv(CoreEnv):
         """Single policy, single agent env."""
         return {0: 1}
 
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'GymCoreEnv') -> None:
+        """Reset this gym environment to the given state by creating a deep copy of the `env.state` instance variable"""
 
-class GymMazeEnv(MazeEnv, SimulatedEnvMixin):
+        # clone core env maze state
+        self._maze_state = deepcopy(env._maze_state)
+
+        # copy entire gym env object
+        assert isinstance(self.env, gym.Env)
+        self.env = deepcopy(env.env)
+
+
+class GymMazeEnv(MazeEnv):
     """Wraps a Gym env into a Maze environment.
 
     **Example**: *env = GymMazeEnv(env="CartPole-v0")*
@@ -239,28 +249,10 @@ class GymMazeEnv(MazeEnv, SimulatedEnvMixin):
         if not isinstance(env, gym.Env):
             env = gym.make(env)
 
-        # instantiate gym core environment
-        core_env = GymCoreEnv(env)
-
         super().__init__(
-            core_env=core_env,
+            core_env=GymCoreEnv(env),
             action_conversion_dict={0: GymActionConversion(env=env)},
             observation_conversion_dict={0: GymObservationConversion(env=env)})
-
-    @override(SimulatedEnvMixin)
-    def clone_from(self, env: MazeEnv) -> None:
-        """Reset this gym environment to the given state by creating a deep copy of the `env.state` instance variable"""
-        # explicit reset to handle e.g time limit wrappers
-        self.reset()
-
-        target_env = self.env
-        while hasattr(target_env, "env"):
-            target_env = target_env.env
-
-        assert hasattr(target_env, "state"), "This default implementation of the clone_from() method works only for " \
-                                             "gym envs exposing their state as 'env.state'"
-
-        target_env.state = deepcopy(env.get_maze_state())
 
 
 def make_gym_maze_env(name: str) -> GymMazeEnv:

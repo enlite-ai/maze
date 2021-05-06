@@ -9,8 +9,6 @@ from hydra.core.hydra_config import HydraConfig
 from hydra.experimental import initialize_config_module, compose
 
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
 from maze.core.wrappers.wrapper_factory import WrapperFactory
 
@@ -59,17 +57,17 @@ class EnvFactory:
         self.env = env
         self.wrappers = wrappers
 
-    def __call__(self, *args, **kwargs) -> Union[StructuredEnv, StructuredEnvSpacesMixin]:
+    def __call__(self, *args, **kwargs) -> MazeEnv:
         """environment factory
         :return: Newly created environment instance.
         """
-        env = Factory(StructuredEnv).instantiate(self.env)
+        env = Factory(MazeEnv).instantiate(self.env)
         env = WrapperFactory.wrap_from_config(env, self.wrappers)
 
         return env
 
 
-def make_env(env: ConfigType, wrappers: CollectionOfConfigType) -> Union[StructuredEnv, StructuredEnvSpacesMixin]:
+def make_env(env: ConfigType, wrappers: CollectionOfConfigType) -> MazeEnv:
     """Helper to create a single environment from configuration"""
     env_factory = EnvFactory(env=env, wrappers=wrappers)
 
@@ -78,7 +76,7 @@ def make_env(env: ConfigType, wrappers: CollectionOfConfigType) -> Union[Structu
 
 def make_env_from_hydra(config_module: str,
                         config_name: str = None,
-                        **hydra_overrides: str) -> Union[StructuredEnv, StructuredEnvSpacesMixin, MazeEnv]:
+                        **hydra_overrides: str) -> MazeEnv:
     """Create an environment instance from the hydra configuration, given the overrides.
     :param config_module: Python module path of the hydra configuration package
     :param config_name: Name of the defaults configuration yaml within `config_module`

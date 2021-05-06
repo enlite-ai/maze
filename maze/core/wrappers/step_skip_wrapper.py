@@ -8,6 +8,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import Wrapper, EnvType
@@ -100,3 +101,15 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Not implemented yet. Note: Some step skipping might be required here as well (depends on the use case)."""
         raise NotImplementedError
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'StepSkipWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self._step_actions = copy.deepcopy(env._step_actions)
+        self._steps_done = env._steps_done
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(action)

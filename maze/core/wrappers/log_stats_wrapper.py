@@ -4,8 +4,8 @@ from typing import Callable, Optional
 from typing import TypeVar, Union, Any, Tuple, Dict
 
 import gym
-
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.environment_context import EnvironmentContext
@@ -13,6 +13,7 @@ from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
@@ -236,9 +237,20 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         episode_id = self.env.get_episode_id() if isinstance(self.env, RecordableEnvMixin) else str(uuid.uuid4())
         return EpisodeEventLog(episode_id)
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'LogStatsWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        raise RuntimeError("Cloning the 'LogStatsWrapper' is not supported.")
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        raise RuntimeError("Stepping the 'LogStatsWrapper' without observations is not supported.")

@@ -8,9 +8,9 @@ several benefits
 - In scenarios with multiple instantiated agent-environment interaction loops the context can be used to identify
   the parent environments.
 """
-
+import copy
 import uuid
-from typing import Optional, Callable
+from typing import Callable
 
 from maze.utils.bcolors import BColors
 
@@ -63,6 +63,7 @@ class EnvironmentContext:
         """
         This must be called after the env step execution, to notify the services about the start of a new step.
         """
+        print(f"_should_clear_events {self._should_clear_events}")
         if self._should_clear_events and not self._increment_env_step_warning_printed:
             BColors.print_colored("Events have not been cleared at the start of the current step!"
                                   "If you called the step function inside a wrapper, look into the "
@@ -94,6 +95,7 @@ class EnvironmentContext:
 
         Checks internally if this has already been done for the current env step, in this case nothing happens.
         """
+        print(" -- > pre_step")
         if not self._should_clear_events:
             return
 
@@ -102,3 +104,13 @@ class EnvironmentContext:
 
         self._should_clear_events = False
         self.event_service.clear_events()
+
+    def clone_from(self, context: 'EnvironmentContext') -> None:
+        """ TODO """
+        self.event_service = copy.deepcopy(context.event_service)
+        self.step_id = context.step_id
+        self._episode_id = context._episode_id
+
+        self._should_clear_events = context._should_clear_events
+
+        self._increment_env_step_warning_printed = context._increment_env_step_warning_printed

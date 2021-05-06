@@ -4,10 +4,12 @@ from typing import Any, Union, Optional, Dict, Tuple
 import numpy as np
 
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.seeding import MazeSeeding
@@ -63,9 +65,20 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
 
         return obs
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """This wrapper does not modify observations and actions."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'RandomResetWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(action)

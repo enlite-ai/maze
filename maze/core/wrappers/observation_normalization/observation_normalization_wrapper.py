@@ -4,24 +4,25 @@ import os
 import pickle
 from collections import defaultdict
 from types import ModuleType
-from typing import Any, Dict, Union, List, Optional
+from typing import Any, Dict, Union, List, Optional, Tuple
 
 import gym
 import numpy as np
+from maze.core.env.action_conversion import ActionType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from omegaconf import DictConfig
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.normalization_strategies.base import \
     ObservationNormalizationStrategy, StructuredStatisticsType
 from maze.core.wrappers.wrapper import ObservationWrapper
 
 
-class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
+class ObservationNormalizationWrapper(ObservationWrapper[MazeEnv]):
     """An observation normalization wrapper.
     It provides functionality for:
 
@@ -58,7 +59,7 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
             base_type=ObservationNormalizationStrategy
         )
 
-    def __init__(self, env: Union[StructuredEnvSpacesMixin, MazeEnv],
+    def __init__(self, env: MazeEnv,
                  default_strategy: Union[str, ObservationNormalizationStrategy],
                  default_strategy_config: Dict[str, Any],
                  default_statistics: Optional[Dict[str, Any]],
@@ -295,3 +296,13 @@ class ObservationNormalizationWrapper(ObservationWrapper[StructuredEnv]):
                                 config_key in self.manual_config[observation_key]
 
         return has_manual_config_key
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'ObservationNormalizationWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(action)

@@ -1,4 +1,5 @@
 """Contains a MazeEnv monitoring wrapper."""
+import warnings
 from typing import TypeVar, Union, Any, Tuple, Dict, Optional
 
 import numpy as np
@@ -11,6 +12,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.log_events.monitoring_events import ActionEvents, RewardEvents, ObservationEvents
 from maze.core.wrappers.wrapper import Wrapper
@@ -70,6 +72,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
 
         return obs, rew, done, info
 
+    @override(BaseEnv)
     def reset(self) -> ObservationType:
         """Resets the wrapper and returns the initial observation.
 
@@ -87,6 +90,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
 
         return obs
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
@@ -148,3 +152,17 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
             elif isinstance(actor_action_space, spaces.Box):
                 actor_action = action[actor_name]
                 self.action_events.continuous_action(step_key=substep_name, name=actor_name, value=actor_action)
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'MazeEnvMonitoringWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        warnings.warn("Try to avoid wrappers such as the 'MazeEnvMonitoringWrapper'"
+                      "when working with simulated envs to reduce overhead.")
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        warnings.warn("Try to avoid wrappers such as the 'MazeEnvMonitoringWrapper'"
+                      "when working with simulated envs to reduce overhead.")
+        return self.env.step_without_observation(action)

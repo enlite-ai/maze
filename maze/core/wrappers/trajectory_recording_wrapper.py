@@ -1,12 +1,14 @@
 """Generate trajectory data for the wrapped environment."""
 
 import uuid
+import warnings
 from copy import deepcopy
 from typing import Union, Any, Tuple, Dict, Optional
 
 import gym
 
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
@@ -14,6 +16,8 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
+from maze.core.env.maze_state import MazeStateType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
@@ -165,9 +169,24 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
 
         return StateTrajectoryRecord(episode_id, renderer)
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'TrajectoryRecordingWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        warnings.warn("Try to avoid wrappers such as the 'TrajectoryRecordingWrapper'"
+                      "when working with simulated envs to reduce overhead.")
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        warnings.warn("Try to avoid wrappers such as the 'TrajectoryRecordingWrapper'"
+                      "when working with simulated envs to reduce overhead.")
+        return self.env.step_without_observation(action)

@@ -20,6 +20,7 @@ from maze.core.log_stats.log_stats_writer_tensorboard import LogStatsWriterTenso
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.utils.bcolors import BColors
 
+
 class SimpleStatsLoggingSetup:
     """
     Helper class to simplify the statistics logging setup. All statistics defined for the given env are sent

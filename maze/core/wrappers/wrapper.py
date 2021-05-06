@@ -3,16 +3,17 @@ from abc import abstractmethod, ABC
 from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, Callable
 
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 
-# Type to be contained in wrapper.
 EnvType = TypeVar("EnvType")
 
 
-class Wrapper(Generic[EnvType], ABC):
+class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     """
     A transparent environment Wrapper that works with any manifestation of :class:`~maze.core.env.base_env.BaseEnv`.
     It is intended as drop-in replacement for gym.core.Wrapper.
@@ -74,6 +75,7 @@ class Wrapper(Generic[EnvType], ABC):
         if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
             assert isinstance(env.context, EnvironmentContext)
             self._register_hook("step", env.context.pre_step)
+            self._register_hook("step_without_observation", env.context.pre_step)
 
     @classmethod
     def _create_proxy(cls, original_fn: Callable, pre_fn: Callable) -> Callable:
@@ -167,6 +169,8 @@ class Wrapper(Generic[EnvType], ABC):
 
         return cls(env, **kwargs)
 
+    # implementing the interfaces below is optional for use cases where you actually need them
+
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
@@ -221,6 +225,19 @@ class Wrapper(Generic[EnvType], ABC):
 
         raise NotImplementedError
 
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: EnvType) -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`.
+
+        Note: implementing this method is required for stateful environment wrappers.
+        """
+        raise NotImplementedError
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        raise NotImplementedError
+
 
 class ObservationWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the environments observation."""
@@ -240,6 +257,7 @@ class ObservationWrapper(Wrapper[EnvType], ABC):
     def observation(self, observation: Any) -> Any:
         """Observation mapping method."""
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
@@ -267,6 +285,7 @@ class ActionWrapper(Wrapper[EnvType], ABC):
     def reverse_action(self, action: Any) -> Any:
         """Abstract action reverse mapping method."""
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
@@ -276,6 +295,11 @@ class ActionWrapper(Wrapper[EnvType], ABC):
         if act_dict is not None:
             act_dict = {policy_id: self.reverse_action(action) for policy_id, action in act_dict.items()}
         return obs_dict, act_dict
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(self.action(action))
 
 
 class RewardWrapper(Wrapper[EnvType], ABC):
@@ -290,9 +314,16 @@ class RewardWrapper(Wrapper[EnvType], ABC):
     def reward(self, reward: Any) -> Any:
         """Reward mapping method."""
 
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType],
                                          first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        reward, done, info = self.env.step_without_observation(action)
+        return self.reward(reward), done, info

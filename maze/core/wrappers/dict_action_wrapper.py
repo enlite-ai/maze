@@ -3,6 +3,8 @@ from typing import Dict, Tuple, Union
 
 import gym
 import numpy as np
+from maze.core.annotations import override
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 
 from maze.core.wrappers.wrapper import ActionWrapper
 
@@ -49,3 +51,8 @@ class DictActionWrapper(ActionWrapper[gym.Env]):
             return dict_action
         else:
             return {"action": action}
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'DictActionWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self.env.clone_from(env)

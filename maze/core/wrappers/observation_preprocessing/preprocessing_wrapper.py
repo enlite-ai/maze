@@ -2,7 +2,9 @@
 from typing import Any, Dict, List, Tuple, Mapping
 
 from maze.core.annotations import override
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.action_conversion import ActionType
+from maze.core.env.maze_env import MazeEnv
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.factory import Factory
 from maze.core.utils.structured_env_utils import flat_structured_space
@@ -10,7 +12,7 @@ from maze.core.wrappers.observation_preprocessing.preprocessors.base import PreP
 from maze.core.wrappers.wrapper import ObservationWrapper
 
 
-class PreProcessingWrapper(ObservationWrapper[StructuredEnv]):
+class PreProcessingWrapper(ObservationWrapper[MazeEnv]):
     """An observation pre-processing wrapper.
     It provides functionality for:
 
@@ -96,3 +98,13 @@ class PreProcessingWrapper(ObservationWrapper[StructuredEnv]):
         # remove temporary spaces
         for sub_step_key, obs_key in temporary_spaces:
             self.observation_spaces_dict[sub_step_key].spaces.pop(obs_key)
+
+    @override(SimulatedEnvMixin)
+    def clone_from(self, env: 'PreProcessingWrapper') -> None:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        self.env.clone_from(env)
+
+    @override(SimulatedEnvMixin)
+    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
+        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
+        return self.env.step_without_observation(action)
