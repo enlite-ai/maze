@@ -38,7 +38,7 @@ Maze so far supports the following action space - probability distribution combi
 +------------------+-------------------------------------------------------+
 | Multi-Discrete   | Multi-Categorical (default)                           |
 +------------------+-------------------------------------------------------+
-| (Multi)-Binary   | Bernoulli (default)                                   |
+| (Multi-)Binary   | Bernoulli (default)                                   |
 +------------------+-------------------------------------------------------+
 | Box (Continuous) | Diagonal-Gaussian (default), Beta, Squashed-Gaussian  |
 +------------------+-------------------------------------------------------+
