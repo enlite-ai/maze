@@ -62,3 +62,27 @@ class CumulativeMovingMeanStd(object):
         self.mean = new_mean
         self.var = new_var
         self._count = new_count
+
+
+class CumulativeMovingMinMax(object):
+    """Maintains cumulative moving min and max of incoming numpy arrays along axis 0.
+
+    Output shapes:
+    scalar -> scalar
+    vector -> scalar
+    matrix -> vector
+    :param initial_min: Initial (known) minimum value.
+    :param initial_max: Initial (known) maximum value.
+    """
+
+    def __init__(self, initial_min: Optional[float] = None, initial_max: Optional[float] = None):
+        self.min = initial_min if initial_min is not None else np.finfo(np.float32).max
+        self.max = initial_max if initial_max is not None else np.finfo(np.float32).min
+
+    def update(self, new_data: float) -> None:
+        """Update cumulative moving statistics.
+
+        :param new_data: New data to update the stats with.
+        """
+        self.max = max(self.max, new_data)
+        self.min = min(self.min, new_data)

@@ -16,12 +16,12 @@ model_builder:
       block_type: maze.perception.blocks.DenseBlock
       block_params:
         hidden_units: [128]
-        non_lin: torch.nn.Tanh
+        non_lin: torch.nn.ReLU
     hidden:
       block_type: maze.perception.blocks.DenseBlock
       block_params:
         hidden_units: [128]
-        non_lin: torch.nn.Tanh
+        non_lin: torch.nn.ReLU
     recurrence: {}
 
 policy:
