@@ -1,6 +1,6 @@
 """Contains unit tests for incremental stats."""
 import numpy as np
-from maze.core.utils.stats_utils import CumulativeMovingMeanStd
+from maze.core.utils.stats_utils import CumulativeMovingMeanStd, CumulativeMovingMinMax
 
 
 def test_incremental_mean_std():
@@ -40,3 +40,14 @@ def test_incremental_mean_std():
         assert np.allclose(stats.var, np.var(np.vstack(data), axis=0), atol=1e-6)
     assert stats.mean.shape == (5,)
     assert stats.var.shape == (5,)
+
+
+def test_incremental_min_max():
+    """ unit tests """
+
+    # scalar case
+    stats = CumulativeMovingMinMax(initial_min=5, initial_max=0)
+    for i in range(5):
+        stats.update(i)
+        assert stats.min == 0
+        assert stats.max == i
