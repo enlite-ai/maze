@@ -38,13 +38,11 @@ Maze so far supports the following action space - probability distribution combi
 +------------------+-------------------------------------------------------+
 | Multi-Discrete   | Multi-Categorical (default)                           |
 +------------------+-------------------------------------------------------+
-| Multi-binary     | Bernoulli (default)                                   |
+| (Multi)-Binary   | Bernoulli (default)                                   |
 +------------------+-------------------------------------------------------+
 | Box (Continuous) | Diagonal-Gaussian (default), Beta, Squashed-Gaussian  |
 +------------------+-------------------------------------------------------+
 | Dict             | DictProbabilityDistribution (default)                 |
-+------------------+-------------------------------------------------------+
-| MultiDiscrete    | MultiCategoricalProbabilityDistribution (default)     |
 +------------------+-------------------------------------------------------+
 
 The DictProbabilityDistribution combines any of the other action spaces and distributions into a joint action space
