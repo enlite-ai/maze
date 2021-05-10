@@ -108,7 +108,11 @@ class EnvironmentContext:
 
         :param context: The environment context to clone.
         """
-        self.event_service = copy.deepcopy(context.event_service)
+        # cloning context.event_service is not required as this gets cleared prior to each step in
+        # maze.core.env.environment_context.EnvironmentContext.pre_step
+        # (as Python's GC cant resolve circular dependencies this would anyways cause severe problems)
+        # self.event_service = copy.deepcopy(context.event_service)
+
         self.step_id = context.step_id
         self._episode_id = context._episode_id
 
