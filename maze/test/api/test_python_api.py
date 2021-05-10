@@ -2,44 +2,43 @@
 Tests for Supervisor run_context.
 """
 import copy
-import tempfile
 from typing import Tuple
 
+import gym
 import pytest
+from torch import nn
 
-from docs.source.best_practices_and_tutorials.code_snippets.plain_python_training import CartpolePolicyNet, \
-    cartpole_env_factory, CartpoleValueNet
+from maze.api import run_context
+from maze.api.utils import RunMode
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
-from maze.api import run_context
-from maze.core.agent.torch_state_critic import TorchSharedStateCritic
+from maze.core.agent.torch_state_critic import TorchSharedStateCritic, TorchStepStateCritic
 from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymCoreEnv, GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.general.torch_model_block import TorchModelBlock
-from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet
+from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
+from maze.perception.models.critics import SharedStateCriticComposer
 from maze.perception.models.custom_model_composer import CustomModelComposer
 from maze.perception.models.policies import ProbabilisticPolicyComposer
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 
 
 def _get_cartpole_setup_components() -> Tuple[
-    CustomModelComposer, ProbabilisticPolicyComposer, TorchPolicy, TorchActorCritic
+    CustomModelComposer, ProbabilisticPolicyComposer, SharedStateCriticComposer, TorchPolicy, TorchActorCritic
 ]:
     """
     Returns various instantiated components for environment CartPole-v0.
     :return: Various components cartpole setting.
     """
 
-    env = cartpole_env_factory()
+
+    env = GymMazeEnv(env=gym.make("CartPole-v0"))
     observation_space = env.observation_space
     action_space = env.action_space
 
-    policy_net = CartpolePolicyNet(
-        obs_shapes={'observation': observation_space.spaces['observation'].shape},
-        action_logit_shapes={'action': (action_space.spaces['action'].n,)})
-
+    policy_net = FlattenConcatPolicyNet({'observation': (4,)}, {'action': (2,)}, hidden_units=[16], non_lin=nn.Tanh)
     maze_wrapped_policy_net = TorchModelBlock(
         in_keys='observation', out_keys='action',
         in_shapes=observation_space.spaces['observation'].shape, in_num_dims=[2],
@@ -77,12 +76,14 @@ def _get_cartpole_setup_components() -> Tuple[
 
     # Value Network
     # ^^^^^^^^^^^^^
-    value_net = CartpoleValueNet(obs_shapes={'observation': observation_space.spaces['observation'].shape})
-
+    value_net = FlattenConcatStateValueNet({'observation': (4,)}, hidden_units=[16], non_lin=nn.Tanh)
     maze_wrapped_value_net = TorchModelBlock(
         in_keys='observation', out_keys='value',
-        in_shapes=observation_space.spaces['observation'].shape, in_num_dims=[2],
-        out_num_dims=2, net=value_net)
+        in_shapes=observation_space.spaces['observation'].shape,
+        in_num_dims=[2],
+        out_num_dims=2,
+        net=value_net
+    )
 
     value_networks = {0: maze_wrapped_value_net}
 
@@ -90,6 +91,14 @@ def _get_cartpole_setup_components() -> Tuple[
     # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     torch_critic = TorchSharedStateCritic(
         networks=value_networks, num_policies=1, device='cpu', stack_observations=True
+    )
+
+    # Critic composer.
+    critic_composer = SharedStateCriticComposer(
+        observation_spaces_dict=env.observation_spaces_dict,
+        agent_counts_dict={0: 1},
+        networks=value_networks,
+        stack_observations=True
     )
 
     # Initializing the ActorCritic Model.
@@ -105,7 +114,7 @@ def _get_cartpole_setup_components() -> Tuple[
         agent_counts_dict={0: 1}
     )
 
-    return model_composer, policy_composer, torch_policy, actor_critic_model
+    return model_composer, policy_composer, critic_composer, torch_policy, actor_critic_model
 
 
 @pytest.mark.parametrize(
@@ -125,8 +134,7 @@ def test_standalone_training(alg: str, runner: str) -> None:
     """
 
     overrides = {
-        "env.name": "CartPole-v0",
-        "runner.normalization_samples": 1
+        "env.name": "CartPole-v0", "runner.normalization_samples": 1
     }
     if alg in ("a2c", "ppo"):
         overrides["runner.concurrency"] = 1
@@ -144,7 +152,7 @@ def test_overrides() -> None:
     Tests setting of values via overrides dictionary.
     """
 
-    model_composer, policy_composer, torch_policy, torch_model = _get_cartpole_setup_components()
+    _, policy_composer, _, _, _ = _get_cartpole_setup_components()
     gym_env_name = "CartPole-v0"
 
     rc = run_context.RunContext(
@@ -240,9 +248,8 @@ def test_manual_rollout() -> None:
     env = env_factory()
     obs = env.reset()
     for i in range(2):
-        # Note: actor_id shouldn't be necessary. Will be fixed.
-        action = rc.policy.compute_action(obs, actor_id=(0, 0))
-        action = rc.compute_action(obs, actor_id=(0, 0))
+        action = rc.policy.compute_action(obs)
+        action = rc.compute_action(obs)
         obs, rewards, dones, info = env.step(action)
 
 
@@ -394,6 +401,7 @@ def test_inconsistency_identification_type_3() -> None:
         algorithm=a2c_alg_config,
         env=lambda: GymMazeEnv(env="CartPole-v0"),
         silent=True,
+        runner="dev",
         overrides=default_overrides
     )
     rc.train(1)
@@ -412,7 +420,7 @@ def test_inconsistency_identification_type_4_invalid() -> None:
     Tests identification of inconsistency due to specification of super- and subcomponents.
     """
 
-    model_composer, policy_composer, torch_policy, torch_model = _get_cartpole_setup_components()
+    model_composer, policy_composer, _, _, _ = _get_cartpole_setup_components()
     model_policy_target = "maze.perception.models.policies.ProbabilisticPolicyComposer"
 
     # With nesting level > 1. Both parent and child in overrides.
@@ -511,7 +519,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
     Tests identification of inconsistency due to specification of super- and subcomponents.
     """
 
-    model_composer, policy_composer, torch_policy, torch_model = _get_cartpole_setup_components()
+    _, policy_composer, _, _, _ = _get_cartpole_setup_components()
     model_policy_target = "maze.perception.models.policies.ProbabilisticPolicyComposer"
     model_dictconfig = {
         '_target_': 'maze.perception.models.custom_model_composer.CustomModelComposer',
@@ -547,6 +555,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         silent=True,
         model=model_dictconfig,
         policy=policy_composer,
+        runner="dev",
         overrides=default_overrides
     )
     rc.train(1)
@@ -559,6 +568,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         silent=True,
         model="flatten_concat",
         policy=policy_composer,
+        runner="dev",
         overrides=default_overrides
     )
     rc.train(1)
@@ -570,6 +580,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         env=lambda: GymMazeEnv(env="CartPole-v0"),
         silent=True,
         policy=model_dictconfig["policy"],
+        runner="dev",
         overrides={"policy._target_": model_policy_target, **default_overrides}
     )
     rc.train(1)
@@ -581,6 +592,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         env=lambda: GymMazeEnv(env="CartPole-v0"),
         silent=True,
         policy=model_dictconfig["policy"],
+        runner="dev",
         overrides={"model.policy._target_": model_policy_target}
     )
     rc.train(1)
@@ -603,5 +615,52 @@ def test_env_type():
     assert isinstance(env, LogStatsWrapper)
 
 
-if __name__ == '__main__':
-    test_env_type()
+def test_autoresolving_proxy_attribute():
+    """
+    Tests auto-resolving proxy attributes like critic (see for :py:class:`maze.api.utils._ATTRIBUTE_PROXIES` for more
+    info).
+    """
+
+    cartpole_env_factory = lambda: GymMazeEnv(env=gym.make("CartPole-v0"))
+
+    _, _, critic_composer, _, _ = _get_cartpole_setup_components()
+    alg_config = A2CAlgorithmConfig(
+        n_epochs=1,
+        epoch_length=25,
+        deterministic_eval=False,
+        eval_repeats=2,
+        patience=15,
+        critic_burn_in_epochs=0,
+        n_rollout_steps=100,
+        lr=0.0005,
+        gamma=0.98,
+        gae_lambda=1.0,
+        policy_loss_coef=1.0,
+        value_loss_coef=0.5,
+        entropy_coef=0.00025,
+        max_grad_norm=0.0,
+        device='cpu'
+    )
+    default_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
+
+    rc = run_context.RunContext(
+        env=cartpole_env_factory,
+        silent=True,
+        algorithm=alg_config,
+        critic=critic_composer,
+        runner="dev",
+        overrides=default_overrides
+    )
+    rc.train(n_epochs=1)
+    assert isinstance(rc._runners[RunMode.TRAINING].model_composer.critic, TorchSharedStateCritic)
+
+    rc = run_context.RunContext(
+        env=cartpole_env_factory,
+        silent=True,
+        algorithm=alg_config,
+        critic="template_state",
+        runner="dev",
+        overrides=default_overrides
+    )
+    rc.train(n_epochs=1)
+    assert isinstance(rc._runners[RunMode.TRAINING].model_composer.critic, TorchStepStateCritic)

@@ -14,7 +14,7 @@ import omegaconf
 from omegaconf import DictConfig
 
 from maze.api.config_auditor import ConfigurationAuditor
-from maze.api.config_loader import ConfigLoader
+from maze.api.config_loader import ConfigurationLoader
 from maze.api.utils import RunMode, InvalidSpecificationError, working_directory
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.action_conversion import ActionType
@@ -30,7 +30,6 @@ from maze.perception.models.critics import BaseStateCriticComposer
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.policies.base_policy_composer import BasePolicyComposer
 from maze.train.trainers.common.config_classes import AlgorithmConfig
-from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
 
 logger = logging.getLogger(__name__)
@@ -43,36 +42,48 @@ class RunContext:
     It is initialized via an interface largely congruent with Maze' CLI, but also accepts instantiated Python objects.
     Internally it wraps a TrainingRunner and RolloutRunner object initiated w.r.t. to the specified configuration.
 
-    Note: Currently only training is supported - rollout capabilities will be added after a refactoring of RolloutRunner
-    and their integration into the Maze configuration flow.
+    Note: As of now, only training is supported. Rollout will be added soon.
 
     :param run_dir: Directory in which to store training and rollout processes and from which to read artefacts. This is
-    an alias of hydra.run.dir (i.e. "hydra.run.dir"=x in `overrides` has the same effect as run_dir=x).
+                    an alias of hydra.run.dir (i.e. "hydra.run.dir"=x in `overrides` has the same effect as run_dir=x).
+
     :param env: Environment configuration module name, Hydra configuration or callable returning instantiated Maze
-    environment. It might be necessary, depending on the chosen runner and/or trainer configuration, that multiple
-    environments have to be instantiated. env has to be passed as config, path to the config or factory function hence.
+                environment. It might be necessary, depending on the chosen runner and/or trainer configuration, that
+                multiple environments have to be instantiated. env has to be passed as config, path to the config or
+                factory function hence.
+
     :param wrappers: Wrapper configuration module name, Hydra configuration or instance.
+
     :param algorithm: Algorithm configuration module name, Hydra configuration or instance.
+
     :param model: Model configuration module name, Hydra configuration or instance.
+
     :param policy: Policy configuration module name, Hydra configuration or instance. Part of the model, i.e. setting
-    the policy via this argument or via model.policy in the overrides dictionary is equivalent.
-    Beware: When using a TemplateModelComposer the policy is to be specified without networks.
+                   the policy via this argument or via model.policy in the overrides dictionary is equivalent.
+                   Beware: When using a TemplateModelComposer the policy is to be specified without networks.
+
     :param critic: Critic configuration module name, Hydra configuration or instance. Part of the model, i.e. setting
-    the policy via this argument or via model.critic in the overrides dictionary is equivalent.
-    Beware: When using a TemplateModelComposer the critic is to be specified without networks.
+                   the policy via this argument or via model.critic in the overrides dictionary is equivalent.
+                   Beware: When using a TemplateModelComposer the critic is to be specified without networks.
+
     :param launcher: Launcher configuration module name, Hydra configuration or instance.
-    :param model_selection: ModelSelection configuration module name, Hydra configuration or instance.
+
     :param runner: Runner configuration module name, Hydra configuration or instance. RolloutRunner configuration
-    will be providable once rollouts are fully supported.
+                   will be providable once rollouts are fully supported.
+
     :param overrides: Dictionary specifying overrides for individual properties. Overrides might specify values for
-    entire components like environments, some of their attributes or for specializations. Possible values are Hydra
-    configuration dictionaries as well as instantiated objects.
-    Beware that overrides will not load configuration modules and can only override loaded configuration elements (i.e.
-    overriding X.attr will fails if X is not part of the loaded configuration).
+                      entire components like environments, some of their attributes or for specializations. Possible
+                      values are Hydra configuration dictionaries as well as instantiated objects.
+                      Beware that overrides will not load configuration modules and can only override loaded
+                      configuration elements (i.e. overriding X.attr will fails if X is not part of the loaded
+                      configuration).
+
     :param configuration: "configuration" determines which specialization configuration to load. Possible values: "run"
-    or None. It has to be specified via module name exclusively, i.e. configuration="test". This affects the following
-    components: Environments, models, algorithms and runners.
+                          or None. It has to be specified via module name exclusively, i.e. configuration="test". This
+                          affects the following components: Environments, models, algorithms and runners.
+
     :param silent: Whether to suppress output to stdout.
+
     """
 
     _SilenceReturnType = TypeVar("_SilenceReturnType")
@@ -89,7 +100,6 @@ class RunContext:
         policy: Optional[Union[str, Mapping[str, Any], BasePolicyComposer]] = None,
         critic: Optional[Union[str, Mapping[str, Any], BaseStateCriticComposer]] = None,
         launcher: Optional[Union[str, Mapping[str, Any], hydra.plugins.launcher.Launcher]] = None,
-        model_selection: Optional[Union[str, Mapping[str, Any], BestModelSelection]] = None,
         runner: Optional[Union[str, Mapping[str, Any], TrainingRunner]] = None,
         # Overrides.
         overrides: Optional[Dict[str, Union[Mapping[str, Any], Any]]] = None,
@@ -180,7 +190,7 @@ class RunContext:
         :return: Instantiated Runner instance.
         """
 
-        cl = ConfigLoader(
+        cl = ConfigurationLoader(
             _run_mode=run_mode,
             _kwargs=self._auditors[run_mode].kwargs,
             _overrides=self._auditors[run_mode].overrides,
@@ -205,9 +215,11 @@ class RunContext:
     def train(self, n_epochs: Optional[int] = None, **train_kwargs) -> None:
         """
         Trains for specified number of epochs.
+
         :param n_epochs: Number of epochs to train for.
+
         :param train_kwargs: Arguments to pass on to
-        :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.train`.
+                             :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.run`.
         """
 
         if self._runners[RunMode.TRAINING] is None:
@@ -283,8 +295,10 @@ class RunContext:
     def configs(self) -> Dict[RunMode, Optional[DictConfig]]:
         """
         Returns Hydra DictConfigs specifying the configuration for training and rollout runners.
+
         :return: Dictionary with one DictConfig for training and rollout each. Note that rollout config is None until
-        first rollout has been enacted.
+                 first rollout has been enacted.
+
         """
 
         return self._configs
@@ -293,7 +307,9 @@ class RunContext:
     def run_dir(self) -> str:
         """
         Returns run directory.
+
         :return: Run directory.
+
         """
 
         return self._workdir
@@ -302,7 +318,9 @@ class RunContext:
     def policy(self) -> TorchPolicy:
         """
         Returns policy.
+
         :return: Policy used for training and rollout.
+
         """
 
         return self._runners[RunMode.TRAINING].model_composer.policy
@@ -316,8 +334,10 @@ class RunContext:
         deterministic: bool = False
     ) -> ActionType:
         """
-        Computes action with configured policy. This wraps :meth:`~maze.core.agent.policy.Policy.compute_action`.
+        Computes action with configured policy. This wraps :meth:`maze.core.agent.policy.Policy.compute_action`.
+
         :return: Computed action for next step.
+
         """
 
         return self.policy.compute_action(observation, maze_state, env, actor_id, deterministic)

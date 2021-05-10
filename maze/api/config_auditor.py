@@ -122,7 +122,7 @@ class ConfigurationAuditor:
               E.g.: If "model" and "policy" are specified, the model is injected first, then the policy. That way the
               "model" object will overwrite the loaded model and the "policy" object will overwrite the policy in the
               "model" object.
-              This doesn't occur in the CLI, since no non-primitive value can be passed.
+              This doesn't occur in the CLI since no non-primitive value can be passed.
         """
 
         # I1. Arguments incompatible with run mode.
@@ -239,7 +239,7 @@ class ConfigurationAuditor:
         # The attribute proxies reflect hierarchy paths for top level arguments.
         attr_proxies = _ATTRIBUTE_PROXIES[self._run_mode]
         fully_qualified_paths = {
-            key: attr_proxies.get(key, tuple(key.split(".")))
+            key: attr_proxies.get(key, {"to": tuple(key.split("."))})["to"]
             for key in ({key for key, val in self._kwargs.items() if val is not None} | self._overrides.keys())
         }
         reverse_fully_qualified_paths = {value: key for key, value in fully_qualified_paths.items()}

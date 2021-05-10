@@ -1,6 +1,6 @@
 """Custom model composer, encapsulating the set of policy and critic networks along with the distribution mapper."""
 
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, Mapping
 
 import gym
 
@@ -64,7 +64,10 @@ class CustomModelComposer(BaseModelComposer):
         # init critic composer
         self._critics_composer = None
         if critic is not None:
-            critic_type = Factory(CriticComposerInterface).type_from_name(critic['_target_'])
+            critic_type = Factory(
+                CriticComposerInterface
+            ).type_from_name(critic['_target_']) if isinstance(critic, Mapping) else type(critic)
+
             if issubclass(critic_type, BaseStateCriticComposer):
                 self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
                     critic,

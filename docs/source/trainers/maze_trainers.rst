@@ -60,9 +60,21 @@ In International conference on machine learning (pp. 1928-1937).
 
 **Example**
 
-.. code-block:: console
+.. tabs::
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
+    .. code-tab:: console
+
+        maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            algorithm="a2c",
+            overrides={"env.name": "CartPole-v0"},
+            model="vector_obs",
+            critic="template_state"
+        )
+        rc.train()
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.a2c.a2c_algorithm_config.A2CAlgorithmConfig`
 
@@ -105,9 +117,21 @@ arXiv preprint arXiv:1707.06347.
 
 **Example**
 
-.. code-block:: console
+.. tabs::
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
+    .. code-tab:: console
+
+        maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            algorithm="ppo",
+            overrides={"env.name": "CartPole-v0"},
+            model="vector_obs",
+            critic="template_state"
+        )
+        rc.train()
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.ppo.ppo_algorithm_config.PPOAlgorithmConfig`
 
@@ -151,9 +175,21 @@ arXiv preprint arXiv:1802.01561.
 
 **Example**
 
-.. code-block:: console
+.. tabs::
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
+    .. code-tab:: console
+
+        maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            algorithm="impala",
+            overrides={"env.name": "CartPole-v0"},
+            model="vector_obs",
+            critic="template_state"
+        )
+        rc.train()
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.impala.impala_algorithm_config.ImpalaAlgorithmConfig`
 
@@ -235,9 +271,20 @@ arXiv preprint arXiv:1703.03864.
 
 **Example**
 
-.. code-block:: console
+.. tabs::
 
-    maze-run -cn conf_train env.name=CartPole-v0 algorithm=es model=vector_obs
+    .. code-tab:: console
+
+        maze-run -cn conf_train env.name=CartPole-v0 algorithm=es model=vector_obs
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            algorithm="es",
+            overrides={"env.name": "CartPole-v0"},
+            model="vector_obs"
+        )
+        rc.train()
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.es.es_algorithm_config.ESAlgorithmConfig`
 
@@ -268,6 +315,8 @@ critics. This enables us to train :ref:`Maze Models <perception_module>` with
 :ref:`Maze action distributions <action_spaces_and_distributions_module>`
 in :ref:`Maze environments <env-hierarchy>` with almost all RLlib algorithms.
 
+RLlib algorithms are currently not supported by :class:`~maze.api.run_context.RunContext`.
+
 **Example and Details:** :ref:`Maze RLlib Runner <maze_rllib_runner>`
 
 Where to Go Next
@@ -276,4 +325,4 @@ Where to Go Next
 - You can read up on our general introduction to the :ref:`Maze Training Workflow <training>`.
 - To build and use custom Maze models please refer to :ref:`Maze Perception Module<perception_module>`.
 - You can also look up the supported
-  :ref:`Action Spaces and Distributions Module<action_spaces_and_distributions_module>`
+  :ref:`Action Spaces and Distributions Module<action_spaces_and_distributions_module>`.

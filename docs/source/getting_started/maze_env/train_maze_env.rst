@@ -56,12 +56,24 @@ you can visit the :ref:`introduction on how to work with template models <templa
 Training an Agent
 -----------------
 
-Once the config is set up we are good to go to start our first training run (in the cmd below with the PPO algorithm):
+Once the config is set up we are good to go to start our first training run (in the cmd below with the PPO algorithm) via the CLI with
 
-.. code:: bash
+.. tabs::
+    .. code-tab:: bash
 
-     maze-run -cn conf_train env=tutorial_cutting_2d_basic wrappers=tutorial_cutting_2d_basic \
-     model=tutorial_cutting_2d_basic algorithm=ppo
+         maze-run -cn conf_train env=tutorial_cutting_2d_basic wrappers=tutorial_cutting_2d_basic \
+         model=tutorial_cutting_2d_basic algorithm=ppo
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            env="tutorial_cutting_2d_basic",
+            wrappers="tutorial_cutting_2d_basic",
+            model="tutorial_cutting_2d_basic",
+            algorithm="ppo"
+        )
+        rc.train()
+
 
 Running the trainer should print a command line output similar to the one shown below.
 

@@ -9,6 +9,10 @@ workflow. In general, there are different options for carrying out and configuri
 (To see experiment configuration in action, check out our
 `project template <https://github.com/enlite-ai/maze-cartpole>`_.)
 
+.. note::
+
+    Experiments are not yet supported by :class:`RunContext<maze.api.run_context.RunContext>`.
+
 .. contents:: Overview
     :depth: 1
     :local:

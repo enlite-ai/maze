@@ -106,6 +106,7 @@ Spotlights
 Below we list of some of Maze's key features.
 The list is far from exhaustive but none the less a nice starting point to dive into the framework.
 
+ - Get things rolling by training your environment and rolling out your policy in just a few lines of code with :ref:`Maze' high-level API <run_context>`.
  - Configure your applications and experiments with the :ref:`Hydra config system <hydra>` |hydra|.
  - Design and visualize your policy and value networks with the :ref:`Perception Module <perception_module>`.
  - :ref:`Pre-process <observation_pre_processing>` and :ref:`normalize <observation_normalization>`
@@ -155,7 +156,7 @@ but most importantly also provide code snippets and minimum working examples to 
 
 .. toctree::
    :maxdepth: -1
-   :caption: Trainers
+   :caption: Training
 
    trainers/maze_trainers.rst
    trainers/maze_rllib_runner.rst
@@ -170,6 +171,7 @@ but most importantly also provide code snippets and minimum working examples to 
    concepts_and_structure/hydra.rst
    concepts_and_structure/rendering.rst
    concepts_and_structure/struct_envs/overview.rst
+   concepts_and_structure/run_context_overview.rst
 
 .. toctree::
    :maxdepth: -1
@@ -190,7 +192,8 @@ but most importantly also provide code snippets and minimum working examples to 
    best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/maze_and_other_frameworks.rst
    best_practices_and_tutorials/example_cmds.rst
-   best_practices_and_tutorials/plain_python_training_example.rst
+   best_practices_and_tutorials/plain_python_training_example_high_level.rst
+   best_practices_and_tutorials/plain_python_training_example_low_level.rst
 
 .. toctree::
    :maxdepth: -1
