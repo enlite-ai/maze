@@ -5,6 +5,7 @@ import torch
 from omegaconf import DictConfig
 
 from maze.core.agent.torch_policy import TorchPolicy
+from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.space_config import SpacesConfig
@@ -42,3 +43,8 @@ class SerializedTorchPolicy(TorchPolicy):
 
         self.load_state_dict(state_dict)
         self.eval()
+
+    @override(TorchPolicy)
+    def seed(self, seed: int):
+        """Set torch manual seed"""
+        torch.manual_seed(seed)
