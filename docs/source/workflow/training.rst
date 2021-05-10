@@ -35,11 +35,18 @@ Example 1: Your First Training Run
 ----------------------------------
 
 We can train a policy from scratch on the Cartpole environment
-with default settings using the following command:
+with default settings using the command:
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train env=gym_env env.name=CartPole-v0
+    .. code-tab:: console
+
+      $ maze-run -cn conf_train env=gym_env env.name=CartPole-v0
+
+    .. code-tab:: python
+
+      rc = RunContext(env="gym_env", overrides={"env.name": "CartPole-v0"})
+      rc.train()
 
 The ``-cn conf_train`` argument specifies that we would like to use
 ``conf_train.yaml`` as our root config file. This is
@@ -49,12 +56,12 @@ Furthermore, we specify that ``gym_env`` configuration should be used, with
 ``CartPole-v0`` as the Gym environment name. (For more information on how to read and customize the default configuration files,
 see :ref:`Hydra overview<hydra-overview-config_root>`.)
 
-Such a training run consists of these main stages,
-loaded based on the default configuration provided by Maze:
+Such a training run consists of these main stages, loaded based on the default configuration provided by Maze:
 
 1. The full configuration is assembled via Hydra based on the config files available, the defaults
    set in root config, and the overrides you provide via CLI (see :ref:`Hydra overview<hydra-overview>`
-   to understand more about this process).
+   to understand more about this process). :class:`~maze.api.run_context.RunContext` allows to do this from within your
+   Python script and offers some convenient functionality, e.g. passing object instances, on top. See :ref:`here<run_context>` for more information on the differences for training and rollout between the Python API, i.e. :class:`~maze.api.run_context.RunContext`, and the CLI, i.e. :code:`maze-run`.
 2. Hydra creates the output directory where all output files will be stored.
 3. The full configuration of the job is logged: (1) to standard output,
    (2) as a text entry to your Tensorboard logs, and (3) as a YAML file in the output directory.
@@ -132,31 +139,73 @@ without writing any additional configuration files.
 By default, the ``gym_env`` configuration is used, which allows us to specify the Gym env
 that we would like to instantiate:
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2
+    .. code-tab:: console
+
+      $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2
+
+    .. code-tab:: python
+
+      rc = RunContext(env="gym_env", overrides={"env.name": "LunarLander-v2"})
+      rc.train()
 
 With appropriate overrides, we can also include vector observation model and wrappers
 (providing normalization):
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v0 wrappers=gym_pixel_env model=gym_pixel_env
+    .. code-tab:: console
+
+      $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 wrappers=vector_obs model=vector_obs
+
+    .. code-tab:: python
+
+      rc = RunContext(
+        env="gym_env",
+        overrides={"env.name": "LunarLander-v2"},
+        wrappers="vector_obs",
+        model="vector_obs"
+      )
+      rc.train()
 
 Alternatively, we could use the :ref:`tutorial Cutting 2D environment <env_from_scratch>`:
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked \
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    .. code-tab:: console
+
+        $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked \
+        wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            env="tutorial_cutting_2d_struct_masked",
+            wrappers="tutorial_cutting_2d",
+            model="tutorial_cutting_2d_struct_masked"
+        )
+        rc.train()
 
 Further, by default, the algorithm used is Evolution Strategies (the implementation is provided by Maze).
 To use a different algorithm, e.g. PPO with a shared critic, we just need to add the appropriate overrides:
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train algorithm=ppo env=tutorial_cutting_2d_struct_masked \
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    .. code-tab:: console
+
+      $ maze-run -cn conf_train algorithm=ppo env=tutorial_cutting_2d_struct_masked \
+        wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+
+    .. code-tab:: python
+
+      rc = RunContext(
+            env="tutorial_cutting_2d_struct_masked",
+            wrappers="tutorial_cutting_2d",
+            model="tutorial_cutting_2d_struct_masked",
+            algorithm="ppo"
+      )
+      rc.train()
 
 To see all the configuration files available out-of-the-box, check out the ``maze/conf`` package.
 
@@ -173,30 +222,39 @@ directory. Below you find a few examples where this might be useful.
 
 This is the initial training run:
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo
+    .. code-tab:: console
 
-Once trained we can resume this run with:
+      $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo
 
-.. code-block:: console
+    Once trained we can resume this run with:
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo \
-    input_dir=outputs/<experiment-dir>
+    .. code-tab:: python
+
+      rc = RunContext(env="gym_env", overrides={"env.name": "LunarLander-v2"}, algorithm="ppo")
+      rc.train()
 
 We could also resume training with a refined learning rate:
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo \
-    algorithm.lr=0.0001 input_dir=outputs/<experiment-dir>
+    .. code-tab:: console
 
-or even with a different (compatible) trainer such as a2c:
+      $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo \
+        algorithm.lr=0.0001 input_dir=outputs/<experiment-dir>
 
-.. code-block:: console
+    or even with a different (compatible) trainer such as a2c:
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=a2c \
-    input_dir=outputs/<experiment-dir>
+    .. code-tab:: python
+
+      rc = RunContext(
+            env="gym_env",
+            run_dir="outputs/<experiment_dir>",
+            overrides={"env.name": "LunarLander-v2", "algorithm.lr": 0.0001},
+            algorithm="ppo"
+      )
+      rc.train()
 
 
 .. _training-custom_run:
@@ -215,10 +273,22 @@ along with respective configuration files (see also :ref:`Hydra: Your Own Config
 Then, you can easily launch your environment by supplying your own configuration file
 (here we use one from the tutorial):
 
-.. code-block:: console
+.. tabs::
 
-  $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked \
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    .. code-tab:: console
+
+      $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked \
+        wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+
+    .. code-tab:: python
+
+      rc = RunContext(
+            env="tutorial_cutting_2d_struct_masked",
+            wrappers="tutorial_cutting_2d",
+            model="tutorial_cutting_2d_struct_masked"
+      )
+      rc.train()
+
 
 For links to more customization options (like building custom models with
 :ref:`Maze Perception Module<perception_module>`), check out the
@@ -228,7 +298,7 @@ While customizing other configuration groups listed in the previous section
 (e.g., ``algorithm``, ``runner``) is not needed as often, all of these can be customized
 in an analogous way (i.e., implement your own components that plug into the framework
 instead of the default ones, and then add your own config
-to be able to configure them from the command line).
+to be able to configure them from the command line). When using the Python API with :class:`~maze.api.run_context.RunContext`, you can also bypass configuration files and plug in your instantiated components directly.
 
 
 .. _training-from_python:
@@ -236,10 +306,15 @@ to be able to configure them from the command line).
 Plain Python Training
 ---------------------
 
-In most use cases, it will probably be more convenient to launch training directly from the CLI
-and just implement your custom components (wrappers, environments, models, etc.) as needed. However,
-it is definitely possible to launch training also from Python, and the inner architecture of Maze
-should be sufficiently modular to allow you to extract just the parts that you want.
+Maze offers training also from within your Python script. This can be achieved manually - by generating all necessary components yourself - or managed - by utilizing :class:`~maze.api.run_context.RunContext`, which provides managed training and rollout capabilities.
+
+**Managed Setup**
+
+:class:`~maze.api.run_context.RunContext` initializes a context for running training and rollout with a shared configuration. Its functionality and interfaces are mostly congruent with the CLI's, however there are some significant changes (e.g. being able to pass instantiated Python objects instead of relying exclusively on configuration dictionary objects or files). See :ref:`here<run_context>` for a more thorough introduction.
+
+**Manual Setup**
+
+In most use cases, it will probably be more convenient to launch training directly from the CLI and just implement your custom components (wrappers, environments, models, etc.) as needed. However, the inner architecture of Maze should be sufficiently modular to allow you to modify just the parts that you want.
 
 Because each of the algorithms included in Maze has slightly different needs, the usage will
 likely slightly differ. However, regardless of which algorithm you intend to use,
@@ -270,7 +345,6 @@ For example, these are the ``setup`` and ``run`` methods taken directly from the
    :pyobject: ESDevRunner.run
    :language: python
 
-
 .. _training-wtgn:
 
 Where to Go Next
@@ -283,3 +357,4 @@ Where to Go Next
 - To build custom Maze models, have a look at the :ref:`Maze Perception Module<perception_module>`.
 - To better understand how to configure custom environments and other components of your project,
   you might want to review the more advanced parts of :ref:`configuration with Hydra<hydra>`.
+- For an introduction into training (and rolling out) conveniently with :class:`~maze.api.run_context.RunContext`, head :ref:`here<run_context>`.

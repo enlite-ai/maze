@@ -37,12 +37,22 @@ and the trainers will consider these changes implicitly.
 Training an Agent
 -----------------
 
-To retrain the agent on the environment extended with event and KPI logging, run:
+To retrain the agent on the environment extended with event and KPI logging, run
 
-.. code:: bash
+.. tabs::
+    .. code-tab:: bash
 
-    maze-run -cn conf_train env=tutorial_cutting_2d_events wrappers=tutorial_cutting_2d_events \
-    model=tutorial_cutting_2d_events algorithm=ppo
+        maze-run -cn conf_train env=tutorial_cutting_2d_events wrappers=tutorial_cutting_2d_events \
+        model=tutorial_cutting_2d_events algorithm=ppo
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            env="tutorial_cutting_2d_events",
+            wrappers="tutorial_cutting_2d_events",
+            model="tutorial_cutting_2d_events", algorithm="ppo"
+        )
+        rc.train()
 
 Running the trainer should print an extended command line output similar to the one shown below.
 In addition to base events we now also get a statistics log of *CuttingEvents*, *InventoryEvents* and KPIs.

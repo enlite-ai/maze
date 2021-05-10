@@ -1,14 +1,16 @@
-.. _end_to_end_python:
+.. _end_to_end_python_low_level:
 
-Plain Python Training Example
-=============================
-Here, we will demonstrate how to train an A2C agent with Maze in plain Python.
+Plain Python Training Example (low-level)
+=========================================
+
+This tutorial demonstrates how to train an A2C agent with Maze in plain Python without utilizing :class:`~maze.api.run_context.RunContext`. In the process it introduces and explains some of Maze' most important components and concepts.
+
+This is complementary to the article on :ref:`high-level training in plain Python <end_to_end_python_high_level>`, which guides through the same setup (but with :class:`~maze.api.run_context.RunContext` support).
 
 Environment Setup
 -----------------
 
-We will first prepare our environment for use with Maze. In order to use Maze's parallelization capabilities, it
-is necessary to define a factory function that returns a MazeEnv of your environment. This is easily done for
+We will first prepare our environment for use with Maze. In order to use Maze's parallelization capabilities, it is necessary to define a factory function that returns a MazeEnv of your environment. This is easily done for
 Gym environments:
 
 .. code-block:: python
@@ -24,8 +26,7 @@ Gym environments:
 
         return maze_env
 
-If you have your own environment you must transform it into a MazeEnv yourself, as is shown
-:ref:`here <env_from_scratch-maze_env>`, and have your factory return that.
+If you have your own environment (that is not a :code:`gym.Env`) you must transform it into a MazeEnv yourself, as is shown :ref:`here <env_from_scratch-maze_env>`, and have your factory return that. If it is a custom gym env it can be instantiated with our wrapper as shown above.
 
 We instantiate one environment. This will be used for convenient access to observation and action spaces later.
 
@@ -53,11 +54,10 @@ create a simple linear mapping network with the required constraints:
 
     class CartpolePolicyNet(nn.Module):
         """ Simple linear policy net for demonstration purposes. """
-        def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logit_shapes: Dict[str, Sequence[int]]):
+        def __init__(self, obs_shapes: Sequence[int], action_logit_shapes: Sequence[int]):
             super().__init__()
             self.net = nn.Sequential(
-                nn.Linear(in_features=obs_shapes['observation'][0],
-                          out_features=action_logit_shapes['action'][0])
+                nn.Linear(in_features=obs_shapes[0], out_features=action_logit_shapes[0])
             )
 
         def forward(self, x_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -67,11 +67,17 @@ create a simple linear mapping network with the required constraints:
             # Do the forward pass.
             logits = self.net(x)
 
-            # Since the return value has to be a dict again, put the forward pass result into a dict with the
-            # correct key.
+            # Since the return value has to be a dict again, put the
+            # forward pass result into a dict with the  correct key.
             logits_dict = {'action': logits}
 
             return logits_dict
+
+    # Instantiate our custom policy net.
+    policy_net = CartpolePolicyNet(
+        obs_shapes=env.observation_space.spaces['observation'].shape,
+        action_logit_shapes=(env.action_space.spaces['action'].n,)
+    )
 
 and
 
@@ -79,13 +85,15 @@ and
 
     class CartpoleValueNet(nn.Module):
         """ Simple linear value net for demonstration purposes. """
-        def __init__(self, obs_shapes: Dict[str, Sequence[int]]):
+        def __init__(self, obs_shapes: Sequence[int]):
             super().__init__()
-            self.value_net = nn.Sequential(nn.Linear(in_features=obs_shapes['observation'][0], out_features=1))
+            self.value_net = nn.Sequential(nn.Linear(in_features=obs_shapes[0], out_features=1))
+
 
         def forward(self, x_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
             """ Forward method. """
-            # The same as for the policy can be said about the value net. Inputs and outputs have to be dicts.
+            # The same as for the policy can be said about the value
+            # net: Inputs and outputs have to be dicts.
             x = x_dict['observation']
 
             value = self.value_net(x)
@@ -289,7 +297,8 @@ To get an out-of sample estimate of our performance, evaluate on the evaluation 
 
 Full Python Code
 ----------------
+
 Here is the code without documentation for easier copy-pasting:
 
-.. literalinclude:: code_snippets/plain_python_training.py
+.. literalinclude:: code_snippets/plain_python_training_low_level.py
   :language: PYTHON

@@ -1,4 +1,5 @@
 """ Rollout of a policy in plain Python. """
+
 from typing import Dict, Sequence
 
 import gym

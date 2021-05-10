@@ -32,7 +32,10 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
+    'sphinx_tabs.tabs'
 ]
+
+sphinx_tabs_valid_builders = ['linkcheck']
 
 # build the templated autosummary files
 autosummary_generate = True
@@ -152,6 +155,7 @@ nitpick_ignore = [
     ('py:class', 'hydra.core.utils.JobReturn'),
     ('py:class', 'hydra.core.config_loader.ConfigLoader'),
     ('py:class', 'hydra.TaskFunction'),
+    ('py:class', 'hydra.plugins.launcher.Launcher')
 ]
 nitpicky = True
 

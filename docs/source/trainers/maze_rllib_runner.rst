@@ -18,6 +18,8 @@ while at the same time using the well optimized algorithms from RLlib.
 
 This page gives an overview of the RLlib module and provides examples on how to apply it.
 
+
+
 .. image:: maze_rllib_overview_simple.png
 
 List of Features

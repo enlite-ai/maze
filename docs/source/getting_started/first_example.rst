@@ -12,9 +12,17 @@ Training and Rollouts
 
 To :ref:`train a policy <training>` with the synchronous advantage actor-critic (:ref:`A2C <maze_trainers-a2c>`), run:
 
-.. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c algorithm.n_epochs=5
+.. tabs::
+
+    .. code-tab:: console
+
+        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c algorithm.n_epochs=5
+
+    .. code-tab:: python
+
+        rc = RunContext(algorithm="a2c", overrides={"env.name": "CartPole-v0"})
+        rc.train(n_epochs=5)
 
 All training outputs including model weights will be stored in
 :code:`outputs/<exp-dir>/<time-stamp>`
@@ -22,9 +30,19 @@ All training outputs including model weights will be stored in
 
 To :ref:`perform rollouts <rollouts>` for evaluating the trained policy, run:
 
-.. code:: console
+.. tabs::
 
-    $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp>
+    .. code-tab:: console
+
+        $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp>
+
+    .. code-tab:: python
+
+        env = GymMazeEnv(env=cartpole_env)
+        obs = env.reset()
+        for i in range(10):
+            action = rc.compute_action(obs)
+            obs, rewards, dones, info = env.step(action)
 
 This performs 50 rollouts and prints the resulting performance statistics to the command line:
 
@@ -50,6 +68,9 @@ To see the policy directly in action you can also perform sequential rollouts wi
    $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp> \
      runner=sequential runner.render=true
 
+.. note::
+
+    Managed rollouts are not yet fully supported by our Python API, but will follow soon.
 
 .. image:: cartpole_img.png
     :width: 40 %

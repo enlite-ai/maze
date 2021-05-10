@@ -15,9 +15,9 @@ from maze.api.utils import RunMode, _PrimitiveType, _ATTRIBUTE_PROXIES, _MISSING
 
 
 @dataclasses.dataclass
-class ConfigLoader:
+class ConfigurationLoader:
     """
-    A ConfigLoader loads and post-processes a particular configuration for RunContext. This includes injecting
+    A ConfigurationLoader loads and post-processes a particular configuration for RunContext. This includes injecting
     instantiated objects, resolving proxy arguments etc.
     """
 
@@ -47,31 +47,31 @@ class ConfigLoader:
 
         This also detects inconsistencies in the specification and raises errors to prevent errors at run time. There
         are the following sources for such inconsistencies:
-            - Codependent components. Some components, e.g. environments and algorithms, are completely independent
-              from each other - each environment can be run with each algorithm. Others have a codependency with each
-              other, e.g. Runner to Trainer: A runner is specific to a particular trainer. If a component and another
-              component to it are specified, these have to be consistent with each other. E.g.: Running
-              A2CMultistepTrainer and ESTrainingRunner will fail.
-            - Derived config groups. Some config groups depend on other attributes or qualifiers, e.g.
-              algorithm_configuration (qualifiers: algorithm, configuration) or algorithm_runner (algorithm, runner).
-              Hydra loads these automatically w.r.t. the set qualifiers. This is not the case when RunContext injects
-              instantiated objects though, since the value for the underlying Hyra configuration group is not changed
-              automatically.
-              E.g.: If an A2CAlgorithmConfig is passed, the expected behaviour would be to load the corresponding A2C
-              trainer config in algorithm_config. Since the default value for the config group "algorithm" is "ES"
-              however, Hydra will load the configuration for the module es-dev or es-local. This results in combining an
-              ES trainer with a A2CAlgorithmConfig, which will fail.
-            - Nested elements. If a super- and at least one sub-component are specified as instantiated components or
-              DictConfigs, RunContext attempts to inject them in the loaded configuration w.r.t. to the respective
-              hierarchy levels. This entails that more specialized attributes will overwrite more general ones.
-              E.g.: If "model" and "policy" are specified, the model is injected first, then the policy. That way the
-              "model" object will overwrite the loaded model and the "policy" object will overwrite the policy in the
-              "model" object.
-              This doesn't occur in the CLI, since no non-primitive value can be passed.
 
-        Furthermore, it resolves proxy arguments w.r.t. the current run mode (see
-        :py:meth:`~maze.maze.api.RunContext._resolve_proxy_arguments`): Non-top level attributes exposed in the
-        :py:meth:`~maze.maze.api.RunContext.__init__` (e.g. "critic").
+        * Codependent components. Some components, e.g. environments and algorithms, are completely independent
+          from each other - each environment can be run with each algorithm. Others have a codependency with each
+          other, e.g. Runner to Trainer: A runner is specific to a particular trainer. If a component and another
+          component to it are specified, these have to be consistent with each other. E.g.: Running
+          A2CMultistepTrainer and ESTrainingRunner will fail.
+        * Derived config groups. Some config groups depend on other attributes or qualifiers, e.g.
+          algorithm_configuration (qualifiers: algorithm, configuration) or algorithm_runner (algorithm, runner).
+          Hydra loads these automatically w.r.t. the set qualifiers. This is not the case when RunContext injects
+          instantiated objects though, since the value for the underlying Hyra configuration group is not changed
+          automatically.
+          E.g.: If an A2CAlgorithmConfig is passed, the expected behaviour would be to load the corresponding A2C
+          trainer config in algorithm_config. Since the default value for the config group "algorithm" is "ES"
+          however, Hydra will load the configuration for the module es-dev or es-local. This results in combining an
+          ES trainer with a A2CAlgorithmConfig, which will fail.
+        * Nested elements. If a super- and at least one sub-component are specified as instantiated components or
+          DictConfigs, RunContext attempts to inject them in the loaded configuration w.r.t. to the respective
+          hierarchy levels. This entails that more specialized attributes will overwrite more general ones.
+          E.g.: If "model" and "policy" are specified, the model is injected first, then the policy. That way the
+          "model" object will overwrite the loaded model and the "policy" object will overwrite the policy in the
+          "model" object.
+          This doesn't occur in the CLI, since no non-primitive value can be passed.
+
+        Furthermore, it resolves proxy arguments w.r.t. the current run mode: Non-top level attributes
+        exposed in :py:class:`maze.api.run_context.RunContext` (e.g. "critic").
         """
 
         # 1. Load Hydra configuration for this algorithm and environment.
@@ -159,7 +159,7 @@ class ConfigLoader:
                 unresolved_path = ik.split(".")
                 for i, path in enumerate(unresolved_path[:-1]):
                     if path in proxy_attributes:
-                        init_kwargs_resolutions[ik] = ".".join(proxy_attributes[path]) + "." + \
+                        init_kwargs_resolutions[ik] = ".".join(proxy_attributes[path]["to"]) + "." + \
                                                       ".".join(unresolved_path[i + 1:])
         for ikr_key in init_kwargs_resolutions:
             self._init_kwargs[init_kwargs_resolutions[ikr_key]] = self._init_kwargs.pop(ikr_key)
@@ -215,7 +215,7 @@ class ConfigLoader:
         attr_proxies = _ATTRIBUTE_PROXIES[self._run_mode]
         # Resolve set variables to full paths.
         fully_qualified_set_vars = {
-            key: ".".join(attr_proxies.get(key, tuple(key.split(".")))) for key in self._set_variables
+            key: ".".join(attr_proxies.get(key, {"to": tuple(key.split("."))})["to"]) for key in self._set_variables
         }
         # Sort to maintain that lower-level, more specific are set after higher-level, more general properties.
         fully_qualified_set_vars_sorted = sorted(fully_qualified_set_vars, key=lambda x: x[1])
@@ -223,11 +223,16 @@ class ConfigLoader:
         # Resolve proxy attributes.
         for set_var in self._set_variables:
             if set_var in attr_proxies:
-                # Update value in configuration.
-                self._set_value_in_nested_dict(cfg, attr_proxies[set_var], cfg[set_var], self._run_mode)
+                # If variable in question was a string (i.e. a config module name) and this proxy attribute is auto-
+                # resolving (see comments for maze.api.utils._ATTRIBUTE_PROXIES), we can ignore this.
+                if isinstance(self._kwargs.get(set_var), str) and attr_proxies[set_var]["auto_resolving"]:
+                    continue
 
-                # Re-set sub-properties set at initializiation time that may have been overwritten by parent
-                # specifications.
+                # Update value in configuration.
+                self._set_value_in_nested_dict(cfg, attr_proxies[set_var]["to"], cfg[set_var], self._run_mode)
+
+                # Re-set sub-properties set at initialization time that may have been overwritten by parent
+                # specifications in previous statement.
                 for dependent_sv in fully_qualified_set_vars_sorted:
                     if dependent_sv.startswith(fully_qualified_set_vars[set_var]) and dependent_sv in self._init_kwargs:
                         self._set_value_in_nested_dict(
@@ -239,7 +244,7 @@ class ConfigLoader:
 
     @classmethod
     def _set_value_in_nested_dict(
-            cls, ndict: Mapping[Any, Any], keys: Sequence[Any], val: Any, run_mode: RunMode
+        cls, ndict: Mapping[Any, Any], keys: Sequence[Any], val: Any, run_mode: RunMode
     ) -> None:
         """
         Sets value in nested dict with list of keys.

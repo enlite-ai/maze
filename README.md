@@ -1,4 +1,11 @@
 ![Banner](https://github.com/enlite-ai/maze/raw/main/docs/source/logos/main_logo.png)
+<a href="https://lgtm.com/projects/g/enlite-ai/maze/context:python">
+    <img src="https://img.shields.io/lgtm/grade/python/g/enlite-ai/maze.svg?logo=lgtm&logoWidth=18" alt="Language grade: Python" />
+</a>
+![PyPI](https://img.shields.io/pypi/v/maze-rl)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/maze-rl)
+![Read the Docs](https://img.shields.io/readthedocs/maze-rl)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 
 # Applied Reinforcement Learning with Python
 
@@ -49,6 +56,21 @@ Below we list a few selected Maze features.
   [install additional binary dependencies manually](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html)
 
 * To see Maze in action check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
+In a nutshell, training and deploying your agent is as simple as can be:
+  ```python
+  from maze.api.run_context import RunContext
+  from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
+
+  rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'))
+  rc.train(n_epochs=100)
+
+  # Run trained policy.
+  env = GymMazeEnv('CartPole-v0')
+  obs = env.reset()
+  for i in range(100):
+      action = rc.compute_action(obs)
+      obs, rewards, dones, info = env.step(action)
+  ```
 
 * [Try your own Gym env](https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/integrating_gym_environment.html)
   or visit our [Maze step-by-step tutorial](https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html).

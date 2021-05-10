@@ -9,7 +9,7 @@ from typing import Dict, Union, Mapping, Any
 
 class RunMode(enum.Enum):
     """
-    Available run modes for Python API.
+    Available run modes for Python API, associated with the corresponding base config module names.
     """
 
     ROLLOUT = "conf_rollout"
@@ -27,7 +27,8 @@ _MISSING_ARGUMENTS = {
 """List of properties missing in run modes' default configurations."""
 _ATTRIBUTE_PROXIES = {
     RunMode.TRAINING: {
-        "policy": ("model", "policy"), "critic": ("model", "critic")
+        "policy": {"auto_resolving": False, "to": ("model", "policy")},
+        "critic": {"auto_resolving": True, "to": ("model", "critic")}
     },
     RunMode.ROLLOUT: {}
 }
@@ -37,6 +38,9 @@ subcomponents of top-level attributes (e.g.: "policy" is not a top-level attribu
 shorthand for model.policy). Since they are more specific than potentially specified top-level arguments, they 
 replace their equivalents in higher-level attributes. I.e.: If "model" and "policy" are specified, the "policy" 
 value replaces the existing "model.policy".
+Furthermore, a configuration attribute might refer to a configuration node that is not identical with the attribute. 
+E.g: "critic" is a top-level attribute, but loads content for model.critic - i.e. the proxy is resolved automatically by 
+Hydra, if a configuration module is loaded. This is marked explicitly, since we don't have (and want) to process this. 
 """
 
 
