@@ -1,17 +1,13 @@
 """Evaluation rollouts in the supplied env."""
-
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
-from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsLevel
-from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.train.parallelization.vector_env.vector_env import VectorEnv
+from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 
@@ -26,7 +22,7 @@ class RolloutEvaluator(Evaluator):
     """
 
     def __init__(self,
-                 eval_env: Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv],
+                 eval_env: StructuredVectorEnv,
                  n_episodes: int,
                  model_selection: Optional[ModelSelectionBase],
                  deterministic: bool = False):
@@ -45,6 +41,9 @@ class RolloutEvaluator(Evaluator):
 
         n_done_episodes = 0
         observations = self.eval_env.reset()
+
+        # Clear epoch stats in case there were some unfinished episodes from the previous evaluation round
+        self.eval_env.clear_epoch_stats()
 
         while n_done_episodes < self.n_episodes:
             # Sample action and take the step

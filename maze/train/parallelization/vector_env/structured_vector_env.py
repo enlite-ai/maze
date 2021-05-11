@@ -109,6 +109,11 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
         self.epoch_stats.reduce()
 
     @override(LogStatsEnv)
+    def clear_epoch_stats(self) -> None:
+        """Clear out episode statistics collected so far in this epoch."""
+        self.epoch_stats.clear_inputs()
+
+    @override(LogStatsEnv)
     def get_stats_value(self,
                         event: Callable,
                         level: LogStatsLevel,
