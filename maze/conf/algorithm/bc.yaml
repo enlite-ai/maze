@@ -22,7 +22,7 @@ eval_every_k_iterations: 500
 validation_percentage: 20
 
 # Number of episodes to run during each evaluation rollout (set to 0 to evaluate using validation only)
-n_eval_episodes: 50
+n_eval_episodes: 8
 
 # Entropy coefficient for policy optimization.
 entropy_coef: 0.0

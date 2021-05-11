@@ -10,7 +10,7 @@ epoch_length: 25
 deterministic_eval: false
 
 # number of evaluation trials
-eval_repeats: 2
+eval_repeats: 8
 
 # number of steps used for early stopping
 patience: 15
