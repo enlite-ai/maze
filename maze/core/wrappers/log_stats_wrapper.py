@@ -3,7 +3,6 @@ import uuid
 from typing import Callable, Optional
 from typing import TypeVar, Union, Any, Tuple, Dict
 
-import gym
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
@@ -11,6 +10,7 @@ from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
@@ -26,13 +26,13 @@ from maze.core.rendering.events_stats_renderer import EventStatsRenderer
 from maze.core.wrappers.wrapper import Wrapper
 
 
-class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
+class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
     """A statistics logging wrapper for :class:`~maze.core.env.base_env.BaseEnv`.
 
     :param env: The environment to wrap.
     """
 
-    def __init__(self, env: Union[gym.Env, BaseEnv], logging_prefix: Optional[str] = None):
+    def __init__(self, env: MazeEnv, logging_prefix: Optional[str] = None):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
         # BaseEnv is a subset of gym.Env
         super().__init__(env)
@@ -183,6 +183,11 @@ class LogStatsWrapper(Wrapper[BaseEnv], LogStatsEnv):
         """Implementation of the LogStatsEnv interface, obtain the value from the cached aggregator statistics.
         """
         return self.epoch_stats.last_stats[(event, name, None)]
+
+    @override(LogStatsEnv)
+    def clear_epoch_stats(self) -> None:
+        """Implementation of the LogStatsEnv interface, clear out episode statistics collected so far in this epoch."""
+        self.epoch_stats.clear_inputs()
 
     def render_stats(self,
                      event_name: str = "BaseEnvEvents.reward",

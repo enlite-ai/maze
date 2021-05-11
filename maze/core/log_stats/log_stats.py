@@ -104,6 +104,10 @@ class LogStatsAggregator(LogStatsConsumer):
         for (event, name, group), value in stats.items():
             self.add_value(event, value, name=name, group=group)
 
+    def clear_inputs(self) -> None:
+        """Clear the input statistics (and start fresh)."""
+        self.input: Dict[LogStatsKey, list] = defaultdict(list)
+
     def add_event(self, event_record: EventRecord) -> None:
         """
         Add a recorded event to this aggregator.

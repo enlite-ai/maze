@@ -31,6 +31,15 @@ class LogStatsEnv(ABC):
         """
 
     @abstractmethod
+    def clear_epoch_stats(self) -> None:
+        """Use this to clear episode statistics collected so far in this epoch (i.e., inputs for epoch stats),
+         and start fresh.
+
+        This can be useful for clearing left-over statistics. E.g., in later epochs, there might be an environment
+        left in the middle of an unfinished episode, which should not be counted into the current epoch.
+        """
+
+    @abstractmethod
     def get_stats_value(self,
                         event: Callable,
                         level: LogStatsLevel,
