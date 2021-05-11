@@ -72,5 +72,5 @@ class CriticImitationEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
-    def mean_abs_deviation(self, step_id: Union[str, int], value: int):
+    def mean_abs_deviation(self, step_id: Union[str, int], value: float):
         """Mean absolute deviation for actual value."""

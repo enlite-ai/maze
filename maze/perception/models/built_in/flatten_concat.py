@@ -1,6 +1,9 @@
 """Contains a flatten and concatenation model applicable in most application scenarios."""
-from typing import Sequence, Dict, List
+from typing import Sequence, Dict, List, Tuple
 
+import torch
+from maze.perception.blocks.general.functional import FunctionalBlock
+from maze.train.trainers.common.utils import support_to_scalar
 from torch import nn
 
 from maze.perception.blocks import PerceptionBlock
@@ -115,6 +118,51 @@ class FlattenConcatStateValueNet(FlattenConcatBaseNet):
         # compile inference model
         self.net = InferenceBlock(in_keys=list(obs_shapes.keys()),
                                   out_keys="value",
+                                  in_shapes=list(obs_shapes.values()),
+                                  perception_blocks=self.perception_dict)
+
+    def forward(self, x):
+        """ forward pass. """
+        return self.net(x)
+
+
+class FlattenConcatCategoricalStateValueNet(FlattenConcatBaseNet):
+    """Flatten and concatenation state value model.
+
+    :param obs_shapes: Dictionary mapping of observation names to shapes.
+    :param hidden_units: Dictionary mapping of action names to shapes.
+    :param non_lin: The non-linearity to apply.
+    :param support_range: Tuple holding the minimum and maximum expected value to predict.
+    """
+
+    def __init__(self,
+                 obs_shapes: Dict[str, Sequence[int]],
+                 hidden_units: List[int],
+                 non_lin: nn.Module,
+                 support_range: Tuple[int, int]):
+        super().__init__(obs_shapes, hidden_units, non_lin)
+
+        # build categorical value head
+        support_set_size = support_range[1] - support_range[0] + 1
+        self.perception_dict["probabilities"] = LinearOutputBlock(
+            in_keys="latent", out_keys="probabilities", in_shapes=self.perception_dict["latent"].out_shapes(),
+            output_units=support_set_size)
+
+        # compute value as probability weighted sum of supports
+        def _to_scalar(x: torch.Tensor) -> torch.Tensor:
+            return support_to_scalar(x, support_range=support_range)
+
+        self.perception_dict["value"] = FunctionalBlock(
+            in_keys="probabilities", out_keys="value", in_shapes=self.perception_dict["probabilities"].out_shapes(),
+            func=_to_scalar
+        )
+
+        module_init = make_module_init_normc(std=0.01)
+        self.perception_dict["probabilities"].apply(module_init)
+
+        # compile inference model
+        self.net = InferenceBlock(in_keys=list(obs_shapes.keys()),
+                                  out_keys=["probabilities", "value"],
                                   in_shapes=list(obs_shapes.values()),
                                   perception_blocks=self.perception_dict)
 

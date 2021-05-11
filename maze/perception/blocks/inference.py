@@ -69,8 +69,7 @@ class InferenceBlock(PerceptionBlock):
             f'in_keys of the network: {set(all_in_keys) - set(all_out_keys)}, vs specified in_keys: {set(in_keys)}'
 
         # 5. The given out_keys should be a subset of the outputs of the computational graph
-        graph_out_keys = set(all_out_keys) - set(all_in_keys)
-        assert all([out_key in graph_out_keys for out_key in out_keys]), \
+        assert all([out_key in all_out_keys for out_key in out_keys]), \
             f'Out_keys of the network: {set(all_out_keys) - set(all_in_keys)}, vs specified out_keys: {set(out_keys)}'
 
     @override(PerceptionBlock)
