@@ -46,10 +46,17 @@ class RandomPolicy(Policy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType],
                        env: Optional[BaseEnv] = None,
-                       actor_id: ActorIDType = None,
+                       actor_id: Optional[ActorIDType] = None,
                        deterministic: bool = False) -> ActionType:
         """Sample random action from the given action space."""
-        return self.action_spaces_dict[actor_id[0]].sample()
+        if actor_id:
+            substep_key = actor_id[0]
+        else:
+            assert len(self.action_spaces_dict) == 1, "action spaces for multiple sub-steps are available, please " \
+                                                      "specify actor ID explicitly"
+            substep_key = list(self.action_spaces_dict.keys())[0]
+
+        return self.action_spaces_dict[substep_key].sample()
 
     @override(Policy)
     def compute_top_action_candidates(self,
@@ -81,10 +88,17 @@ class DistributedRandomPolicy(RandomPolicy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType],
                        env: Optional[BaseEnv] = None,
-                       actor_id: ActorIDType = None,
+                       actor_id: Optional[ActorIDType] = None,
                        deterministic: bool = False) -> ActionType:
         """Sample multiple actions together."""
-        return stack_numpy_dict_list([self.action_spaces_dict[actor_id[0]].sample() for _ in range(self.concurrency)])
+        if actor_id:
+            substep_key = actor_id[0]
+        else:
+            assert len(self.action_spaces_dict) == 1, "action spaces for multiple sub-steps are available, please " \
+                                                      "specify actor ID explicitly"
+            substep_key = list(self.action_spaces_dict.keys())[0]
+
+        return stack_numpy_dict_list([self.action_spaces_dict[substep_key].sample() for _ in range(self.concurrency)])
 
 
 def random_policy_from_config(env_config: DictConfig, wrappers_config: DictConfig) -> RandomPolicy:
