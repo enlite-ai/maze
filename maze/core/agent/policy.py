@@ -65,14 +65,14 @@ class Policy(ABC):
 
     @abstractmethod
     def compute_top_action_candidates(self, observation: ObservationType,
-                                      num_candidates: int, maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
+                                      num_candidates: Optional[int], maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
                                       actor_id: Optional[ActorIDType] = None, deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """
         Get the top :num_candidates actions as well as the probabilities, q-values, .. leading to the decision.
 
         :param observation: Current observation of the environment
-        :param num_candidates: The number of actions that should be returned
+        :param num_candidates: The number of actions that should be returned. If None all candidates are returned.
         :param maze_state: Current state representation of the environment
                            (only provided if `needs_state()` returns True)
         :param env: The environment instance (only provided if `needs_env()` returns True)

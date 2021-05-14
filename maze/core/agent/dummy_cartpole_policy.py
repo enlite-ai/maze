@@ -45,7 +45,7 @@ class DummyCartPolePolicy(Policy):
     @override(Policy)
     def compute_top_action_candidates(self,
                                       observation: ObservationType,
-                                      num_candidates: int,
+                                      num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
                                       actor_id: ActorIDType = None,

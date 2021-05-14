@@ -8,6 +8,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorIDType
 from maze.core.utils.factory import Factory, ConfigType
 from maze_envs.logistics.cutting_2d.env.maze_action import Cutting2DMazeAction
 from maze_envs.logistics.cutting_2d.space_interfaces.action_conversion.base import BaseActionConversion
@@ -70,7 +71,7 @@ class GreedyPolicy(Policy):
     @override(Policy)
     def compute_top_action_candidates(self,
                                       observation: ObservationType,
-                                      num_candidates: int,
+                                      num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
                                       actor_id: Optional[ActorIDType] = None,

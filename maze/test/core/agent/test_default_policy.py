@@ -1,5 +1,5 @@
 """Contains unit tests for default policies."""
-from typing import Tuple, Sequence
+from typing import Tuple, Sequence, Optional
 
 import numpy as np
 
@@ -19,7 +19,7 @@ class DummyFlatPolicy(FlatPolicy):
         """ compute action """
         return {self.action_name: np.ones(5, dtype=np.float32)}
 
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int) -> \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int]) -> \
             Tuple[Sequence[ActionType], Sequence[float]]:
         """ compute top action """
         raise NotImplementedError
