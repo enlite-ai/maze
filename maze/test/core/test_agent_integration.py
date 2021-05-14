@@ -90,7 +90,7 @@ def test_handles_multiple_policies():
 
         def compute_top_action_candidates(self,
                                           observation: Any,
-                                          num_candidates: int,
+                                          num_candidates: Optional[int],
                                           maze_state: Optional[MazeStateType] = None,
                                           env: Optional[BaseEnv] = None,
                                           actor_id: ActorIDType = None,
@@ -237,7 +237,7 @@ def test_gets_maze_action_candidates():
 
         def compute_top_action_candidates(self,
                                           observation: ObservationType,
-                                          num_candidates: int,
+                                          num_candidates: Optional[int],
                                           maze_state: Optional[MazeStateType] = None,
                                           env: Optional[BaseEnv] = None,
                                           actor_id: ActorIDType = None,
@@ -285,7 +285,7 @@ def test_propagates_exceptions_to_main_thread():
 
         def compute_top_action_candidates(self,
                                           observation: ObservationType,
-                                          num_candidates: int,
+                                          num_candidates: Optional[int],
                                           maze_state: Optional[MazeStateType] = None,
                                           env: Optional[BaseEnv] = None,
                                           actor_id: ActorIDType = None,
