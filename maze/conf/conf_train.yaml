@@ -50,7 +50,9 @@ seeding:
 hydra:
   # Local trainings
   run:
-    dir: ${log_base_dir}/${hydra:choices.env}-${hydra:choices.model}-${hydra:choices.algorithm}-${hydra:choices.runner}/${now:%Y-%m-%d_%H-%M-%S}
+    # note that the directory name is based on microseconds (%f) to make it extremely unlikely that simultaneously
+    # started runs do not accidentally write to the same output directory
+    dir: ${log_base_dir}/${hydra:choices.env}-${hydra:choices.model}-${hydra:choices.algorithm}-${hydra:choices.runner}/${now:%Y-%m-%d_%H-%M-%f}
   # Training launched through launchers (i.e. kubernetes-based)
   sweep:
-    dir: ${log_base_dir}/${hydra.choices.hydra/sweeper}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${log_base_dir}/${hydra.choices.hydra/sweeper}/${now:%Y-%m-%d_%H-%M-%f}
