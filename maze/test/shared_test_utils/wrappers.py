@@ -21,7 +21,6 @@ def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_lis
 
     # reset main env and take a random step
     main_env.reset()
-    print("\nmain_env.step")
     main_env.step(main_env.action_space.sample())
 
     # clone state from main env
@@ -33,12 +32,8 @@ def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_lis
     # take the same action in main and cloned env
     action = main_env.action_space.sample()
 
-    print("\nmain_env.step")
-    print(main_env.core_env.context._should_clear_events)
     obs, rew, done, info = main_env.step(action)
 
-    print("\ncloned_env.step")
-    print(cloned_env.core_env.context._should_clear_events)
     obs_sim, rew_sim, done_sim, info_sim = cloned_env.step(action)
 
     # assert that they return the same

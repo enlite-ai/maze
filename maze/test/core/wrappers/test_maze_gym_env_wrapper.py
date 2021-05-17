@@ -6,6 +6,7 @@ from maze.core.agent.dummy_cartpole_policy import DummyCartPolePolicy
 from maze.core.agent.random_policy import RandomPolicy
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.test.shared_test_utils.test_seeding import perform_seeding_test
+from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
 
 def test_maze_gym_env_wrapper():
@@ -56,3 +57,15 @@ def test_heuristic_sampling():
     policy = DummyCartPolePolicy()
 
     perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=True)
+
+
+def test_maze_gym_env_clone_from():
+    """ time limit wrapper unit tests """
+
+    for env_id in ["CartPole-v0"]:
+
+        def make_env():
+            env = GymMazeEnv(env_id)
+            return env
+
+        assert_wrapper_clone_from(make_env, assert_member_list=[])
