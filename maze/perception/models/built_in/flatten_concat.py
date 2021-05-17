@@ -3,7 +3,7 @@ from typing import Sequence, Dict, List, Tuple
 
 import torch
 from maze.perception.blocks.general.functional import FunctionalBlock
-from maze.train.trainers.common.utils import support_to_scalar
+from maze.train.trainers.common.value_transform import support_to_scalar
 from torch import nn
 
 from maze.perception.blocks import PerceptionBlock
