@@ -1,14 +1,15 @@
 """Contains unit tests for training utility functions."""
 import numpy as np
 import torch
-from maze.train.trainers.common.utils import transform_value, transform_value_inv, support_to_scalar, scalar_to_support
+from maze.train.trainers.common.value_transform import support_to_scalar, scalar_to_support, ReduceScaleValueTransform
 
 
 def test_transform_value():
     """ unit test """
     x = np.arange(-100, 100, 0.1)
     eps = 1e-7
-    x_hat = transform_value_inv(transform_value(x, eps=eps), eps=eps)
+    transform = ReduceScaleValueTransform(epsilon=eps)
+    x_hat = transform.transform_value_inv(transform.transform_value(x))
     assert np.allclose(x, x_hat)
 
 

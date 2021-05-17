@@ -35,6 +35,10 @@ These are general interfaces, classes and utility functions for trainers and tra
     ~common.evaluators.multi_evaluator.MultiEvaluator
     ~common.evaluators.rollout_evaluator.RolloutEvaluator
 
+    ~common.value_transform.ValueTransform
+    ~common.value_transform.ReduceScaleValueTransform
+    ~common.value_transform.support_to_scalar
+    ~common.value_transform.scalar_to_support
 
 .. _trainers_ref:
 
