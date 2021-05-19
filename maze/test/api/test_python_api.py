@@ -33,7 +33,6 @@ def _get_cartpole_setup_components() -> Tuple[
     :return: Various components cartpole setting.
     """
 
-
     env = GymMazeEnv(env=gym.make("CartPole-v0"))
     observation_space = env.observation_space
     action_space = env.action_space
@@ -126,6 +125,7 @@ def _get_cartpole_setup_components() -> Tuple[
         ("es", "dev"), ("es", "local")
     ]
 )
+@pytest.mark.timeout(60)
 def test_standalone_training(alg: str, runner: str) -> None:
     """
     Tests whether instantation and standalone training runs with all supported algorithms.
