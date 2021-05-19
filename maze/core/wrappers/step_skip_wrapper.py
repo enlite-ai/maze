@@ -108,8 +108,3 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         self._step_actions = copy.deepcopy(env._step_actions)
         self._steps_done = env._steps_done
         self.env.clone_from(env)
-
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        return self.env.step_without_observation(action)

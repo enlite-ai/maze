@@ -263,12 +263,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.core_env.clone_from(env.core_env)
 
         self.core_env.context.clone_from(env.core_env.context)
-        self.core_env.reward_aggregator = copy.deepcopy(env.core_env.reward_aggregator)
-
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        return self._step_core_env(action)
+        self.core_env.reward_aggregator.clone_from(env.core_env.reward_aggregator)
 
     def _step_core_env(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
         """Take environment step without converting the state into and observation.

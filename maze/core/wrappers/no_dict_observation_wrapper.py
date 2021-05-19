@@ -45,8 +45,3 @@ class NoDictObservationWrapper(ObservationWrapper[Union[EnvType, StructuredEnvSp
     def clone_from(self, env: 'NoDictObservationWrapper') -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self.env.clone_from(env)
-
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        return self.env.step_without_observation(action)

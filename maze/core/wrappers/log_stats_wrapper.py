@@ -254,8 +254,3 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
     def clone_from(self, env: 'LogStatsWrapper') -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         raise RuntimeError("Cloning the 'LogStatsWrapper' is not supported.")
-
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        raise RuntimeError("Stepping the 'LogStatsWrapper' without observations is not supported.")
