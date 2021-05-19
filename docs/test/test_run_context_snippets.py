@@ -1,17 +1,15 @@
 """
 Tests RunContext snippets in various files.
 """
+import pytest
+
+from maze.api.run_context import RunContext
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.policies import ProbabilisticPolicyComposer
-
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
-
-from maze.api.run_context import RunContext
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 
 
 def test_getting_started_maze_env_train_event_env():
@@ -32,6 +30,7 @@ def test_getting_started_maze_env_train_maze_env():
     pass
 
 
+@pytest.mark.timeout(60)
 def test_workflow_training():
     """
     Tests snippets in docs/source/workflow/training.rst.
@@ -75,6 +74,7 @@ def test_workflow_training():
     rc.train(n_epochs=1)
 
 
+@pytest.mark.timeout(60)
 def test_trainers_maze_trainers():
     """
     Tests snippets in docs/source/trainers/maze_trainers.rst.
