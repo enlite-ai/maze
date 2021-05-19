@@ -183,10 +183,3 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self._observation_stack = copy.deepcopy(env._observation_stack)
         self.env.clone_from(env)
-
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        warnings.warn("Calling 'step_without_observation' with the ObservationStackWrapper is not recommended"
-                      "as it will mess up the observation stack!")
-        return self.env.step_without_observation(action)

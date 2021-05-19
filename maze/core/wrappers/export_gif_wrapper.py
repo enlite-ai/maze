@@ -109,8 +109,3 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
     def clone_from(self, env: 'ExportGifWrapper') -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         raise RuntimeError("Cloning the 'ExportGifWrapper' is not supported.")
-
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        raise RuntimeError("Stepping the 'ExportGifWrapper' without observations is not supported.")

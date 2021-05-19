@@ -6,7 +6,7 @@ from maze.core.env.maze_env import MazeEnv
 
 
 def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_list: List[str] = None):
-    """ Asserts that the clone_from and step_without_observation functions work properly for wrappers.
+    """ Asserts that the clone_from functions work properly for wrappers.
 
     :param make_env: Instantiates a MazeEnv.
     :param assert_member_list: A list of member variables that should be asserted for equality.
@@ -40,17 +40,6 @@ def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_lis
     assert rew == rew_sim
     assert done == done_sim
     assert np.all(obs["observation"] == obs_sim["observation"])
-
-    for member in assert_member_list:
-        assert getattr(main_env, member) == getattr(cloned_env, member)
-
-    # take the same action in main and cloned env
-    action = main_env.action_space.sample()
-    rew, done, info = main_env.step_without_observation(action)
-    rew_sim, done_sim, info_sim = cloned_env.step_without_observation(action)
-
-    assert rew == rew_sim
-    assert done == done_sim
 
     for member in assert_member_list:
         assert getattr(main_env, member) == getattr(cloned_env, member)

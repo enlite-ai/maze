@@ -19,16 +19,9 @@ class SimulatedEnvMixin(ABC):
         :param env: The environment to clone.
         """
 
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """Environment step function that does not return any observation.
+    def set_fast_step(self, do_fast_step: bool) -> None:
+        """Sets the step mode of the environment.
+        Can be used for example to bypass expensive action masking when replaying actions on a seeded environment.
 
-        This method can be significantly faster than the full step function in cases with expensive state to
-        observation mappings.
-
-        :param action: the selected action to take.
-        :return: reward, done, info
+        :param do_fast_step: If True fast stepping is active; else not.
         """
-
-        assert isinstance(self, StructuredEnv)
-        obs, reward, done, info = self.step(action)
-        return reward, done, info

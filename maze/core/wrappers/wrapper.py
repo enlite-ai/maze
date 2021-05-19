@@ -75,7 +75,6 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
             assert isinstance(env.context, EnvironmentContext)
             self._register_hook("step", env.context.pre_step)
-            self._register_hook("step_without_observation", env.context.pre_step)
 
     @classmethod
     def _create_proxy(cls, original_fn: Callable, pre_fn: Callable) -> Callable:
@@ -233,11 +232,6 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         """
         raise NotImplementedError
 
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        raise NotImplementedError
-
 
 class ObservationWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the environments observation."""
@@ -296,11 +290,6 @@ class ActionWrapper(Wrapper[EnvType], ABC):
             act_dict = {policy_id: self.reverse_action(action) for policy_id, action in act_dict.items()}
         return obs_dict, act_dict
 
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        return self.env.step_without_observation(self.action(action))
-
 
 class RewardWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the reward before passed to the agent."""
@@ -321,9 +310,3 @@ class RewardWrapper(Wrapper[EnvType], ABC):
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
-
-    @override(SimulatedEnvMixin)
-    def step_without_observation(self, action: ActionType) -> Tuple[Any, bool, Dict[Any, Any]]:
-        """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        reward, done, info = self.env.step_without_observation(action)
-        return self.reward(reward), done, info
