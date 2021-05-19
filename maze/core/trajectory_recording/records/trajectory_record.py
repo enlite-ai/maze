@@ -1,14 +1,14 @@
 """Episode record is the main unit of trajectory data recording."""
 
-from typing import List, Optional, Any, TypeVar, Generic, Dict
+from typing import List, Optional, Any, TypeVar, Generic, Dict, Union
 
 import numpy as np
 
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord, StepKeyType
 from maze.core.trajectory_recording.records.state_record import StateRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord, StepKeyType
 
 StepRecordType = TypeVar('StepRecordType', StructuredSpacesRecord, StateRecord)
 
@@ -80,7 +80,8 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
 
         stacked_trajectory = SpacesTrajectoryRecord(id=np.stack([trajectory.id for trajectory in trajectories]))
         step_records_in_time = list(zip(*[t.step_records for t in trajectories]))
-        stacked_trajectory.step_records = [StructuredSpacesRecord.stack_records(list(recs)) for recs in step_records_in_time]
+        stacked_trajectory.step_records = [StructuredSpacesRecord.stack_records(list(recs)) for recs in
+                                           step_records_in_time]
         return stacked_trajectory
 
     @property
@@ -91,7 +92,12 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
     @property
     def observations(self) -> List[Dict[StepKeyType, ObservationType]]:
         """Convenience access to all structured observation dicts from this trajectory."""
-        return [step_record.actions_dict for step_record in self.step_records]
+        return [step_record.observations_dict for step_record in self.step_records]
+
+    @property
+    def rewards(self) -> List[Dict[StepKeyType, Union[float, np.ndarray]]]:
+        """Convenience access to all structured reward dicts from this trajectory."""
+        return [step_record.rewards_dict for step_record in self.step_records]
 
     def is_done(self) -> bool:
         """Convenience method for checking whether the end of this trajectory represents also the end of an episode."""
