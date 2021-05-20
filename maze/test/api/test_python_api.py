@@ -125,7 +125,6 @@ def _get_cartpole_setup_components() -> Tuple[
         ("es", "dev"), ("es", "local")
     ]
 )
-@pytest.mark.timeout(60)
 def test_standalone_training(alg: str, runner: str) -> None:
     """
     Tests whether instantation and standalone training runs with all supported algorithms.
@@ -139,11 +138,11 @@ def test_standalone_training(alg: str, runner: str) -> None:
     if alg in ("a2c", "ppo"):
         overrides["runner.concurrency"] = 1
     elif alg in ("es",):
-        overrides["runner.n_eval_rollouts"] = 1
-        overrides["runner.shared_noise_table_size"] = 10
+        overrides["algorithm.n_epochs"] = 1
+        overrides["algorithm.n_rollouts_per_update"] = 1
 
     run_context.RunContext(
-        algorithm=alg, overrides=overrides, silent=True, runner=runner
+        algorithm=alg, overrides=overrides, silent=True, runner=runner, configuration="test"
     ).train(n_epochs=1)
 
 
@@ -546,7 +545,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
             }]
         }
     }
-    default_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
+    default_overrides = {"runner.concurrency": 1}
 
     # With DictConfig parent (legal).
     rc = run_context.RunContext(
@@ -556,7 +555,8 @@ def test_inconsistency_identification_type_4_valid() -> None:
         model=model_dictconfig,
         policy=policy_composer,
         runner="dev",
-        overrides=default_overrides
+        overrides=default_overrides,
+        configuration="test"
     )
     rc.train(1)
     assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
@@ -569,7 +569,8 @@ def test_inconsistency_identification_type_4_valid() -> None:
         model="flatten_concat",
         policy=policy_composer,
         runner="dev",
-        overrides=default_overrides
+        overrides=default_overrides,
+        configuration="test"
     )
     rc.train(1)
     assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
@@ -581,7 +582,8 @@ def test_inconsistency_identification_type_4_valid() -> None:
         silent=True,
         policy=model_dictconfig["policy"],
         runner="dev",
-        overrides={"policy._target_": model_policy_target, **default_overrides}
+        overrides={"policy._target_": model_policy_target, **default_overrides},
+        configuration="test"
     )
     rc.train(1)
     assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
@@ -593,7 +595,8 @@ def test_inconsistency_identification_type_4_valid() -> None:
         silent=True,
         policy=model_dictconfig["policy"],
         runner="dev",
-        overrides={"model.policy._target_": model_policy_target}
+        overrides={"model.policy._target_": model_policy_target},
+        configuration="test"
     )
     rc.train(1)
     assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
