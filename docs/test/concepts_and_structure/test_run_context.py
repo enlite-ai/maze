@@ -12,34 +12,13 @@ from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.api.run_context import RunContext
 
 
-def test_examples():
+def _get_alg_config() -> A2CAlgorithmConfig:
     """
-    Tests snippets in maze/docs/source/concepts_and_structure/run_context_overview.rst.
-    Adds some performance-specific configuration that should not influence snippets' functionality.
+    Returns algorithm config used in tests.
+    :return: A2CAlgorithmConfig instance.
     """
 
-    a2c_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
-    es_overrides = {
-        "runner.normalization_samples": 1,
-        "runner.n_eval_rollouts": 1,
-        "runner.shared_noise_table_size": 10
-    }
-    env_factory = lambda: GymMazeEnv('CartPole-v0')
-
-    # ------------------------------------------------------------------
-
-    rc = RunContext(
-        algorithm="a2c",
-        overrides={"env.name": "CartPole-v0", **a2c_overrides},
-        model="vector_obs",
-        critic="template_state",
-        runner="dev"
-    )
-    rc.train(n_epochs=1)
-
-    # ------------------------------------------------------------------
-
-    alg_config = A2CAlgorithmConfig(
+    return A2CAlgorithmConfig(
         n_epochs=1,
         epoch_length=25,
         deterministic_eval=False,
@@ -56,18 +35,47 @@ def test_examples():
         max_grad_norm=0.0,
         device='cpu'
     )
+
+
+def test_examples_part1():
+    """
+    Tests snippets in maze/docs/source/concepts_and_structure/run_context_overview.rst.
+    Adds some performance-specific configuration that should not influence snippets' functionality.
+    Split for runtime reasons.
+    """
+
+    a2c_overrides = {"runner.concurrency": 1}
+    es_overrides = {"algorithm.n_epochs": 1, "algorithm.n_rollouts_per_update": 1}
+    env_factory = lambda: GymMazeEnv('CartPole-v0')
+
+    # ------------------------------------------------------------------
+
     rc = RunContext(
-        algorithm=alg_config,
+        algorithm="a2c",
         overrides={"env.name": "CartPole-v0", **a2c_overrides},
         model="vector_obs",
         critic="template_state",
-        runner="dev"
+        runner="dev",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
     # ------------------------------------------------------------------
 
-    rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), overrides=es_overrides, runner="dev")
+    alg_config = _get_alg_config()
+    rc = RunContext(
+        algorithm=alg_config,
+        overrides={"env.name": "CartPole-v0", **a2c_overrides},
+        model="vector_obs",
+        critic="template_state",
+        runner="dev",
+        configuration="test"
+    )
+    rc.train(n_epochs=1)
+
+    # ------------------------------------------------------------------
+
+    rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), overrides=es_overrides, runner="dev", configuration="test")
     rc.train(n_epochs=1)
 
     # ------------------------------------------------------------------
@@ -82,7 +90,9 @@ def test_examples():
         "substeps_with_separate_agent_nets": [],
         "agent_counts_dict": {0: 1}
     }
-    rc = RunContext(overrides={"model.policy": policy_composer_config, **es_overrides}, runner="dev")
+    rc = RunContext(
+        overrides={"model.policy": policy_composer_config, **es_overrides}, runner="dev", configuration="test"
+    )
     rc.train(n_epochs=1)
 
     # ------------------------------------------------------------------
@@ -100,12 +110,25 @@ def test_examples():
         substeps_with_separate_agent_nets=[],
         agent_counts_dict={0: 1}
     )
-    rc = RunContext(overrides={"model.policy": policy_composer, **es_overrides}, runner="dev")
+    rc = RunContext(overrides={"model.policy": policy_composer, **es_overrides}, runner="dev", configuration="test")
     rc.train(n_epochs=1)
+
+
+def test_examples_part2():
+    """
+    Tests snippets in maze/docs/source/concepts_and_structure/run_context_overview.rst.
+    Adds some performance-specific configuration that should not influence snippets' functionality.
+    Split for runtime reasons.
+    """
+
+    a2c_overrides = {"runner.concurrency": 1}
+    es_overrides = {"algorithm.n_epochs": 1, "algorithm.n_rollouts_per_update": 1}
+    env_factory = lambda: GymMazeEnv('CartPole-v0')
+    alg_config = _get_alg_config()
 
     # ------------------------------------------------------------------
 
-    rc = RunContext(algorithm=alg_config, runner="dev", overrides=a2c_overrides)
+    rc = RunContext(algorithm=alg_config, runner="dev", overrides=a2c_overrides, configuration="test")
     rc.train(n_epochs=1)
 
     # ------------------------------------------------------------------
@@ -116,7 +139,7 @@ def test_examples():
 
     # ------------------------------------------------------------------
 
-    rc = RunContext(env=lambda: env_factory(), overrides=es_overrides, runner="dev")
+    rc = RunContext(env=lambda: env_factory(), overrides=es_overrides, runner="dev", configuration="test")
     rc.train(n_epochs=1)
 
     # Run trained policy.
@@ -128,7 +151,7 @@ def test_examples():
 
     # ------------------------------------------------------------------
 
-    rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), overrides=es_overrides, runner="dev")
+    rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), overrides=es_overrides, runner="dev", configuration="test")
     rc.train()
 
     evaluator = RolloutEvaluator(

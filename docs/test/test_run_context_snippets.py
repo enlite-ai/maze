@@ -30,38 +30,43 @@ def test_getting_started_maze_env_train_maze_env():
     pass
 
 
-@pytest.mark.timeout(60)
-def test_workflow_training():
+def test_workflow_training_part1():
     """
-    Tests snippets in docs/source/workflow/training.rst.
+    Tests snippets in docs/source/workflow/training.rst. Split for runtime reasons.
     """
 
     # Default overrides for faster tests. Shouldn't change functionality.
-    es_overrides = {
-        "runner.normalization_samples": 1,
-        "runner.n_eval_rollouts": 1,
-        "runner.shared_noise_table_size": 10
-    }
-    ac_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
+    es_overrides = {"algorithm.n_epochs": 1, "algorithm.n_rollouts_per_update": 1}
 
-    rc = RunContext(env="gym_env", overrides={"env.name": "CartPole-v0", **es_overrides})
+    rc = RunContext(env="gym_env", overrides={"env.name": "CartPole-v0", **es_overrides}, configuration="test")
     rc.train(n_epochs=1)
 
-    rc = RunContext(env="gym_env", overrides={"env.name": "LunarLander-v2", **es_overrides})
+    rc = RunContext(env="gym_env", overrides={"env.name": "LunarLander-v2", **es_overrides}, configuration="test")
     rc.train(n_epochs=1)
 
     rc = RunContext(
         env="gym_env",
         overrides={"env.name": "LunarLander-v2", **es_overrides},
         wrappers="vector_obs",
-        model="vector_obs"
+        model="vector_obs",
+        configuration="test"
     )
     rc.train(n_epochs=1)
+
+
+def test_workflow_training_part2():
+    """
+    Tests snippets in docs/source/workflow/training.rst. Split for runtime reasons.
+    """
+
+    # Default overrides for faster tests. Shouldn't change functionality.
+    ac_overrides = {"runner.concurrency": 1}
 
     rc = RunContext(
         env="gym_env",
         overrides={"env.name": "LunarLander-v2", **ac_overrides},
-        algorithm="ppo"
+        algorithm="ppo",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
@@ -69,31 +74,29 @@ def test_workflow_training():
         env="gym_env",
         run_dir="outputs/experiment_dir",
         overrides={"env.name": "LunarLander-v2", "algorithm.lr": 0.0001, **ac_overrides},
-        algorithm="ppo"
+        algorithm="ppo",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
 
-@pytest.mark.timeout(60)
 def test_trainers_maze_trainers():
     """
     Tests snippets in docs/source/trainers/maze_trainers.rst.
+    Split for runtime reasons.
     """
 
     # Default overrides for faster tests. Shouldn't change functionality.
-    es_overrides = {
-        "runner.normalization_samples": 1,
-        "runner.n_eval_rollouts": 1,
-        "runner.shared_noise_table_size": 1
-    }
-    ac_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
+    ac_overrides = {"runner.concurrency": 1}
+    es_overrides = {"algorithm.n_epochs": 1, "algorithm.n_rollouts_per_update": 1}
 
     rc = RunContext(
         algorithm="a2c",
         overrides={"env.name": "CartPole-v0", **ac_overrides},
         model="vector_obs",
         critic="template_state",
-        runner="dev"
+        runner="dev",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
@@ -102,7 +105,8 @@ def test_trainers_maze_trainers():
         overrides={"env.name": "CartPole-v0", **ac_overrides},
         model="vector_obs",
         critic="template_state",
-        runner="dev"
+        runner="dev",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
@@ -111,7 +115,8 @@ def test_trainers_maze_trainers():
         overrides={"env.name": "CartPole-v0"},
         model="vector_obs",
         critic="template_state",
-        runner="dev"
+        runner="dev",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
@@ -119,7 +124,8 @@ def test_trainers_maze_trainers():
         algorithm="es",
         overrides={"env.name": "CartPole-v0", **es_overrides},
         model="vector_obs",
-        runner="dev"
+        runner="dev",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
@@ -130,12 +136,8 @@ def test_concepts_and_structures_run_context_overview():
     """
 
     # Default overrides for faster tests. Shouldn't change functionality.
-    es_overrides = {
-        "runner.normalization_samples": 1,
-        "runner.n_eval_rollouts": 1,
-        "runner.shared_noise_table_size": 10
-    }
-    ac_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
+    ac_overrides = {"runner.concurrency": 1}
+    es_overrides = {"algorithm.n_epochs": 1, "algorithm.n_rollouts_per_update": 1}
 
     # Training
     # --------
@@ -145,7 +147,8 @@ def test_concepts_and_structures_run_context_overview():
         overrides={"env.name": "CartPole-v0", **ac_overrides},
         model="vector_obs",
         critic="template_state",
-        runner="dev"
+        runner="dev",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
@@ -172,11 +175,12 @@ def test_concepts_and_structures_run_context_overview():
         overrides={"env.name": "CartPole-v0", **ac_overrides},
         model="vector_obs",
         critic="template_state",
-        runner="dev"
+        runner="dev",
+        configuration="test"
     )
     rc.train(n_epochs=1)
 
-    rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), overrides=es_overrides, runner="dev")
+    rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), overrides=es_overrides, runner="dev", configuration="test")
     rc.train(n_epochs=1)
 
     policy_composer_config = {
@@ -189,7 +193,9 @@ def test_concepts_and_structures_run_context_overview():
         "substeps_with_separate_agent_nets": [],
         "agent_counts_dict": {0: 1}
     }
-    rc = RunContext(overrides={"model.policy": policy_composer_config, **es_overrides}, runner="dev")
+    rc = RunContext(
+        overrides={"model.policy": policy_composer_config, **es_overrides}, runner="dev", configuration="test"
+    )
     rc.train(n_epochs=1)
 
     env = GymMazeEnv('CartPole-v0')
@@ -205,10 +211,10 @@ def test_concepts_and_structures_run_context_overview():
         substeps_with_separate_agent_nets=[],
         agent_counts_dict={0: 1}
     )
-    rc = RunContext(overrides={"model.policy": policy_composer, **es_overrides}, runner="dev")
+    rc = RunContext(overrides={"model.policy": policy_composer, **es_overrides}, runner="dev", configuration="test")
     rc.train(n_epochs=1)
 
-    rc = RunContext(algorithm=alg_config, overrides=ac_overrides, runner="dev")
+    rc = RunContext(algorithm=alg_config, overrides=ac_overrides, runner="dev", configuration="test")
     rc.train(n_epochs=1)
     rc.train()
 
