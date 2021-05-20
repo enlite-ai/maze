@@ -38,9 +38,6 @@ def _get_all_overrides_from_hydra() -> List[Dict[str, str]]:
             env, configuration = env_configuration.split('-')
             overrides.append(dict(env=env, configuration=configuration))
 
-    # remove duplicates
-    overrides = [dict(t) for t in {tuple(d.items()) for d in overrides}]
-
     return overrides
 
 
