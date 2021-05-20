@@ -1,1 +1,2 @@
-recursive-include maze/conf *.yaml
+recursive-include maze/conf *.yaml *.yml
+recursive-include maze/test *.yaml *.yml
