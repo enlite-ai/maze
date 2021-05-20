@@ -162,7 +162,8 @@ nitpicky = True
 
 intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
-    'python': ('https://python.readthedocs.io/en/latest', None)
+    'python': ('https://docs.python.org/3/', None),
+    'torch': ('https://pytorch.org/docs/master/', None),
 }
 
 autodoc_mock_imports = [
