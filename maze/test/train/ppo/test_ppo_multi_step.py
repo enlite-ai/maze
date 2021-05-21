@@ -38,9 +38,9 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
     # algorithm config
     algorithm_config = PPOAlgorithmConfig(
         n_epochs=n_epochs,
-        epoch_length=10,
+        epoch_length=2,
         deterministic_eval=False,
-        eval_repeats=5,
+        eval_repeats=2,
         patience=10,
         critic_burn_in_epochs=0,
         n_rollout_steps=20,
@@ -53,7 +53,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
         max_grad_norm=1.0,
         device="cpu",
         batch_size=10,
-        n_optimization_epochs=4,
+        n_optimization_epochs=1,
         clip_range=0.2)
 
     # initialize actor critic model

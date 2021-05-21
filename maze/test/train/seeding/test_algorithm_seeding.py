@@ -13,13 +13,14 @@ from maze.utils.tensorboard_reader import tensorboard_to_pandas
 from maze.utils.timeout import Timeout
 
 trainings = [
-    {"algorithm": "ppo", "algorithm.n_epochs": "2", "algorithm.eval_repeats": "0", 'algorithm.epoch_length': '2',
-     'algorithm.n_optimization_epochs': '1', "env": "gym_env", "env.name": "CartPole-v0"},
-
-    {"algorithm": "a2c", "algorithm.n_epochs": "2", "algorithm.eval_repeats": "0", 'algorithm.epoch_length': '2',
+    {"algorithm": "ppo", "configuration": "test",
      "env": "gym_env", "env.name": "CartPole-v0"},
 
-    {"algorithm": "es", "algorithm.n_epochs": "10", "env": "gym_env", "env.name": "CartPole-v0"}
+    {"algorithm": "a2c", "configuration": "test",
+     "env": "gym_env", "env.name": "CartPole-v0"},
+
+    {"algorithm": "es", "configuration": "test",
+     "env": "gym_env", "env.name": "CartPole-v0"}
 ]
 
 

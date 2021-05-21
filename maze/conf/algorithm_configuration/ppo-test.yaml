@@ -3,6 +3,9 @@
 algorithm:
   n_epochs: 1
   eval_repeats: 1
+  epoch_length: 2
+  n_rollout_steps: 20
+  n_optimization_epochs: 1
 
 runner:
   normalization_samples: 1

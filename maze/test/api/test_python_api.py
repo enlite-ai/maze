@@ -133,13 +133,8 @@ def test_standalone_training(alg: str, runner: str) -> None:
     """
 
     overrides = {
-        "env.name": "CartPole-v0", "runner.normalization_samples": 1
+        "env.name": "CartPole-v0", "runner.normalization_samples": "1"
     }
-    if alg in ("a2c", "ppo"):
-        overrides["runner.concurrency"] = 1
-    elif alg in ("es",):
-        overrides["algorithm.n_epochs"] = 1
-        overrides["algorithm.n_rollouts_per_update"] = 1
 
     run_context.RunContext(
         algorithm=alg, overrides=overrides, silent=True, runner=runner, configuration="test"
