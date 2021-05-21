@@ -38,9 +38,9 @@ def train_function(n_epochs: int, distributed_env_cls) -> A2C:
     # algorithm configuration
     algorithm_config = A2CAlgorithmConfig(
         n_epochs=n_epochs,
-        epoch_length=10,
+        epoch_length=2,
         deterministic_eval=False,
-        eval_repeats=5,
+        eval_repeats=2,
         patience=10,
         critic_burn_in_epochs=0,
         n_rollout_steps=20,
