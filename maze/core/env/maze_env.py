@@ -83,6 +83,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # create event topics
         self.reward_events = self.core_env.context.event_service.create_event_topic(RewardEvents)
 
+        # Check if the underlying core env has only single sub-step
+        self.is_single_substep_env = sum(self.core_env.agent_counts_dict.values()) == 1
+
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
@@ -271,6 +274,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :param action: the action the agent wants to take.
         :return: reward, done, info.
         """
+        last_env_time = self.get_env_time()
 
         # compile action object
         maze_state = self.core_env.get_maze_state()
@@ -279,20 +283,23 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # take environment step
         maze_state, reward, done, info = self.core_env.step(maze_action)
 
-        # aggregate to scalar reward (if necessary)
-        if self.core_env.reward_aggregator:
-            reward = self.core_env.reward_aggregator.to_scalar_reward(reward)
+        if self.is_single_substep_env or last_env_time != self.get_env_time():
+            # aggregate to scalar reward (if necessary)
+            if self.core_env.reward_aggregator:
+                reward = self.core_env.reward_aggregator.to_scalar_reward(reward)
 
-        # reward captured immediately after the reward aggregation
-        self.reward_events.reward_original(value=reward)
+            # reward captured immediately after the reward aggregation
+            self.reward_events.reward_original(value=reward)
 
-        # record the last MazeAction
-        self.last_maze_action = maze_action
+            # record the last MazeAction
+            self.last_maze_action = maze_action
 
-        # schedule a new environment step (the event logs are reset at the beginning of the next step)
-        self.core_env.context.increment_env_step()
+            # For single sub-step core envs which do not manage their env time:
+            # Schedule a new step and clear event logs automatically
+            if self.is_single_substep_env and last_env_time == self.get_env_time():
+                self.core_env.context.increment_env_step()
 
-        # ensure that all reward aggregator are cleared
-        self.core_env.context.event_service.clear_pubsub()
+            # ensure that all reward aggregator are cleared
+            self.core_env.context.event_service.clear_pubsub()
 
         return reward, done, info

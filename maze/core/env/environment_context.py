@@ -61,7 +61,9 @@ class EnvironmentContext:
 
     def increment_env_step(self) -> None:
         """
-        This must be called after the env step execution, to notify the services about the start of a new step.
+        This must be called after the env step execution, to:
+         - Clear event logs (used for statistics for the current step)
+         - Increment step_id, which is used as env_time by default
         """
         if self._should_clear_events and not self._increment_env_step_warning_printed:
             BColors.print_colored("Events have not been cleared at the start of the current step!"
