@@ -1,0 +1,33 @@
+# Environment for Maze core.
+name: maze
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.7
+  - cudatoolkit=10.2
+  - pytorch
+  - pygraphviz
+  - pip:
+      - tensorboard==2.4.1
+      - pyyaml==5.3.1
+      - requests==2.23.0
+      - pillow==7.2.0
+      # pinned hydra-core and the associated omegaconf version to 1.1.0 pre-release
+      - hydra-core==1.1.0.dev4
+      - omegaconf==2.1.0.dev21
+      - gym[box2d]==0.18.0; python_version < '3.8'
+      - gym==0.18.0; python_version >= '3.8'
+      - pandas==1.0.4
+      - networkx==2.4
+      - matplotlib==3.2.2
+      - seaborn==0.10.1
+      - tqdm==4.50.2
+      - imageio==2.9.0
+      # train
+      - redis==3.4.1
+      - cloudpickle==1.2.2
+      # testing
+      - pytest==6.2.4
+      - pytest-timeout==1.4.2
+      - pytest-redis==2.0.0
