@@ -8,6 +8,7 @@ from maze.core.log_stats.event_decorators import define_step_stats, define_episo
     define_stats_grouping
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel
 from maze.core.log_stats.reducer_functions import histogram
+from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env_with_structured_core_env
 
 
 def test_event_attributes():
@@ -324,3 +325,7 @@ def test_event_stats_histogram_2():
 
     assert value1 == [1, 1]
     assert value2 == [2, 2]
+
+
+def test_stats_in_structured_core_environments():
+    env = build_dummy_maze_env_with_structured_core_env()
