@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image CI for Maze
 
 on:
   push:
@@ -46,15 +46,6 @@ jobs:
           tags: enliteai/maze:playground
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-      -
-        name: Build and push Docker image with RLlib and Tensorflow.
-        id: docker_build_rllib_tensorflow
-        uses: docker/build-push-action@v2
-        with:
-          file: docker/maze-core.dockerfile
-          push: true
-          build-args: opt_pip_installs=ray[rllib],tensorflow
-          tags: enliteai/maze:rllib-tensorflow
       -
         # Temp fix for growing cache issue.
         # See https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md.
