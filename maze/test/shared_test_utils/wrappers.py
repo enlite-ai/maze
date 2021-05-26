@@ -24,6 +24,7 @@ def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_lis
     main_env.step(main_env.action_space.sample())
 
     # clone state from main env
+    cloned_env.reset()
     cloned_env.clone_from(main_env)
 
     for member in assert_member_list:
