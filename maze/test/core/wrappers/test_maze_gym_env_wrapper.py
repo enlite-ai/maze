@@ -1,6 +1,7 @@
 """ Contains unit test for the maze gym environment wrapper """
 import gym
 import numpy as np
+import pytest
 
 from maze.core.agent.dummy_cartpole_policy import DummyCartPolePolicy
 from maze.core.agent.random_policy import RandomPolicy
@@ -59,13 +60,17 @@ def test_heuristic_sampling():
     perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=True)
 
 
-def test_maze_gym_env_clone_from():
+# Environments to be tested
+env_ids = ["CartPole-v0", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v0",
+           "PongNoFrameskip-v4"]
+
+
+@pytest.mark.parametrize("env_id", env_ids)
+def test_maze_gym_env_clone_from(env_id: str):
     """ time limit wrapper unit tests """
 
-    for env_id in ["CartPole-v0"]:
+    def _make_env():
+        env = GymMazeEnv(env_id)
+        return env
 
-        def make_env():
-            env = GymMazeEnv(env_id)
-            return env
-
-        assert_wrapper_clone_from(make_env, assert_member_list=[])
+    assert_wrapper_clone_from(_make_env, assert_member_list=[])

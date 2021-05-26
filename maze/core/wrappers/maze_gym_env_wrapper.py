@@ -5,6 +5,8 @@ from typing import Tuple, Union, Any, Dict, Optional, List, Type
 
 import gym
 import numpy as np
+from gym.envs.atari import AtariEnv
+from gym.envs.classic_control import CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionConversionInterface
@@ -232,9 +234,30 @@ class GymCoreEnv(CoreEnv):
         # clone core env maze state
         self._maze_state = deepcopy(env._maze_state)
 
-        # copy entire gym env object
-        assert isinstance(self.env, gym.Env)
-        self.env = deepcopy(env.env)
+        # clone environment state
+        target_env = self.env
+        while hasattr(target_env, "env"):
+            target_env = target_env.env
+        assert isinstance(target_env, gym.Env)
+
+        source_env = env.env
+        while hasattr(source_env, "env"):
+            source_env = source_env.env
+        assert isinstance(source_env, target_env.__class__)
+
+        # clone state of classic control environments
+        control_envs = (CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv)
+        if isinstance(target_env, control_envs):
+            assert isinstance(source_env, control_envs)
+            target_env.state = deepcopy(source_env.state)
+        # clone state of atari environments
+        elif isinstance(target_env, AtariEnv):
+            assert isinstance(source_env, AtariEnv)
+            state = source_env.ale.cloneState()
+            target_env.ale.restoreState(state)
+        # reset is not supported yet
+        else:
+            raise RuntimeError(f"Cloning of {target_env.__class__} env not supported!")
 
 
 class GymMazeEnv(MazeEnv):
