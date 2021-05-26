@@ -16,6 +16,7 @@ from maze.perception.models.policies import ProbabilisticPolicyComposer
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
+from maze.test.shared_test_utils.dummy_env.dummy_structured_core_env import DummyStructuredCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
 
@@ -74,6 +75,21 @@ def build_dummy_structured_env() -> DummyStructuredEnvironment:
     :return: Instance of a DummyStructuredEnvironment
     """
     return DummyStructuredEnvironment(maze_env=build_dummy_maze_env())
+
+
+def build_dummy_maze_env_with_structured_core_env() -> DummyEnvironment:
+    """
+    Instantiates the DummyEnvironment.
+
+    :return: Instance of a DummyEnvironment
+    """
+    observation_conversion = ObservationConversion()
+
+    return DummyEnvironment(
+        core_env=DummyStructuredCoreEnvironment(observation_conversion.space()),
+        action_conversion=[DictActionConversion()],
+        observation_conversion=[observation_conversion]
+    )
 
 
 def all_classes_of_module(module) -> List[Type]:
