@@ -7,6 +7,7 @@ import gym
 import numpy as np
 from gym.envs.atari import AtariEnv
 from gym.envs.classic_control import CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv
+from gym.wrappers import TimeLimit
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionConversionInterface
@@ -236,14 +237,19 @@ class GymCoreEnv(CoreEnv):
 
         # clone environment state
         target_env = self.env
-        while hasattr(target_env, "env"):
-            target_env = target_env.env
-        assert isinstance(target_env, gym.Env)
-
         source_env = env.env
-        while hasattr(source_env, "env"):
+        while hasattr(target_env, "env"):
+            assert hasattr(source_env, "env")
+
+            # copy state of time limit wrapper
+            if isinstance(target_env, TimeLimit):
+                assert isinstance(source_env, TimeLimit)
+                target_env._max_episode_steps = source_env._max_episode_steps
+                target_env._elapsed_steps = source_env._elapsed_steps
+
+            target_env = target_env.env
             source_env = source_env.env
-        assert isinstance(source_env, target_env.__class__)
+            assert isinstance(source_env, target_env.__class__)
 
         # clone state of classic control environments
         control_envs = (CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv)
