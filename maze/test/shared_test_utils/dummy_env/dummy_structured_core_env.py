@@ -41,6 +41,7 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         else:
             # Calculate reward, increment env step
             self.current_agent = 0
+            self.context.increment_env_step()
             return self.get_maze_state(), self.reward_aggregator.summarize_reward(), False, {}
 
     @override(CoreEnv)

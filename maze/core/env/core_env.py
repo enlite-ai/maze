@@ -37,6 +37,10 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, ABC):
             Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
         """Environment step function.
 
+        Note: If you core environment is structured, you should call
+        :method:`maze.core.env.environment_context.EnvironmentContext.increment_env_step()`
+        once the structured step is done, so that the env time is incremented and events/stats cleared.
+
         :param maze_action: Environment MazeAction to take.
         :return: state, reward, done, info
         """
