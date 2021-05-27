@@ -111,7 +111,7 @@ def test_handles_multiple_policies():
     s = env.reset()  # Just get a valid state, the content is not really important
     for i in range(10):
         pol_id = i % 2
-        maze_action = agent_integration.get_maze_action(s, 0, False, {}, actor_id=(pol_id, 0))
+        maze_action = agent_integration.get_maze_action(s, 0, False, {}, actor_id=ActorID(pol_id, 0))
         assert maze_action == static_actions[pol_id]  # We should get action from the correct policy
 
 

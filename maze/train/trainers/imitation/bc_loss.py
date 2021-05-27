@@ -6,6 +6,7 @@ import gym
 import torch
 import torch.nn as nn
 from maze.core.agent.torch_policy import TorchPolicy
+from maze.core.env.structured_env import ActorID
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 
 
@@ -47,7 +48,7 @@ class BCLoss:
         # Iterate over all substeps
         for substep_key, observation in observation_dict.items():
             target = action_dict[substep_key]
-            logits = policy.compute_logits_dict(observation, actor_id=(substep_key, 0))
+            logits = policy.compute_logits_dict(observation, actor_id=ActorID(substep_key, 0))
             substep_losses = self._get_substep_loss(substep_key, logits, target, self.action_spaces_dict[substep_key],
                                                     events=events)
             losses.append(substep_losses)

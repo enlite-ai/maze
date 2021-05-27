@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env import StructuredEnv, ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
@@ -77,7 +77,8 @@ class ImpalaLearner:
 
             # iterate environment steps
             for step_key in self.sub_step_keys:
-                sampled_action = self.model.policy.compute_action(obs, actor_id=(step_key, 0), deterministic=deterministic)
+                sampled_action = self.model.policy.compute_action(obs, actor_id=ActorID(step_key, 0),
+                                                                  deterministic=deterministic)
                 obs, step_rewards, dones, infos = self.env.step(sampled_action)
 
             if np.any(dones):

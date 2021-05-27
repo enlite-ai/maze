@@ -5,6 +5,7 @@ import gym
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.structured_env import ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
@@ -72,7 +73,7 @@ def _mock_spaces_trajectory_record(step_count: int):
 
     for i in range(step_count):
         substep_record = SpacesRecord(
-            actor_id=(0, 0),
+            actor_id=ActorID(0, 0),
             observation=dict(observation=i),
             action=dict(action=i),
             reward=0,
