@@ -81,12 +81,12 @@ class SpacesRecord:
     @property
     def substep_key(self) -> Union[str, int]:
         """Sub-step key (i.e., the first part of the Actor ID) for this step."""
-        return self.actor_id[0]
+        return self.actor_id.step_key
 
     @property
     def agent_id(self) -> int:
         """Sub-step key (i.e., the second part of the Actor ID) for this step."""
-        return self.actor_id[1]
+        return self.actor_id.agent_id
 
     def to_numpy(self) -> 'SpacesRecord':
         """Convert the record to numpy."""

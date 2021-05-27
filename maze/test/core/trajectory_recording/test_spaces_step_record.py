@@ -26,8 +26,8 @@ def _mock_spaces_record(
 
 def _mock_structured_spaces_record(step_no: int, done: bool = False):
     return StructuredSpacesRecord(substep_records=[
-        _mock_spaces_record(actor_id=(0, 0), keys=["x", "y"], value=[step_no * 10, step_no * 10], reward=step_no),
-        _mock_spaces_record(actor_id=(1, 0), keys=["z"], value=[step_no * 10 + 1], reward=step_no, done=done),
+        _mock_spaces_record(actor_id=ActorID(0, 0), keys=["x", "y"], value=[step_no * 10, step_no * 10], reward=step_no),
+        _mock_spaces_record(actor_id=ActorID(1, 0), keys=["z"], value=[step_no * 10 + 1], reward=step_no, done=done),
     ])
 
 

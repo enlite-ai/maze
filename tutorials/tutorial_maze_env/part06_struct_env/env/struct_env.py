@@ -6,7 +6,7 @@ import numpy as np
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env import StructuredEnv, ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import Wrapper
 from .maze_env import maze_env_factory
@@ -100,14 +100,14 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
 
         return self._obs_selection_step(self._flat_obs), rew, done, info
 
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorID:
         """Returns the currently executed actor along with the policy id. The id is unique only with
         respect to the policies (every policy has its own actor 0).
         Note that identities of done actors can not be reused in the same rollout.
 
         :return: The current actor, as tuple (policy id, actor number).
         """
-        return self._sub_step_key, 0
+        return ActorID(step_key=self._sub_step_key, agent_id=0)
 
     @property
     def agent_counts_dict(self) -> Dict[Union[str, int], int]:

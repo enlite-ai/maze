@@ -11,7 +11,7 @@ from maze.core.env.core_env import CoreEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
-from maze.core.env.structured_env import StepKeyType
+from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.rendering.renderer import Renderer
@@ -114,12 +114,12 @@ class ExternalCoreEnv(CoreEnv):
 
     # --- Structured env methods and setters ---
 
-    def set_actor_id(self, new_value: Tuple[Union[str, int], int]):
+    def set_actor_id(self, new_value: ActorID):
         """Hook for the agent integration to set actor_id before querying execution."""
         self._actor_id = new_value
 
     @override(CoreEnv)
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorID:
         """Current actor ID set by the agent integration."""
         return self._actor_id
 

@@ -1,11 +1,21 @@
 """An environment interface for multi-step, hierarchical and multi-agent environments."""
 from abc import abstractmethod
-from typing import Tuple, Union, Dict
+from typing import Tuple, Union, Dict, NamedTuple
 
 from maze.core.env.base_env import BaseEnv
 
 StepKeyType = Union[str, int]
-ActorID = Tuple[StepKeyType, int]
+
+
+class ActorID(NamedTuple):
+    """Identifies an actor in the environment."""
+
+    step_key: StepKeyType
+    """Identifies the step type, i.e. shapes of action and observation spaces."""
+
+    agent_id: int
+    """Identifies an agent for the current step type -- multi-agent environments can have multiple agents
+    for each step type."""
 
 
 class StructuredEnv(BaseEnv):

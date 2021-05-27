@@ -86,7 +86,7 @@ def test_handles_multiple_policies():
                            actor_id: ActorID = None,
                            deterministic: bool = False) -> ActionType:
             """Return the set static action"""
-            return self.static_action[actor_id[0]]
+            return self.static_action[actor_id.step_key]
 
         def compute_top_action_candidates(self,
                                           observation: Any,

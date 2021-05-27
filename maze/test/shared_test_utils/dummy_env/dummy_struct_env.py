@@ -8,7 +8,7 @@ import gym
 import numpy as np
 
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.structured_env import StructuredEnv, StepKeyType
+from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import Wrapper
 
@@ -111,11 +111,11 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         """
         self.env.seed(seed)
 
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorID:
         """
         :return The action id (sub_step_index, not used)
         """
-        return self._sub_step_index, 0
+        return ActorID(step_key=self._sub_step_index, agent_id=0)
 
     def is_actor_done(self) -> bool:
         """Actors are never destroyed in this env."""

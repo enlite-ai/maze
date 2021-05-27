@@ -3,6 +3,7 @@ from typing import Union, Tuple, Dict, Any
 import numpy as np
 
 from maze.core.env.core_env import CoreEnv
+from maze.core.env.structured_env import ActorID
 
 from .maze_state import Cutting2DMazeState
 from .maze_action import Cutting2DMazeAction
@@ -116,7 +117,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
     def is_actor_done(self) -> bool:
         pass
 
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorID:
         pass
 
     def agent_counts_dict(self) -> Dict[Union[str, int], int]:
