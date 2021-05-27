@@ -35,6 +35,8 @@ jobs:
           push: true
           build-args: opt_pip_installs=ray[rllib],tensorflow
           tags: enliteai/maze:rllib-tensorflow
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
       -
         # Temp fix for growing cache issue.
         # See https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md.
