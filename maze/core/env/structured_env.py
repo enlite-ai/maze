@@ -1,6 +1,8 @@
 """An environment interface for multi-step, hierarchical and multi-agent environments."""
 from abc import abstractmethod
-from typing import Tuple, Union, Dict, NamedTuple
+from typing import Union, Dict, NamedTuple, Optional
+
+import numpy as np
 
 from maze.core.env.base_env import BaseEnv
 
@@ -92,3 +94,18 @@ class StructuredEnv(BaseEnv):
             sub-step 1 (with just one selection and cut happening in each step),
             this method should return {0: 1, 1: 1}
         """
+
+    def get_actor_rewards(self) -> Optional[np.ndarray]:
+        """Optional. If this is a multi-step or multi-agent environment, this method should return
+        the last reward for all actors from the last structured step.
+
+        I.e., the length of the returned array should be equal to the number of sub-steps in the last structured
+        step.
+
+        This is useful e.g. for multi-agent cases, where we first collect actions from all agents, and then
+        process them together and calculate rewards for all agents. In such scenario, the reward of individual
+        agents is not know until after actions of all agents have been collected. Then, individual
+        sub-steps might return None as agent reward, and then the reward for all agents can be queried
+        and redistributed once the while structured step is done.
+        """
+        return None
