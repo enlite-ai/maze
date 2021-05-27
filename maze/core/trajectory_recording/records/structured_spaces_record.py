@@ -8,7 +8,7 @@ import numpy as np
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
 from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
@@ -151,7 +151,7 @@ class StructuredSpacesRecord:
         return self.substep_records[-1].done
 
     @property
-    def actor_ids(self) -> List[ActorIDType]:
+    def actor_ids(self) -> List[ActorID]:
         """List of actor IDs for the individual sub-steps."""
         return [r.actor_id for r in self.substep_records]
 

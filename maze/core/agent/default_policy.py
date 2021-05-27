@@ -9,7 +9,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.core.utils.factory import Factory, CollectionOfConfigType
 
 
@@ -37,12 +37,12 @@ class DefaultPolicy(Policy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType] = None,
                        env: Optional[BaseEnv] = None,
-                       actor_id: Optional[ActorIDType] = None,
+                       actor_id: Optional[ActorID] = None,
                        deterministic: bool = False) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface"""
         return self.policy_for(actor_id).compute_action(observation, deterministic=deterministic)
 
-    def policy_for(self, actor_id: Optional[ActorIDType]) -> FlatPolicy:
+    def policy_for(self, actor_id: Optional[ActorID]) -> FlatPolicy:
         """Return policy corresponding to the given actor ID (or the single available policy if no actor ID is provided)
 
         :param actor_id: Actor ID to get policy for
@@ -61,7 +61,7 @@ class DefaultPolicy(Policy):
                                       num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
-                                      actor_id: Optional[ActorIDType] = None,
+                                      actor_id: Optional[ActorID] = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface"""

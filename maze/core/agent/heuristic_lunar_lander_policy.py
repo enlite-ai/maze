@@ -15,7 +15,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 
 
 class HeuristicLunarLanderPolicy(Policy):
@@ -42,7 +42,7 @@ class HeuristicLunarLanderPolicy(Policy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType] = None,
                        env: Optional[BaseEnv] = None,
-                       actor_id: ActorIDType = None,
+                       actor_id: ActorID = None,
                        deterministic: bool = False) -> ActionType:
         """Sample an action."""
 

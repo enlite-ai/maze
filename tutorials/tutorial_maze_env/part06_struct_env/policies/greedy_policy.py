@@ -8,7 +8,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.core.utils.factory import Factory, ConfigType
 from maze_envs.logistics.cutting_2d.env.maze_action import Cutting2DMazeAction
 from maze_envs.logistics.cutting_2d.space_interfaces.action_conversion.base import BaseActionConversion
@@ -74,7 +74,7 @@ class GreedyPolicy(Policy):
                                       num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
-                                      actor_id: Optional[ActorIDType] = None,
+                                      actor_id: Optional[ActorID] = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface
@@ -83,7 +83,7 @@ class GreedyPolicy(Policy):
 
     @override(Policy)
     def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                       env: Optional[BaseEnv] = None, actor_id: Optional[ActorIDType] = None,
+                       env: Optional[BaseEnv] = None, actor_id: Optional[ActorID] = None,
                        deterministic: bool = False) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface
         """

@@ -5,7 +5,7 @@ import gym
 import numpy as np
 
 from maze.core.annotations import override
-from maze.core.env.structured_env import StructuredEnv, ActorIDType, StepKeyType
+from maze.core.env.structured_env import StructuredEnv, ActorID, StepKeyType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
@@ -48,7 +48,7 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
         self._env_times = None
 
     @override(StructuredEnv)
-    def actor_id(self) -> ActorIDType:
+    def actor_id(self) -> ActorID:
         """Current actor ID (should be the same for all envs, as only synchronous envs are supported)."""
         assert len(set(self._actor_ids)) == 1, "only synchronous environments are supported."
         return self._actor_ids[0]

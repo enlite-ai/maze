@@ -6,7 +6,7 @@ from typing import Dict, Union, Optional, List
 import numpy as np
 import torch
 
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list, stack_torch_dict_list
 
@@ -15,7 +15,7 @@ from maze.train.utils.train_utils import stack_numpy_dict_list, stack_torch_dict
 class SpacesRecord:
     """Record of spaces (i.e., raw action, observation, and associated data) from a single sub-step."""
 
-    actor_id: ActorIDType
+    actor_id: ActorID
     """ID of the actor for this step."""
 
     observation: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None

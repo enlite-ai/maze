@@ -11,7 +11,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 
 
 class DummyGreedyPolicy(Policy):
@@ -35,7 +35,7 @@ class DummyGreedyPolicy(Policy):
                                       num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
-                                      actor_id: Optional[ActorIDType] = None,
+                                      actor_id: Optional[ActorID] = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """
@@ -48,7 +48,7 @@ class DummyGreedyPolicy(Policy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType] = None,
                        env: Optional[BaseEnv] = None,
-                       actor_id: Optional[ActorIDType] = None,
+                       actor_id: Optional[ActorID] = None,
                        deterministic: bool = False) -> ActionType:
         """
         Returns next action to take.

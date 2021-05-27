@@ -3,13 +3,13 @@ from typing import List, Union
 import numpy as np
 import torch
 
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
 
 def _mock_spaces_record(
-        actor_id: ActorIDType,
+        actor_id: ActorID,
         keys: List[str],
         value: Union[int, List[int]],
         reward: int = 1,

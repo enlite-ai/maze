@@ -13,7 +13,7 @@ from typing.io import BinaryIO
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
-from maze.core.env.structured_env import StructuredEnv, ActorIDType
+from maze.core.env.structured_env import StructuredEnv, ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
@@ -246,7 +246,7 @@ class ActorCritic(Trainer, ABC):
     def _append_train_stats(self,
                             policy_train_stats: List[Dict[str, List[float]]],
                             critic_train_stats: List[Dict[str, List[float]]],
-                            actor_ids: List[ActorIDType],
+                            actor_ids: List[ActorID],
                             policy_losses: List[torch.Tensor],
                             entropies: List[torch.Tensor],
                             detached_values: List[torch.Tensor],
