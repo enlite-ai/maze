@@ -150,7 +150,7 @@ class TorchPolicy(TorchModel, Policy):
             assert len(self.networks) == 1, "multiple networks are available, please specify the actor ID explicitly"
             return list(self.networks.values())[0]
 
-        network_key = actor_id if actor_id[0] in self.substeps_with_separate_agent_nets else actor_id[0]
+        network_key = actor_id if actor_id.step_key in self.substeps_with_separate_agent_nets else actor_id.step_key
         return self.networks[network_key]
 
     def logits_dict_to_distribution(self, logits_dict: Dict[str, torch.Tensor], temperature: float = 1.0):

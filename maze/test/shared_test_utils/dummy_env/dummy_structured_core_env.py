@@ -7,7 +7,7 @@ import numpy as np
 
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
-from maze.core.env.structured_env import StepKeyType
+from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.events.pubsub import Pubsub
 from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator, DummyEnvEvents
 
@@ -71,9 +71,9 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         return None
 
     @override(CoreEnv)
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorID:
         """Single-step, two-agent environment"""
-        return 0, self.current_agent
+        return ActorID(step_key=0, agent_id=self.current_agent)
 
     @property
     @override(CoreEnv)

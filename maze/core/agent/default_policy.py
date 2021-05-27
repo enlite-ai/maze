@@ -52,8 +52,7 @@ class DefaultPolicy(Policy):
             assert len(self.policies.items()) == 1, "no policy ID provided but multiple policies are available"
             return list(self.policies.values())[0]
         else:
-            substep_key = actor_id[0]
-            return self.policies[substep_key]
+            return self.policies[actor_id.step_key]
 
     @override(Policy)
     def compute_top_action_candidates(self,

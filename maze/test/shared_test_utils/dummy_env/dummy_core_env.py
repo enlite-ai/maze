@@ -7,7 +7,7 @@ import gym
 import numpy as np
 
 from maze.core.env.core_env import CoreEnv
-from maze.core.env.structured_env import StepKeyType
+from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
 from maze.test.shared_test_utils.dummy_env.dummy_renderer import DummyMatplotlibRenderer
@@ -93,12 +93,9 @@ class DummyCoreEnvironment(CoreEnv):
         """
         return self.renderer
 
-    def actor_id(self) -> Tuple[Union[str, int], int]:
-        """
-        Not implemented
-        :return: 0, 0
-        """
-        return 0, 0
+    def actor_id(self) -> ActorID:
+        """Single-step, single-agent environment"""
+        return ActorID(step_key=0, agent_id=0)
 
     def is_actor_done(self) -> bool:
         """

@@ -17,7 +17,7 @@ from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationConversionInterface
-from maze.core.env.structured_env import StepKeyType
+from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.events.pubsub import Subscriber
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
@@ -222,9 +222,9 @@ class GymCoreEnv(CoreEnv):
         return False
 
     @override(CoreEnv)
-    def actor_id(self) -> Tuple[Union[str, int], int]:
+    def actor_id(self) -> ActorID:
         """Intercept ``CoreEnv.actor_id``"""
-        return 0, 0
+        return ActorID(step_key=0, agent_id=0)
 
     @property
     @override(CoreEnv)

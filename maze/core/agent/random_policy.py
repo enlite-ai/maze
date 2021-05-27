@@ -50,13 +50,13 @@ class RandomPolicy(Policy):
                        deterministic: bool = False) -> ActionType:
         """Sample random action from the given action space."""
         if actor_id:
-            substep_key = actor_id[0]
+            action_space = self.action_spaces_dict[actor_id.step_key]
         else:
             assert len(self.action_spaces_dict) == 1, "action spaces for multiple sub-steps are available, please " \
                                                       "specify actor ID explicitly"
-            substep_key = list(self.action_spaces_dict.keys())[0]
+            action_space = list(self.action_spaces_dict.values())[0]
 
-        return self.action_spaces_dict[substep_key].sample()
+        return action_space.sample()
 
     @override(Policy)
     def compute_top_action_candidates(self,
@@ -92,13 +92,13 @@ class DistributedRandomPolicy(RandomPolicy):
                        deterministic: bool = False) -> ActionType:
         """Sample multiple actions together."""
         if actor_id:
-            substep_key = actor_id[0]
+            action_space = self.action_spaces_dict[actor_id.step_key]
         else:
             assert len(self.action_spaces_dict) == 1, "action spaces for multiple sub-steps are available, please " \
                                                       "specify actor ID explicitly"
-            substep_key = list(self.action_spaces_dict.keys())[0]
+            action_space = list(self.action_spaces_dict.values())[0]
 
-        return stack_numpy_dict_list([self.action_spaces_dict[substep_key].sample() for _ in range(self.concurrency)])
+        return stack_numpy_dict_list([action_space.sample() for _ in range(self.concurrency)])
 
 
 def random_policy_from_config(env_config: DictConfig, wrappers_config: DictConfig) -> RandomPolicy:

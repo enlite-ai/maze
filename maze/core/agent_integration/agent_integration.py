@@ -26,6 +26,7 @@ from maze.core.env.action_conversion import ActionConversionInterface
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationConversionInterface
+from maze.core.env.structured_env import ActorID
 from maze.core.events.event_record import EventRecord
 from maze.core.rendering.renderer import Renderer
 from maze.core.wrappers.wrapper import Wrapper
@@ -101,7 +102,7 @@ class AgentIntegration:
                         done: bool,
                         info: Union[None, Dict[Any, Any]],
                         events: Optional[List[EventRecord]] = None,
-                        actor_id: Tuple[Union[str, int], int] = (0, 0)):
+                        actor_id: ActorID = ActorID(0, 0)):
         """Query the agent for MazeAction derived from the given state.
 
         Passes the state etc. to the agent's thread, where it is integrated into an ordinary env rollout loop.
