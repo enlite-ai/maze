@@ -98,7 +98,7 @@ class StructuredSpacesRecord:
         obs, action = conversion_env.get_observation_and_action_dicts(obs, action, first_step_in_episode)
 
         substep_records = [SpacesRecord(
-            actor_id=(substep_key, 0),
+            actor_id=ActorID(substep_key, 0),
             observation=obs[substep_key],
             action=action[substep_key],
             reward=None,

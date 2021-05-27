@@ -2,6 +2,7 @@
 import torch
 
 from maze.core.agent.serialized_torch_policy import SerializedTorchPolicy
+from maze.core.env.structured_env import ActorID
 from maze.perception.models.custom_model_composer import CustomModelComposer
 from maze.perception.models.space_config import SpacesConfig
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env
@@ -47,5 +48,5 @@ def test_serialized_torch_policy():
     policy = SerializedTorchPolicy(model=model_config, state_dict_file="state_dict.pt",
                                    spaces_dict_file="spaces_config.pkl", device="cpu")
 
-    action = policy.compute_action(observation=env.observation_space.sample(), actor_id=(0, 0))
+    action = policy.compute_action(observation=env.observation_space.sample(), actor_id=ActorID(0, 0))
     assert isinstance(action, dict)

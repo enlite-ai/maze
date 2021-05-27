@@ -7,6 +7,7 @@ import pytest
 import maze.test.core.wrappers.observation_normalization as test_observation_normalization_module
 
 from maze.core.agent.random_policy import RandomPolicy
+from maze.core.env.structured_env import ActorID
 from maze.core.log_stats.log_stats import register_log_stats_writer, increment_log_step
 from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.log_stats.log_stats_writer_tensorboard import LogStatsWriterTensorboard
@@ -26,7 +27,7 @@ def random_env_steps(env: ObservationNormalizationWrapper, steps: int) -> np.nda
     obs = env.reset()
     observations.append(obs["observation"])
     for _ in range(steps):
-        action = env.sampling_policy.compute_action(obs, maze_state=None, env=env, actor_id=(0, 0), deterministic=False)
+        action = env.sampling_policy.compute_action(obs, maze_state=None, env=env, actor_id=ActorID(0, 0), deterministic=False)
         obs, rew, done, info = env.step(action)
         observations.append(obs["observation"])
         if done:

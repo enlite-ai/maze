@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 
 from maze.core.env.maze_env import MazeEnv
+from maze.core.env.structured_env import ActorID
 from maze.perception.models.custom_model_composer import CustomModelComposer
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env
 from maze.test.shared_test_utils.dummy_models.actor_model import DummyPolicyNet
@@ -45,8 +46,8 @@ def test_building_shared_agent_policies():
     assert len(policy.networks) == 2
     assert [0, 1] == list(policy.networks.keys())
 
-    assert isinstance(policy.network_for(actor_id=(0, 0)), DummyPolicyNet)
-    assert isinstance(policy.network_for(actor_id=(1, 0)), DummyPolicyNet)
+    assert isinstance(policy.network_for(actor_id=ActorID(0, 0)), DummyPolicyNet)
+    assert isinstance(policy.network_for(actor_id=ActorID(1, 0)), DummyPolicyNet)
 
 
 def test_building_separated_agent_policies():
@@ -58,8 +59,8 @@ def test_building_separated_agent_policies():
     assert len(policy.networks) == 4
     assert [(0, 0), (1, 0), (1, 1), (1, 2)] == list(policy.networks.keys())
 
-    assert isinstance(policy.network_for(actor_id=(0, 0)), DummyPolicyNet)
-    assert isinstance(policy.network_for(actor_id=(1, 0)), DummyPolicyNet)
+    assert isinstance(policy.network_for(actor_id=ActorID(0, 0)), DummyPolicyNet)
+    assert isinstance(policy.network_for(actor_id=ActorID(1, 0)), DummyPolicyNet)
 
 
 def test_building_separated_and_shared_agent_policies():
@@ -71,5 +72,5 @@ def test_building_separated_and_shared_agent_policies():
     assert len(policy.networks) == 4
     assert [0, (1, 0), (1, 1), (1, 2)] == list(policy.networks.keys())
 
-    assert isinstance(policy.network_for(actor_id=(0, 0)), DummyPolicyNet)
-    assert isinstance(policy.network_for(actor_id=(1, 0)), DummyPolicyNet)
+    assert isinstance(policy.network_for(actor_id=ActorID(0, 0)), DummyPolicyNet)
+    assert isinstance(policy.network_for(actor_id=ActorID(1, 0)), DummyPolicyNet)
