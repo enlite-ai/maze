@@ -84,7 +84,8 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.reward_events = self.core_env.context.event_service.create_event_topic(RewardEvents)
 
         # Check if the underlying core env has only single sub-step
-        self.is_single_substep_env = sum(self.core_env.agent_counts_dict.values()) == 1
+        agent_counts = self.core_env.agent_counts_dict
+        self.is_single_substep_env = len(agent_counts) == 1 and sum(agent_counts.values()) == 1
 
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
