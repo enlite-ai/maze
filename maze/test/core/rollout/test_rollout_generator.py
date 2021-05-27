@@ -8,7 +8,8 @@ from maze.core.agent.random_policy import RandomPolicy, DistributedRandomPolicy
 from maze.core.env.base_env import BaseEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
-from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, build_dummy_maze_env
+from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, build_dummy_maze_env, \
+    build_dummy_maze_env_with_structured_core_env
 from maze.test.shared_test_utils.helper_functions import flatten_concat_probabilistic_policy_for_env
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 
@@ -169,3 +170,11 @@ def test_records_next_observations():
                     assert np.all(curr_obs[obs_key] == last_next_obs[obs_key])
 
             last_next_obs = record.next_observations_dict[step_key]
+
+
+def test_redistributes_actor_reward_if_available():
+    env = build_dummy_maze_env_with_structured_core_env()
+    rollout_generator = RolloutGenerator(env=env)
+    policy = RandomPolicy(env.action_spaces_dict)
+    trajectory = rollout_generator.rollout(policy, n_steps=1)
+    assert np.all(trajectory.step_records[0].rewards == [1, 1])

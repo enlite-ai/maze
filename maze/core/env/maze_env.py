@@ -11,6 +11,7 @@ from the MazeAction to the action space.
 from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
 import gym
+import numpy as np
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionConversionInterface, ActionType
@@ -199,6 +200,11 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
     def agent_counts_dict(self) -> Dict[StepKeyType, int]:
         """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.agent_counts_dict
+
+    @override(StructuredEnv)
+    def get_actor_rewards(self) -> Optional[np.array]:
+        """forward call to :attr:`self.core_env <core_env>`"""
+        return self.core_env.get_actor_rewards()
 
     @property
     def action_space(self):

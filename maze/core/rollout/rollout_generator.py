@@ -96,6 +96,13 @@ class RolloutGenerator:
             if self.record_episode_stats and not self.is_vectorized and step_record.is_done():
                 step_record.episode_stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
 
+            # Redistribute actor rewards, if available
+            actor_rewards = self.env.get_actor_rewards()
+            if actor_rewards is not None:
+                assert len(actor_rewards) == len(step_record.substep_records)
+                for substep_record, reward in zip(step_record.substep_records, actor_rewards):
+                    substep_record.reward = reward
+
             trajectory_record.append(step_record)
 
             # Limit maximum number of steps
