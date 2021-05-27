@@ -22,7 +22,7 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.core.rollout.rollout_runner import RolloutRunner
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.wrapper import Wrapper
@@ -335,7 +335,7 @@ class RunContext:
         observation: ObservationType,
         maze_state: Optional[MazeStateType] = None,
         env: Optional[BaseEnv] = None,
-        actor_id: ActorIDType = None,
+        actor_id: ActorID = None,
         deterministic: bool = False
     ) -> ActionType:
         """

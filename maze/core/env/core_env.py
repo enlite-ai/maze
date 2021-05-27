@@ -18,7 +18,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
-from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorIDType
+from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorID
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
@@ -108,7 +108,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
 
     @abstractmethod
     @override(StructuredEnv)
-    def actor_id(self) -> ActorIDType:
+    def actor_id(self) -> ActorID:
         """Returns the currently executed actor along with the policy id. The id is unique only with
         respect to the policies (every policy has its own actor 0).
 

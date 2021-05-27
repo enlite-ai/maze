@@ -10,7 +10,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 
 
 class DummyCartPolePolicy(Policy):
@@ -36,7 +36,7 @@ class DummyCartPolePolicy(Policy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType] = None,
                        env: Optional[BaseEnv] = None,
-                       actor_id: ActorIDType = None,
+                       actor_id: ActorID = None,
                        deterministic: bool = False) -> ActionType:
         """Sample an action."""
         action = 1 if observation["observation"][2] > 0 else 0
@@ -48,7 +48,7 @@ class DummyCartPolePolicy(Policy):
                                       num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
-                                      actor_id: ActorIDType = None,
+                                      actor_id: ActorID = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface

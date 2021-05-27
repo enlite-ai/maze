@@ -14,7 +14,7 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
@@ -83,7 +83,7 @@ def test_handles_multiple_policies():
                            observation: ObservationType,
                            maze_state: Optional[MazeStateType] = None,
                            env: Optional[BaseEnv] = None,
-                           actor_id: ActorIDType = None,
+                           actor_id: ActorID = None,
                            deterministic: bool = False) -> ActionType:
             """Return the set static action"""
             return self.static_action[actor_id[0]]
@@ -93,7 +93,7 @@ def test_handles_multiple_policies():
                                           num_candidates: Optional[int],
                                           maze_state: Optional[MazeStateType] = None,
                                           env: Optional[BaseEnv] = None,
-                                          actor_id: ActorIDType = None,
+                                          actor_id: ActorID = None,
                                           deterministic: bool = False) -> Tuple[Sequence[Any], Sequence[float]]:
             """Not used"""
             raise NotImplementedError
@@ -240,7 +240,7 @@ def test_gets_maze_action_candidates():
                                           num_candidates: Optional[int],
                                           maze_state: Optional[MazeStateType] = None,
                                           env: Optional[BaseEnv] = None,
-                                          actor_id: ActorIDType = None,
+                                          actor_id: ActorID = None,
                                           deterministic: bool = False) \
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Return static action candidates"""
@@ -278,7 +278,7 @@ def test_propagates_exceptions_to_main_thread():
                            observation: ObservationType,
                            maze_state: Optional[MazeStateType] = None,
                            env: Optional[BaseEnv] = None,
-                           actor_id: ActorIDType = None,
+                           actor_id: ActorID = None,
                            deterministic: bool = False) -> ActionType:
             """Throw an error."""
             raise RuntimeError("Test error.")
@@ -288,7 +288,7 @@ def test_propagates_exceptions_to_main_thread():
                                           num_candidates: Optional[int],
                                           maze_state: Optional[MazeStateType] = None,
                                           env: Optional[BaseEnv] = None,
-                                          actor_id: ActorIDType = None,
+                                          actor_id: ActorID = None,
                                           deterministic: bool = False) \
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Not used"""

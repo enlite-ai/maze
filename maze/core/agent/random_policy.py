@@ -11,7 +11,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType
+from maze.core.env.structured_env import ActorID
 from maze.core.utils.config_utils import make_env
 from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
@@ -46,7 +46,7 @@ class RandomPolicy(Policy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType],
                        env: Optional[BaseEnv] = None,
-                       actor_id: Optional[ActorIDType] = None,
+                       actor_id: Optional[ActorID] = None,
                        deterministic: bool = False) -> ActionType:
         """Sample random action from the given action space."""
         if actor_id:
@@ -64,7 +64,7 @@ class RandomPolicy(Policy):
                                       num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
-                                      actor_id: ActorIDType = None,
+                                      actor_id: ActorID = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """Random policy does not provide top action candidates."""
@@ -88,7 +88,7 @@ class DistributedRandomPolicy(RandomPolicy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType],
                        env: Optional[BaseEnv] = None,
-                       actor_id: Optional[ActorIDType] = None,
+                       actor_id: Optional[ActorID] = None,
                        deterministic: bool = False) -> ActionType:
         """Sample multiple actions together."""
         if actor_id:

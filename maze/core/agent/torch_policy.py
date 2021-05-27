@@ -11,7 +11,7 @@ from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType, StepKeyType
+from maze.core.env.structured_env import ActorID, StepKeyType
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch, convert_to_numpy
@@ -56,7 +56,7 @@ class TorchPolicy(TorchModel, Policy):
                        observation: ObservationType,
                        maze_state: Optional[MazeStateType] = None,
                        env: Optional[BaseEnv] = None,
-                       actor_id: ActorIDType = None,
+                       actor_id: ActorID = None,
                        deterministic: bool = False) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy`
         """
@@ -69,13 +69,13 @@ class TorchPolicy(TorchModel, Policy):
                                       num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType] = None,
                                       env: Optional[BaseEnv] = None,
-                                      actor_id: ActorIDType = None,
+                                      actor_id: ActorID = None,
                                       deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy`"""
         raise NotImplementedError
 
-    def compute_action_with_logits(self, observation: Any, actor_id: ActorIDType = None,
+    def compute_action_with_logits(self, observation: Any, actor_id: ActorID = None,
                                    deterministic: bool = False) -> Tuple[Any, Dict[str, torch.Tensor]]:
         """Compute action for the given observation and policy ID and return it together with the logits.
 
@@ -95,7 +95,7 @@ class TorchPolicy(TorchModel, Policy):
         return convert_to_numpy(sampled_action, cast=None, in_place=False), logits_dict
 
     def compute_action_logits_entropy_dist(
-            self, actor_id: ActorIDType, observation: Dict[Union[str, int], torch.Tensor],
+            self, actor_id: ActorID, observation: Dict[Union[str, int], torch.Tensor],
             deterministic: bool, temperature: float) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor],
                                                               torch.Tensor, DictProbabilityDistribution]:
         """Compute action for the given observation and policy ID and return it together with the logits.
@@ -119,7 +119,7 @@ class TorchPolicy(TorchModel, Policy):
 
         return sampled_action, logits_dict, prob_dist.entropy(), prob_dist
 
-    def compute_action_distribution(self, observation: Any, actor_id: ActorIDType = None) -> Any:
+    def compute_action_distribution(self, observation: Any, actor_id: ActorID = None) -> Any:
         """Query the policy corresponding to the given ID for the action distribution.
 
         :param observation: Observation to get action distribution for
@@ -129,7 +129,7 @@ class TorchPolicy(TorchModel, Policy):
         logits_dict = self.compute_logits_dict(observation, actor_id)
         return self.distribution_mapper.logits_dict_to_distribution(logits_dict=logits_dict, temperature=1.0)
 
-    def compute_logits_dict(self, observation: Any, actor_id: ActorIDType = None) -> Dict[str, torch.Tensor]:
+    def compute_logits_dict(self, observation: Any, actor_id: ActorID = None) -> Dict[str, torch.Tensor]:
         """Get the logits for the given observation and actor ID.
 
         :param observation: Observation to return probability distribution for
@@ -139,7 +139,7 @@ class TorchPolicy(TorchModel, Policy):
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
         return self.network_for(actor_id)(obs_t)
 
-    def network_for(self, actor_id: Optional[ActorIDType]) -> nn.Module:
+    def network_for(self, actor_id: Optional[ActorID]) -> nn.Module:
         """Helper function for returning a network for the given policy ID (using either just the sub-step ID
         or the full Actor ID as key, depending on the separated agent networks mode.
 

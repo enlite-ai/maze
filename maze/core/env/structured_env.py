@@ -5,7 +5,7 @@ from typing import Tuple, Union, Dict
 from maze.core.env.base_env import BaseEnv
 
 StepKeyType = Union[str, int]
-ActorIDType = Tuple[StepKeyType, int]
+ActorID = Tuple[StepKeyType, int]
 
 
 class StructuredEnv(BaseEnv):
@@ -39,7 +39,7 @@ class StructuredEnv(BaseEnv):
     """
 
     @abstractmethod
-    def actor_id(self) -> ActorIDType:
+    def actor_id(self) -> ActorID:
         """Returns the current sub step key along with the currently executed actor.
 
         The env must decide the actor in :meth:`~maze.core.env.base_env.BaseEnv.reset` and
