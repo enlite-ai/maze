@@ -236,6 +236,8 @@ class GymCoreEnv(CoreEnv):
         self._maze_state = deepcopy(env._maze_state)
 
         # clone environment state
+        parent_target_env = None
+        parent_source_env = None
         target_env = self.env
         source_env = env.env
         while hasattr(target_env, "env"):
@@ -247,7 +249,9 @@ class GymCoreEnv(CoreEnv):
                 target_env._max_episode_steps = source_env._max_episode_steps
                 target_env._elapsed_steps = source_env._elapsed_steps
 
+            parent_target_env = target_env
             target_env = target_env.env
+            parent_source_env = source_env
             source_env = source_env.env
             assert isinstance(source_env, target_env.__class__)
 
@@ -255,14 +259,13 @@ class GymCoreEnv(CoreEnv):
         control_envs = (CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv)
         if isinstance(target_env, control_envs):
             assert isinstance(source_env, control_envs)
-            target_env.state = deepcopy(source_env.state)
-            target_env.np_random = deepcopy(source_env.np_random)
+            parent_target_env.env = deepcopy(parent_source_env.env)
         # clone state of atari environments
         elif isinstance(target_env, AtariEnv):
             assert isinstance(source_env, AtariEnv)
+            target_env.np_random = deepcopy(source_env.np_random)
             state = source_env.ale.cloneState()
             target_env.ale.restoreState(state)
-            target_env.np_random = deepcopy(source_env.np_random)
         # reset is not supported yet
         else:
             raise RuntimeError(f"Cloning of {target_env.__class__} env not supported!")
