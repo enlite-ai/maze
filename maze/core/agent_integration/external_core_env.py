@@ -131,7 +131,7 @@ class ExternalCoreEnv(CoreEnv):
     @override(CoreEnv)
     def agent_counts_dict(self) -> Dict[StepKeyType, int]:
         """Agent counts are not known and not needed, as this env is not used for training or any other setup."""
-        raise NotImplementedError
+        return {0: -1}
 
     # --- The rest of core env methods ---
 
