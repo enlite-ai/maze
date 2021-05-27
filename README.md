@@ -4,6 +4,7 @@
 </a>
 ![PyPI](https://img.shields.io/pypi/v/maze-rl)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/maze-rl)
+[![Maze Docker Image](https://github.com/rmitsch/maze/actions/workflows/dockerhub-ci.yml/badge.svg)](https://github.com/rmitsch/maze/actions/workflows/dockerhub-ci.yml)
 ![Read the Docs](https://img.shields.io/readthedocs/maze-rl)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 
