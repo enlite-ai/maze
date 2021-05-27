@@ -20,29 +20,21 @@ class DummyStructuredCoreEnvironment(CoreEnv):
 
     def __init__(self, observation_space: gym.spaces.space.Space):
         super().__init__()
-
-        self.pubsub = Pubsub(self.context.event_service)
-        self.dummy_core_events = self.pubsub.create_event_topic(DummyEnvEvents)
-
-        self.reward_aggregator = RewardAggregator()
-        self.pubsub.register_subscriber(self.reward_aggregator)
-
         self.observation_space = observation_space
-
         self.current_agent = 0
 
     @override(CoreEnv)
     def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
         """Switch agents, increment env step after the second agent"""
         if self.current_agent == 0:
-            # No reward yet
             self.current_agent = 1
+            # No reward yet
             return self.get_maze_state(), 0, False, {}
         else:
-            # Calculate reward, increment env step
+            # Increment env step, return reward of 2 (sum for both agents)
             self.current_agent = 0
             self.context.increment_env_step()
-            return self.get_maze_state(), self.reward_aggregator.summarize_reward(), False, {}
+            return self.get_maze_state(), 2, False, {}
 
     @override(CoreEnv)
     def get_maze_state(self) -> Dict[str, np.ndarray]:
@@ -85,6 +77,11 @@ class DummyStructuredCoreEnvironment(CoreEnv):
     def is_actor_done(self) -> bool:
         """Actors are never done"""
         return False
+
+    @override(CoreEnv)
+    def get_actor_rewards(self) -> Optional[np.ndarray]:
+        """Return reward of 1 for each actor as the last reward"""
+        return np.array([1, 1])
 
     @override(CoreEnv)
     def close(self) -> None:
