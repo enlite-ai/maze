@@ -105,6 +105,10 @@ class ExternalCoreEnv(CoreEnv):
         state, reward, done, info, events = self.state_queue.get()
         self.last_maze_state = state
         self.step_events = events
+
+        # Increment step and clear events - structured core environments are not supported
+        self.context.increment_env_step()
+
         return state, reward, done, info
 
     # --- Structured env methods and setters ---
