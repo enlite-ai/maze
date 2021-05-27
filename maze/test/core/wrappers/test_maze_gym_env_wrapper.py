@@ -9,6 +9,12 @@ from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.test.shared_test_utils.test_seeding import perform_seeding_test
 from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
+try:
+    gym.make("PongNoFrameskip-v4")
+    ATARI_AVAILABLE = True
+except:
+    ATARI_AVAILABLE = False
+
 
 def test_maze_gym_env_wrapper():
     """ gym env wrapper unit test """
@@ -61,8 +67,9 @@ def test_heuristic_sampling():
 
 
 # Environments to be tested
-env_ids = ["CartPole-v0", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v0",
-           "PongNoFrameskip-v4"]
+env_ids = ["CartPole-v0", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v0"]
+if ATARI_AVAILABLE:
+    env_ids.append("PongNoFrameskip-v4")
 
 
 @pytest.mark.parametrize("env_id", env_ids)
