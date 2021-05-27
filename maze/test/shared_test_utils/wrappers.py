@@ -31,16 +31,19 @@ def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_lis
         assert getattr(main_env, member) == getattr(cloned_env, member)
 
     # take the same action in main and cloned env
-    action = main_env.action_space.sample()
+    for j in range(10):
+        action = main_env.action_space.sample()
+        obs, rew, done, info = main_env.step(action)
+        obs_sim, rew_sim, done_sim, info_sim = cloned_env.step(action)
 
-    obs, rew, done, info = main_env.step(action)
+        # assert that they return the same
+        assert rew == rew_sim
+        assert done == done_sim
+        assert np.all(obs["observation"] == obs_sim["observation"])
 
-    obs_sim, rew_sim, done_sim, info_sim = cloned_env.step(action)
+        for member in assert_member_list:
+            assert getattr(main_env, member) == getattr(cloned_env, member)
 
-    # assert that they return the same
-    assert rew == rew_sim
-    assert done == done_sim
-    assert np.all(obs["observation"] == obs_sim["observation"])
-
-    for member in assert_member_list:
-        assert getattr(main_env, member) == getattr(cloned_env, member)
+        if done or np.mod(j, 3) == 0:
+            main_env.reset()
+            cloned_env.reset()

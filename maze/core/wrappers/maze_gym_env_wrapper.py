@@ -256,11 +256,13 @@ class GymCoreEnv(CoreEnv):
         if isinstance(target_env, control_envs):
             assert isinstance(source_env, control_envs)
             target_env.state = deepcopy(source_env.state)
+            target_env.np_random = deepcopy(source_env.np_random)
         # clone state of atari environments
         elif isinstance(target_env, AtariEnv):
             assert isinstance(source_env, AtariEnv)
             state = source_env.ale.cloneState()
             target_env.ale.restoreState(state)
+            target_env.np_random = deepcopy(source_env.np_random)
         # reset is not supported yet
         else:
             raise RuntimeError(f"Cloning of {target_env.__class__} env not supported!")
