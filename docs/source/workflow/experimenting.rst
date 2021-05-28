@@ -95,7 +95,7 @@ Per default Hydra uses the local (sequential) runner for processing jobs.
 For setting up a more scalable (local, parallel) grid search
 we recommend to create an experiments file for configuration.
 As a starting point Maze already contains a simple local grid search setting
-based in the built-in :class:`MazeLocalLauncher <hydra_plugins.maze_local_launcher.MazeLocalLauncher>`.
+based on the built-in :class:`MazeLocalLauncher <hydra_plugins.maze_local_launcher.MazeLocalLauncher>`.
 
 .. literalinclude:: ../../../maze/conf/experiment/grid_search.yaml
   :language: YAML
@@ -118,9 +118,7 @@ Hyper Parameter Optimization
 Maze also support hyper parameter optimization beyond vanilla grid search via
 `Nevergrad <https://hydra.cc/docs/plugins/nevergrad_sweeper>`_ (in case you have enough resources available).
 
-First, make sure that all `requirements <https://hydra.cc/docs/plugins/nevergrad_sweeper#installation>`_ are installed.
-
-Next, you can continue with the experiment template below and adopt it to your needs
+You can start with the experiment template below and adopt it to your needs
 (for details on how to define the search space we refer to the
 `Hydra docs <https://hydra.cc/docs/plugins/nevergrad_sweeper#defining-the-parameters>`_ and this
 `example <https://github.com/facebookresearch/hydra/blob/master/plugins/hydra_nevergrad_sweeper/example/config.yaml>`_).

@@ -5,7 +5,6 @@ from typing import Tuple, Union, Any, Dict, Optional, List, Type
 
 import gym
 import numpy as np
-from gym.envs.atari import AtariEnv
 from gym.envs.classic_control import CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv
 from gym.wrappers import TimeLimit
 
@@ -22,6 +21,11 @@ from maze.core.env.structured_env import StepKeyType
 from maze.core.events.pubsub import Subscriber
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
+
+try:
+    from gym.envs.atari import AtariEnv
+except gym.error.DependencyNotInstalled:
+    AtariEnv = None
 
 
 class GymActionConversion(ActionConversionInterface):
@@ -261,14 +265,16 @@ class GymCoreEnv(CoreEnv):
             assert isinstance(source_env, control_envs)
             parent_target_env.env = deepcopy(parent_source_env.env)
         # clone state of atari environments
-        elif isinstance(target_env, AtariEnv):
+        elif AtariEnv and isinstance(target_env, AtariEnv):
             assert isinstance(source_env, AtariEnv)
             target_env.np_random = deepcopy(source_env.np_random)
             state = source_env.ale.cloneState()
             target_env.ale.restoreState(state)
         # reset is not supported yet
         else:
-            raise RuntimeError(f"Cloning of {target_env.__class__} env not supported!")
+            raise RuntimeError(
+                f"Cloning of {target_env.__class__} env not supported!"
+                f"If working with an Atari env make sure all required dependencies are installed!")
 
 
 class GymMazeEnv(MazeEnv):
