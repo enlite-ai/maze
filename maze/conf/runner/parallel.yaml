@@ -8,7 +8,7 @@ n_processes: 5
 n_episodes: 50
 
 # Max steps per episode to perform
-max_episode_steps: 200
+max_episode_steps: 0
 
 # If true, trajectory data will be recorded and stored in `trajectory_data` directory
 record_trajectory: true
