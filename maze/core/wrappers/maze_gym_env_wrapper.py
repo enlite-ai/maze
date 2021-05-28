@@ -274,7 +274,8 @@ class GymCoreEnv(CoreEnv):
         else:
             raise RuntimeError(
                 f"Cloning of {target_env.__class__} env not supported!"
-                f"If working with an Atari env make sure all required dependencies are installed!")
+                f"If working with an Atari env make sure all required dependencies are installed "
+                f"(e.g., 'pip install gym[atari]')!")
 
 
 class GymMazeEnv(MazeEnv):
