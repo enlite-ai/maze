@@ -52,7 +52,7 @@ hydra:
   run:
     # note that the directory name is based on microseconds (%f) to make it extremely unlikely that simultaneously
     # started runs do not accidentally write to the same output directory
-    dir: ${log_base_dir}/${hydra:choices.env}-${hydra:choices.model}-${hydra:choices.algorithm}-${hydra:choices.runner}/${now:%Y-%m-%d_%H-%M-%f}
+    dir: ${log_base_dir}/${hydra:runtime.choices.env}-${hydra:runtime.choices.model}-${hydra:runtime.choices.algorithm}-${hydra:runtime.choices.runner}/${now:%Y-%m-%d_%H-%M-%f}
   # Training launched through launchers (i.e. kubernetes-based)
   sweep:
     dir: ${log_base_dir}/sweep/${now:%Y-%m-%d_%H-%M-%f}
