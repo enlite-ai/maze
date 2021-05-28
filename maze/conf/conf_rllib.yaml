@@ -58,7 +58,7 @@ log_base_dir: outputs
 hydra:
   # Local trainings
   run:
-    dir: ${log_base_dir}/${hydra:choices.env}-${hydra:choices.model}-rllib_${hydra:choices.rllib/algorithm}-${hydra:choices.rllib/runner}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${log_base_dir}/${hydra:runtime.choices.env}-${hydra:runtime.choices.model}-rllib_${hydra:runtime.choices.rllib/algorithm}-${hydra:runtime.choices.rllib/runner}/${now:%Y-%m-%d_%H-%M-%f}
   # Training launched through launchers (i.e. kubernetes-based)
   sweep:
-    dir: ${log_base_dir}/${hydra.choices.hydra/sweeper}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${log_base_dir}/sweep/${now:%Y-%m-%d_%H-%M-%f}
