@@ -16,9 +16,12 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
     """Wrapper to limit the environment step count, equivalent to gym.wrappers.time_limit.
 
     Additionally to the gym wrapper, this one supports adjusting the limit after construction.
+
+    :param env: The environment to wrap.
+    :param max_episode_steps: The maximum number of steps to take. If 0, the step limit is disabled.
     """
 
-    def __init__(self, env: BaseEnv, max_episode_steps=None):
+    def __init__(self, env: BaseEnv, max_episode_steps: Optional[int] = None):
         """"private" constructor, the preferred way of constructing this class is by calling :method:`wrap`
         """
         super().__init__(env)
