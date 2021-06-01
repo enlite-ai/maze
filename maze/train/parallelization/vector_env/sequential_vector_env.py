@@ -70,6 +70,18 @@ class SequentialVectorEnv(StructuredVectorEnv):
 
         return obs, rewards, env_dones, infos
 
+    @override(StructuredVectorEnv)
+    def get_actor_rewards(self) -> Optional[np.ndarray]:
+        """Stack actor rewards from encapsulated environments."""
+        rewards = [env.get_actor_rewards() for env in self.envs]
+
+        # Return none if rewards are not available
+        if rewards[0] is None:
+            return None
+
+        rewards = np.stack(rewards, axis=1).astype(np.float32)
+        return rewards
+
     def reset(self) -> Dict[str, np.ndarray]:
         """VectorEnv implementation"""
         observations = []

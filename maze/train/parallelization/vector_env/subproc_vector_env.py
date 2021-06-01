@@ -62,6 +62,8 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 break
             elif cmd == 'get_spaces':
                 remote.send((env.observation_spaces_dict, env.action_spaces_dict, env.agent_counts_dict))
+            elif cmd == 'get_actor_rewards':
+                remote.send(env.get_actor_rewards())
             elif cmd == 'env_method':
                 method = getattr(env, data[0])
                 remote.send(method(*data[1], **data[2]))
@@ -151,6 +153,20 @@ class SubprocVectorEnv(StructuredVectorEnv):
             agent_counts_dict=agent_counts_dict,
             logging_prefix=logging_prefix
         )
+
+    @override(StructuredVectorEnv)
+    def get_actor_rewards(self) -> Optional[np.ndarray]:
+        """Stack actor rewards from encapsulated environments."""
+        for remote in self.remotes:
+            remote.send(('get_actor_rewards', None))
+        rewards = [remote.recv() for remote in self.remotes]
+
+        # Return none if rewards are not available
+        if rewards[0] is None:
+            return None
+
+        rewards = np.stack(rewards, axis=1).astype(np.float32)
+        return rewards
 
     def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
