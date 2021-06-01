@@ -56,13 +56,15 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch
     return result
 
 
-def stack_and_flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
+def stack_and_flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]], dim: int) -> Dict[str, torch.Tensor]:
     """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
     into a single dictionary containing all the items.
 
     If one key is present in multiple elements, all its values will be concatenated in the resulting dictionary.
 
-    :param: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
+    :param spaces: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
+    :param dim: Dimension along which to stack (usually 0 if we have a single environment, or 1 if we have a batch
+                of environments)
     :return: One flat dictionary, containing all keys and values form the elements of the iterable.
     """
     result = defaultdict(list)
@@ -77,7 +79,7 @@ def stack_and_flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[
         if len(observations) == 1:
             result[obs_name] = observations[0]
         else:
-            result[obs_name] = torch.stack(observations)
+            result[obs_name] = torch.stack(observations, dim=dim)
 
     # Return an ordinary dict, not default dict
     return dict(result)

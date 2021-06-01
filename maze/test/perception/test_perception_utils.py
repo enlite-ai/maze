@@ -25,7 +25,7 @@ def test_stack_and_flatten_spaces():
     observations = [dict(a=torch.ones(3, 4), b=torch.ones(3, 2)), dict(b=torch.ones(3, 2), c=torch.ones(3))]
     expected_shapes = dict(a=(3, 4), b=(2, 3, 2), c=(3,))
 
-    for space_name, space_value in stack_and_flatten_spaces(spaces=observations).items():
+    for space_name, space_value in stack_and_flatten_spaces(spaces=observations, dim=0).items():
         assert space_value.shape == expected_shapes[space_name]
 
 
