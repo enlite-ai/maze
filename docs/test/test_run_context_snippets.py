@@ -250,6 +250,9 @@ def test_readme():
     # Run trained policy.
     env = GymMazeEnv('CartPole-v0')
     obs = env.reset()
-    for i in range(1):
+    done = False
+
+    while not done:
         action = rc.compute_action(obs)
-        obs, rewards, dones, info = env.step(action)
+        obs, reward, done, info = env.step(action)
+        break

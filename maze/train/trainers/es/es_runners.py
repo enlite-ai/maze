@@ -112,7 +112,7 @@ class ESDevRunner(ESMasterRunner):
 
         print("********** Run Trainer **********")
 
-        env = self._env_factory()
+        env = self.env_factory()
         env.seed(self.maze_seeding.generate_env_instance_seed())
 
         # run with pseudo-distribution, without worker processes

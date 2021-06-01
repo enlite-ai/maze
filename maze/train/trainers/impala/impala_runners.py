@@ -52,7 +52,7 @@ class ImpalaRunner(TrainingRunner):
         rollout_policy.to("cpu")
 
         # initialize the env and enable statistics collection
-        eval_env = self.create_distributed_eval_env(self._env_factory,
+        eval_env = self.create_distributed_eval_env(self.env_factory,
                                                     cfg.algorithm.eval_concurrency,
                                                     logging_prefix="eval")
         eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
@@ -63,7 +63,7 @@ class ImpalaRunner(TrainingRunner):
                                     range(cfg.algorithm.num_actors)]
         train_agent_instance_seeds = [self.maze_seeding.generate_agent_instance_seed() for _ in
                                       range(cfg.algorithm.num_actors)]
-        rollout_actors = self.create_distributed_rollout_actors(self._env_factory, rollout_policy,
+        rollout_actors = self.create_distributed_rollout_actors(self.env_factory, rollout_policy,
                                                                 cfg.algorithm.n_rollout_steps,
                                                                 cfg.algorithm.num_actors,
                                                                 cfg.algorithm.actors_batch_size,

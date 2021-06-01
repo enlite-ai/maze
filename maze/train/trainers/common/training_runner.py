@@ -44,7 +44,7 @@ class TrainingRunner(Runner):
     """Number of samples (=steps) to collect normalization statistics at the beginning of the
     training."""
 
-    _env_factory: Optional[
+    env_factory: Optional[
         Union[EnvFactory, Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, ObservationNormalizationWrapper]]]
     ] = dataclasses.field(default=None, init=False)
     _model_composer: Optional[BaseModelComposer] = dataclasses.field(default=None, init=False)
@@ -72,18 +72,18 @@ class TrainingRunner(Runner):
 
             # if the observation normalization is already available, read it from the input directory
             if isinstance(cfg.env, DictConfig):
-                self._env_factory = EnvFactory(cfg.env, wrapper_cfg)
+                self.env_factory = EnvFactory(cfg.env, wrapper_cfg)
             elif isinstance(cfg.env, Callable):
-                self._env_factory = lambda: WrapperFactory.wrap_from_config(cfg.env(), wrapper_cfg)
+                self.env_factory = lambda: WrapperFactory.wrap_from_config(cfg.env(), wrapper_cfg)
 
-            normalization_env = self._env_factory()
+            normalization_env = self.env_factory()
             normalization_env.seed(self.maze_seeding.generate_env_instance_seed())
 
         # Observation normalization
         self._normalization_statistics = obtain_normalization_statistics(normalization_env,
                                                                          n_samples=self.normalization_samples)
         if self._normalization_statistics:
-            self._env_factory = make_normalized_env_factory(self._env_factory, self._normalization_statistics)
+            self.env_factory = make_normalized_env_factory(self.env_factory, self._normalization_statistics)
             # dump statistics to current working directory
             assert isinstance(normalization_env, ObservationNormalizationWrapper)
             normalization_env.dump_statistics()

@@ -3,8 +3,7 @@
 
 FROM enliteai/maze:latest
 
-RUN pip install ipykernel jupyterlab
-RUN python -m ipykernel install --user --name env --display-name maze-env
+RUN pip install ipykernel && python -m ipykernel install --user --name env --display-name maze-env
 
 # Start Jupyter lab.
 EXPOSE 8888

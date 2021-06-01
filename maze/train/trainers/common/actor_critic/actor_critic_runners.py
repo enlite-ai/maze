@@ -40,14 +40,14 @@ class ACRunner(TrainingRunner):
         super().setup(cfg)
 
         # initialize distributed env
-        envs = self.create_distributed_env(self._env_factory, self.concurrency, logging_prefix="train")
+        envs = self.create_distributed_env(self.env_factory, self.concurrency, logging_prefix="train")
         train_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in range(self.concurrency)]
         envs.seed(train_env_instance_seeds)
 
         # initialize the env and enable statistics collection
         eval_env = None
         if cfg.algorithm.eval_repeats > 0:
-            eval_env = self.create_distributed_env(self._env_factory, self.concurrency, logging_prefix="eval")
+            eval_env = self.create_distributed_env(self.env_factory, self.concurrency, logging_prefix="eval")
             eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in range(self.concurrency)]
             eval_env.seed(eval_env_instance_seeds)
         # initialize actor critic model

@@ -42,7 +42,8 @@ Below we list a few selected Maze features.
  
 ## Get Started
 
-* Make sure [PyTorch](https://pytorch.org/get-started/locally/) is installed and then get the latest released version of Maze as follows
+* You can try Maze without prior installation! We provide a series of _Getting started_ notebooks to help you get familiar with Maze. These notebooks can be viewed and executed in Google Colab - just pick any of the [included notebooks](https://github.com/enlite-ai/maze/tree/main/tutorials/notebooks/getting_started) and click on the ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) button.
+* If you want to install Maze locally, make sure [PyTorch](https://pytorch.org/get-started/locally/) is installed and then get the latest released version of Maze as follows:
 
       pip install -U maze-rl
       
@@ -55,24 +56,25 @@ Below we list a few selected Maze features.
   :zap:  We encourage you to start with **Python 3.7**, as many popular environments like Atari or Box2D can not easily 
   be installed in newer Python environments. Maze itself supports newer Python versions, but for Python 3.9 you might have to
   [install additional binary dependencies manually](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html)
-
-* To see Maze in action check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
-In a nutshell, training and deploying your agent is as simple as can be:
+* Alternatively you can work with Maze in a <img alt="Docker" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Docker_%28container_engine%29_logo.svg/1280px-Docker_%28container_engine%29_logo.svg.png" width="100" height="22" /> container with pre-installed Jupyter lab: Run `docker run -p 8888:8888 enliteai/maze:playground` and open `localhost:8888` in your browser. This loads Jupyter 
+* To see Maze in action, check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
+Training and deploying your agent is as simple as can be:
   ```python
   from maze.api.run_context import RunContext
   from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 
-  rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'))
-  rc.train(n_epochs=100)
+  rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), algorithm="ppo")
+  rc.train(n_epochs=50)
 
   # Run trained policy.
   env = GymMazeEnv('CartPole-v0')
   obs = env.reset()
-  for i in range(100):
-      action = rc.compute_action(obs)
-      obs, rewards, dones, info = env.step(action)
-  ```
+  done = False
 
+  while not done:
+      action = rc.compute_action(obs)
+      obs, reward, done, info = env.step(action)
+  ```
 * [Try your own Gym env](https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/integrating_gym_environment.html)
   or visit our [Maze step-by-step tutorial](https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html).
 

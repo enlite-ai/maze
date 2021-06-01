@@ -162,7 +162,7 @@ def test_overrides() -> None:
     rc.train(n_epochs=1)
 
     train_network = rc._runners[run_context.RunMode.TRAINING]._trainer.model.policy.networks[0]
-    env = rc._runners[run_context.RunMode.TRAINING]._env_factory()
+    env = rc._runners[run_context.RunMode.TRAINING].env_factory()
     assert isinstance(env.core_env, GymCoreEnv)
     assert env.core_env.env.unwrapped.spec.id == gym_env_name
     assert isinstance(train_network, FlattenConcatPolicyNet)
@@ -607,7 +607,7 @@ def test_env_type():
         overrides={"runner.normalization_samples": 1, "runner.shared_noise_table_size": 10}
     )
     rc.train(1)
-    env = rc._runners[run_context.RunMode.TRAINING]._env_factory()
+    env = rc._runners[run_context.RunMode.TRAINING].env_factory()
 
     assert isinstance(env, MazeEnv)
     assert isinstance(env, LogStatsWrapper)

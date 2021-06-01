@@ -1,6 +1,7 @@
 [run]
 omit =
   tests/*
+  tutorials/notebooks/*
 
 [report]
 exclude_lines =
