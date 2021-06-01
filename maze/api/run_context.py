@@ -15,7 +15,7 @@ from omegaconf import DictConfig
 
 from maze.api.config_auditor import ConfigurationAuditor
 from maze.api.config_loader import ConfigurationLoader
-from maze.api.utils import RunMode, InvalidSpecificationError, working_directory
+from maze.api.utils import RunMode, InvalidSpecificationError, working_directory, RunContextError
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
@@ -341,3 +341,19 @@ class RunContext:
         """
 
         return self.policy.compute_action(observation, maze_state, env, actor_id, deterministic)
+
+    def generate_env(self) -> MazeEnv:
+        """
+        Returns a newly generated environment with wrappers applied w.r.t. the specified configuration.
+        :return: Newly generated environment.
+
+        """
+
+        if self._runners[RunMode.TRAINING]:
+            return self._runners[RunMode.TRAINING].env_factory()
+        elif self._runners[RunMode.ROLLOUT]:
+            return self._runners[RunMode.ROLLOUT].env_factory()
+        else:
+            raise RunContextError(
+                "Neither training nor rollout runner are instantiated. .env_factory() couldn't be called."
+            )

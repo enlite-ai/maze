@@ -51,10 +51,10 @@ class BCRunner(TrainingRunner):
 
         super().setup(cfg)
 
-        env = self._env_factory()
+        env = self.env_factory()
 
         with SwitchWorkingDirectoryToInput(cfg.input_dir):
-            dataset = Factory(base_type=Dataset).instantiate(self.dataset, conversion_env_factory=self._env_factory)
+            dataset = Factory(base_type=Dataset).instantiate(self.dataset, conversion_env_factory=self.env_factory)
 
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
@@ -96,7 +96,7 @@ class BCRunner(TrainingRunner):
 
         # if evaluation episodes are set, perform additional evaluation by policy rollout
         if cfg.algorithm.n_eval_episodes > 0:
-            eval_env = self.create_distributed_eval_env(self._env_factory, self.eval_concurrency,
+            eval_env = self.create_distributed_eval_env(self.env_factory, self.eval_concurrency,
                                                         logging_prefix="eval-rollout")
             eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
                                        range(self.eval_concurrency)]

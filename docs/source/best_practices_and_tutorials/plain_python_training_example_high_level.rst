@@ -127,8 +127,8 @@ To instantiate e.g. a :class:`ProbabilisticPolicyComposer<maze.perception.models
 
     # Instantiate our custom policy net.
     policy_net = CartpolePolicyNet(
-        obs_shapes=env.observation_space.spaces['observation'].shape,
-        action_logit_shapes=(env.action_space.spaces['action'].n,)
+        obs_shapes={'observation': env.observation_space.spaces['observation'].shape},
+        action_logit_shapes={'action': (env.action_space.spaces['action'].n,)}
     )
 
 Optionally, we can wrap our policy network with a :class:`~maze.perception.blocks.general.torch_model_block.TorchModelBlock`, which applies shape normalization (see :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock`):

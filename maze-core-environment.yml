@@ -8,6 +8,7 @@ dependencies:
   - cudatoolkit=10.2
   - pytorch
   - pygraphviz
+  - jupyterlab=2.1.4
   - pip:
       - tensorboard==2.4.1
       - pyyaml==5.3.1
