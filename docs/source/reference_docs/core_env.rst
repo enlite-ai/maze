@@ -18,6 +18,7 @@ Environment interfaces:
     :template: classtemplate.rst
 
     ~base_env.BaseEnv
+    ~structured_env.ActorID
     ~structured_env.StructuredEnv
     ~core_env.CoreEnv
     ~structured_env_spaces_mixin.StructuredEnvSpacesMixin
