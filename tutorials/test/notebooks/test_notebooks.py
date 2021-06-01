@@ -30,7 +30,7 @@ def test_getting_started_notebook(path: str):
     with tempfile.TemporaryDirectory() as dirpath:
         assert subprocess.run(
             [
-                'jupyter', 'nbconvert', "--execute", path, "--to", "python", "--ExecutePreprocessor.timeout=180",
+                'jupyter', 'nbconvert', "--execute", path, "--to", "python",
                 "--output-dir={od}".format(od=dirpath)
             ],
             capture_output=True
