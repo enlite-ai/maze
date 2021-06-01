@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Dict, Union, Optional, Callable
 
 import gym
@@ -62,6 +62,11 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
     def is_actor_done(self) -> np.ndarray:
         """Return the done flags of all actors in a list."""
         return self._actor_dones
+
+    @abstractmethod
+    @override(StructuredEnv)
+    def get_actor_rewards(self) -> Optional[np.ndarray]:
+        """Individual implementations need to override this to support structured rewards."""
 
     @override(TimeEnvMixin)
     def get_env_time(self) -> np.ndarray:
