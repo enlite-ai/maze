@@ -202,7 +202,7 @@ class TorchSharedStateCritic(TorchStateCritic):
     def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
         """Predict the shared values and repeat them for each sub-step."""
         if self.stack_observations:
-            flattened_obs_t = stack_and_flatten_spaces(record.observations)
+            flattened_obs_t = stack_and_flatten_spaces(record.observations, dim=1)
         else:
             flattened_obs_t = flatten_spaces(record.observations)
 
