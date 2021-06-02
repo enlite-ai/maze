@@ -46,9 +46,11 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch
             if key in result:
                 assert result[key].shape == obs.shape
                 if isinstance(obs, np.ndarray):
-                    assert np.allclose(result[key], obs)
+                    assert np.allclose(result[key], obs), f"Tried merging observations, but values for key {key} " \
+                                                          "differ. Did you intend to stack the observations instead?"
                 else:
-                    assert torch.allclose(result[key], obs)
+                    assert torch.allclose(result[key], obs), f"Tried merging observations, but values for key {key} " \
+                                                             "differ. Did you intend to stack the observations instead?"
 
             # override with newest value if already existing
             result[key] = obs
