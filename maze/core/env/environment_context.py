@@ -8,7 +8,6 @@ several benefits
 - In scenarios with multiple instantiated agent-environment interaction loops the context can be used to identify
   the parent environments.
 """
-import copy
 import uuid
 from typing import Callable
 
