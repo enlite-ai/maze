@@ -6,7 +6,6 @@ from typing import Tuple, Any, Dict, Type, List, Union
 import numpy as np
 from torch import nn
 
-from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_env import MazeEnv
