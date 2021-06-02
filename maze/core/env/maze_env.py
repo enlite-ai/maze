@@ -202,7 +202,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return self.core_env.agent_counts_dict
 
     @override(StructuredEnv)
-    def get_actor_rewards(self) -> Optional[np.array]:
+    def get_actor_rewards(self) -> Optional[np.ndarray]:
         """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.get_actor_rewards()
 
