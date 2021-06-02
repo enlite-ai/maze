@@ -9,8 +9,8 @@ import numpy as np
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.maze_action import MazeActionType
-from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.maze_state import MazeStateType
+from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.structured_env import StepKeyType
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
@@ -94,7 +94,8 @@ class ExternalCoreEnv(CoreEnv):
         return self.last_maze_state
 
     @override(CoreEnv)
-    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
+    def step(self, maze_action: MazeActionType) -> Tuple[
+        MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
         """Relays the execution back to the agent integration. Then suspends thread execution until
         the next state is provided by agent integration."""
         self.maze_action_queue.put(maze_action)

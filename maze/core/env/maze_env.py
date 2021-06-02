@@ -8,19 +8,19 @@ RL training algorithms require a more rigid representation. To that end :class:`
 gym-compatible environment in a reusable form, by utilizing mappings from the MazeState to the observations space and
 from the MazeAction to the action space.
 """
-import copy
 from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
 import gym
+
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionConversionInterface, ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
-from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationConversionInterface, ObservationType
+from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorIDType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
