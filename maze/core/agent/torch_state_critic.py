@@ -99,12 +99,13 @@ class TorchStateCritic(TorchModel, StateCritic):
                 assert key in state_dict_critics, f"Could not find state dict for policy ID: {key}"
                 critic.load_state_dict(state_dict_critics[key])
 
-    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float, ) \
+    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float) \
             -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
         """Bootstrap returns using the value function.
 
         Useful for example to implement PPO or A2C.
-        
+        Only synchronous environments supported.
+
         :param record: Record of a structured step containing observations, rewards, and dones
         :param gamma: Discounting factor
         :param gae_lambda: Bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
@@ -114,19 +115,36 @@ class TorchStateCritic(TorchModel, StateCritic):
         # predict state values
         values, detached_values = self.predict_values(record)
 
-        rews = torch.stack(record.rewards).sum(dim=0)
-        dones = record.dones[-1]
+        # take dones from the last sub-step -- there should not be any more sub-steps when the env is done
+        dones: torch.Tensor = record.dones[-1]
 
         # reshape values to match rewards
-        values = [torch.reshape(v, rews.shape) for v in values]
-        detached_values = [torch.reshape(dv, rews.shape) for dv in detached_values]
+        values = [torch.reshape(v, dones.shape) for v in values]
+        detached_values = [torch.reshape(dv, dones.shape) for dv in detached_values]
 
         # compute returns
-        sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                              rewards=rews, values=detached_values[-1], dones=dones)
+        returns = self.compute_structured_return(gamma=gamma, gae_lambda=gae_lambda, rewards=record.rewards,
+                                                 values=detached_values, dones=dones)
 
-        returns = [sub_step_return for _ in values]
         return returns, values, detached_values
+
+    @abstractmethod
+    def compute_structured_return(self,
+                                  gamma: float,
+                                  gae_lambda: float,
+                                  rewards: List[torch.Tensor],
+                                  values: List[torch.Tensor],
+                                  dones: torch.Tensor,
+                                  ) -> List[torch.Tensor]:
+        """Compute bootstrapped return for the whole structured step (i.e., all sub-steps).
+
+        :param gamma: Discounting factor
+        :param gae_lambda: Bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
+        :param rewards: List of sub-step rewards, each with shape (n_steps, n_workers)
+        :param values: List of sub-step detached values, each with shape (n_steps, n_workers)
+        :param dones: Step dones with shape (n_steps, n_workers)
+        :return: List of per-time sub-step returns
+        """
 
     def compute_return(self,
                        gamma: float,
@@ -218,6 +236,25 @@ class TorchSharedStateCritic(TorchStateCritic):
         """There is a single shared critic network."""
         return 1
 
+    @override(TorchStateCritic)
+    def compute_structured_return(self,
+                                  gamma: float,
+                                  gae_lambda: float,
+                                  rewards: List[torch.Tensor],
+                                  values: List[torch.Tensor],
+                                  dones: torch.Tensor,
+                                  ) -> List[torch.Tensor]:
+        """Compute return based on shared reward (summing the reward across all sub-steps)"""
+        # Sum rewards across all sub-steps into a shared reward
+        shared_rewards = torch.stack(rewards).sum(dim=0)
+
+        # Note: With shared critic, values are the same for each sub-step --> just take the last one here
+        sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
+                                              rewards=shared_rewards, values=values[-1], dones=dones)
+
+        # The same shared return for each sub-step
+        return [sub_step_return for _ in values]
+
 
 class TorchStepStateCritic(TorchStateCritic):
     """Each sub-step or actor gets its individual critic.
@@ -242,6 +279,23 @@ class TorchStepStateCritic(TorchStateCritic):
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
         return self.num_policies
+
+    @override(TorchStateCritic)
+    def compute_structured_return(self,
+                                  gamma: float,
+                                  gae_lambda: float,
+                                  rewards: List[torch.Tensor],
+                                  values: List[torch.Tensor],
+                                  dones: torch.Tensor,
+                                  ) -> List[torch.Tensor]:
+        """Compute returns for each sub-step separately"""
+        returns = []
+        for substep_rewards, substep_values in zip(rewards, values):
+            sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
+                                                  rewards=substep_rewards, values=substep_values, dones=dones)
+            returns.append(sub_step_return)
+
+        return returns
 
 
 class TorchDeltaStateCritic(TorchStateCritic):
@@ -285,3 +339,20 @@ class TorchDeltaStateCritic(TorchStateCritic):
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
         return self.num_policies
+
+    @override(TorchStateCritic)
+    def compute_structured_return(self,
+                                  gamma: float,
+                                  gae_lambda: float,
+                                  rewards: List[torch.Tensor],
+                                  values: List[torch.Tensor],
+                                  dones: torch.Tensor,
+                                  ) -> List[torch.Tensor]:
+        """Compute return based on shared reward (summing the reward across all sub-steps)"""
+        # Sum rewards across all sub-steps into a shared reward
+        shared_rewards = torch.stack(rewards).sum(dim=0)
+        sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
+                                              rewards=shared_rewards, values=values[-1], dones=dones)
+
+        # The same shared return for each sub-step
+        return [sub_step_return for _ in values]
