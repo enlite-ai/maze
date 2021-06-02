@@ -1,6 +1,6 @@
 """Interface specifying the computation of scalar rewards from aggregated reward events."""
 from abc import abstractmethod, ABC
-from typing import Any, Union, List, Type
+from typing import Any, Union, List, Type, Optional
 
 from maze.core.annotations import override
 from maze.core.env.maze_state import MazeStateType
@@ -12,7 +12,7 @@ class RewardAggregatorInterface(Subscriber):
     """Event aggregation object for reward customization and shaping."""
 
     @abstractmethod
-    def summarize_reward(self, maze_state: MazeStateType) -> Union[float, np.ndarray]:
+    def summarize_reward(self, maze_state: Optional[MazeStateType] = None) -> Union[float, np.ndarray]:
         """
         Summarize the reward for this step. Expected to be called once per structured step.
 
