@@ -175,8 +175,8 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
     @override(TimeEnvMixin)
     def get_env_time(self) -> int:
-        """Return ID of the current core env step as env time."""
-        return self.core_env.context.step_id
+        """Forward the call to :attr:`self.core_env <core_env>`"""
+        return self.core_env.get_env_time()
 
     def _init_spaces(self) -> None:
         """Initialize observation and action space.

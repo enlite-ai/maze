@@ -19,12 +19,13 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
 from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorIDType
+from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.rendering.renderer import Renderer
 
 
-class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, ABC):
+class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, ABC):
     """Interface definition for core environments forming the basis for actual RL trainable environments.
     """
 
@@ -74,6 +75,11 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, ABC):
 
         :return The same state as returned by reset().
         """
+
+    @override(TimeEnvMixin)
+    def get_env_time(self) -> int:
+        """Return ID of the current step as env time."""
+        return self.context.step_id
 
     @override(EventEnvMixin)
     def get_step_events(self) -> Iterable[EventRecord]:
