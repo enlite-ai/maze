@@ -126,15 +126,6 @@ nitpick_ignore = [
     ('py:class', 'Union[None, Dict[Any, Any]]'),
     ('py:class', 'Union[None, Dict[Any, Any]]'),
 
-    # torch can't be resolved
-    ('py:class', 'torch.Tensor'),
-    ('py:class', 'torch.Generator'),
-    ('py:class', 'torch.dtype'),
-    ('py:class', 'torch.nn.Module'),
-    ('py:class', 'torch.optim.optimizer.Optimizer'),
-    ('py:class', 'torch.utils.data.dataloader.DataLoader'),
-    ('py:class', 'torch.utils.data.dataset.Subset'),
-
     # special maze data types
     ('py:class', 'maze.train.trainers.impala.impala_learner.LearnerOutput'),
     ('py:class', 'maze.train.trainers.imitation.parallel_loaded_im_data_set.ActionTuple'),
