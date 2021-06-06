@@ -115,6 +115,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         maze_state = self.core_env.reset()
 
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
+        for key, value in observation.items():
+            assert not (isinstance(value, np.ndarray) and value.dtype == np.float64), \
+                   f"observation contains numpy arrays with float64, please convert observation '{key}' to float32"
 
         return observation
 
