@@ -76,7 +76,7 @@ class ESTrainer(Trainer):
 
         for epoch in itertools.count():
             # check if we reached the max number of epochs
-            if epoch == n_epochs:
+            if n_epochs and epoch == n_epochs:
                 break
 
             print('********** Iteration {} **********'.format(epoch))
