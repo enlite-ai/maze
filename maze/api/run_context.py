@@ -78,9 +78,12 @@ class RunContext:
                       configuration elements (i.e. overriding X.attr will fails if X is not part of the loaded
                       configuration).
 
-    :param configuration: "configuration" determines which specialization configuration to load. Possible values: "run"
-                          or None. It has to be specified via module name exclusively, i.e. configuration="test". This
-                          affects the following components: Environments, models, algorithms and runners.
+    :param configuration: Determines which specialization configuration to load. Possible values: "run" or None. Has to
+                          be specified via module name exclusively, i.e. configuration="test". This affects the
+                          following components: Environments, models, algorithms and runners.
+
+    :param experiment: Determines which experiment to load. Has to be specified via module name exclusively, i.e.
+                       experiment="x".
 
     :param silent: Whether to suppress output to stdout.
 
@@ -105,6 +108,8 @@ class RunContext:
         overrides: Optional[Dict[str, Union[Mapping[str, Any], Any]]] = None,
         # Configuration mode.
         configuration: Optional[str] = None,
+        # Experiment module name.
+        experiment: Optional[str] = None,
         # Whether to suppress output to stdout.
         silent: bool = False
     ):

@@ -6,6 +6,7 @@ from typing import Tuple
 
 import gym
 import pytest
+from maze.train.trainers.ppo.ppo_trainer import PPO
 from torch import nn
 
 from maze.api import run_context
@@ -611,6 +612,23 @@ def test_env_type():
 
     assert isinstance(env, MazeEnv)
     assert isinstance(env, LogStatsWrapper)
+
+
+def test_experiment():
+    """
+    Tests whether experiments are correctly loaded.
+    """
+
+    rc = run_context.RunContext(
+        env=lambda: GymMazeEnv('CartPole-v0'),
+        silent=True,
+        overrides={"runner.normalization_samples": 1, "runner.concurrency": 1},
+        experiment="cartpole_ppo_wrappers"
+    )
+    rc.train(1)
+
+    assert isinstance(rc._runners[RunMode.TRAINING]._trainer, PPO)
+    assert rc._runners[RunMode.TRAINING]._cfg.algorithm.lr == 0.0001
 
 
 def test_autoresolving_proxy_attribute():

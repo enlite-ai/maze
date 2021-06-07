@@ -9,10 +9,6 @@ workflow. In general, there are different options for carrying out and configuri
 (To see experiment configuration in action, check out our
 `project template <https://github.com/enlite-ai/maze-cartpole>`_.)
 
-.. note::
-
-    Experiments are not yet supported by :class:`RunContext<maze.api.run_context.RunContext>`.
-
 .. contents:: Overview
     :depth: 1
     :local:
@@ -26,9 +22,22 @@ you can utilize Hydra command line overrides to reset parameters specified
 in the default config
 (e.g., `conf_train <https://github.com/enlite-ai/maze/blob/main/maze/conf/conf_train.yaml/>`_).
 
-.. code:: console
+.. tabs::
+    .. code-tab:: bash
 
-   $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo algorithm.lr=0.0001
+         $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo algorithm.lr=0.0001
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            algorithm="ppo",
+            overrides={
+                "env.name": "CartPole-v0",
+                "algorithm.lr": 0.0001,
+            }
+        )
+        rc.train()
+
 
 The example above changes the trainer to PPO and optimizes with a learning rate of 0.0001.
 You can of course override any other parameter of your training and rollout runs.
@@ -58,9 +67,15 @@ and additionally activates the
 
 To start the training run with this config file, run:
 
-.. code:: console
+.. tabs::
+    .. code-tab:: bash
 
-   $ maze-run -cn conf_train +experiment=cartpole_ppo_wrappers
+         $ maze-run -cn conf_train +experiment=cartpole_ppo_wrappers
+
+    .. code-tab:: python
+
+        rc = RunContext(experiment="cartpole_ppo_wrappers")
+        rc.train()
 
 You can find a more detail explanation on how experiments are embedded in the overall configuration system in our
 :ref:`Hydra experiment documentation <hydra-custom-experiments>`.
@@ -73,6 +88,10 @@ To perform a simple grid search over selected hyper parameters you can use
 which converts lists of command line arguments into distinct jobs.
 
 The example below shows how to launch the same experiment with three different learning rates.
+
+.. note::
+
+    Multiruns are not supported by `RunContext` yet.
 
 .. code:: console
 

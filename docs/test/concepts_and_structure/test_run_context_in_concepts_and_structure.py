@@ -1,5 +1,5 @@
 """
-Tests for exemplary RunContext uses given in maze/docs/source/concepts_and_structure/run_context_overview.rst.
+Tests for RunContext examples given in maze/docs/source/concepts_and_structure/run_context_overview.rst.
 """
 import omegaconf
 import pytest
