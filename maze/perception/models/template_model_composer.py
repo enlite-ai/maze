@@ -148,7 +148,7 @@ class TemplateModelComposer(BaseModelComposer):
             perception_dict = perception_net.perception_dict
             inference_block_in_keys = perception_net.in_keys
             inference_block_in_shapes = perception_net.in_shapes
-            net_in_shapes = perception_dict["concat"].out_shapes()
+            net_in_shapes = perception_dict["latent"].out_shapes()
         else:
             assert self._shared_embedding, 'If a perception net is given, shared embedding has to be set to true'
             inference_block_in_keys = 'latent'
