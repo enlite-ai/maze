@@ -9,7 +9,7 @@ from maze.core.agent.state_critic import StateCritic
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorIDType, StepKeyType
+from maze.core.env.structured_env import StepKeyType
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.perception.perception_utils import convert_to_torch, flatten_spaces, stack_and_flatten_spaces
 
@@ -19,8 +19,8 @@ class TorchStateCritic(TorchModel, StateCritic):
 
     :param networks: Mapping of value functions (critic) to encapsulate.
     :param num_policies: The number of corresponding policies.
+    :param device: Device the policy should be located on (cpu or cuda).
     :param shared_embedding: Specify whether the critic shares the embedding with the policy.
-    :param device: Device the policy should be located on (cpu or cuda)
     """
 
     def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str,
@@ -114,6 +114,8 @@ class TorchStateCritic(TorchModel, StateCritic):
         :param record: Record of a structured step containing observations, rewards, and dones
         :param gamma: Discounting factor
         :param gae_lambda: Bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
+        :embedding_out: An optional dict of dicts holding the ouptput of the shared embedding network produced by the
+            policy. This is only relevant if model.shared_embedding is set to true.
         :return: Tuple containing the computed returns, the predicted values and the detached predicted values.
         """
 
@@ -277,7 +279,12 @@ class TorchStepStateCritic(TorchStateCritic):
     def predict_values(self, record: Union[StructuredSpacesRecord,
                                            Optional[Dict[StepKeyType, Dict[str, torch.Tensor]]]]) \
             -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
-        """TODO:"""
+        """Predict the values for each substep with the appropriate critic.
+
+        :param record: Record of a structured step containing keys and observations for the individual sub-steps. OR
+            a dict of dicts holding the collected output of each subset policy's embedding layer.
+        :return: Tuple containing lists of values and detached values for individual sub-steps.
+        """
         values, detached_values = [], []
         if self.shared_embedding:
             assert isinstance(record, dict)

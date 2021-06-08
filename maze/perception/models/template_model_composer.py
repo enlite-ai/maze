@@ -40,6 +40,7 @@ class TemplateModelComposer(BaseModelComposer):
         E.g. {'type': maze.perception.models.policies.ProbabilisticPolicyComposer} specifies a probabilistic policy.
     :param critic: Specifies the critic type as a configType.
         E.g. {'type': maze.perception.models.critics.StateCriticComposer} specifies the single step state critic.
+    :param shared_embedding: Specify whether the critic shares the embedding with the policy.
     """
 
     @classmethod

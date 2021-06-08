@@ -20,12 +20,14 @@ class StepStateCriticComposer(BaseStateCriticComposer):
 
     :param observation_spaces_dict: Dict of sub-step id to observation space.
     :param networks: Critics networks as defined in the config (either list or dictionary of object params and type).
+    :param shared_embedding: Specify whether the critic shares the embedding with the policy.
     """
 
     def __init__(self,
                  observation_spaces_dict: Dict[Union[str, int], spaces.Dict],
                  agent_counts_dict: Dict[StepKeyType, int],
-                 networks: CollectionOfConfigType):
+                 networks: CollectionOfConfigType,
+                 shared_embedding: bool):
         super().__init__(observation_spaces_dict, agent_counts_dict)
 
         # initialize critics
