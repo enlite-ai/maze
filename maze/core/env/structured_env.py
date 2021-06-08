@@ -106,7 +106,7 @@ class StructuredEnv(BaseEnv):
         process them together and calculate rewards for all agents. In such scenario, the reward of individual
         agents is not know until after actions of all agents have been collected. Then, individual
         sub-steps might return None as agent reward, and then the reward for all agents can be queried
-        and redistributed once the while structured step is done.
+        and redistributed once the structured step is done.
 
         :return: If available: Array of rewards, one per each actor in the last structured step. None otherwise.
         """
