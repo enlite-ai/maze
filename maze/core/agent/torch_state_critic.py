@@ -1,6 +1,6 @@
 """Encapsulation of multiple torch state critics for training in structured environments."""
 from abc import abstractmethod
-from typing import Mapping, Union, List, Dict, Tuple
+from typing import Mapping, Union, List, Dict, Tuple, Optional
 
 import torch
 from torch import nn
@@ -9,6 +9,7 @@ from maze.core.agent.state_critic import StateCritic
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorIDType, StepKeyType
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.perception.perception_utils import convert_to_torch, flatten_spaces, stack_and_flatten_spaces
 
@@ -18,12 +19,15 @@ class TorchStateCritic(TorchModel, StateCritic):
 
     :param networks: Mapping of value functions (critic) to encapsulate.
     :param num_policies: The number of corresponding policies.
+    :param shared_embedding: Specify whether the critic shares the embedding with the policy.
     :param device: Device the policy should be located on (cpu or cuda)
     """
 
-    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str):
+    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str,
+                 shared_embedding: bool):
         self.networks = networks
         self.num_policies = num_policies
+        self.shared_embedding = shared_embedding
         TorchModel.__init__(self, device=device)
 
     @override(StateCritic)
@@ -99,7 +103,8 @@ class TorchStateCritic(TorchModel, StateCritic):
                 assert key in state_dict_critics, f"Could not find state dict for policy ID: {key}"
                 critic.load_state_dict(state_dict_critics[key])
 
-    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float) \
+    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float,
+                          embedding_out: Optional[Dict[StepKeyType, Dict[str, torch.Tensor]]]) \
             -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
         """Bootstrap returns using the value function.
 
@@ -113,7 +118,7 @@ class TorchStateCritic(TorchModel, StateCritic):
         """
 
         # predict state values
-        values, detached_values = self.predict_values(record)
+        values, detached_values = self.predict_values(embedding_out if self.shared_embedding else record)
 
         # take dones from the last sub-step -- there should not be any more sub-steps when the env is done
         dones: torch.Tensor = record.dones[-1]
@@ -212,7 +217,7 @@ class TorchSharedStateCritic(TorchStateCritic):
                  num_policies: int,
                  device: str,
                  stack_observations: bool):
-        super().__init__(networks=networks, num_policies=num_policies, device=device)
+        super().__init__(networks=networks, num_policies=num_policies, device=device, shared_embedding=False)
         self.stack_observations = stack_observations
         self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
 
@@ -229,6 +234,12 @@ class TorchSharedStateCritic(TorchStateCritic):
         detached_values = [value.detach() for _ in record.substep_records]
 
         return values, detached_values
+
+    @override(StateCritic)
+    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> torch.Tensor:
+        """Predictions depend on previous sub-steps, thus this method is not supported in the delta state critic.
+        """
+        raise NotImplemented
 
     @property
     @override(TorchStateCritic)
@@ -263,13 +274,22 @@ class TorchStepStateCritic(TorchStateCritic):
     """
 
     @override(StateCritic)
-    def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
-        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`"""
+    def predict_values(self, record: Union[StructuredSpacesRecord,
+                                           Optional[Dict[StepKeyType, Dict[str, torch.Tensor]]]]) \
+            -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+        """TODO:"""
         values, detached_values = [], []
-        for substep_record in record.substep_records:
-            value = self.networks[substep_record.substep_key](substep_record.observation)["value"][..., 0]
-            values.append(value)
-            detached_values.append(value.detach())
+        if self.shared_embedding:
+            assert isinstance(record, dict)
+            for substep_key, value in record.items():
+                value = self.networks[substep_key](value)["value"][..., 0]
+                values.append(value)
+                detached_values.append(value.detach())
+        else:
+            for substep_record in record.substep_records:
+                value = self.networks[substep_record.substep_key](substep_record.observation)["value"][..., 0]
+                values.append(value)
+                detached_values.append(value.detach())
 
         return values, detached_values
 
@@ -303,6 +323,9 @@ class TorchDeltaStateCritic(TorchStateCritic):
     Can be instantiated via the
     :class:`~maze.perception.models.critics.delta_state_critic_composer.DeltaStateCriticComposer`.
     """
+
+    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str):
+        super().__init__(networks=networks, num_policies=num_policies, device=device, shared_embedding=False)
 
     @override(StateCritic)
     def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:

@@ -47,14 +47,21 @@ class ImpalaLearner:
         :return: A LearnerOutput names tuple consisting of (values, detached_values, actions_logits, n_critics)
         """
 
-        # predict values of stage 2 in a regular fashion
-        values, detached_values = self.model.critic.predict_values(actors_output)
-
         # compute action log-probabilities of actions taken
         actions_logits = []
+        embedding_out = dict()
         for record in actors_output.substep_records:
-            substep_logits = self.model.policy.compute_logits_dict(record.observation, actor_id=record.actor_id)
+            substep_logits, embedding_out[record.actor_id] = self.model.policy.compute_logits_dict(
+                record.observation, actor_id=record.actor_id, return_embedding=self.model.critic.shared_embedding)
             actions_logits.append(substep_logits)
+
+        if self.model.critic.shared_embedding:
+            critic_input = embedding_out
+        else:
+            critic_input = actors_output
+
+        # predict values of stage 2 in a regular fashion
+        values, detached_values = self.model.critic.predict_values(critic_input)
 
         # convert logits and values into dicts keyed by sub-step ID
         values = {r.substep_key: v for r, v in zip(actors_output.substep_records, values)}

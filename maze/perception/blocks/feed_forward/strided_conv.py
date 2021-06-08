@@ -8,6 +8,7 @@ from torch import nn as nn
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
+from torch.nn import ZeroPad2d
 
 
 class StridedConvolutionBlock(ShapeNormalizationBlock):
@@ -74,7 +75,7 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
         num_layers = len(self.hidden_channels)
         self.hidden_strides = hidden_strides if hidden_strides is not None else [1 for _ in range(num_layers)]
         self.hidden_dilations = hidden_dilations if hidden_dilations is not None else [1 for _ in range(num_layers)]
-        self.hidden_padding = hidden_padding if hidden_padding is not None else [1 for _ in range(num_layers)]
+        self.hidden_padding = hidden_padding if hidden_padding is not None else [0 for _ in range(num_layers)]
         self.padding_mode = padding_mode if padding_mode is not None else 'zeros'
 
         # checks
@@ -129,11 +130,17 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
 
         # treat remaining layers
         for ii in range(1, len(self.hidden_channels)):
+            padding_to_use = self.hidden_padding[ii]
+            if isinstance(self.hidden_padding[ii], list) and len(self.hidden_padding[ii]) == 4 and \
+                    self.padding_mode == 'zeros':
+                layer_dict[f'padding_{ii}'] = ZeroPad2d(self.hidden_padding[ii])
+                padding_to_use = 0
+
             layer_dict[f"conv_{ii}"] = self.convolution_nn(in_channels=self.hidden_channels[ii - 1],
                                                            out_channels=self.hidden_channels[ii],
                                                            kernel_size=self.hidden_kernels[ii],
                                                            stride=self.hidden_strides[ii],
-                                                           padding=self.hidden_padding[ii],
+                                                           padding=padding_to_use,
                                                            dilation=self.hidden_dilations[ii],
                                                            padding_mode=self.padding_mode)
             layer_dict[f"{self.non_lin.__name__}_{ii}"] = self.non_lin()

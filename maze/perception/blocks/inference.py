@@ -29,17 +29,21 @@ class InferenceBlock(PerceptionBlock):
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 perception_blocks: Dict[str, PerceptionBlock]):
+                 perception_blocks: Dict[str, PerceptionBlock],
+                 additional_out_keys: Optional[List[str]] = None):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
-        self._test_condition(perception_blocks, self.in_keys, self.out_keys)
+        additional_out_keys = [] if additional_out_keys is None else additional_out_keys
+        self._test_condition(perception_blocks, self.in_keys, self.out_keys, additional_out_keys)
         self.block_keys = list(perception_blocks.keys())
         self.perception_dict = perception_blocks
+        self.additional_out_keys = additional_out_keys
         self.perception_blocks = nn.ModuleDict(perception_blocks)
         # Copy the in_keys
         self.execution_plan = self._build_execution_graph(computed_keys=self.in_keys[:], execution_plan=dict())
 
     @classmethod
-    def _test_condition(cls, perception_blocks: Dict[str, PerceptionBlock], in_keys: List[str], out_keys: List[str]):
+    def _test_condition(cls, perception_blocks: Dict[str, PerceptionBlock], in_keys: List[str], out_keys: List[str],
+                        additional_out_keys: Optional[List[str]]):
         """Test the defined conditions
 
         :param perception_blocks: Dictionary of perception blocks.
@@ -72,6 +76,9 @@ class InferenceBlock(PerceptionBlock):
         assert all([out_key in all_out_keys for out_key in out_keys]), \
             f'Out_keys of the network: {set(all_out_keys) - set(all_in_keys)}, vs specified out_keys: {set(out_keys)}'
 
+        assert all([a_out_key in all_out_keys for a_out_key in additional_out_keys]), ' One or more of the specified ' \
+            f'additional out keys {additional_out_keys} is not a network out key {all_out_keys}'
+
     @override(PerceptionBlock)
     def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
@@ -94,7 +101,7 @@ class InferenceBlock(PerceptionBlock):
         assert all([key in tmp_dict for key in self.out_keys]), 'All out_keys should be computed at this point'
         # compile output dictionary
         out_dict = dict()
-        for out_key in self.out_keys:
+        for out_key in self.out_keys + self.additional_out_keys:
             out_dict[out_key] = tmp_dict[out_key]
 
         return out_dict

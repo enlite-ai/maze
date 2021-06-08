@@ -37,11 +37,11 @@ The custom model composer supports the following features:
 The Custom Models Signature
 ---------------------------
 
-The constraints we impose on any model used in conjunction with the custom model composer are twofold:
+The constraints we impose on any model used in conjunction with the custom model composer are threefold:
 fist, the network class has to adhere to PyTorch's
 `nn.Model <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_ and implement the *forward* method.
 Second, a custom network class requires specified constructor arguments depending on the type of network
-(policy, state critic, ...).
+(policy, state critic, ...). And lastly the model has to return a dictionary when calling the forward method.
 
 **Policy Networks** require the constructor arguments *obs_shapes* and *action_logits_shapes*.
 When models are built in the the custom model composer these two arguments are passed to the
@@ -53,11 +53,14 @@ Both, observation and action logits shapes are automatically inferred in the mod
 
     - implement `nn.Model <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
     - constructor arguments: *obs_shapes* and *action_logits_shapes*
+    - return type of forward method: Here the forward method has to return a dict, where the keys correspond to the
+      actions of the environment.
 
 **State Critic Networks** require only the constructor argument *obs_shapes*.
 
     - implement `nn.Model <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
     - constructor arguments: *obs_shapes*
+    - return type of forward method: The critic networks also have to return a dict, where the key is 'value'.
 
 .. _custom_example_1:
 

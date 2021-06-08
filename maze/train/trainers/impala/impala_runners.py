@@ -38,9 +38,7 @@ class ImpalaRunner(TrainingRunner):
 
         # initialize actor critic model
         model = TorchActorCritic(
-            policy=TorchPolicy(networks=self._model_composer.policy.networks,
-                               distribution_mapper=self._model_composer.distribution_mapper,
-                               device=cfg.algorithm.device),
+            policy=self._model_composer.policy,
             critic=self._model_composer.critic,
             device=cfg.algorithm.device)
 

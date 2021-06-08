@@ -180,21 +180,23 @@ class ActorCritic(Trainer, ABC):
         raise NotImplementedError
 
     def _action_log_probs_and_dists(self, record: StructuredSpacesRecord) \
-            -> Tuple[List[Dict[str, torch.Tensor]],
-                     List[DictProbabilityDistribution]]:
+            -> Tuple[List[Dict[str, torch.Tensor]], List[DictProbabilityDistribution],
+                     Dict[ActorIDType, Dict[str, torch.Tensor]]]:
         """Computes action log probabilities and corresponding action distributions for all sub-steps and actions.
 
         :param record: Structured spaces record holding the actions and observations for individual sub-steps.
-        :return: A tuple containing the action log-probabilities and corresponding action distributions.
+        :return: A tuple containing the action log-probabilities and corresponding action distributions. TODO
         """
 
         action_log_probs = []
         step_action_dists = []
 
+        embedding_out = dict()
         for substep_record in record.substep_records:
             # Predict step action logits
-            logits_dict = self.model.policy.compute_logits_dict(observation=substep_record.observation,
-                                                                actor_id=substep_record.actor_id)
+            logits_dict, embedding_out[substep_record.substep_key] = self.model.policy.compute_logits_dict(observation=substep_record.observation,
+                                                                actor_id=substep_record.actor_id,
+                                                                return_embedding=self.model.critic.shared_embedding)
 
             # Prepare action distributions & compute log probs
             prob_dist = self.model.policy.logits_dict_to_distribution(logits_dict, temperature=1.0)
@@ -203,7 +205,7 @@ class ActorCritic(Trainer, ABC):
             action_log_probs.append(log_probs)
             step_action_dists.append(prob_dist)
 
-        return action_log_probs, step_action_dists
+        return action_log_probs, step_action_dists, embedding_out
 
     def _gradient_step(self, policy_losses: List[torch.Tensor], entropies: List[torch.Tensor],
                        value_loss: torch.Tensor) -> None:

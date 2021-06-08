@@ -49,7 +49,7 @@ class PPO(ActorCritic):
 
         # compute action log-probabilities of actions taken (aka old action log probs)
         with torch.no_grad():
-            action_log_probs_old, _ = self._action_log_probs_and_dists(record)
+            action_log_probs_old, _, embedding_out_old = self._action_log_probs_and_dists(record)
             # manually empty GPU cache
             torch.cuda.empty_cache()
 
@@ -69,7 +69,9 @@ class PPO(ActorCritic):
                 returns, _, detached_values = self.model.critic.bootstrap_returns(
                     record=record,
                     gamma=self.algorithm_config.gamma,
-                    gae_lambda=self.algorithm_config.gae_lambda)
+                    gae_lambda=self.algorithm_config.gae_lambda,
+                    embedding_out=embedding_out_old
+                )
                 # manually empty GPU cache
                 torch.cuda.empty_cache()
 
@@ -108,8 +110,12 @@ class PPO(ActorCritic):
 
                     batch_record.append(batch_substep_record)
 
+                # compute log probabilities
+                action_log_probs, prob_dists, embedding_out = self._action_log_probs_and_dists(batch_record)
+
                 # predict values
-                values, _ = self.model.critic.predict_values(batch_record)
+                values, _ = self.model.critic.predict_values(batch_record if not self.model.critic.shared_embedding
+                                                             else embedding_out)
 
                 # compute advantages
                 advantages = [r[batch_idxs] - dv[batch_idxs] for r, dv in zip(returns, detached_values)]
@@ -123,9 +129,6 @@ class PPO(ActorCritic):
                 else:
                     value_losses = [(ret[batch_idxs] - val).pow(2).mean() for ret, val in zip(returns, values)]
                 value_loss = sum(value_losses)
-
-                # compute log probabilities
-                action_log_probs, prob_dists = self._action_log_probs_and_dists(batch_record)
 
                 # compute policy loss
                 policy_losses = []

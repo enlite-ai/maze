@@ -151,8 +151,8 @@ def from_logits(behaviour_policy_logits: Mapping[Union[str, int], Dict[str, torc
     target_action_log_probs, target_step_action_dists = \
         log_probs_from_logits_and_actions_and_spaces(target_policy_logits, actions, action_spaces, distribution_mapper)
 
-    log_rhos = get_log_rhos(target_action_log_probs,
-                            behaviour_action_log_probs)
+    log_rhos = get_log_rhos(target_action_log_probs=target_action_log_probs,
+                            behaviour_action_log_probs=behaviour_action_log_probs)
     vss = dict()
     pg_advantagess = dict()
     for step_key in action_spaces.keys():
@@ -282,7 +282,7 @@ def get_log_rhos(target_action_log_probs: Mapping[Union[str, int], Dict[str, tor
     with torch.no_grad():
         for step_key in target_action_log_probs.keys():
             step_target_action_log_probs = target_action_log_probs[step_key]
-            step_behaviour_action_log_probs = target_action_log_probs[step_key]
+            step_behaviour_action_log_probs = behaviour_action_log_probs[step_key]
 
             step_target_action_log_probs_tensor = torch.stack(list(step_target_action_log_probs.values()))
             step_behaviour_action_log_probs_tensor = torch.stack(list(step_behaviour_action_log_probs.values()))
