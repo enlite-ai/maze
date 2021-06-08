@@ -10,7 +10,7 @@ Motivation
 
 Maze :ref:`utilizes Hydra <hydra>` to facilitate a powerful configuration mechanism boosting developers' flexibility in their creation of reinforcement learning projects. Hydra however is geared towards command line usage, so these benefits are not accessible when working with individual Maze components (like :class:`~maze.train.trainers.common.trainer.Trainer`, :class:`~maze.core.wrappers.wrapper.Wrapper`, :class:`~maze.core.env.maze_env.MazeEnv`, ...) and composing them manually in Python.
 
-E.g.: It is not possible to generate components directly from the provided configuration modules. This would however be quite useful, as it allows to loads pre-configured (sets of) components. This can be exemplified by the `pixel_obs` wrapper configuration module, which defines several wrappers useful for the preprocessing, normalization and logging of such pixel space observations. Via the CLI this can be loaded trivially via :code:`... wrappers=pixel_obs ...` - yet there is no obvious way to leverage Maze' Hydra-based configuration system from within a Python script. This also affects other features, like the inability to instantiate objects from a YAML-/dict-based configuration object (which can be very convienient with increasing experiment or application complexity).
+E.g.: It is not possible to generate components directly from the provided configuration modules. This would however be quite useful, as it allows to loads pre-configured (sets of) components. This can be exemplified by the `pixel_obs` wrapper configuration module, which defines several wrappers useful for the preprocessing, normalization and logging of such pixel space observations. Via the CLI this can be loaded trivially via :code:`... wrappers=pixel_obs ...` - yet there is no obvious way to leverage Maze' Hydra-based configuration system from within a Python script. This also affects other features, like the inability to instantiate objects from a YAML-/dict-based configuration object (which can be very convenient with increasing experiment or application complexity).
 
 This motivates the introduction of :class:`~maze.api.run_context.RunContext`, a high-level API for training, rollout and evaluation. When working with Maze from within a Python script (as opposed to via the CLI with :code:`maze-run`) we highly recommend that you start with :class:`~maze.api.run_context.RunContext`: It requires very little configuration overhead to get things rolling, yet offers a lot of flexibility if you require additional configuration. While there might be cases where this is not sufficient, we expect that this would not happen too frequently.
 
@@ -26,7 +26,7 @@ We designed :class:`~maze.api.run_context.RunContext` to be largely congruent wi
 Usage
 -----
 
-This section aims to convey the principal ideas and features of :class:`~maze.api.run_context.RunContext`. For further explanation and a detailled discussion of the exposed interface as well as auxiliary components and utilities see :ref:`here <run_context_ref>`.
+This section aims to convey the principal ideas and features of :class:`~maze.api.run_context.RunContext`. For further explanation and a detailed discussion of the exposed interface as well as auxiliary components and utilities see :ref:`here <run_context_ref>`.
 
 **Initialization**
 

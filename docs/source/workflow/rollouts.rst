@@ -72,7 +72,7 @@ This is mainly useful when running a single episode only or for debugging, as
 sequential rollouts are much slower.
 
 The available configuration options for both scenarios are listed in
-the Hydra runner package (:code:`conf/runners/`).
+the Hydra runner package (:code:`conf/runner/`).
 
 These are the parameters for :code:`parallel` rollout runner:
 
@@ -125,11 +125,11 @@ the :code:`StructuredPolicy` interface.
 
 For agents, there are the following example config files:
 
-- :code:`agent/random_policy.yaml` for instantiating a class that conforms
+- :code:`policy/random_policy.yaml` for instantiating a class that conforms
   to the :code:`StructuredPolicy` interface directly
-- :code:`agent/cutting_2d_greedy_policy` (in :code:`maze-envs/logistics`) for wrapping (potentially multiple) flat
+- :code:`policy/cutting_2d_greedy_policy` (in :code:`maze-envs/logistics`) for wrapping (potentially multiple) flat
   policies into a structured policy
-- :code:`agent/torch_policy` (in :code:`maze/train`) for loading and rolling out
+- :code:`policy/torch_policy` (in :code:`maze/train`) for loading and rolling out
   a policy trained using the Maze framework
 
 Hence, after training a policy on the :ref:`tutorial Cutting 2D environment <env_from_scratch>`:
