@@ -60,9 +60,10 @@ def rollout(
                 done = False
 
                 while not done and i < n_max_steps:
-                    obs, reward, done, _ = monitored_env.step(
-                        agent.compute_action(obs, maze_state=monitored_env.get_maze_state(), actor_id=(0, 0))
-                    )
+                    action = agent.compute_action(obs,
+                                                  maze_state=monitored_env.get_maze_state(),
+                                                  actor_id=monitored_env.actor_id())
+                    obs, reward, done, _ = monitored_env.step(action)
                     cumulative_reward += reward
 
                     if render:
