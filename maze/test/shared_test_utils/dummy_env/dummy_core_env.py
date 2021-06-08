@@ -1,7 +1,7 @@
 """
 Includes the implementation of the dummy core environment.
 """
-from typing import Tuple, Dict, Any, Union, Optional
+from typing import Tuple, Dict, Any, Optional
 
 import gym
 import numpy as np
