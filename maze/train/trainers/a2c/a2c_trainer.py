@@ -43,14 +43,15 @@ class A2C(ActorCritic):
         # collect observations
         record = self._rollout()
 
+        # compute action log-probabilities of actions taken
+        action_log_probs, step_action_dist, embedding_out = self._action_log_probs_and_dists(record)
+
         # compute bootstrapped returns
         returns, values, detached_values = self.model.critic.bootstrap_returns(
             record=record,
             gamma=self.algorithm_config.gamma,
-            gae_lambda=self.algorithm_config.gae_lambda)
-
-        # compute action log-probabilities of actions taken
-        action_log_probs, step_action_dist = self._action_log_probs_and_dists(record)
+            gae_lambda=self.algorithm_config.gae_lambda,
+            embedding_out=embedding_out)
 
         # compute entropies
         entropies = [action_dist.entropy().mean() for action_dist in step_action_dist]

@@ -1,6 +1,8 @@
 # @package model
 _target_: maze.perception.models.custom_model_composer.CustomModelComposer
 
+shared_embedding: false
+
 distribution_mapper_config:
     - action_space: gym.spaces.Box
       distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution

@@ -148,6 +148,7 @@ class MultiStepIMPALA(Trainer):
         if n_epochs <= 0:
             n_epochs = sys.maxsize
 
+        reward = -np.inf
         # run training epochs
         for epoch in range(n_epochs):
             start = time.time()
@@ -158,9 +159,16 @@ class MultiStepIMPALA(Trainer):
                 reward = self.learner.env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name="mean")
             # take training reward
             else:
-                reward = -np.inf if epoch < 1 else \
-                    self.distributed_actors.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH,
-                                                            name="mean")
+                prev_reward = reward
+                try:
+                    reward = prev_reward if epoch < 1 else \
+                        self.distributed_actors.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH,
+                                                                name="mean")
+                except KeyError:
+                    BColors.print_colored('No training episode finished in this epoch... This really should not '
+                                          'happen!! Try increasing the number of rollout-steps for example.',
+                                          BColors.WARNING)
+                    reward = prev_reward
 
             # evaluate policy
             time_evaluation = time.time() - start
@@ -275,7 +283,7 @@ class MultiStepIMPALA(Trainer):
                         'Second dimension should be the batch dimension'
 
         bootstrap_value = {step_key: step_values[-1]
-                           for step_key, step_values in learner_output.detached_values.items()}
+                           for step_key, step_values in learner_output.values.items()}
 
         # Shift values:
         record, learner_output = self._shift_outputs(record, learner_output)
@@ -292,6 +300,7 @@ class MultiStepIMPALA(Trainer):
         else:
             clipped_rewards = record.rewards_dict[list(record.rewards_dict.keys())[-1]]
         # START: Loss computation --------------------------------------------------------------------------------------
+
         vtrace_returns = impala_vtrace.from_logits(
             behaviour_policy_logits=record.logits_dict,
             target_policy_logits=learner_output.actions_logits,
@@ -300,7 +309,7 @@ class MultiStepIMPALA(Trainer):
             distribution_mapper=self.model.policy.distribution_mapper,
             discounts=(~record.dones_dict[list(record.dones_dict.keys())[-1]]).float() * self.gamma,
             rewards=clipped_rewards,
-            values=learner_output.detached_values,
+            values=learner_output.values,
             bootstrap_value=bootstrap_value,
             clip_rho_threshold=self.vtrace_clip_rho_threshold,
             clip_pg_rho_threshold=self.vtrace_clip_pg_rho_threshold,
@@ -314,16 +323,15 @@ class MultiStepIMPALA(Trainer):
         for step_key in self.learner.sub_step_keys:
             step_policy_loss = torch.tensor(0.0).to(self.learner.model.device)
             for action_key in self.learner.step_action_keys[step_key]:
-                step_policy_loss -= (vtrace_returns.pg_advantages[step_key] *
-                                     vtrace_returns.target_action_log_probs[step_key][action_key]).mean()
+                step_policy_loss -= (vtrace_returns.target_action_log_probs[step_key][action_key] *
+                                     vtrace_returns.pg_advantages[step_key]).mean()
             policy_losses[step_key] = step_policy_loss
         overall_policy_loss = sum(policy_losses.values())
 
         # compute value loss
         value_losses = dict()
         for step_key in self.learner.sub_step_keys[:len(self.learner.model.critic.networks)]:
-            value_loss = (vtrace_returns.vs[step_key] -
-                          learner_output.values[step_key]).pow(2).mean()
+            value_loss = (learner_output.values[step_key] - vtrace_returns.vs[step_key]).pow(2.0).mean()
             value_losses[step_key] = value_loss
         overall_value_loss = sum(value_losses.values())
 

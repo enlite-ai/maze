@@ -33,10 +33,12 @@ class StepStateCriticComposer(BaseStateCriticComposer):
         self._critics = {key: Factory(base_type=nn.Module).instantiate(networks[key],
                                                                        obs_shapes=self._obs_shapes[key])
                          for key in networks.keys()}
+        self.shared_embedding = shared_embedding
 
     @property
     @override(BaseStateCriticComposer)
     def critic(self) -> TorchStepStateCritic:
         """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
         """
-        return TorchStepStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu")
+        return TorchStepStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu",
+                                    shared_embedding=self.shared_embedding)

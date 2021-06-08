@@ -1,5 +1,5 @@
 """Composer for probabilistic policy (actor) networks."""
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from gym import spaces
 from torch import nn

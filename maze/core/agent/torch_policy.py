@@ -85,7 +85,7 @@ class TorchPolicy(TorchModel, Policy):
         :return: Tuple of (action, logits_dict)
         """
         with torch.no_grad():
-            logits_dict = self.compute_logits_dict(observation, actor_id)
+            logits_dict, _ = self.compute_logits_dict(observation, actor_id)
             prob_dist = self.logits_dict_to_distribution(logits_dict)
             if deterministic:
                 sampled_action = prob_dist.deterministic_sample()
@@ -110,7 +110,7 @@ class TorchPolicy(TorchModel, Policy):
         """
 
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
-        logits_dict = self.compute_logits_dict(obs_t, actor_id)
+        logits_dict, _ = self.compute_logits_dict(obs_t, actor_id)
         prob_dist = self.logits_dict_to_distribution(logits_dict, temperature)
         if deterministic:
             sampled_action = prob_dist.deterministic_sample()
@@ -126,18 +126,30 @@ class TorchPolicy(TorchModel, Policy):
         :param actor_id: Actor ID corresponding to the observation
         :return: Action distribution for the given observation
         """
-        logits_dict = self.compute_logits_dict(observation, actor_id)
+        logits_dict, _ = self.compute_logits_dict(observation, actor_id)
         return self.distribution_mapper.logits_dict_to_distribution(logits_dict=logits_dict, temperature=1.0)
 
-    def compute_logits_dict(self, observation: Any, actor_id: ActorID = None) -> Dict[str, torch.Tensor]:
+    def compute_logits_dict(self, observation: Any, actor_id: ActorID = None,
+                            return_embedding: bool = False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
         """Get the logits for the given observation and actor ID.
 
         :param observation: Observation to return probability distribution for
         :param actor_id: Actor ID this observation corresponds to
-        :return: Logits dictionary
+        :param return_embedding:
+        :return: Logits dictionary TODO
         """
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
-        return self.network_for(actor_id)(obs_t)
+        network_out = self.network_for(actor_id)(obs_t)
+        embedding_out = None
+        if return_embedding:
+            embedding_out = dict(filter(lambda ii: ii[0] not in self.distribution_mapper.action_space.spaces.keys(),
+                                        network_out.items()))
+        if any([key not in self.distribution_mapper.action_space.spaces.keys() for key in
+                network_out.keys()]):
+            network_out = dict(filter(lambda ii: ii[0] in self.distribution_mapper.action_space.spaces.keys(),
+                                      network_out.items()))
+
+        return network_out, embedding_out
 
     def network_for(self, actor_id: Optional[ActorID]) -> nn.Module:
         """Helper function for returning a network for the given policy ID (using either just the sub-step ID

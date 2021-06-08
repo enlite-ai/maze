@@ -107,7 +107,50 @@ def test_custom_model_composer():
              "non_lin": "torch.nn.SELU"},
             {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
              "non_lin": "torch.nn.SELU"}
-        ]
+        ],
+        'shared_embedding': 'false'
+    }
+
+    # check if model config is fine
+    CustomModelComposer.check_model_config({"critic": step_critic})
+
+    composer = CustomModelComposer(action_spaces_dict=env.action_spaces_dict,
+                                   observation_spaces_dict=env.observation_spaces_dict,
+                                   agent_counts_dict=env.agent_counts_dict,
+                                   distribution_mapper_config=[],
+                                   policy=policies,
+                                   critic=step_critic)
+
+    assert isinstance(composer.distribution_mapper, DistributionMapper)
+    assert isinstance(composer.critic, TorchStepStateCritic)
+    assert isinstance(composer.critic.networks, dict)
+    assert isinstance(composer.critic.networks[0], DummyValueNet)
+    assert isinstance(composer.critic.networks[1], DummyValueNet)
+
+    # test saving models
+    composer.save_models()
+
+    try:
+        import pygraphviz
+
+        for model_file in ["critic_0.pdf", "critic_1.pdf", "policy_0.pdf", "policy_1.pdf"]:
+            file_path = os.path.join(os.getcwd(), model_file)
+            assert os.path.exists(file_path)
+            os.remove(file_path)
+    except ImportError as e:
+        pass  # no output generated as pygraphviz is not installed.
+
+
+    # step critic
+    step_critic = {
+        "_target_": "maze.perception.models.critics.StepStateCriticComposer",
+        "networks": [
+            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
+             "non_lin": "torch.nn.SELU"},
+            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
+             "non_lin": "torch.nn.SELU"}
+        ],
+        'shared_embedding': 'true'
     }
 
     # check if model config is fine

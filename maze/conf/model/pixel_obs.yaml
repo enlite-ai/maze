@@ -1,6 +1,8 @@
 # @package model
 _target_: maze.perception.models.template_model_composer.TemplateModelComposer
 
+shared_embedding: false
+
 distribution_mapper_config:
     - action_space: gym.spaces.Box
       distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
@@ -26,7 +28,7 @@ model_builder:
         convolution_dimension: 2
         hidden_strides: [ 4, 2, 2 ]
         hidden_dilations: ~
-        hidden_padding: ~
+        hidden_padding: [ 1, 1, 1 ]
         padding_mode: ~
         hidden_units: []
         non_lin: torch.nn.ReLU
