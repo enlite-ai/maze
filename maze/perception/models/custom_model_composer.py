@@ -1,6 +1,6 @@
 """Custom model composer, encapsulating the set of policy and critic networks along with the distribution mapper."""
 
-from typing import Dict, Union, Optional, Mapping, List
+from typing import Dict, Union, Optional, Mapping
 
 import gym
 import numpy as np
@@ -12,7 +12,7 @@ from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.factory import Factory, ConfigType
-from maze.perception.models.critics import BaseStateCriticComposer
+from maze.perception.models.critics import BaseStateCriticComposer, StateCriticComposer
 from maze.perception.models.critics.base_state_action_critic_composer import BaseStateActionCriticComposer
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.models.model_composer import BaseModelComposer
@@ -27,8 +27,7 @@ class CustomModelComposer(BaseModelComposer):
     :param distribution_mapper_config: Distribution mapper configuration.
     :param policy: Mapping of sub-step keys to models.
     :param critic: Configuration for the critic composer.
-    :param shared_embedding_keys: Specify up to which keys to share the embedding between actor and critic
-        (if applicable).
+    :param shared_embedding: Specify whether the critic shares the embedding with the policy. (if applicable).
     """
 
     @classmethod
@@ -41,7 +40,7 @@ class CustomModelComposer(BaseModelComposer):
             assert 'networks' in model_config['policy'], \
                 f"Custom models expect explicit policy networks! Check the model config!"
         if 'critic' in model_config and model_config["critic"] and not isinstance(
-            model_config["critic"], CriticComposerInterface
+                model_config["critic"], CriticComposerInterface
         ):
             assert '_target_' in model_config['critic']
             assert 'networks' in model_config['critic'], \
@@ -54,10 +53,8 @@ class CustomModelComposer(BaseModelComposer):
                  distribution_mapper_config: ConfigType,
                  policy: ConfigType,
                  critic: ConfigType,
-                 shared_embedding_keys: Optional[List[str]]):
+                 shared_embedding: bool):
         super().__init__(action_spaces_dict, observation_spaces_dict, agent_counts_dict, distribution_mapper_config)
-
-        self.shared_embedding = shared_embedding_keys is not None and shared_embedding_keys is not []
 
         # init policy composer
         self._policy_composer = Factory(BasePolicyComposer).instantiate(
@@ -69,11 +66,10 @@ class CustomModelComposer(BaseModelComposer):
         )
 
         embedding_out = dict()
-        if self.shared_embedding:
+        if shared_embedding:
             for step_key, observation_space in observation_spaces_dict.items():
-                actor_id = (step_key, 0) if self._policy_composer.policy.substeps_with_separate_agent_nets else step_key
                 out, embedding_out[step_key] = self._policy_composer.policy.compute_logits_dict(
-                    observation_space.sample(), actor_id=actor_id, return_embedding=self.shared_embedding)
+                    observation_space.sample(), actor_id=(step_key, 0), return_embedding=shared_embedding)
 
         # init critic composer
         self._critics_composer = None
@@ -82,21 +78,26 @@ class CustomModelComposer(BaseModelComposer):
                 CriticComposerInterface
             ).type_from_name(critic['_target_']) if isinstance(critic, Mapping) else type(critic)
 
-            if issubclass(critic_type, BaseStateCriticComposer):
-                if self.shared_embedding:
-                    observation_spaces_dict = {step_key: spaces.Dict(
-                        {latent_key: spaces.Box(low=np.finfo(np.float32).min, high=np.finfo(np.float32).max,
-                                                shape=latent_tensor.shape, dtype=np.float32)
-                         for latent_key, latent_tensor in embedding_step_out.items()})
-                        for step_key, embedding_step_out in embedding_out.items()}
+            if issubclass(critic_type, StateCriticComposer) and shared_embedding:
+                critic_observation_spaces_dict = {step_key: spaces.Dict(
+                    {latent_key: spaces.Box(low=np.finfo(np.float32).min, high=np.finfo(np.float32).max,
+                                            shape=latent_tensor.shape, dtype=np.float32)
+                     for latent_key, latent_tensor in embedding_step_out.items()})
+                    for step_key, embedding_step_out in embedding_out.items()}
+                self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
+                    critic,
+                    observation_spaces_dict=critic_observation_spaces_dict,
+                    agent_counts_dict=self.agent_counts_dict,
+                    shared_embedding=shared_embedding
+                )
+            elif issubclass(critic_type, BaseStateCriticComposer):
                 self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
                     critic,
                     observation_spaces_dict=self.observation_spaces_dict,
-                    agent_counts_dict=self.agent_counts_dict,
-                    shared_embedding=self.shared_embedding
+                    agent_counts_dict=self.agent_counts_dict
                 )
             elif issubclass(critic_type, BaseStateActionCriticComposer):
-                assert not self.shared_embedding, 'Shared embedding is not supported for state action critics'
+                assert not shared_embedding, 'Shared embedding is not supported for state action critics'
                 self._critics_composer = Factory(BaseStateActionCriticComposer).instantiate(
                     critic, observation_spaces_dict=self.observation_spaces_dict,
                     action_spaces_dict=self.action_spaces_dict

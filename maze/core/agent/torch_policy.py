@@ -135,8 +135,8 @@ class TorchPolicy(TorchModel, Policy):
 
         :param observation: Observation to return probability distribution for
         :param actor_id: Actor ID this observation corresponds to
-        :param return_embedding:
-        :return: Logits dictionary TODO
+        :param return_embedding: Specify whether to return the embedding output of the policy network.
+        :return: Tuple of Logits dictionary and embedding output if return embedding is set to true.
         """
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
         network_out = self.network_for(actor_id)(obs_t)
@@ -144,6 +144,9 @@ class TorchPolicy(TorchModel, Policy):
         if return_embedding:
             embedding_out = dict(filter(lambda ii: ii[0] not in self.distribution_mapper.action_space.spaces.keys(),
                                         network_out.items()))
+            assert len(embedding_out) > 0, 'If return embedding is specified the network should also produce an ' \
+                                           'embedding output.'
+
         if any([key not in self.distribution_mapper.action_space.spaces.keys() for key in
                 network_out.keys()]):
             network_out = dict(filter(lambda ii: ii[0] in self.distribution_mapper.action_space.spaces.keys(),

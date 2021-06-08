@@ -35,7 +35,8 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=None)
+                                   critic=None,
+                                   shared_embedding=False)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert composer.critic is None
@@ -56,7 +57,8 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=shared_critic)
+                                   critic=shared_critic,
+                                   shared_embedding=False)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchSharedStateCritic)
@@ -82,7 +84,8 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=step_critic)
+                                   critic=step_critic,
+                                   shared_embedding=False)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchDeltaStateCritic)
@@ -119,7 +122,8 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=step_critic)
+                                   critic=step_critic,
+                                   shared_embedding=False)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchStepStateCritic)
@@ -141,16 +145,32 @@ def test_custom_model_composer():
         pass  # no output generated as pygraphviz is not installed.
 
 
-    # step critic
+def test_custom_model_composer_with_shared_embedding():
+    env = build_dummy_structured_env()
+
+    policies = {
+        "_target_": "maze.perception.models.policies.ProbabilisticPolicyComposer",
+        "networks": [{"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatPolicyNet",
+                      "non_lin": "torch.nn.SELU",
+                      "hidden_units": [16],
+                      "head_units": [16]},
+                     {"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatPolicyNet",
+                      "non_lin": "torch.nn.SELU",
+                      "hidden_units": [16],
+                      "head_units": [16]}],
+        "substeps_with_separate_agent_nets": []
+    }
+
     step_critic = {
         "_target_": "maze.perception.models.critics.StepStateCriticComposer",
         "networks": [
-            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
-             "non_lin": "torch.nn.SELU"},
-            {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
-             "non_lin": "torch.nn.SELU"}
-        ],
-        'shared_embedding': 'true'
+            {"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatStateValueNet",
+             "non_lin": "torch.nn.SELU",
+             "head_units": [16]},
+            {"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatStateValueNet",
+             "non_lin": "torch.nn.SELU",
+             "head_units": [16]}
+        ]
     }
 
     # check if model config is fine
@@ -161,13 +181,12 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=step_critic)
+                                   critic=step_critic,
+                                   shared_embedding=True)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchStepStateCritic)
     assert isinstance(composer.critic.networks, dict)
-    assert isinstance(composer.critic.networks[0], DummyValueNet)
-    assert isinstance(composer.critic.networks[1], DummyValueNet)
 
     # test saving models
     composer.save_models()

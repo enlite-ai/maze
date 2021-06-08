@@ -1,6 +1,6 @@
 """Implementation of the Impala Learner"""
 import collections
-from typing import Dict, Union
+from typing import Union
 
 import gym
 import numpy as np
@@ -51,17 +51,13 @@ class ImpalaLearner:
         actions_logits = []
         embedding_out = dict()
         for record in actors_output.substep_records:
-            substep_logits, embedding_out[record.actor_id] = self.model.policy.compute_logits_dict(
+            substep_logits, embedding_out[record.substep_key] = self.model.policy.compute_logits_dict(
                 record.observation, actor_id=record.actor_id, return_embedding=self.model.critic.shared_embedding)
             actions_logits.append(substep_logits)
 
-        if self.model.critic.shared_embedding:
-            critic_input = embedding_out
-        else:
-            critic_input = actors_output
-
         # predict values of stage 2 in a regular fashion
-        values, detached_values = self.model.critic.predict_values(critic_input)
+        values, detached_values = self.model.critic.predict_values(embedding_out if self.model.critic.shared_embedding
+                                                                   else actors_output)
 
         # convert logits and values into dicts keyed by sub-step ID
         values = {r.substep_key: v for r, v in zip(actors_output.substep_records, values)}
