@@ -28,10 +28,12 @@ def test_getting_started_notebook(path: str):
     # successfully and 1 otherwise. We redirect the converted notebook into a temporary directory, since we have no
     # futher interest in it (executing without converting is apparently not possible as of 2021-05-28).
     with tempfile.TemporaryDirectory() as dirpath:
-        assert subprocess.run(
+        output = subprocess.run(
             [
                 'jupyter', 'nbconvert', "--execute", path, "--to", "python", "--ExecutePreprocessor.timeout=-1",
                 "--output-dir={od}".format(od=dirpath)
             ],
             capture_output=True
-        ).returncode == 0
+        )
+
+        assert output.returncode == 0, output.stderr.decode("utf-8")
