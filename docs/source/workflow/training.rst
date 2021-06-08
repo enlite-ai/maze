@@ -65,7 +65,7 @@ Such a training run consists of these main stages, loaded based on the default c
 2. Hydra creates the output directory where all output files will be stored.
 3. The full configuration of the job is logged: (1) to standard output,
    (2) as a text entry to your Tensorboard logs, and (3) as a YAML file in the output directory.
-4. If the observation normalization wrappers is present,
+4. If the observation normalization wrapper is present,
    :ref:`observation normalization<observation_normalization>` statistics
    are collected and stored (note that no wrappers are applied by default).
 5. Policies and critics are initialized and their graphical depictions saved.
@@ -122,7 +122,7 @@ listed in the training root config file, namely:
 
 - Environment (``env`` configuration group), configuring which environment the training runs on,
   as well as customizing any other inner configuration of the environment, if available (like
-  raw piece size in 2D cuttting environment)
+  raw piece size in 2D cutting environment)
 - Training algorithm (``algorithm`` configuration group), specifying the algorithm used and configuration
   for it
 - Model (``model`` configuration group), specifying how the models for policies and (optionally) critics
