@@ -58,9 +58,9 @@ setup(name="maze-rl",
           "pillow",
 
           # pinned hydra-core and the associated omegaconf version to 1.1.0 pre-release
-          "hydra-core",
-          "hydra-nevergrad-sweeper",
-          "omegaconf",
+          "hydra-core == 1.1.0rc1",
+          "omegaconf == 2.1.0.rc1",
+          "hydra-nevergrad-sweeper == 1.1.5.dev2",
 
           "gym[box2d]; python_version < '3.8'",
           "gym; python_version >= '3.8'",
