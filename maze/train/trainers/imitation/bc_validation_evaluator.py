@@ -4,7 +4,7 @@ from typing import Optional
 
 import numpy as np
 import torch
-from torch.utils.data.dataloader import DataLoader
+from torch.utils.data import DataLoader
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
