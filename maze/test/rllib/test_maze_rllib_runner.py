@@ -3,6 +3,7 @@ import os
 import shutil
 
 from gym.envs.classic_control import CartPoleEnv
+import ray
 from ray.rllib.models import MODEL_DEFAULTS
 from ray.rllib.utils.deprecation import DEPRECATED_VALUE
 from ray.tune.registry import RLLIB_MODEL, RLLIB_ACTION_DIST, _global_registry
@@ -48,7 +49,10 @@ def test_init_cartpole_rllib_model():
     for k, v in rllib_config['model'].items():
         if v == "DEPRECATED_VALUE":
             v = DEPRECATED_VALUE
-        assert MODEL_DEFAULTS[k] == v
+        assert k in MODEL_DEFAULTS, f'Maze RLlib model parameter \'{k}\' not in RLlib MODEL_DEFAULTS (rllib version: ' \
+                                    f'{ray.__version__})'
+        assert MODEL_DEFAULTS[k] == v, f'Rllib key:\'{k}\',value:\'{MODEL_DEFAULTS[k]}\' does not match with the ' \
+                                       f'maze defined config \'{v}\' with rllib version: {ray.__version__}'
 
     if 'ObservationNormalizationWrapper' in cfg.wrappers:
         assert os.path.exists(cfg.wrappers.ObservationNormalizationWrapper.statistics_dump)

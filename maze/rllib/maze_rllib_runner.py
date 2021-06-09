@@ -18,6 +18,7 @@ from maze.rllib.maze_rllib_models.maze_rllib_base_model import MazeRLlibBaseMode
 from maze.rllib.maze_tune_callback_save_model import MazeRLlibSaveModelCallback
 from maze.runner import Runner
 
+
 @dataclass
 class MazeRLlibRunner(Runner):
     """Base class for rllib runner
@@ -86,7 +87,8 @@ class MazeRLlibRunner(Runner):
         tune.register_env("maze_env", lambda x: self.env_factory())
 
         # Register maze model and distribution mapper if a maze model should be used
-        using_rllib_model_composer = cfg.model.keys() == MODEL_DEFAULTS.keys()
+        # Check whether we are using the rllib default model composer or a maze model
+        using_rllib_model_composer = '_target_' not in cfg.model.keys()
         if not using_rllib_model_composer:
             # Get model class
             model_cls = Factory(MazeRLlibBaseModel).type_from_name(cfg.algorithm.model_cls)
