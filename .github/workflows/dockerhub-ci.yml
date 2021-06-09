@@ -97,7 +97,7 @@ jobs:
         with:
           file: docker/maze-core.dockerfile
           push: true
-          build-args: opt_pip_installs=ray[rllib],tensorflow
+          build-args: opt_pip_installs="ray[rllib]">=1.4.0,tensorflow
           tags: enliteai/maze:rllib-tensorflow
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
