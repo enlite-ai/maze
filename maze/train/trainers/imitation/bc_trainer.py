@@ -8,16 +8,14 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, increment_log_step
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 from maze.train.utils.train_utils import compute_gradient_norm
-from torch.optim.optimizer import Optimizer
-from torch.utils.data.dataloader import DataLoader
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 from typing.io import BinaryIO
 
 

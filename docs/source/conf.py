@@ -126,6 +126,9 @@ nitpick_ignore = [
     ('py:class', 'Union[None, Dict[Any, Any]]'),
     ('py:class', 'Union[None, Dict[Any, Any]]'),
 
+    # # torch can't be resolved
+    ('py:class', 'torch.dtype'),
+
     # special maze data types
     ('py:class', 'maze.train.trainers.impala.impala_learner.LearnerOutput'),
     ('py:class', 'maze.train.trainers.imitation.parallel_loaded_im_data_set.ActionTuple'),
@@ -152,9 +155,9 @@ nitpicky = True
 
 
 intersphinx_mapping = {
-    'numpy': ('https://numpy.org/doc/stable/', None),
     'python': ('https://docs.python.org/3/', None),
-    'torch': ('https://pytorch.org/docs/master/', None),
+    'torch': ('https://pytorch.org/docs/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
 }
 
 autodoc_mock_imports = [
