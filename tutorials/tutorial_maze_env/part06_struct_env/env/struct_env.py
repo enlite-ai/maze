@@ -43,6 +43,7 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
         self._flat_obs = None
         self._action_0 = None
         self._sub_step_key = 0
+        self._last_reward = None  # Last reward obtained from the underlying environment
 
     def step(self, action):
         """Generic step function alternating between the two sub-steps.
@@ -95,10 +96,10 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
                        "cut_rotation": action["cut_rotation"],
                        "cut_order": action["cut_order"]}
 
-        self._flat_obs, rew, done, info = self.env.step(flat_action)
+        self._flat_obs, self._last_reward, done, info = self.env.step(flat_action)
         self._flat_obs["ordered_piece"] = self._flat_obs["ordered_piece"]
 
-        return self._obs_selection_step(self._flat_obs), rew, done, info
+        return self._obs_selection_step(self._flat_obs), self._last_reward, done, info
 
     def actor_id(self) -> ActorID:
         """Returns the currently executed actor along with the policy id. The id is unique only with
@@ -108,6 +109,18 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
         :return: The current actor, as tuple (policy id, actor number).
         """
         return ActorID(step_key=self._sub_step_key, agent_id=0)
+
+    def get_actor_rewards(self) -> Optional[np.ndarray]:
+        """Returns rewards attributed to individual actors after the step has been done. This is necessary,
+        as after the first sub-step (i.e., piece selection), the full reward is not yet available, so zero
+        reward is returned instead. The second (= last) sub-step then returns joint reward for all (both) actors.
+
+        With this method, we can attribute parts of the reward to the individual actors, which is useful for example
+        if each has its own separate critic.
+
+        In this case, we attribute half of the reward to each actor.
+        """
+        return np.array([self._last_reward / 2.0] * 2)
 
     @property
     def agent_counts_dict(self) -> Dict[Union[str, int], int]:
