@@ -1,5 +1,15 @@
 # @package model
 
+# Experimental flag.
+# If True, try to use a native (tf.keras.Model or torch.Module) default
+# model instead of our built-in ModelV2 defaults.
+# If False (default), use "classic" ModelV2 default models.
+# Note that this currently only works for:
+# 1) framework != torch AND
+# 2) fully connected and CNN default networks as well as
+# auto-wrapped LSTM- and attention nets.
+"_use_default_native_models": false
+
 # === Built-in options ===
 # FullyConnectedNetwork (tf and torch): rllib.models.tf|torch.fcnet.py
 # These are used if no custom model is specified and the input space is 1D.
