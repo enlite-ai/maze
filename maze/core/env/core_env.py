@@ -110,11 +110,11 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
     @override(StructuredEnv)
     def actor_id(self) -> ActorID:
         """Returns the currently executed actor. The id is unique only with
-        respect to the policies (every policy has its own actor 0).
+        respect to the policies (every policy has its own agent 0).
 
         Note that identities of done actors can not be reused in the same rollout.
 
-        :return: The current actor, as named tuple holding step_key and agent_id.
+        :return: The current actor, as a named tuple holding step_key and agent_id.
         """
 
     @abstractmethod
