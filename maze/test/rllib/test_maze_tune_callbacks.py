@@ -3,6 +3,7 @@ import pickle
 import shutil
 from typing import Dict
 
+import pytest
 import torch
 from omegaconf import DictConfig
 
@@ -20,6 +21,7 @@ def run_cartpole(hydra_args: Dict[str, str]):
     return cfg
 
 
+@pytest.mark.rllib
 def test_stored_model_multiple_check_points_max_att():
     check_stored_model_multiple_check_points({'runner.num_workers': '1',
                                               'runner.ray_config.local_mode': 'False',
@@ -28,6 +30,7 @@ def test_stored_model_multiple_check_points_max_att():
                                               'runner.tune_config.stop.training_iteration': '2'})
 
 
+@pytest.mark.rllib
 def test_stored_model_multiple_check_points_min_att():
     check_stored_model_multiple_check_points({'runner.tune_config.keep_checkpoints_num': '2',
                                               'runner.tune_config.stop.training_iteration': '2',

@@ -38,7 +38,14 @@ function build_local {
   if [ ! -z "$TARGET" ] ; then
        DOCKER_TARGET="--target $TARGET"
   fi
-  docker build --ssh default $DOCKER_BUILDARGS $DOCKER_TARGET -f $DOCKERFILE_VAR -t $IMAGE .
+  # Cache from built image with same tag/pipeline ID, if specified.
+  if [ ! -z "$CACHE_FROM" ] ; then
+       full_cache_image_name=$CACHE_FROM:$(echo $IMAGE | sed 's/.*://')
+       DOCKER_CACHE_FROM="--cache-from=$full_cache_image_name"
+       docker pull $full_cache_image_name || true
+  fi
+
+  docker build --ssh default $DOCKER_BUILDARGS $DOCKER_TARGET -f $DOCKERFILE_VAR $DOCKER_CACHE_FROM -t $IMAGE .
 }
 
 # Function to resolve build arguments. Useful because right now there are two types of docker build arguments that are

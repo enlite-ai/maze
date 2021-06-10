@@ -2,6 +2,7 @@
 import os
 import shutil
 
+import pytest
 from gym.envs.classic_control import CartPoleEnv
 import ray
 from ray.rllib.models import MODEL_DEFAULTS
@@ -18,6 +19,7 @@ from maze.test.shared_test_utils.hydra_helper_functions import load_hydra_config
 SPACE_CONFIG_DUMP_FILE = 'space_config_dump.pkl'
 
 
+@pytest.mark.rllib
 def test_runner_basic():
     """Test the basic runner """
     runner = MazeRLlibRunner(SPACE_CONFIG_DUMP_FILE, normalization_samples=5,
@@ -27,6 +29,7 @@ def test_runner_basic():
     assert isinstance(runner, Runner)
 
 
+@pytest.mark.rllib
 def test_init_cartpole_rllib_model():
     """test the init methods"""
     hydra_overrides = {'rllib/runner': 'dev', 'model': 'rllib'}
@@ -59,6 +62,7 @@ def test_init_cartpole_rllib_model():
         os.remove(cfg.wrappers.ObservationNormalizationWrapper.statistics_dump)
 
 
+@pytest.mark.rllib
 def test_init_cartpole_maze_model():
     """test the init methods """
     hydra_overrides = {'rllib/runner': 'dev', 'configuration': 'test',
@@ -95,6 +99,7 @@ def test_init_cartpole_maze_model():
         os.remove(cfg.wrappers.ObservationNormalizationWrapper.statistics_dump)
 
 
+@pytest.mark.rllib
 def test_run_cartpole():
     """Test full run with cartpole"""
     hydra_overrides = {'rllib/runner': 'dev', 'configuration': 'test',
@@ -106,6 +111,7 @@ def test_run_cartpole():
     shutil.rmtree(cfg.algorithm.algorithm)
 
 
+@pytest.mark.rllib
 def test_run_cartpole_dqn():
     """Test full run with cartpole"""
     hydra_overrides = {'rllib/runner': 'dev', 'configuration': 'test', 'rllib/algorithm': 'dqn',

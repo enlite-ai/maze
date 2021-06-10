@@ -9,6 +9,7 @@ numpy_user_warning_text = ('The given NumPy array is not writeable, and PyTorch 
                            'converting it to a tensor')
 
 
+@pytest.mark.rllib
 def test_monkey_patch_convert_to_tensor():
     """The the rllib monkey patch for writable np arrays"""
     assert_that_patch_has_been_applied()

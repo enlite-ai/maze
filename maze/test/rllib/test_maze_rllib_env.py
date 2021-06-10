@@ -1,6 +1,7 @@
 """Test maze rllib env"""
 from collections import Callable
 
+import pytest
 from gym.envs.classic_control import CartPoleEnv
 
 from maze.rllib.maze_rllib_env import build_maze_rllib_env_factory
@@ -8,6 +9,7 @@ from maze.test.rllib.test_that_segfault_has_been_fixed import assert_that_patch_
 from maze.test.shared_test_utils.hydra_helper_functions import load_hydra_config
 
 
+@pytest.mark.rllib
 def test_maze_rllib_env():
     hydra_overrides = {}
 

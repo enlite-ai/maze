@@ -31,5 +31,8 @@ dependencies:
       - cloudpickle==1.2.2
       # testing
       - pytest==6.2.4
+      - pytest-cov==2.12.0
+      - pytest-xdist==2.2.1
+      - pytest-random-order==1.0.4
       - pytest-timeout==1.4.2
       - pytest-redis==2.0.0

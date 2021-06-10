@@ -1,0 +1,190 @@
+name: Maze Build
+
+on: [push]
+
+jobs:
+
+  # Build complete image; run tests; push to Dockerhub.
+  build-test-push-rlltf:
+
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+
+      - name: Free up disk space.
+        run: sudo rm -rf "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY" "/usr/share/dotnet/"
+
+      - name: Set up Docker Buildx.
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver-opts: network=host
+
+      - name: Cache layers for image with RLLib + TF environment.
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-rlltf-env
+          key: buildx-rlltf-env-${{ github.sha }}
+          restore-keys: buildx-rlltf-env-
+
+      - name: Cache layers for image with RLLib + TF.
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-rlltf
+          key: buildx-rlltf-${{ github.sha }}
+          restore-keys: buildx-rlltf-
+
+      - name: Login to DockerHub.
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Perhaps faster with manual docker build?
+      - name: Build image with RLLib + TF environment.
+        uses: docker/build-push-action@v2
+        with:
+          file: docker/maze-core-env.dockerfile
+          build-args: opt_pip_installs=ray[rllib]>=1.4.0,tensorflow
+          cache-from: type=local,src=/tmp/.buildx-cache-rlltf-env
+          cache-to: type=local,dest=/tmp/.buildx-cache-rlltf-env-new
+          tags: localhost:5000/enliteai/maze:rllib-tensorflow-env
+          push: true
+
+      - name: Build image with RLLib + TF environment and code.
+        uses: docker/build-push-action@v2
+        with:
+          file: docker/maze-core.dockerfile
+          build-args: MAZE_CORE_ENV=localhost:5000/enliteai/maze:rllib-tensorflow-env
+          cache-from: type=local,src=/tmp/.buildx-cache-rlltf
+          cache-to: type=local,dest=/tmp/.buildx-cache-rlltf-new
+          tags: localhost:5000/enliteai/maze:rllib-tensorflow
+          load: true
+
+      # Workaround for growing cache issue.
+      # See https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md.
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      - name: Move image caches.
+        run: |
+          rm -rf /tmp/.buildx-cache-rlltf-env /tmp/.buildx-cache-rlltf
+          mv /tmp/.buildx-cache-rlltf-env-new /tmp/.buildx-cache-rlltf-env
+          mv /tmp/.buildx-cache-rlltf-new /tmp/.buildx-cache-rlltf
+
+      - name: Execute tests.
+        run: docker run localhost:5000/enliteai/maze:rllib-tensorflow /bin/bash /usr/src/maze/.github/execute_tests.sh
+
+      - name: Tag image.
+        run: docker image tag localhost:5000/enliteai/maze:rllib-tensorflow enliteai/maze:rllib-tensorflow
+
+      - name: Check images.
+        run: docker images
+
+      - name: Push RLLib + TFimage.
+        if: endsWith(github.ref, '/main')
+        run: docker push enliteai/maze:rllib-tensorflow
+
+      - name: Output image digest.
+        run: echo ${{ steps.docker_build_rllibtf.outputs.digest }}
+
+  # Build core image w/o RLlib/TF; push to Dockerhub.
+  build-push-core:
+    # Only build if we are in main.
+    if: endsWith(github.ref, '/main')
+
+    needs: build-test-push-rlltf
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+
+      - name: Free up disk space.
+        run: sudo rm -rf "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY" "/usr/share/dotnet/"
+
+      - name: Set up Docker Buildx.
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver-opts: network=host
+
+      - name: Cache layers for image with environment.
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-env
+          key: buildx-env-${{ github.sha }}
+          restore-keys: buildx-env-
+
+      - name: Cache layers for image with environment and code.
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: buildx-${{ github.sha }}
+          restore-keys: buildx-
+
+      - name: Login to DockerHub.
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image with environment.
+        uses: docker/build-push-action@v2
+        with:
+          file: docker/maze-core-env.dockerfile
+          cache-from: type=local,src=/tmp/.buildx-cache-env
+          cache-to: type=local,dest=/tmp/.buildx-cache-env-new
+          tags: localhost:5000/enliteai/maze:env
+          push: true
+
+      - name: Build and push image with environment and code.
+        uses: docker/build-push-action@v2
+        with:
+          file: docker/maze-core.dockerfile
+          build-args: MAZE_CORE_ENV=localhost:5000/enliteai/maze:env
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          tags: enliteai/maze:latest
+          push: true
+
+      - name: Move image caches.
+        run: |
+          rm -rf /tmp/.buildx-cache-env /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-env-new /tmp/.buildx-cache-env
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Output image digest.
+        run: echo ${{ steps.docker_build_rllibtf.outputs.digest }}
+
+  # Build playground image (core + Jupyterlab); push to Dockerhub.
+  build-push-playground:
+    # Only build if we are in main.
+    if: endsWith(github.ref, '/main')
+
+    needs: build-push-core
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push playground Docker image
+        id: docker_build_playground
+        uses: docker/build-push-action@v2
+        with:
+          file: docker/playground.dockerfile
+          tags: enliteai/maze:playground
+          push: true
+
+      - name: Output image digest.
+        run: echo ${{ steps.docker_build.outputs.digest }}
