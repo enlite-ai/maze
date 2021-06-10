@@ -48,20 +48,6 @@ class RewardAggregatorInterface(Subscriber):
         """
         return []
 
-    @classmethod
-    def to_scalar_reward(cls, reward: Any) -> float:
-        """
-        Aggregate sub-rewards to scalar reward.
-
-        This method is used in cases when the aggregator returns a per-actor reward (as a numpy array). Then, this
-        method can be used to aggregate this per-actor reward into a single, scalar number. A default implementation
-        of summing the reward is provided (as this is useful in most cases).
-
-        :param: reward: The aggregated reward (e.g. per-agent reward for multi-agent RL settings).
-        :return: The scalar reward returned by the environment.
-        """
-        return np.sum(reward)
-
     def clone_from(self, reward_aggregator: 'RewardAggregatorInterface') -> None:
         """Clones the state of the provided reward aggregator.
 

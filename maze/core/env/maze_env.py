@@ -294,10 +294,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         maze_state, reward, done, info = self.core_env.step(maze_action)
 
         if self.is_single_substep_env or last_env_time != self.get_env_time():
-            # aggregate to scalar reward (if necessary)
-            if self.core_env.reward_aggregator:
-                reward = self.core_env.reward_aggregator.to_scalar_reward(reward)
-
             # reward captured immediately after the reward aggregation
             self.reward_events.reward_original(value=reward)
 
