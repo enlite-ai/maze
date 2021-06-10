@@ -18,7 +18,7 @@ def find_version(*filepath):
 
 setup(name="maze-rl",
       version=find_version("maze", "__init__.py"),
-      packages=find_namespace_packages(include=['maze', 'maze.*']),
+      packages=find_namespace_packages(include=['maze', 'maze.*', 'hydra_plugins']),
       include_package_data=True,
 
 
