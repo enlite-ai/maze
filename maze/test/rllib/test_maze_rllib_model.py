@@ -90,6 +90,7 @@ def reset_seed():
     torch.manual_seed(42)
 
 
+@pytest.mark.rllib
 def perform_test_maze_p_rllib_model_without_ray(gym_env: str):
     """Perfrom the test for a given gym env"""
     reset_seed()
@@ -136,6 +137,7 @@ def perform_test_maze_p_rllib_model_without_ray(gym_env: str):
         assert torch.allclose(maze_model_state_dict[key], value)
 
 
+@pytest.mark.rllib
 def test_maze_rllib_p_model_without_ray_cartpole():
     """Test cartpole model"""
     perform_test_maze_p_rllib_model_without_ray('CartPole-v0')
@@ -198,6 +200,7 @@ def perform_test_maze_ac_rllib_model_without_ray(gym_env: str):
         assert torch.allclose(maze_model_state_dict[key], value)
 
 
+@pytest.mark.rllib
 def test_maze_rllib_ac_model_without_ray_cartpole():
     """Test cartpole model"""
     perform_test_maze_ac_rllib_model_without_ray('CartPole-v0')

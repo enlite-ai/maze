@@ -2,6 +2,7 @@
 import random
 
 import numpy as np
+import pytest
 import torch
 from gym import spaces
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
@@ -27,14 +28,17 @@ class FakeRLLibModel(TorchModelV2, torch.nn.Module):
         self.model_composer = FakeModelComposer(distribution_mapper)
 
 
+@pytest.mark.rllib
 def test_maze_rllib_action_dist_batch_0():
     perform_test_maze_rllib_action_distribution(0)
 
 
+@pytest.mark.rllib
 def test_maze_rllib_action_dist_batch_20():
     perform_test_maze_rllib_action_distribution(20)
 
 
+@pytest.mark.rllib
 def perform_test_maze_rllib_action_distribution(batch_dim: int):
     """ distribution test """
     random.seed(42)

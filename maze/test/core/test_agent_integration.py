@@ -30,6 +30,7 @@ from maze.test.shared_test_utils.dummy_env.dummy_renderer import DummyRenderer
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
 
 
+@pytest.mark.rllib
 def test_steps_env_with_single_policy():
     env = build_dummy_maze_env()
     core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
@@ -59,6 +60,7 @@ def test_steps_env_with_single_policy():
         maze_state, reward, done, info = core_env.step(maze_action)
 
 
+@pytest.mark.rllib
 def test_handles_multiple_policies():
     """
     Tests whether AgentIntegration handles multiple policies.
@@ -115,6 +117,7 @@ def test_handles_multiple_policies():
         assert maze_action == static_actions[pol_id]  # We should get action from the correct policy
 
 
+@pytest.mark.rllib
 def test_supports_trajectory_recording_wrapper():
     """
     Tests whether agent integration supports trajectory recording wrappers.
@@ -162,6 +165,7 @@ def test_supports_trajectory_recording_wrapper():
     assert writer.step_count
 
 
+@pytest.mark.rllib
 def test_logs_events_and_records_stats():
     class TestEventsWriter(LogEventsWriter):
         """Test event writer for checking logged events."""
@@ -231,6 +235,7 @@ def test_logs_events_and_records_stats():
     assert stats_writer.collected_stats_count > 0
 
 
+@pytest.mark.rllib
 def test_gets_maze_action_candidates():
     class StaticPolicy(DummyGreedyPolicy):
         """Mock policy, returns static action candidates (careful, always three of them)."""
@@ -270,6 +275,7 @@ def test_gets_maze_action_candidates():
         assert maze_action.probabilities == [0.95, 0.04, 0.01]
 
 
+@pytest.mark.rllib
 def test_propagates_exceptions_to_main_thread():
     class FailingPolicy(DummyGreedyPolicy):
         """Mock policy, throws an error every time."""
