@@ -12,6 +12,9 @@ ARG BASE_IMAGE="condaforge/mambaforge:4.9.2-5"
 FROM condaforge/mambaforge:4.9.2-5 as maze_core_env_build
 # build-arg for optional pip installs.
 ARG opt_pip_installs
+ARG BUILD_VERSION
+
+RUN echo "BUILD_VERSION: $BUILD_VERSION"
 
 # Install environment.
 COPY maze-core-environment.yml .
