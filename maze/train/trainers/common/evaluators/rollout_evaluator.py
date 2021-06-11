@@ -19,6 +19,7 @@ class RolloutEvaluator(Evaluator):
     :param n_episodes: Number of evaluation episodes to run. Note that the actual number might be slightly larger
                         due to the distributed nature of the environment.
     :param model_selection: Model selection to notify about the recorded rewards.
+    :param deterministic: deterministic or stochastic action sampling (selection).
     """
 
     def __init__(self,

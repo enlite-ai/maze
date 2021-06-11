@@ -58,7 +58,8 @@ class ACRunner(TrainingRunner):
             device=cfg.algorithm.device)
 
         # initialize best model selection
-        self._model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=model)
+        self._model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=model,
+                                                   dump_interval=None)
 
         # look up model class
         trainer_class = Factory(base_type=ActorCritic).type_from_name(self.trainer_class)
