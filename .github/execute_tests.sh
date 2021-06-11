@@ -1,8 +1,8 @@
 #!/bin/bash
 
 OMP_NUM_THREADS=1 MPLBACKEND=Agg xvfb-run -s "-screen 0 1400x900x24" python -m pytest \
-  -n8 \
-  -v -m "not rllib" \
+  -v -n8 \
+  -k "not rllib" \
   --random-order-seed 1234 \
   --ignore=tutorials/test/notebooks \
   --cov=maze/test \
