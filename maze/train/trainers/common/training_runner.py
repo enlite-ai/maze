@@ -38,6 +38,8 @@ class TrainingRunner(Runner):
 
     state_dict_dump_file: str
     """Where to save the best model (output directory handled by hydra)."""
+    dump_interval: Optional[int]
+    """If provided the state dict will be dumped ever 'dump_interval' epochs."""
     spaces_config_dump_file: str
     """Where to save the env spaces configuration (output directory handled by hydra)."""
     normalization_samples: int

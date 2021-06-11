@@ -92,7 +92,7 @@ class ActorCritic(Trainer, ABC):
 
         # init minimum best model selection for early stopping
         if self.model_selection is None:
-            self.model_selection = BestModelSelection(dump_file=None, model=None)
+            self.model_selection = BestModelSelection(dump_file=None, model=None, dump_interval=None)
 
         # load initial policy weights
         if self.initial_state:

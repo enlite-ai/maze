@@ -2,7 +2,7 @@
 import copy
 import dataclasses
 from abc import abstractmethod
-from typing import Union, Callable, List
+from typing import Union, Callable, Optional, List
 
 from omegaconf import DictConfig
 
@@ -28,9 +28,6 @@ from maze.utils.bcolors import BColors
 @dataclasses.dataclass
 class ImpalaRunner(TrainingRunner):
     """Common superclass for IMPALA runners, implementing the main training controls."""
-
-    initial_state_dict: str
-    """Path to initial state (policy weights, critic weights, optimizer state)."""
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:
@@ -83,12 +80,43 @@ class ImpalaRunner(TrainingRunner):
             eval_env=eval_env,
             model=model,
             model_selection=self._model_selection,
-            initial_state=self.initial_state_dict
         )
 
         # initialize model from input_dir
         self._init_trainer_from_input_dir(trainer=self._trainer, state_dict_dump_file=self.state_dict_dump_file,
                                           input_dir=cfg.input_dir)
+
+    @override(TrainingRunner)
+    def run(
+        self,
+        n_epochs: Optional[int] = None,
+        epoch_length: Optional[int] = None,
+        deterministic_eval: Optional[bool] = None,
+        eval_repeats: Optional[int] = None,
+        patience: Optional[int] = None,
+        model_selection: Optional[BestModelSelection] = None
+    ) -> None:
+        """
+        See :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.run`.
+        :param n_epochs: number of epochs to train.
+        :param epoch_length: number of updates per epoch.
+        :param deterministic_eval: run evaluation in deterministic mode (argmax-policy)
+        :param eval_repeats: number of evaluation trials
+        :param patience: number of steps used for early stopping
+        :param model_selection: Optional model selection class, receives model evaluation results
+        """
+
+        # train agent
+        self._trainer.train(
+            n_epochs=self._cfg.algorithm.n_epochs if n_epochs is None else n_epochs,
+            epoch_length=self._cfg.algorithm.epoch_length if epoch_length is None else epoch_length,
+            deterministic_eval=(
+                self._cfg.algorithm.deterministic_eval if deterministic_eval is None else deterministic_eval
+            ),
+            eval_repeats=self._cfg.algorithm.eval_repeats if eval_repeats is None else eval_repeats,
+            patience=self._cfg.algorithm.patience if patience is None else patience,
+            model_selection=self._model_selection if model_selection is None else model_selection
+        )
 
     @abstractmethod
     def create_distributed_eval_env(self,
