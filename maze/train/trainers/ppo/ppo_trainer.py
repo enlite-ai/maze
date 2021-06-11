@@ -1,13 +1,13 @@
 """Multi-step multi-agent PPO implementation."""
 from collections import defaultdict
-from typing import Union, Dict, Optional, List
+from typing import Union, Dict, Optional
 
 import numpy as np
 import torch
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
-from maze.core.env.structured_env import StructuredEnv
+from maze.core.env.structured_env import StructuredEnv, StepKeyType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
@@ -49,36 +49,29 @@ class PPO(ActorCritic):
 
         # compute action log-probabilities of actions taken (aka old action log probs)
         with torch.no_grad():
-            action_log_probs_old, _, embedding_out_old = self._action_log_probs_and_dists(record)
+            policy_output_old, critic_output_old = self.model.compute_actor_critic_output(record)
+            returns = self.model.critic.compute_structured_return(gamma=self.algorithm_config.gamma,
+                                                                  gae_lambda=self.algorithm_config.gae_lambda,
+                                                                  rewards=record.rewards,
+                                                                  values=critic_output_old.detached_values,
+                                                                  dones=record.dones[-1])
+            action_log_probs_old = self.model.policy.compute_action_log_probs(policy_output_old,
+                                                                              record.actions_dict)
             # manually empty GPU cache
             torch.cuda.empty_cache()
 
-        # flatten items for batch processing
-        self._flatten_sub_step_items(record.actions)
-        self._flatten_sub_step_items(record.observations)
+        # flatten items for batch processing/
+        returns = {kk: rr.flatten() for kk, rr in returns.items()}
+        self._flatten_sub_step_items(record.actions_dict)
+        self._flatten_sub_step_items(record.observations_dict)
         self._flatten_sub_step_items(action_log_probs_old)
+        critic_output_old.reshape(list(returns.values())[0].shape)
 
         # iterate ppo optimization epochs
         critic_train_stats = defaultdict(lambda: defaultdict(list))
         policy_train_stats = defaultdict(lambda: defaultdict(list))
         n_samples = self.env.n_envs * self.algorithm_config.n_rollout_steps
         for k in range(self.algorithm_config.n_optimization_epochs):
-
-            # compute bootstrapped returns
-            with torch.no_grad():
-                returns, _, detached_values = self.model.critic.bootstrap_returns(
-                    record=record,
-                    gamma=self.algorithm_config.gamma,
-                    gae_lambda=self.algorithm_config.gae_lambda,
-                    embedding_out=embedding_out_old
-                )
-                # manually empty GPU cache
-                torch.cuda.empty_cache()
-
-            # convert everything to batch dimension
-            returns = [r.flatten() for r in returns]
-            detached_values = [dv.flatten() for dv in detached_values]
-
             # iterate mini-batch updates
             indices = np.random.permutation(n_samples)
             n_batches = n_samples // self.algorithm_config.batch_size
@@ -110,34 +103,35 @@ class PPO(ActorCritic):
 
                     batch_record.append(batch_substep_record)
 
-                # compute log probabilities
-                action_log_probs, prob_dists, embedding_out = self._action_log_probs_and_dists(batch_record)
+                # Produce policy and critic output
+                policy_output, critic_output = self.model.compute_actor_critic_output(batch_record)
 
-                # predict values
-                values, _ = self.model.critic.predict_values(batch_record if not self.model.critic.shared_embedding
-                                                             else embedding_out)
+                # Compute action log probabilities with the original actions
+                action_log_probs = self.model.policy.compute_action_log_probs(policy_output, batch_record.actions_dict)
 
                 # compute advantages
-                advantages = [r[batch_idxs] - dv[batch_idxs] for r, dv in zip(returns, detached_values)]
+                advantages = {kk: rr[batch_idxs] - critic_output_old.detached_values[kk][batch_idxs]
+                              for kk, rr in returns.items()}
 
                 # normalize advantages
                 advantages = self._normalize_advantages(advantages)
 
                 # compute value loss
                 if self.model.critic.num_critics == 1:
-                    value_losses = [(returns[0][batch_idxs] - values[0]).pow(2).mean()]
+                    key = list(returns.keys())[0]
+                    value_losses = {key: (returns[key][batch_idxs] - critic_output.values[key][0]).pow(2).mean()}
                 else:
-                    value_losses = [(ret[batch_idxs] - val).pow(2).mean() for ret, val in zip(returns, values)]
-                value_loss = sum(value_losses)
+                    value_losses = {step_key: (returns[step_key][batch_idxs] - values).pow(2).mean()
+                                    for step_key, values in critic_output.values.items()}
 
                 # compute policy loss
-                policy_losses = []
-                entropies = []
+                policy_losses = dict()
+                entropies = dict()
                 for idx, substep_record in enumerate(batch_record.substep_records):
 
                     # compute entropies
-                    step_entropy = prob_dists[idx].entropy().mean()
-                    entropies.append(step_entropy)
+                    step_entropy = policy_output.entropy[idx].mean()
+                    entropies[idx] = step_entropy
 
                     # accumulate independent action losses
                     step_policy_loss = torch.tensor(0.0).to(self.algorithm_config.device)
@@ -161,23 +155,22 @@ class PPO(ActorCritic):
                         action_loss = -torch.min(surr1, surr2).mean()
                         step_policy_loss += action_loss
 
-                    policy_losses.append(step_policy_loss)
+                    policy_losses[idx] = step_policy_loss
 
                 # perform gradient step
-                self._gradient_step(policy_losses=policy_losses, entropies=entropies, value_loss=value_loss)
+                self._gradient_step(policy_losses=policy_losses, entropies=entropies, value_losses=value_losses)
 
                 # append training stats for logging
                 self._append_train_stats(policy_train_stats, critic_train_stats,
-                                         record.actor_ids, policy_losses, entropies, detached_values, value_losses)
+                                         policy_losses, entropies, critic_output_old.detached_values, value_losses)
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)
 
-    def _flatten_sub_step_items(self, step_items: List[Dict[str, torch.Tensor]]) -> None:
+    def _flatten_sub_step_items(self, step_items: Dict[StepKeyType, Dict[str, torch.Tensor]]) -> None:
         """Flattens sub-step items for batch processing in PPO.
         :param step_items: Dict of items to be flattened.
         """
-
-        for substep_dict in step_items:
+        for substep_key, substep_dict in step_items.items():
             for key in substep_dict.keys():
                 substep_dict[key] = torch.flatten(substep_dict[key], start_dim=0, end_dim=1)

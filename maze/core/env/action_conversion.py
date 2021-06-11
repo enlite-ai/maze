@@ -3,12 +3,14 @@ from abc import ABC, abstractmethod
 from typing import Dict, Union
 
 import numpy as np
+import torch
 from gym import spaces
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 
 ActionType = Dict[str, Union[int, np.ndarray]]
+TorchActionType = Dict[str, Union[int, torch.Tensor]]
 
 
 class ActionConversionInterface(ABC):

@@ -10,6 +10,7 @@ from torch import nn as nn
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+from maze.utils.bcolors import BColors
 
 
 class InferenceBlock(PerceptionBlock):
@@ -40,6 +41,13 @@ class InferenceBlock(PerceptionBlock):
         self.perception_blocks = nn.ModuleDict(perception_blocks)
         # Copy the in_keys
         self.execution_plan = self._build_execution_graph(computed_keys=self.in_keys[:], execution_plan=dict())
+        blocks_not_in_execution_graph = list(filter(lambda block_key: block_key not in sum(self.execution_plan.values(),[]),
+                                               self.perception_dict.keys()))
+        # Delete unused perception blocks from the inference block
+        if len(blocks_not_in_execution_graph) > 0:
+            print(f'Deleting unused blocks: {blocks_not_in_execution_graph}')
+        for block_key in blocks_not_in_execution_graph:
+            del self.perception_dict[block_key]
 
     @classmethod
     def _test_condition(cls, perception_blocks: Dict[str, PerceptionBlock], in_keys: List[str], out_keys: List[str],
@@ -72,12 +80,9 @@ class InferenceBlock(PerceptionBlock):
         assert all([in_key in in_keys for in_key in graph_in_keys]), \
             f'in_keys of the network: {set(all_in_keys) - set(all_out_keys)}, vs specified in_keys: {set(in_keys)}'
 
-        # 5. The given out_keys should be a subset of the outputs of the computational graph
+        # 5. The given out_keys should be a subset of the outputs of blocks in the graph
         assert all([out_key in all_out_keys for out_key in out_keys]), \
-            f'Out_keys of the network: {set(all_out_keys) - set(all_in_keys)}, vs specified out_keys: {set(out_keys)}'
-
-        assert all([a_out_key in all_out_keys for a_out_key in additional_out_keys]), ' One or more of the specified ' \
-            f'additional out keys {additional_out_keys} is not a network out key {all_out_keys}'
+            f'Out_keys of the network: {set(all_out_keys)}, vs specified out_keys: {set(out_keys)}'
 
     @override(PerceptionBlock)
     def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:

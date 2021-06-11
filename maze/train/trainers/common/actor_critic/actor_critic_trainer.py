@@ -13,7 +13,7 @@ from typing.io import BinaryIO
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
-from maze.core.env.structured_env import StructuredEnv, ActorID
+from maze.core.env.structured_env import StructuredEnv, ActorID, StepKeyType
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
@@ -49,8 +49,8 @@ class ActorCritic(Trainer, ABC):
         eval_env: Optional[Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
         model: TorchActorCritic,
         model_selection: Optional[BestModelSelection],
-        initial_state: Optional[str] = None
-    ):
+        initial_state: Optional[str] = None):
+
         super().__init__(algorithm_config)
 
         self.env = env
@@ -59,6 +59,8 @@ class ActorCritic(Trainer, ABC):
         # initialize policies and critic
         self.model = model
         self.model.to(self.algorithm_config.device)
+
+
 
         # initialize rollout generator
 
@@ -179,36 +181,8 @@ class ActorCritic(Trainer, ABC):
         """
         raise NotImplementedError
 
-    def _action_log_probs_and_dists(self, record: StructuredSpacesRecord) \
-            -> Tuple[List[Dict[str, torch.Tensor]], List[DictProbabilityDistribution],
-                     Dict[ActorIDType, Dict[str, torch.Tensor]]]:
-        """Computes action log probabilities and corresponding action distributions for all sub-steps and actions.
-
-        :param record: Structured spaces record holding the actions and observations for individual sub-steps.
-        :return: A tuple containing the action log-probabilities and corresponding action distributions. TODO
-        """
-
-        action_log_probs = []
-        step_action_dists = []
-
-        embedding_out = dict()
-        for substep_record in record.substep_records:
-            # Predict step action logits
-            logits_dict, embedding_out[substep_record.substep_key] = self.model.policy.compute_logits_dict(observation=substep_record.observation,
-                                                                actor_id=substep_record.actor_id,
-                                                                return_embedding=self.model.critic.shared_embedding)
-
-            # Prepare action distributions & compute log probs
-            prob_dist = self.model.policy.logits_dict_to_distribution(logits_dict, temperature=1.0)
-            log_probs = prob_dist.log_prob(substep_record.action)
-
-            action_log_probs.append(log_probs)
-            step_action_dists.append(prob_dist)
-
-        return action_log_probs, step_action_dists, embedding_out
-
-    def _gradient_step(self, policy_losses: List[torch.Tensor], entropies: List[torch.Tensor],
-                       value_loss: torch.Tensor) -> None:
+    def _gradient_step(self, policy_losses: Dict[StepKeyType,torch.Tensor], entropies: Dict[StepKeyType, torch.Tensor],
+                       value_losses: Dict[StepKeyType, torch.Tensor]) -> None:
         """Perform gradient step based on given losses.
 
         :param policy_losses: List of policy losses.
@@ -217,10 +191,13 @@ class ActorCritic(Trainer, ABC):
         """
 
         # accumulate step losses
-        policy_loss = sum(policy_losses)
+        policy_loss = sum(policy_losses.values())
 
-        # compute entropy loss
-        entropy_loss = sum(entropies)
+        # accumulate entropy loss
+        entropy_loss = sum(entropies.values())
+
+        # accumulate value loss
+        value_loss = sum(value_losses.values())
 
         # perform update
         loss = self.algorithm_config.value_loss_coef * value_loss + self.algorithm_config.policy_loss_coef * policy_loss
@@ -248,11 +225,10 @@ class ActorCritic(Trainer, ABC):
     def _append_train_stats(self,
                             policy_train_stats: List[Dict[str, List[float]]],
                             critic_train_stats: List[Dict[str, List[float]]],
-                            actor_ids: List[ActorID],
-                            policy_losses: List[torch.Tensor],
-                            entropies: List[torch.Tensor],
-                            detached_values: List[torch.Tensor],
-                            value_losses: List[torch.Tensor]) -> None:
+                            policy_losses: Dict[StepKeyType, torch.Tensor],
+                            entropies: Dict[StepKeyType, torch.Tensor],
+                            detached_values: Dict[StepKeyType, torch.Tensor],
+                            value_losses: Dict[StepKeyType, torch.Tensor]) -> None:
         """Append logging statistics for policies and critic.
 
         :param policy_train_stats: List of policy training statistics.
@@ -264,20 +240,18 @@ class ActorCritic(Trainer, ABC):
         """
 
         # Policies
-        for actor_id, substep_loss, substep_entropies in zip(actor_ids, policy_losses, entropies):
-            policy_train_stats[actor_id[0]]["policy_loss"].append(substep_loss.detach().item())
-            policy_train_stats[actor_id[0]]["policy_entropy"].append(substep_entropies.detach().item())
+        for substep_key in policy_losses.keys():
+            policy_train_stats[substep_key]["policy_loss"].append(policy_losses[substep_key].detach().item())
+            policy_train_stats[substep_key]["policy_entropy"].append(entropies[substep_key].detach().item())
 
-            grad_norm = compute_gradient_norm(self.model.policy.network_for(actor_id).parameters())
-            policy_train_stats[actor_id[0]]["policy_grad_norm"].append(grad_norm)
+            grad_norm = compute_gradient_norm(self.model.policy.network_for(ActorID(substep_key, 0)).parameters())
+            policy_train_stats[substep_key]["policy_grad_norm"].append(grad_norm)
 
         # Critic(s)
         #  - if there is just one critic, report only values from the first sub-step.
         #  - otherwise, use sub-step keys to identify the critics.
-        first_critic_id = list(self.model.critic.networks.keys())[-1]
-        critic_ids = [first_critic_id] if self.model.critic.num_critics == 1 else list(map(lambda x: x[0], actor_ids))
-        for critic_id, substep_detached_values, substep_losses in zip(critic_ids, detached_values, value_losses):
-            critic_train_stats[critic_id]["critic_value"].append(substep_detached_values.mean().item())
+        for critic_id, substep_losses in value_losses.items():
+            critic_train_stats[critic_id]["critic_value"].append(detached_values[critic_id].mean().item())
             critic_train_stats[critic_id]["critic_value_loss"].append(substep_losses.detach().item())
 
             grad_norm = compute_gradient_norm(self.model.critic.networks[critic_id].parameters())
@@ -307,13 +281,13 @@ class ActorCritic(Trainer, ABC):
             self.ac_events.critic_grad_norm(critic_id=critic_id, value=np.mean(stats["critic_grad_norm"]))
 
     @classmethod
-    def _normalize_advantages(cls, advantages: List[torch.Tensor]) -> List[torch.Tensor]:
+    def _normalize_advantages(cls, advantages: Dict[StepKeyType, torch.Tensor]) -> Dict[StepKeyType, torch.Tensor]:
         """Normalize advantages.
 
         :param advantages: List of advantages.
         :return: List of normalized advantages.
         """
-        return [(a - a.mean()) / (a.std() + 1e-8) for a in advantages]
+        return {step_key: (aa - aa.mean()) / (aa.std() + 1e-8) for step_key, aa in advantages.items()}
 
     @classmethod
     def _compile_actions_dict_list(cls, sampled_action: Dict[str, np.ndarray]) -> List[Dict[str, np.ndarray]]:

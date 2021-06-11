@@ -1,13 +1,15 @@
 """Encapsulation of multiple torch policies for training and rollouts in structured environments."""
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 
 import torch
 
-from maze.core.agent.torch_policy import TorchPolicy
+from maze.core.agent.state_critic import CriticInput, CriticOutput
+from maze.core.agent.torch_policy import TorchPolicy, PolicyOutput
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
 
 class TorchActorCritic(TorchModel):
@@ -32,6 +34,7 @@ class TorchActorCritic(TorchModel):
 
         self.policy = policy
         self.critic = critic
+        self._shared_embedding = self.critic.shared_embedding
 
         TorchModel.__init__(self, device=device)
 
@@ -84,3 +87,54 @@ class TorchActorCritic(TorchModel):
         """
         self.policy.load_state_dict(state_dict)
         self.critic.load_state_dict(state_dict)
+
+    def build_critic_input(self, policy_output: PolicyOutput, record: StructuredSpacesRecord) -> CriticInput:
+        """TODO"""
+        critic_input = dict()
+        for substep_record in record.substep_records:
+            if not self._shared_embedding[substep_record.substep_key]:
+                critic_input[substep_record.substep_key] = substep_record.observation
+        for step_key, value in policy_output.embedding_logits.items():
+            if self._shared_embedding[step_key]:
+                critic_input[step_key] = value
+        return critic_input
+
+    def compute_actor_critic_output(self, record: StructuredSpacesRecord, temperature: float = 1.0,
+                                    deterministic: bool = False) -> Tuple[PolicyOutput, CriticOutput]:
+        """TODO"""
+        policy_output = self.policy.compute_policy_output(record, temperature=temperature,
+                                                          deterministic=deterministic)
+        critic_input = self.build_critic_input(policy_output, record)
+
+        critic_output = self.critic.predict_values(critic_input)
+        return policy_output, critic_output
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

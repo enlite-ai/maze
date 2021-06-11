@@ -1,31 +1,36 @@
 """Contains default model tests."""
-from maze.core.agent.torch_state_critic import TorchSharedStateCritic, \
-    TorchDeltaStateCritic, TorchStepStateCritic, TorchStateCritic
+from typing import Dict, List, Union, Optional
+
+import pytest
 from torch import nn
 
+from maze.core.agent.torch_state_critic import TorchSharedStateCritic, \
+    TorchDeltaStateCritic, TorchStepStateCritic, TorchStateCritic
+from maze.core.env.structured_env import StepKeyType
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.models.critics import SharedStateCriticComposer, StepStateCriticComposer, BaseStateCriticComposer, \
     DeltaStateCriticComposer
 from maze.perception.models.template_model_composer import TemplateModelComposer
-from maze.perception.perception_utils import convert_to_torch, flatten_spaces, convert_to_numpy
-from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env
+from maze.perception.perception_utils import convert_to_torch, flatten_spaces
+from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, \
+    build_dummy_maze_env_with_structured_core_env
 
 policy_composer_type = 'maze.perception.models.policies.ProbabilisticPolicyComposer'
 
 
 def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCriticComposer),
-                                       critics_type: type(TorchStateCritic), shared_embedding: bool):
+                                       critics_type: type(TorchStateCritic),
+                                       shared_embedding_keys: Optional[Union[List[str], Dict[StepKeyType, List[str]]]]):
     """ helper function """
     # init environment
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv('CartPole-v0')
     observation_space = env.observation_space
     action_space = env.action_space
 
     # map observations to a modality
-    obs_modalities = {"observation": "feature"}
-
+    obs_modalities = {obs_key: "feature" for obs_key in observation_space.spaces.keys()}
     # define how to process a modality
     modality_config = dict()
     modality_config["feature"] = {"block_type": "maze.perception.blocks.DenseBlock",
@@ -48,7 +53,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
                                             model_builder=model_builder,
                                             policy={'_target_': policy_composer_type},
                                             critic={'_target_': critics_composer_type},
-                                            shared_embedding=shared_embedding)
+                                            shared_embedding_keys=shared_embedding_keys)
 
     # create model pdf
     default_builder.save_models()
@@ -71,26 +76,35 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
     assert "value" in value_net.out_keys
     assert value_net.out_shapes()[0] == (1,)
 
-    if shared_embedding:
-        assert value_net.in_keys == ['latent']
+    if shared_embedding_keys is not None:
+        if isinstance(shared_embedding_keys, list):
+            assert all([shared_key in value_net.in_keys for shared_key in shared_embedding_keys])
+        else:
+            assert all([shared_key in value_net.in_keys for shared_keylist in shared_embedding_keys.values() for
+                        shared_key in shared_keylist])
     else:
         assert value_net.in_keys == policy_net.in_keys
 
 
 def test_default_models() -> None:
     """ default model builder test. """
-    build_single_step_with_critic_type(SharedStateCriticComposer, TorchSharedStateCritic, shared_embedding=False)
-    build_single_step_with_critic_type(StepStateCriticComposer, TorchStepStateCritic, shared_embedding=False)
-    build_single_step_with_critic_type(DeltaStateCriticComposer, TorchDeltaStateCritic, shared_embedding=False)
+    build_single_step_with_critic_type(SharedStateCriticComposer, TorchSharedStateCritic,
+                                       shared_embedding_keys=None)
+    build_single_step_with_critic_type(StepStateCriticComposer, TorchStepStateCritic,
+                                       shared_embedding_keys=None)
+    build_single_step_with_critic_type(DeltaStateCriticComposer, TorchDeltaStateCritic,
+                                       shared_embedding_keys=None)
 
-    build_single_step_with_critic_type(StepStateCriticComposer, TorchStepStateCritic, shared_embedding=True)
+    build_single_step_with_critic_type(StepStateCriticComposer, TorchStepStateCritic,
+                                       shared_embedding_keys=['latent'])
+    build_single_step_with_critic_type(StepStateCriticComposer, TorchStepStateCritic,
+                                       shared_embedding_keys={0: ['observation_DenseBlock']})
 
-
-def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriticComposer),
-                                      critics_type: type(TorchStateCritic), shared_embedding: bool):
+def build_structured_with_critic_type(env,
+                                      critics_composer_type: type(BaseStateCriticComposer),
+                                      critics_type: type(TorchStateCritic),
+                                      shared_embedding_keys: Optional[Union[List[str], Dict[StepKeyType, List[str]]]]):
     """ helper function """
-    # init environment
-    env = build_dummy_structured_env()
 
     # map observations to a modality
     obs_modalities = {"observation_0": "image",
@@ -131,7 +145,7 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
         model_builder=model_builder,
         policy={'_target_': policy_composer_type},
         critic={'_target_': critics_composer_type},
-        shared_embedding=shared_embedding)
+        shared_embedding_keys=shared_embedding_keys)
 
     # create model pdf
     default_builder.save_models()
@@ -147,10 +161,11 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
     embedding_out_dict = dict()
     for step_key, step_obs in env.observation_spaces_dict.items():
         torch_obs = convert_to_torch(step_obs.sample(), cast=None, device=None, in_place=True)
-        logits, embedding_out = default_builder.policy.compute_logits_dict(torch_obs, actor_id=(step_key, 0),
-                                                                           return_embedding=shared_embedding)
+        logits, embedding_out = default_builder.policy.compute_logits_dict(
+            torch_obs, actor_id=(step_key, 0),
+            return_embedding=default_builder.critic.shared_embedding[step_key])
         assert set(logits.keys()) == set(env.action_spaces_dict[step_key].spaces.keys())
-        if not shared_embedding:
+        if not default_builder.critic.shared_embedding[step_key]:
             assert embedding_out is None
         else:
             assert isinstance(embedding_out, dict)
@@ -163,7 +178,7 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
         value = default_builder.critic.networks[0](flattened_obs_t)["value"][..., 0]
     elif critics_composer_type == StepStateCriticComposer:
         for step_id in env.observation_spaces_dict.keys():
-            if not shared_embedding:
+            if not default_builder.critic.shared_embedding[step_id]:
                 value = default_builder.critic.predict_value(obs_t[step_id], step_id)
             else:
                 value = default_builder.critic.predict_value(embedding_out_dict[step_id], step_id)
@@ -177,8 +192,28 @@ def build_structured_with_critic_type(critics_composer_type: type(BaseStateCriti
 
 def test_default_models_multi_step() -> None:
     """ default model builder test. """
-    build_structured_with_critic_type(SharedStateCriticComposer, TorchSharedStateCritic, shared_embedding=False)
-    build_structured_with_critic_type(StepStateCriticComposer, TorchStepStateCritic, shared_embedding=False)
-    build_structured_with_critic_type(DeltaStateCriticComposer, TorchDeltaStateCritic, shared_embedding=False)
+    env = build_dummy_structured_env()
+    build_structured_with_critic_type(env, SharedStateCriticComposer, TorchSharedStateCritic, shared_embedding_keys=None)
+    build_structured_with_critic_type(env, StepStateCriticComposer, TorchStepStateCritic, shared_embedding_keys=None)
+    build_structured_with_critic_type(env, DeltaStateCriticComposer, TorchDeltaStateCritic, shared_embedding_keys=None)
 
-    build_structured_with_critic_type(StepStateCriticComposer, TorchStepStateCritic, shared_embedding=True)
+
+def test_default_shared_model_multi_obs() -> None:
+    env = build_dummy_maze_env_with_structured_core_env()
+    build_structured_with_critic_type(env, StepStateCriticComposer, TorchStepStateCritic,
+                                      shared_embedding_keys=['latent'])
+    build_structured_with_critic_type(env, StepStateCriticComposer, TorchStepStateCritic,
+                                      shared_embedding_keys=['observation_0_StridedConvolutionDenseBlock',
+                                                             'observation_1_DenseBlock'])
+    with pytest.raises(AssertionError):
+        build_structured_with_critic_type(env, StepStateCriticComposer, TorchStepStateCritic,
+                                          shared_embedding_keys=['concat',
+                                                                 'observation_1'])
+
+
+def test_default_shared_models_multi_step() -> None:
+    env = build_dummy_structured_env()
+    build_structured_with_critic_type(env, StepStateCriticComposer, TorchStepStateCritic,
+                                      shared_embedding_keys=['latent'])
+    build_structured_with_critic_type(env, StepStateCriticComposer, TorchStepStateCritic,
+                                      shared_embedding_keys={0: ['latent'], 1: ['observation_1_DenseBlock']})

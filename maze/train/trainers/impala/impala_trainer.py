@@ -165,9 +165,9 @@ class MultiStepIMPALA(Trainer):
                         self.distributed_actors.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH,
                                                                 name="mean")
                 except KeyError:
-                    BColors.print_colored('No training episode finished in this epoch... This really should not '
-                                          'happen!! Try increasing the number of rollout-steps for example.',
-                                          BColors.WARNING)
+                    BColors.print_colored('No training episode finished in this epoch. We use the last reported reward '
+                                          'for logging and model selection! To avoid this you can try increasing the '
+                                          'number of rollout-steps for example.', BColors.WARNING)
                     reward = prev_reward
 
             # evaluate policy

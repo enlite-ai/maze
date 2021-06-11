@@ -4,10 +4,11 @@ from dataclasses import dataclass
 from typing import Optional, List, Union, Dict
 
 import numpy as np
+import torch
 
-from maze.core.env.action_conversion import ActionType
+from maze.core.env.action_conversion import ActionType, TorchActionType
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.observation_conversion import ObservationType, TorchObservationType
 from maze.core.env.structured_env import ActorID
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
@@ -161,7 +162,7 @@ class StructuredSpacesRecord:
         return [r.substep_key for r in self.substep_records]
 
     @property
-    def actions(self) -> List[ActionType]:
+    def actions(self) -> List[Union[ActionType, TorchActionType]]:
         """List of actions from the individual sub-steps."""
         return [r.action for r in self.substep_records]
 
@@ -171,12 +172,12 @@ class StructuredSpacesRecord:
         return [r.observation for r in self.substep_records]
 
     @property
-    def rewards(self) -> List[Union[float, np.ndarray]]:
+    def rewards(self) -> List[Union[float, Union[np.ndarray, torch.Tensor]]]:
         """List of rewards from the individual sub-steps."""
         return [r.reward for r in self.substep_records]
 
     @property
-    def dones(self) -> List[bool]:
+    def dones(self) -> List[Union[bool, torch.Tensor]]:
         """List of dones from the individual sub-steps."""
         return [r.done for r in self.substep_records]
 
@@ -196,12 +197,12 @@ class StructuredSpacesRecord:
         return [r.discounted_return for r in self.substep_records]
 
     @property
-    def actions_dict(self) -> Dict[StepKeyType, ActionType]:
+    def actions_dict(self) -> Dict[StepKeyType, Union[ActionType, TorchActionType]]:
         """Dict of actions from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.action for r in self.substep_records}
 
     @property
-    def observations_dict(self) -> Dict[StepKeyType, ObservationType]:
+    def observations_dict(self) -> Dict[StepKeyType, Union[ObservationType, TorchObservationType]]:
         """Dict of observations from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.observation for r in self.substep_records}
 
