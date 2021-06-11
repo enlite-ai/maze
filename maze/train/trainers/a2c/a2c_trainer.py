@@ -33,8 +33,10 @@ class A2C(ActorCritic):
                  model: TorchActorCritic,
                  model_selection: Optional[BestModelSelection],
                  initial_state: Optional[str] = None):
+
         super().__init__(algorithm_config=algorithm_config, env=env, eval_env=eval_env, model=model,
                          model_selection=model_selection, initial_state=initial_state)
+        assert isinstance(self.model, TorchActorCritic)
 
     @override(ActorCritic)
     def _update(self) -> None:
@@ -43,57 +45,60 @@ class A2C(ActorCritic):
         # collect observations
         record = self._rollout()
 
-        # compute action log-probabilities of actions taken
-        action_log_probs, step_action_dist, embedding_out = self._action_log_probs_and_dists(record)
+        # compute action log-probabilities and values
+        policy_output, critic_output = self.model.compute_actor_critic_output(record)
 
-        # compute bootstrapped returns
-        returns, values, detached_values = self.model.critic.bootstrap_returns(
-            record=record,
-            gamma=self.algorithm_config.gamma,
-            gae_lambda=self.algorithm_config.gae_lambda,
-            embedding_out=embedding_out)
+        # compute returns
+        returns = self.model.critic.bootstrap_returns(gamma=self.algorithm_config.gamma,
+                                                      gae_lambda=self.algorithm_config.gae_lambda,
+                                                      record=record,
+                                                      critic_output=critic_output)
 
         # compute entropies
-        entropies = [action_dist.entropy().mean() for action_dist in step_action_dist]
+        entropies = {step_key: entropy.mean() for step_key, entropy in policy_output.entropy.items()}
 
         # compute advantages
-        advantages = [ret - detached_val for ret, detached_val in zip(returns, detached_values)]
+        advantages = {step_key: returns[step_key] - detached_val for step_key, detached_val in
+                      critic_output.detached_values.items()}
 
         # normalize advantages
         advantages = self._normalize_advantages(advantages)
 
         # compute value loss
         if self.model.critic.num_critics == 1:
-            value_losses = [(returns[0] - values[0]).pow(2).mean()]
+            key = list(returns.keys())[0]
+            value_losses = {key: (returns[key] - critic_output.values[key]).pow(2).mean()}
         else:
-            value_losses = [(ret - val).pow(2).mean() for ret, val in zip(returns, values)]
-        value_loss = sum(value_losses)
+            value_losses = {step_key: (returns[step_key] - values).pow(2).mean() for step_key, values in
+                            critic_output.values.items()}
 
         # compute policy loss, iterating across all sub-steps
-        policy_losses = []
-        for advantage, action_log_probs_dict in zip(advantages, action_log_probs):
+        policy_losses = dict()
+        for step_key, action_log_probs_dict in self.model.policy.compute_action_log_probs(policy_output,
+                                                                                          record.actions_dict).items():
 
             # accumulate independent action losses, iterating components of the action
             step_policy_loss = torch.tensor(0.0).to(self.algorithm_config.device)
             for action_log_prob in action_log_probs_dict.values():
                 # prepare advantages
-                action_advantages = advantage.detach()
+                action_advantages = advantages[step_key].detach()
                 while action_advantages.ndim < action_log_prob.ndimension():
                     action_advantages = action_advantages.unsqueeze(dim=-1)
 
                 # compute policy gradient objective
                 step_policy_loss -= (action_advantages * action_log_prob).mean()
 
-            policy_losses.append(step_policy_loss)
+            policy_losses[step_key] = step_policy_loss
 
         # perform gradient step
-        self._gradient_step(policy_losses=policy_losses, entropies=entropies, value_loss=value_loss)
+        self._gradient_step(policy_losses=policy_losses, entropies=entropies, value_losses=value_losses)
 
         # collect training stats for logging
         policy_train_stats = defaultdict(lambda: defaultdict(list))
         critic_train_stats = defaultdict(lambda: defaultdict(list))
         self._append_train_stats(policy_train_stats, critic_train_stats,
-                                 record.actor_ids, policy_losses, entropies, detached_values, value_losses)
+                                 policy_losses, entropies,
+                                 critic_output.detached_values, value_losses)
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)

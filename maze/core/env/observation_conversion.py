@@ -2,13 +2,14 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
+import torch
 from gym import spaces
 import numpy as np
 
 from maze.core.env.maze_state import MazeStateType
 
 ObservationType = Dict[str, np.ndarray]
-
+TorchObservationType = Dict[str, torch.Tensor]
 
 class ObservationConversionInterface(ABC):
     """Interface specifying the conversion of abstract environment state to the gym-compatible observation.
