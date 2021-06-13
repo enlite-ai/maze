@@ -27,7 +27,7 @@ class PreProcessingObservationConversion(ObservationConversion):
             "observation_0_feature_series":
                 gym.spaces.Box(low=np.float32(0), high=np.float32(1), shape=(64, 24), dtype=np.float32),
             "observation_0_image":
-                gym.spaces.Box(low=0.0, high=1.0, shape=(3, 32, 32), dtype=np.float64),
+                gym.spaces.Box(low=0.0, high=1.0, shape=(3, 32, 32), dtype=np.float32),
             "observation_1_categorical_feature":
                 gym.spaces.Box(low=np.float32(0), high=np.float32(11), shape=(), dtype=np.float32),
         })
