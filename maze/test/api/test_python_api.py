@@ -680,3 +680,22 @@ def test_autoresolving_proxy_attribute():
     )
     rc.train(n_epochs=1)
     assert isinstance(rc._runners[RunMode.TRAINING].model_composer.critic, TorchStepStateCritic)
+
+
+def test_evaluation():
+    """
+    Tests evaluation.
+    """
+
+    rc = run_context.RunContext(
+        env=lambda: GymMazeEnv(env=gym.make("CartPole-v0")),
+        silent=True,
+        overrides={"runner.normalization_samples": 1, "runner.shared_noise_table_size": 10}
+    )
+    rc.train(1)
+
+    # Evaluate sequentially.
+    rc.evaluate(5, 5)
+
+    # Evaluate in parallel.
+    rc.evaluate(5, 5, parallel=True)
