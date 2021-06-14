@@ -30,7 +30,6 @@ trainings = [
 
 
 @pytest.mark.longrun
-@pytest.mark.timeout(10*60)
 @pytest.mark.parametrize("target_reward, hydra_overrides", trainings)
 def test_train(hydra_overrides: Dict[str, str], target_reward: float):
     # run training
