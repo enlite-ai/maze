@@ -9,18 +9,25 @@ from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.common.config_classes import AlgorithmConfig
 
 
-@dataclasses.dataclass
 class Trainer(ABC):
     """
     Interface for trainers.
+    :param algorithm_config: Algorithm configuration including all parameter expected in .train().
+    :param model: Model to train.
     """
 
-    _AlgorithmConfigType: ClassVar[TypeVar] = TypeVar("_AlgorithmConfigType", bound=AlgorithmConfig)
+    AlgorithmConfigType: TypeVar = TypeVar("AlgorithmConfigType", bound=AlgorithmConfig)
+    _TorchModelType: TypeVar = TypeVar("_TorchModelType", bound=TorchModel)
 
-    algorithm_config: _AlgorithmConfigType
-    """Algorithm configuration including all parameter expected in .train()."""
-    model: Optional[TorchModel] = dataclasses.field(init=False, default=None)
-    """Model to train."""
+    def __init__(self, algorithm_config: AlgorithmConfigType, model: Optional[TorchModel] = None):
+        """
+        Note: This is not implemented as dataclass due to type hinting for class members not working properly in derived
+        classes with dataclasses. I.e. PyCharm's type hinting always assumes model is of type TorchModel, but not the
+        specific subtype (e.g. TorchActorCritic).
+        """
+
+        self.model = model
+        self.algorithm_config = algorithm_config
 
     @abstractmethod
     def load_state(self, file_path: Union[str, BinaryIO]) -> None:
