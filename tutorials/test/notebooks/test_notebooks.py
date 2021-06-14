@@ -10,7 +10,6 @@ import pytest
 _notebook_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../notebooks/getting_started/')
 
 
-@pytest.mark.timeout(300)
 @pytest.mark.parametrize(
     "path",
     [
