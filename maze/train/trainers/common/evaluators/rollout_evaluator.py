@@ -16,7 +16,7 @@ class RolloutEvaluator(Evaluator):
     """Evaluates a given policy by rolling it out and collecting the mean reward.
 
     :param eval_env: Distributed environment to run evaluation rollouts in.
-    :param: n_episodes: Number of evaluation episodes to run. Note that the actual number might be slightly larger
+    :param n_episodes: Number of evaluation episodes to run. Note that the actual number might be slightly larger
                         due to the distributed nature of the environment.
     :param model_selection: Model selection to notify about the recorded rewards.
     """

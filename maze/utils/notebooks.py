@@ -30,7 +30,7 @@ def fix_gym_syspath() -> None:
             sys.path.append(pip_show_output.split("\\n")[-4].split(": ")[1])
         # gym is actually not installed.
         except subprocess.CalledProcessError:
-            print("gym is not installed. Please install with: pip install gym")
+            print("gym is not installed. Please install with: pip install gym.")
 
 
 def rollout(

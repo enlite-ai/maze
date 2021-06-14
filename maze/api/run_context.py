@@ -7,10 +7,19 @@ import copy
 import logging
 import os
 import sys
-from typing import Callable, TypeVar, Union, Any, Dict, Optional, Mapping
+from typing import Callable, TypeVar, Union, Any, Dict, Optional, Mapping, Type
 
 import hydra.plugins.launcher
 import omegaconf
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+
+from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
+
+from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
+
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
+
+from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from omegaconf import DictConfig
 
 from maze.api.config_auditor import ConfigurationAuditor
@@ -347,18 +356,62 @@ class RunContext:
 
         return self.policy.compute_action(observation, maze_state, env, actor_id, deterministic)
 
-    def generate_env(self) -> MazeEnv:
+    def evaluate(
+        self,
+        n_envs: int,
+        n_episodes: int,
+        model_selection: Optional[ModelSelectionBase] = None,
+        deterministic: bool = False,
+        parallel: bool = False
+    ) -> None:
+        """
+        Evaluates the trained/loaded policy with an RolloutEvaluator.
+
+        :param n_envs: Number of environments.
+
+        :param n_episodes: Number of evaluation episodes to run. Note that the actual number might be slightly larger
+                           due to the distributed nature of the environment.
+
+        :param model_selection: Model selection to notify about the recorded rewards.
+
+        :param deterministic: Whether to compute the policy action deterministically.
+
+        :param parallel: Whether to evaluate environments in parallel using SubprocVectorEnv.
+
+        """
+
+        # todo Would be better if we just load the policy instead of having to initialize a training runner (e.g. after
+        #  training in a previous run and loading from its checkpoints).
+        if self._runners[RunMode.TRAINING] is None:
+            self._runners[RunMode.TRAINING]: TrainingRunner = self._silence(
+                lambda: self._generate_runner(RunMode.TRAINING)
+            )
+
+        evaluator = RolloutEvaluator(
+            eval_env=(SubprocVectorEnv if parallel else SequentialVectorEnv)(
+                env_factories=[self.env_factory] * n_envs
+            ),
+            n_episodes=n_episodes,
+            model_selection=model_selection,
+            deterministic=deterministic
+        )
+
+        evaluator.evaluate(self.policy)
+
+    @property
+    def env_factory(self) -> Callable[[], MazeEnv]:
         """
         Returns a newly generated environment with wrappers applied w.r.t. the specified configuration.
-        :return: Newly generated environment.
+
+        :return: Environment factory function.
 
         """
 
         if self._runners[RunMode.TRAINING]:
-            return self._runners[RunMode.TRAINING].env_factory()
+            return self._runners[RunMode.TRAINING].env_factory
         elif self._runners[RunMode.ROLLOUT]:
-            return self._runners[RunMode.ROLLOUT].env_factory()
+            return self._runners[RunMode.ROLLOUT].env_factory
         else:
             raise RunContextError(
-                "Neither training nor rollout runner are instantiated. .env_factory() couldn't be called."
+                "Neither training nor rollout runner are instantiated. .env_factory() is not available."
             )
