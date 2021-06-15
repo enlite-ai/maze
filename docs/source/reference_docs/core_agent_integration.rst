@@ -15,5 +15,4 @@ This page contains the reference documentation for the Maze agent integration co
     ~maze_action_candidates.ActionCandidates
     ~maze_action_candidates.MazeActionCandidates
     ~maze_action_candidates.ActionConversionCandidatesInterface
-    ~external_core_env.ExternalCoreEnvRewardAggregator
     ~external_core_env.ExternalCoreEnv

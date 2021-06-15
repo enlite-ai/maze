@@ -197,6 +197,5 @@ These are the contained components:
     ~maze_gym_env_wrapper.make_gym_maze_env
     ~maze_gym_env_wrapper.GymCoreEnv
     ~maze_gym_env_wrapper.GymRenderer
-    ~maze_gym_env_wrapper.GymRewardAggregator
     ~maze_gym_env_wrapper.GymObservationConversion
     ~maze_gym_env_wrapper.GymActionConversion
