@@ -3,6 +3,7 @@ from typing import Union, Tuple, Dict, Any
 import numpy as np
 
 from maze.core.env.core_env import CoreEnv
+from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.structured_env import ActorID
 from maze.core.events.pubsub import Pubsub
 
@@ -12,7 +13,6 @@ from .inventory import Inventory
 from .renderer import Cutting2DRenderer
 from .events import CuttingEvents, InventoryEvents
 from .kpi_calculator import Cutting2dKpiCalculator
-from ..reward.default_reward import CuttingRewardAggregator
 
 
 class Cutting2DCoreEnvironment(CoreEnv):
@@ -33,7 +33,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
     """
 
     def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int), static_demand: (int, int),
-                 reward_aggregator: CuttingRewardAggregator):
+                 reward_aggregator: RewardAggregatorInterface):
         super().__init__()
 
         self.max_pieces_in_inventory = max_pieces_in_inventory
@@ -103,12 +103,12 @@ class Cutting2DCoreEnvironment(CoreEnv):
         self.inventory.log_step_statistics()
 
         # aggregate reward from events
-        reward = self.reward_aggregator.collect_rewards()
+        rewards = self.reward_aggregator.summarize_reward()
 
         # compile env state
         maze_state = self.get_maze_state()
 
-        return maze_state, reward, False, info
+        return maze_state, sum(rewards), False, info
 
     def get_maze_state(self) -> Cutting2DMazeState:
         """Returns the current Cutting2DMazeState of the environment."""
