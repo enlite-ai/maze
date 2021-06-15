@@ -43,12 +43,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Perhaps faster with manual docker build?
       - name: Build image with RLLib + TF environment.
         uses: docker/build-push-action@v2
         with:
           file: docker/maze-core-env.dockerfile
-          build-args: opt_pip_installs=ray[rllib]>=1.4.0,tensorflow
+          build-args: opt_pip_installs=ray[rllib]>=1.4.0,tensorflow==2.5.0
           cache-from: type=local,src=/tmp/.buildx-cache-rlltf-env
           cache-to: type=local,dest=/tmp/.buildx-cache-rlltf-env-new
           tags: localhost:5000/enliteai/maze:rllib-tensorflow-env
