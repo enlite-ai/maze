@@ -1,6 +1,4 @@
 ...
-from ..reward.default_reward import CuttingRewardAggregator
-
 
 class Cutting2DCoreEnvironment(CoreEnv):
     """Environment for cutting 2D pieces based on the customer demand. Works as follows:
@@ -9,7 +7,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
     """
 
     def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int), static_demand: (int, int),
-                 reward_aggregator: CuttingRewardAggregator):
+                 reward_aggregator: RewardAggregatorInterface):
         super().__init__()
 
         ...
@@ -57,9 +55,9 @@ class Cutting2DCoreEnvironment(CoreEnv):
         self.inventory.log_step_statistics()
 
         # aggregate reward from events
-        reward = self.reward_aggregator.collect_rewards()
+        rewards = self.reward_aggregator.summarize_reward()
 
         # compile env state
         maze_state = self.get_maze_state()
 
-        return maze_state, reward, False, info
+        return maze_state, sum(rewards), False, info
