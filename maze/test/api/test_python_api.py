@@ -6,7 +6,6 @@ from typing import Tuple
 
 import gym
 import pytest
-from hydra.errors import ConfigCompositionException
 from maze.train.trainers.ppo.ppo_trainer import PPO
 from torch import nn
 
@@ -678,7 +677,7 @@ def test_multirun():
     Tests multirun capabilities.
     """
 
-    with pytest.raises(ConfigCompositionException):
+    with pytest.raises(BaseException):
         rc = run_context.RunContext(
             env=lambda: GymMazeEnv('CartPole-v0'),
             silent=True,
