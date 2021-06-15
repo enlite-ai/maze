@@ -4,16 +4,17 @@ from typing import Dict, List, Union, Optional
 import pytest
 from torch import nn
 
+from maze.core.agent.random_policy import RandomPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic, \
     TorchDeltaStateCritic, TorchStepStateCritic, TorchStateCritic
 from maze.core.env.structured_env import StepKeyType
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.models.critics import SharedStateCriticComposer, StepStateCriticComposer, BaseStateCriticComposer, \
     DeltaStateCriticComposer
 from maze.perception.models.template_model_composer import TemplateModelComposer
-from maze.perception.perception_utils import convert_to_torch, flatten_spaces
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, \
     build_dummy_maze_env_with_structured_core_env
 
@@ -85,6 +86,14 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
     else:
         assert value_net.in_keys == policy_net.in_keys
 
+    rollout_generator = RolloutGenerator(env=env, record_next_observations=False)
+    policy = RandomPolicy(env.action_spaces_dict)
+    trajectory = rollout_generator.rollout(policy, n_steps=10).stack().to_torch(device='cpu')
+
+    policy_output = default_builder.policy.compute_policy_output(trajectory)
+    critic_input = default_builder.critic.build_critic_input(policy_output, trajectory)
+    critic_output = default_builder.critic.predict_values(critic_input)
+
 
 def test_default_models() -> None:
     """ default model builder test. """
@@ -99,6 +108,7 @@ def test_default_models() -> None:
                                        shared_embedding_keys=['latent'])
     build_single_step_with_critic_type(StepStateCriticComposer, TorchStepStateCritic,
                                        shared_embedding_keys={0: ['observation_DenseBlock']})
+
 
 def build_structured_with_critic_type(env,
                                       critics_composer_type: type(BaseStateCriticComposer),
@@ -158,42 +168,20 @@ def build_structured_with_critic_type(env,
 
     assert isinstance(default_builder.critic, critics_type)
 
-    embedding_out_dict = dict()
-    for step_key, step_obs in env.observation_spaces_dict.items():
-        torch_obs = convert_to_torch(step_obs.sample(), cast=None, device=None, in_place=True)
-        logits, embedding_out = default_builder.policy.compute_logits_dict(
-            torch_obs, actor_id=(step_key, 0),
-            return_embedding=default_builder.critic.shared_embedding[step_key])
-        assert set(logits.keys()) == set(env.action_spaces_dict[step_key].spaces.keys())
-        if not default_builder.critic.shared_embedding[step_key]:
-            assert embedding_out is None
-        else:
-            assert isinstance(embedding_out, dict)
-            embedding_out_dict[step_key] = embedding_out
+    rollout_generator = RolloutGenerator(env=env, record_next_observations=False)
+    policy = RandomPolicy(env.action_spaces_dict)
+    trajectory = rollout_generator.rollout(policy, n_steps=10).stack().to_torch(device='cpu')
 
-    obs_t = {step_key: convert_to_torch(step_obs.sample(), cast=None, device=None, in_place=True)
-             for step_key, step_obs in env.observation_spaces_dict.items()}
-    if critics_composer_type == SharedStateCriticComposer:
-        flattened_obs_t = flatten_spaces(obs_t.values())
-        value = default_builder.critic.networks[0](flattened_obs_t)["value"][..., 0]
-    elif critics_composer_type == StepStateCriticComposer:
-        for step_id in env.observation_spaces_dict.keys():
-            if not default_builder.critic.shared_embedding[step_id]:
-                value = default_builder.critic.predict_value(obs_t[step_id], step_id)
-            else:
-                value = default_builder.critic.predict_value(embedding_out_dict[step_id], step_id)
-    elif critics_composer_type == DeltaStateCriticComposer:
-        value_0 = default_builder.critic.networks[0](obs_t[0])["value"][..., 0]
-        obs_t[1].update({DeltaStateCriticComposer.prev_value_key: value_0.unsqueeze(-1)})
-        value_1 = default_builder.critic.networks[1](obs_t[1])["value"][..., 0]
-    else:
-        raise ValueError("Invalid CriticType <{}> selected!".format(critics_composer_type))
+    policy_output = default_builder.policy.compute_policy_output(trajectory)
+    critic_input = default_builder.critic.build_critic_input(policy_output, trajectory)
+    critic_output = default_builder.critic.predict_values(critic_input)
 
 
 def test_default_models_multi_step() -> None:
     """ default model builder test. """
     env = build_dummy_structured_env()
-    build_structured_with_critic_type(env, SharedStateCriticComposer, TorchSharedStateCritic, shared_embedding_keys=None)
+    build_structured_with_critic_type(env, SharedStateCriticComposer, TorchSharedStateCritic,
+                                      shared_embedding_keys=None)
     build_structured_with_critic_type(env, StepStateCriticComposer, TorchStepStateCritic, shared_embedding_keys=None)
     build_structured_with_critic_type(env, DeltaStateCriticComposer, TorchDeltaStateCritic, shared_embedding_keys=None)
 

@@ -2,7 +2,6 @@
 import functools
 from typing import Optional, Dict, Union, Type, Tuple, List
 
-import numpy as np
 from gym import spaces
 from omegaconf import ListConfig, DictConfig
 
@@ -42,7 +41,6 @@ class TemplateModelComposer(BaseModelComposer):
         E.g. {'type': maze.perception.models.policies.ProbabilisticPolicyComposer} specifies a probabilistic policy.
     :param critic: Specifies the critic type as a configType.
         E.g. {'type': maze.perception.models.critics.StateCriticComposer} specifies the single step state critic.
-    :param shared_embedding: Specify whether the critic shares the embedding with the policy.
     """
 
     @classmethod
@@ -110,13 +108,12 @@ class TemplateModelComposer(BaseModelComposer):
         return perception_net
 
     def template_policy_net(self, observation_space: spaces.Dict, action_space: spaces.Dict,
-                            shared_embedding_keys: List[str]) \
-            -> Tuple[InferenceBlock, InferenceBlock]:
+                            shared_embedding_keys: List[str]) -> Tuple[InferenceBlock, InferenceBlock]:
         """Compiles a template policy network.
 
         :param observation_space: The input observations for the perception network.
         :param action_space: The action space that defines the network action heads.
-        :param shared_embedding_keys: TODO
+        :param shared_embedding_keys: The list of embedding keys for this substep's model.
         :return: A policy network (actor) InferenceBlock.
         """
 
@@ -157,6 +154,7 @@ class TemplateModelComposer(BaseModelComposer):
         """Compiles a template value network.
 
         :param observation_space: The input observations for the perception network.
+        :param shared_embedding_keys: The shared embedding keys for this substep's model (input)
         :param perception_net: A initial network to continue from.
                 (e.g. useful for shared weights. Model building continues from the key 'latent'.)
         :return: A value network (critic) InferenceBlock.
@@ -183,11 +181,7 @@ class TemplateModelComposer(BaseModelComposer):
             assert len(_blocks_with_more_outputs) == 0, \
                 f'All given latent keys, must refer to a block with only a single output. But the following keys ' \
                 f'have more than one output {_blocks_with_more_outputs}.'
-            # shared_embedding_as_obs_space = spaces.Dict({
-            #     block_key: spaces.Box(low=np.finfo(np.float32).min, high=np.finfo(np.float32).max,
-            #                           shape=perception_net.perception_dict[block_key].out_shapes()[0], dtype=np.float32)
-            #     for block_key in shared_embedding_keys
-            # })
+
             new_perception_net = self.template_perception_net(observation_space)
             new_perception_dict = new_perception_net.perception_dict
             start_adding_blocks = False
@@ -338,7 +332,7 @@ class TemplateModelComposer(BaseModelComposer):
             observation_space = flat_structured_space(self.observation_spaces_dict)
             critics = {0: self.template_value_net(observation_space)}
             return TorchSharedStateCritic(networks=critics, num_policies=len(self.action_spaces_dict), device="cpu",
-                                          stack_observations=False, shared_embedding=self._use_shared_embedding)
+                                          stack_observations=False)
 
         elif issubclass(self._critic_type, StepStateCriticComposer):
             critics = dict()
@@ -348,7 +342,7 @@ class TemplateModelComposer(BaseModelComposer):
                     shared_embedding_keys=self._shared_embedding_keys[sub_step_key])
             return TorchStepStateCritic(networks=critics,
                                         num_policies=len(self.action_spaces_dict),
-                                        device="cpu", shared_embedding=self._use_shared_embedding)
+                                        device="cpu")
 
         elif issubclass(self._critic_type, DeltaStateCriticComposer):
             critics = dict()
@@ -363,9 +357,10 @@ class TemplateModelComposer(BaseModelComposer):
                                                                     sub_step_key])
             return TorchDeltaStateCritic(networks=critics,
                                          num_policies=len(self.action_spaces_dict),
-                                         device="cpu", shared_embedding=self._use_shared_embedding)
+                                         device="cpu")
         elif issubclass(self._critic_type, SharedStateActionCriticComposer):
-            assert not self._use_shared_embedding, f'Embedding can not be shared when using a shared state action critic'
+            assert not any(self._use_shared_embedding.values()), f'Embedding can not be shared when using a shared' \
+                                                                 f' state action critic'
             observation_space = flat_structured_space(self.observation_spaces_dict)
             action_space = flat_structured_space(self.action_spaces_dict)
             only_discrete_spaces = self._only_discrete_spaces()
@@ -378,7 +373,8 @@ class TemplateModelComposer(BaseModelComposer):
                                                 action_spaces_dict={0: action_space})
 
         elif issubclass(self._critic_type, StepStateActionCriticComposer):
-            assert not self._use_shared_embedding, f'Embedding can not be shared when using a step state action critic'
+            assert not any(self._use_shared_embedding.values()), f'Embedding can not be shared when using a step ' \
+                                                                 f'state action critic'
             critics = dict()
             only_discrete_spaces = self._only_discrete_spaces()
             for sub_step_key, sub_step_space in self.observation_spaces_dict.items():

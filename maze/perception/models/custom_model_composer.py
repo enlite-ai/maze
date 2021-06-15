@@ -1,18 +1,19 @@
 """Custom model composer, encapsulating the set of policy and critic networks along with the distribution mapper."""
-
-from typing import Dict, Union, Optional, Mapping
+import copy
+from typing import Dict, Union, Optional, Mapping, List
 
 import gym
 import numpy as np
 from gym import spaces
 
+from maze.core.agent.state_critic import StateCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override
-from maze.core.env.structured_env import StepKeyType
+from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.utils.factory import Factory, ConfigType
-from maze.perception.models.critics import BaseStateCriticComposer, StateCriticComposer
+from maze.perception.models.critics import BaseStateCriticComposer, DeltaStateCriticComposer
 from maze.perception.models.critics.base_state_action_critic_composer import BaseStateActionCriticComposer
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.models.model_composer import BaseModelComposer
@@ -27,7 +28,6 @@ class CustomModelComposer(BaseModelComposer):
     :param distribution_mapper_config: Distribution mapper configuration.
     :param policy: Mapping of sub-step keys to models.
     :param critic: Configuration for the critic composer.
-    :param shared_embedding: Specify whether the critic shares the embedding with the policy. (if applicable).
     """
 
     @classmethod
@@ -52,8 +52,7 @@ class CustomModelComposer(BaseModelComposer):
                  agent_counts_dict: Dict[StepKeyType, int],
                  distribution_mapper_config: ConfigType,
                  policy: ConfigType,
-                 critic: ConfigType,
-                 shared_embedding: bool):
+                 critic: ConfigType):
         super().__init__(action_spaces_dict, observation_spaces_dict, agent_counts_dict, distribution_mapper_config)
 
         # init policy composer
@@ -65,11 +64,7 @@ class CustomModelComposer(BaseModelComposer):
             distribution_mapper=self._distribution_mapper
         )
 
-        embedding_out = dict()
-        if shared_embedding:
-            for step_key, observation_space in observation_spaces_dict.items():
-                out, embedding_out[step_key] = self._policy_composer.policy.compute_logits_dict(
-                    observation_space.sample(), actor_id=(step_key, 0), return_embedding=shared_embedding)
+        self.critic_input_spaces_dict = self._build_critic_input_space_dict()
 
         # init critic composer
         self._critics_composer = None
@@ -78,28 +73,15 @@ class CustomModelComposer(BaseModelComposer):
                 CriticComposerInterface
             ).type_from_name(critic['_target_']) if isinstance(critic, Mapping) else type(critic)
 
-            if issubclass(critic_type, StateCriticComposer) and shared_embedding:
-                critic_observation_spaces_dict = {step_key: spaces.Dict(
-                    {latent_key: spaces.Box(low=np.finfo(np.float32).min, high=np.finfo(np.float32).max,
-                                            shape=latent_tensor.shape, dtype=np.float32)
-                     for latent_key, latent_tensor in embedding_step_out.items()})
-                    for step_key, embedding_step_out in embedding_out.items()}
+            if issubclass(critic_type, BaseStateCriticComposer):
                 self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
                     critic,
-                    observation_spaces_dict=critic_observation_spaces_dict,
-                    agent_counts_dict=self.agent_counts_dict,
-                    shared_embedding=shared_embedding
-                )
-            elif issubclass(critic_type, BaseStateCriticComposer):
-                self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
-                    critic,
-                    observation_spaces_dict=self.observation_spaces_dict,
+                    observation_spaces_dict=self.critic_input_spaces_dict,
                     agent_counts_dict=self.agent_counts_dict
                 )
             elif issubclass(critic_type, BaseStateActionCriticComposer):
-                assert not shared_embedding, 'Shared embedding is not supported for state action critics'
                 self._critics_composer = Factory(BaseStateActionCriticComposer).instantiate(
-                    critic, observation_spaces_dict=self.observation_spaces_dict,
+                    critic, observation_spaces_dict=self.critic_input_spaces_dict,
                     action_spaces_dict=self.action_spaces_dict
                 )
             else:
@@ -107,6 +89,30 @@ class CustomModelComposer(BaseModelComposer):
 
         # save model graphs to pdf
         self.save_models()
+
+    def _build_critic_input_space_dict(self) -> Dict[StepKeyType, spaces.Dict]:
+        """Build the critic input from the given observation input and a dummy pass through the policy network (in case
+            shared embeddings are used.
+
+            :return: The dict holding the enw critic input spaces dict, needed for building the model.
+            """
+        critic_input_spaces_dict = copy.deepcopy(self.observation_spaces_dict)
+        for step_key, obs_space in self.observation_spaces_dict.items():
+            step_observation = obs_space.sample()
+            tmp_out = self._policy_composer.policy.compute_substep_policy_output(
+                step_observation, actor_id=ActorID(step_key, 0))
+            if tmp_out.embedding_logits is not None:
+                new_observation_space = dict()
+                critic_input = StateCritic.build_step_critic_input(tmp_out, step_observation)
+                for in_key, in_value in critic_input.logits.items():
+                    if in_key in critic_input_spaces_dict[step_key]:
+                        new_observation_space[in_key] = critic_input_spaces_dict[step_key][in_key]
+                    else:
+                        new_observation_space[in_key] = spaces.Box(low=np.finfo(np.float32).min,
+                                                                   high=np.finfo(np.float32).max,
+                                                                   shape=in_value.shape, dtype=np.float32)
+                critic_input_spaces_dict[step_key] = spaces.Dict(new_observation_space)
+        return critic_input_spaces_dict
 
     @property
     @override(BaseModelComposer)

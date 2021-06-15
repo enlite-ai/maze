@@ -9,6 +9,9 @@ from maze.train.trainers.common.config_classes import AlgorithmConfig
 class ImpalaAlgorithmConfig(AlgorithmConfig):
     """Algorithm parameters for Impala."""
 
+    n_epochs: int
+    """number of epochs to train"""
+
     epoch_length: int
     """number of updates per epoch"""
 
@@ -18,6 +21,36 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
     eval_repeats: int
     """number of evaluation trials"""
 
+    patience: int
+    """number of steps used for early stopping"""
+
+    critic_burn_in_epochs: int
+    """Number of critic (value function) burn in epochs"""
+
+    n_rollout_steps: int
+    """Number of steps taken for each rollout"""
+
+    lr: float
+    """learning rate"""
+
+    gamma: float
+    """discounting factor"""
+
+    policy_loss_coef: float
+    """weight of policy loss"""
+
+    value_loss_coef: float
+    """weight of value loss"""
+
+    entropy_coef: float
+    """weight of entropy loss"""
+
+    max_grad_norm: float
+    """The maximum allowed gradient norm during training"""
+
+    device: str
+    """Either "cpu" or "cuda" """
+
     eval_concurrency: int
     """Number of concurrently executed evaluation environments."""
 
@@ -26,35 +59,11 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
        the agents output collected by the learner. Therefor if the all rollouts computed can be at most
        (queue_out_of_sync_factor + num_agents/actor_batch_size) out of sync with learner policy"""
 
-    patience: int
-    """number of steps used for early stopping"""
-
-    n_rollout_steps: int = 50
-    """number of rolloutstep of each epoch substep"""
-
     actors_batch_size: int = 2
     """number of actors to combine to one batch"""
 
     num_actors: int = 2
     """number of actors to be run"""
-
-    lr: float = 0.0002
-    """learning rate"""
-
-    gamma: float = 0.98
-    """discount factor"""
-
-    policy_loss_coef: float = 1.0
-    """coefficient of the policy used in the loss calculation"""
-
-    value_loss_coef: float = 0.5
-    """coefficient of the value used in the loss calculation"""
-
-    entropy_coef: float = 0.00025
-    """coefficient of the entropy used in the loss calculation"""
-
-    max_grad_norm: float = 0
-    """max grad norm for gradient clipping, ignored if value==0"""
 
     vtrace_clip_rho_threshold: float = 1.0
     r"""A scalar float32 tensor with the clipping threshold for importance weights
@@ -64,6 +73,3 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
     r"""A scalar float32 tensor with the clipping threshold on rho_s in
         \rho_s \delta log \pi(a|x) (r + \gamma v_{s+1} - V(x_sfrom_importance_weights)). If None, no clipping is
         applied."""
-
-    device: str = "cpu"
-    """Device of the learner (either cpu or cuda). Note that the actors collecting rollouts are always run on CPU."""

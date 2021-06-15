@@ -39,7 +39,7 @@ def _algorithm_config():
         eval_repeats=1,
         eval_concurrency=1,
         queue_out_of_sync_factor=2,
-        patience=None,
+        patience=15,
         n_rollout_steps=20,
         lr=0.0005,
         gamma=0.98,
@@ -52,17 +52,15 @@ def _algorithm_config():
         vtrace_clip_rho_threshold=1,
         num_actors=1,
         actors_batch_size=5,
-        reward_clipping='abs_one')
+        critic_burn_in_epochs=0)
 
 
 def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> MultiStepIMPALA:
-    impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()), rollout_actors=train_actors,
+    impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()), rollout_generator=train_actors,
                              eval_env=SequentialVectorEnv([_env_factory], logging_prefix="eval"),
-                             options=algorithm_config)
+                             algorithm_config=algorithm_config, model_selection=None)
 
-    impala.train(n_epochs=algorithm_config.n_epochs, epoch_length=algorithm_config.epoch_length,
-                 deterministic_eval=algorithm_config.deterministic_eval,
-                 eval_repeats=algorithm_config.eval_repeats, patience=None, model_selection=None)
+    impala.train(n_epochs=algorithm_config.n_epochs)
 
     return impala
 

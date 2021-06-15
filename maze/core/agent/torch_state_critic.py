@@ -1,6 +1,6 @@
 """Encapsulation of multiple torch state critics for training in structured environments."""
 from abc import abstractmethod
-from typing import Mapping, Union, List, Dict, Tuple, Optional
+from typing import Mapping, Union, List, Dict
 
 import torch
 from torch import nn
@@ -9,8 +9,6 @@ from maze.core.agent.state_critic import StateCritic, CriticOutput, CriticStepOu
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import StepKeyType
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.perception.perception_utils import convert_to_torch, flatten_spaces, stack_and_flatten_spaces
 
 
@@ -23,11 +21,9 @@ class TorchStateCritic(TorchModel, StateCritic):
     :param shared_embedding: Specify whether the critic shares the embedding with the policy.
     """
 
-    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str,
-                 shared_embedding: Dict[StepKeyType, bool]):
+    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str):
         self.networks = networks
         self.num_policies = num_policies
-        self.shared_embedding = shared_embedding
         TorchModel.__init__(self, device=device)
 
     @override(StateCritic)
@@ -186,26 +182,25 @@ class TorchSharedStateCritic(TorchStateCritic):
                  networks: Mapping[Union[str, int], nn.Module],
                  num_policies: int,
                  device: str,
-                 stack_observations: bool,
-                 shared_embedding: Dict[str, bool]):
-        super().__init__(networks=networks, num_policies=num_policies, device=device, shared_embedding=shared_embedding)
-        assert all(not shared for shared in shared_embedding.values())
+                 stack_observations: bool):
+        super().__init__(networks=networks, num_policies=num_policies, device=device)
         self.stack_observations = stack_observations
         self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
 
     @override(StateCritic)
-    def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+    def predict_values(self, critic_input: CriticInput) -> CriticOutput:
         """Predict the shared values and repeat them for each sub-step."""
         if self.stack_observations:
-            flattened_obs_t = stack_and_flatten_spaces(record.observations, dim=1)
+            flattened_obs_t = stack_and_flatten_spaces(critic_input.logtis, dim=1)
         else:
-            flattened_obs_t = flatten_spaces(record.observations)
+            flattened_obs_t = flatten_spaces(critic_input.logtis)
 
         value = self.network(flattened_obs_t)["value"][..., 0]
-        values = [value for _ in record.substep_records]
-        detached_values = [value.detach() for _ in record.substep_records]
+        critic_output = CriticOutput()
+        for actor_id in critic_input.actor_ids:
+            critic_output.append(CriticStepOutput(values=value, detached_values=value.detach(), actor_id=actor_id))
 
-        return values, detached_values
+        return critic_output
 
     @override(StateCritic)
     def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> torch.Tensor:
@@ -254,9 +249,10 @@ class TorchStepStateCritic(TorchStateCritic):
         :return: Tuple containing lists of values and detached values for individual sub-steps.
         """
         critic_output = CriticOutput()
-        for actor_id, value in critic_input:
-            value = self.networks[actor_id.step_key](value)["value"][..., 0]
-            critic_output.append(CriticStepOutput(values=value, detached_values=value.detach(), actor_id=actor_id))
+        for critic_step_input in critic_input:
+            value = self.networks[critic_step_input.actor_id.step_key](critic_step_input.logits)["value"][..., 0]
+            critic_output.append(CriticStepOutput(values=value, detached_values=value.detach(),
+                                                  actor_id=critic_step_input.actor_id))
 
         return critic_output
 
@@ -292,27 +288,29 @@ class TorchDeltaStateCritic(TorchStateCritic):
     """
 
     @override(StateCritic)
-    def predict_values(self, record: StructuredSpacesRecord) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+    def predict_values(self, critic_input: CriticInput) -> CriticOutput:
         """implementation of :class:`~maze.core.agent.state_critic.StateCritic`"""
 
+        critic_output = CriticOutput()
         # predict values for the first state
-        key_0 = record.substep_keys[0]
-        values = [self.networks[key_0](record.observations[0])["value"][..., 0]]
-        detached_values = [values[0].detach()]
+        key_0 = critic_input[0].actor_id.step_key
+        value_0 = self.networks[key_0](critic_input[0].logits)["value"][..., 0]
+        critic_output.append(CriticStepOutput(value_0, detached_values=value_0.detach(),
+                                              actor_id=critic_input[0].actor_id))
 
-        for substep_record in record.substep_records[1:]:
+        for step_critic_input in critic_input.substep_inputs[1:]:
             # compute value 2 as delta of value 1
-            prev_values = detached_values[-1]
-            obs = substep_record.observation.copy()
+            prev_values = critic_output.detached_values[-1]
+            obs = step_critic_input.logits.copy()
             obs['prev_value'] = prev_values.unsqueeze(-1)
 
-            value_delta = self.networks[substep_record.substep_key](obs)["value"][..., 0]
-            next_values = detached_values[-1] + value_delta
+            value_delta = self.networks[step_critic_input.actor_id.step_key](obs)["value"][..., 0]
+            next_values = critic_output.detached_values[-1] + value_delta
 
-            values.append(next_values)
-            detached_values.append(next_values.detach())
+            critic_output.append(CriticStepOutput(next_values, detached_values=next_values.detach(),
+                                                  actor_id=step_critic_input.actor_id))
 
-        return values, detached_values
+        return critic_output
 
     @override(StateCritic)
     def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> torch.Tensor:

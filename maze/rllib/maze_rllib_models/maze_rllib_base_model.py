@@ -40,6 +40,10 @@ class MazeRLlibBaseModel(ABC):
 
         assert model_config.get('vf_share_layers') is False, 'vf_share_layer not implemented for maze models'
 
+        assert maze_model_composer_config.get('shared_embedding_keys', None) is None, 'Shared embedding with maze ' \
+                                                                                      'models is not supported for ' \
+                                                                                      'rllib trainers'
+
         # Initialize model composer
         self.model_composer = Factory(BaseModelComposer).instantiate(
             maze_model_composer_config,

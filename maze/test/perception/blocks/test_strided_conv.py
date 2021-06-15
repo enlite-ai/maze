@@ -14,7 +14,7 @@ def test_strided_convolution_block_2d():
                                                            in_shapes=(3, 64, 64), hidden_channels=[4, 8, 16],
                                                            hidden_strides=[2, 2, 1], hidden_kernels=[3, 3, 5],
                                                            non_lin=nn.ReLU, convolution_dimension=2,
-                                                           hidden_dilations=None, hidden_padding=None,
+                                                           hidden_dilations=None, hidden_padding=[1,1,1],
                                                            padding_mode='reflect')
     str(net)
     out_dict = net(in_dict)

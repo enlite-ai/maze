@@ -34,7 +34,6 @@ class TorchActorCritic(TorchModel):
 
         self.policy = policy
         self.critic = critic
-        self._shared_embedding = self.critic.shared_embedding
 
         TorchModel.__init__(self, device=device)
 
@@ -88,27 +87,6 @@ class TorchActorCritic(TorchModel):
         self.policy.load_state_dict(state_dict)
         self.critic.load_state_dict(state_dict)
 
-    @staticmethod
-    def build_critic_input(policy_output: PolicyOutput, record: StructuredSpacesRecord) -> CriticInput:
-        """Build the critic input from the policy outputs and the spaces record (policy input).
-
-        This method is responsible for building a List that hold the appropriate input for each critic w.r.t. the
-        substep and the shared-embedding-keys.
-
-        :param policy_output: The full policy output.
-        :param record: The structured spaces record used to compute the policy output.
-        :return: A Critic input.
-        """
-        critic_input = list()
-        for idx, substep_record in enumerate(record.substep_records):
-            assert substep_record.actor_id == policy_output[idx].actor_id
-            if policy_output[idx].embedding_logits is not None:
-                critic_input.append((substep_record.actor_id, policy_output[idx].embedding_logits))
-            else:
-                critic_input.append((substep_record.actor_id, substep_record.observation))
-
-        return critic_input
-
     def compute_actor_critic_output(self, record: StructuredSpacesRecord, temperature: float = 1.0) -> \
             Tuple[PolicyOutput, CriticOutput]:
         """One method to compute the policy and critic output in one go, managing the substeps, individual critic types
@@ -120,7 +98,7 @@ class TorchActorCritic(TorchModel):
         :returns: A tuple of the policy and critic output.
         """
         policy_output = self.policy.compute_policy_output(record, temperature=temperature)
-        critic_input = self.build_critic_input(policy_output, record)
+        critic_input = self.critic.build_critic_input(policy_output, record)
 
         critic_output = self.critic.predict_values(critic_input)
         return policy_output, critic_output

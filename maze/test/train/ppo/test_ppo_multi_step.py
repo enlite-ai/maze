@@ -5,6 +5,7 @@ import torch.nn as nn
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
@@ -63,7 +64,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
                                       stack_observations=False),
         device=algorithm_config.device)
 
-    ppo = PPO(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,
+    ppo = PPO(rollout_generator=RolloutGenerator(envs), algorithm_config=algorithm_config, eval_env=eval_env, model=model,
               model_selection=None)
 
     # train agent

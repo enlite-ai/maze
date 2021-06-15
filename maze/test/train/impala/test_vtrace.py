@@ -101,7 +101,6 @@ def _log_probs_from_logits_and_actions(batch_size):
 
     action_log_probs_tensor, _ = impala_vtrace.log_probs_from_logits_and_actions_and_spaces(
         policy_logits=[{'action1': policy_logits}], actions=[{'action1': actions}],
-        action_spaces={0: gym.spaces.Dict({'action1': action_space})},
         distribution_mapper=distribution_mapper)
     action_log_probs_tensor = action_log_probs_tensor[0]['action1']
     # Ground Truth
@@ -195,12 +194,11 @@ def _vtrace_from_logits(batch_size):
             [convert_to_torch(_shaped_arange(seq_len, batch_size) / batch_size, device=None, cast=None,
                               in_place='try')],
         'bootstrap_value':
-            [convert_to_torch(_shaped_arange(batch_size) + 1.0, device=None, cast=None, in_place='try')],  # B
-        'action_spaces': {0: gym.spaces.Dict({'action1': gym.spaces.Discrete(num_actions)})},
+            [convert_to_torch(_shaped_arange(batch_size) + 1.0, device=None, cast=None, in_place='try')],
     }
-
+    action_space = {0: gym.spaces.Dict({'action1': gym.spaces.Discrete(num_actions)})}
     # initialize distribution mapper
-    distribution_mapper = DistributionMapper(action_space=values["action_spaces"][0], distribution_mapper_config={})
+    distribution_mapper = DistributionMapper(action_space=action_space[0], distribution_mapper_config={})
 
     from_logits_output = impala_vtrace.from_logits(
         clip_rho_threshold=clip_rho_threshold,
@@ -210,10 +208,10 @@ def _vtrace_from_logits(batch_size):
 
     target_log_probs, _ = impala_vtrace.log_probs_from_logits_and_actions_and_spaces(
         values['target_policy_logits'], values['actions'],
-        action_spaces=values['action_spaces'], distribution_mapper=distribution_mapper)
+        distribution_mapper=distribution_mapper)
     behaviour_log_probs, _ = impala_vtrace.log_probs_from_logits_and_actions_and_spaces(
         values['behaviour_policy_logits'], values['actions'],
-        action_spaces=values['action_spaces'], distribution_mapper=distribution_mapper)
+        distribution_mapper=distribution_mapper)
     log_rhos = impala_vtrace.get_log_rhos(target_log_probs, behaviour_log_probs)
     ground_truth_log_rhos, ground_truth_behaviour_action_log_probs, ground_truth_target_action_log_probs = \
         log_rhos, behaviour_log_probs, target_log_probs

@@ -48,7 +48,7 @@ class BCLoss:
         # Iterate over all substeps
         for substep_key, observation in observation_dict.items():
             target = action_dict[substep_key]
-            logits = policy.compute_logits_dict(observation, actor_id=ActorID(substep_key, 0))
+            logits = policy.compute_substep_policy_output(observation, actor_id=ActorID(substep_key, 0)).action_logits
             substep_losses = self._get_substep_loss(substep_key, logits, target, self.action_spaces_dict[substep_key],
                                                     events=events)
             losses.append(substep_losses)
