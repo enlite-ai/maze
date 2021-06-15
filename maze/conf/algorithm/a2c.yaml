@@ -27,9 +27,6 @@ lr: 0.0005
 # discounting factor
 gamma: 0.98
 
-# bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
-gae_lambda: 1.0
-
 # weight of policy loss
 policy_loss_coef: 1.0
 
@@ -44,3 +41,6 @@ max_grad_norm: 0.0
 
 # Either "cpu" or "cuda"
 device: cpu
+
+# bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
+gae_lambda: 1.0

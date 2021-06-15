@@ -1,17 +1,19 @@
 """General interface for performing and recording policy rollouts during training."""
 
-from typing import Union, Optional, Any
+from typing import Union, Optional, Any, Callable
 
 import numpy as np
+import torch
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.maze_env import MazeEnv
-from maze.core.log_stats.log_stats import LogStatsLevel
+from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
+from maze.perception.perception_utils import convert_to_numpy
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 
 
@@ -53,6 +55,25 @@ class RolloutGenerator:
         self.last_observation = None  # Keep last observations and do not reset envs between rollouts
 
         self.rollout_counter = 0  # For generating trajectory IDs if none are supplied
+
+    def get_epoch_stats_aggregator(self) -> LogStatsAggregator:
+        """Return the collected epoch stats aggregator"""
+        return self.env.get_stats(LogStatsLevel.EPOCH)
+
+    def get_stats_value(self,
+                        event: Callable,
+                        level: LogStatsLevel,
+                        name: Optional[str] = None) -> LogStatsValue:
+        """Obtain a single value from the epoch statistics dict.
+
+        :param event: The event interface method of the value in question.
+        :param name: The *output_name* of the statistics in case it has been specified in
+                     :func:`maze.core.log_stats.event_decorators.define_epoch_stats`
+        :param level: Must be set to `LogStatsLevel.EPOCH`, step or episode statistics are not propagated.
+        """
+        assert level == LogStatsLevel.EPOCH
+
+        return self.env.get_stats_value(event, level, name)
 
     def rollout(self, policy: Policy, n_steps: Optional[int], trajectory_id: Optional[Any] = None) \
             -> SpacesTrajectoryRecord:
@@ -133,9 +154,11 @@ class RolloutGenerator:
         # Sample action and record logits if configured
         # Note: Copy the observation (as by default, the policy converts and handles it in place)
         if self.record_logits:
-            action, logits = policy.compute_action_with_logits(self.last_observation.copy(), actor_id=record.actor_id,
-                                                               deterministic=False)
-            record.logits = logits
+            with torch.no_grad():
+                step_policy_output = policy.compute_substep_policy_output(self.last_observation.copy(),
+                                                                          actor_id=record.actor_id)
+                action = convert_to_numpy(step_policy_output.prob_dist.sample(), cast=None, in_place=False)
+                record.logits = step_policy_output.action_logits
         else:
             # Inject the MazeEnv state if desired by the policy
             maze_state = self.env.get_maze_state() if policy.needs_state() else None

@@ -1,7 +1,7 @@
 # @package model
 _target_: maze.perception.models.template_model_composer.TemplateModelComposer
 
-shared_embedding_keys: ['latent']
+shared_embedding_keys: ['concat']
 
 distribution_mapper_config:
     - action_space: gym.spaces.Box

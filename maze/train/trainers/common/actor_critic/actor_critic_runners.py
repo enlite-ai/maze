@@ -9,6 +9,7 @@ from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.utils.factory import Factory
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
@@ -65,7 +66,7 @@ class ACRunner(TrainingRunner):
         # initialize trainer (from input directory)
         self._trainer = trainer_class(
             algorithm_config=cfg.algorithm,
-            env=envs,
+            rollout_generator=RolloutGenerator(env=envs),
             eval_env=eval_env,
             model=model,
             model_selection=self._model_selection,

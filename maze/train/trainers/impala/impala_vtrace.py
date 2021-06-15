@@ -34,8 +34,11 @@ from typing import List, Dict, Tuple, Union, Mapping
 import gym
 import torch
 
+from maze.core.env.action_conversion import TorchActionType
+from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution import ProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
+from maze.distributions.torch_dist import TorchProbabilityDistribution
 from maze.perception.perception_utils import convert_to_torch
 
 VTraceFromLogitsReturns = collections.namedtuple(
@@ -47,12 +50,10 @@ VTraceReturns = collections.namedtuple("VTraceReturns", "vs pg_advantages")
 
 
 def log_probs_from_logits_and_actions_and_spaces(
-        policy_logits: Mapping[Union[str, int], Dict[str, torch.Tensor]],
-        actions: Mapping[Union[str, int], Dict[str, torch.Tensor]],
-        action_spaces: Mapping[Union[str, int], gym.spaces.Space],
+        policy_logits: List[TorchActionType],
+        actions: List[TorchActionType],
         distribution_mapper: DistributionMapper) \
-        -> Tuple[Union[Dict[Union[int, str], Dict[str, torch.Tensor]], torch.Tensor],
-                 Dict[Union[str, int], ProbabilityDistribution]]:
+        -> Tuple[List[TorchActionType], List[DictProbabilityDistribution]]:
     """Computes action log-probs from policy logits, actions and acton_spaces.
 
     In the notation used throughout documentation and comments, T refers to the
@@ -63,7 +64,6 @@ def log_probs_from_logits_and_actions_and_spaces(
         of un-normalized log-probabilities (shape list[dict[str,[T, B, NUM_ACTIONS]]])
     :param actions: An list (w.r.t. the substeps of the env) of dicts (w.r.t. the actions) of tensors
         (list[dict[str,[T, B]]])
-    :param action_spaces: A list (w.r.t. the substeps of the env) of the action spaces
     :param distribution_mapper: A distribution mapper providing a mapping of action heads to distributions.
 
     :return: A list (w.r.t. the substeps of the env) of dicts (w.r.t. the actions) of tensors of shape [T, B]
@@ -71,25 +71,24 @@ def log_probs_from_logits_and_actions_and_spaces(
         And a list (w.r.t. the substeps of the env) of DictProbability distributions corresponding to the step-action-
         distributions.
     """
-    log_probs = {}
-    step_action_dists = {}
-    for step_key, action_spaces_dict in action_spaces.items():
-        step_action_dist = distribution_mapper.logits_dict_to_distribution(logits_dict=policy_logits[step_key],
+    log_probs = list()
+    step_action_dists = list()
+    for step_policy_logits, step_actions in zip(policy_logits, actions):
+        step_action_dist = distribution_mapper.logits_dict_to_distribution(logits_dict=step_policy_logits,
                                                                            temperature=1.0)
-        log_probs[step_key] = step_action_dist.log_prob(actions[step_key])
-        step_action_dists[step_key] = step_action_dist
+        log_probs.append(step_action_dist.log_prob(step_actions))
+        step_action_dists.append(step_action_dist)
     return log_probs, step_action_dists
 
 
-def from_logits(behaviour_policy_logits: Mapping[Union[str, int], Dict[str, torch.Tensor]],
-                target_policy_logits: Mapping[Union[str, int], Dict[str, torch.Tensor]],
-                actions: Mapping[Union[str, int], Dict[str, torch.Tensor]],
-                action_spaces: Mapping[Union[str, int], gym.spaces.Space],
+def from_logits(behaviour_policy_logits: List[TorchActionType],
+                target_policy_logits: List[TorchActionType],
+                actions: List[TorchActionType],
                 distribution_mapper: DistributionMapper,
                 discounts: torch.Tensor,
                 rewards: torch.Tensor,
-                values: Mapping[Union[str, int], torch.Tensor],
-                bootstrap_value: Mapping[Union[str, int], torch.Tensor],
+                values: List[torch.Tensor],
+                bootstrap_value: List[torch.Tensor],
                 clip_rho_threshold: Union[float, None],
                 clip_pg_rho_threshold: Union[float, None],
                 device: Union[str, None]) -> VTraceFromLogitsReturns:
@@ -116,7 +115,6 @@ def from_logits(behaviour_policy_logits: Mapping[Union[str, int], Dict[str, torc
                                  of un-normalized log-probabilities (shape list[dict[str,[T, B, NUM_ACTIONS]]])
     :param actions: An list (w.r.t. the substeps of the env) of dicts (w.r.t. the actions) with actions sampled from
                     the behavior policy. (list[dict[str,[T, B]]])
-    :param action_spaces: A list (w.r.t. the substeps of the env) of the action spaces
     :param distribution_mapper: A distribution mapper providing a mapping of action heads to distributions.
     :param discounts: A float32 tensor of shape [T, B] with the discount encountered when following the behavior policy.
     :param rewards: A float32 tensor of shape [T, B] with the rewards generated by following the behavior policy.
@@ -146,26 +144,25 @@ def from_logits(behaviour_policy_logits: Mapping[Union[str, int], Dict[str, torc
     """
 
     behaviour_action_log_probs, _ = \
-        log_probs_from_logits_and_actions_and_spaces(behaviour_policy_logits, actions, action_spaces,
-                                                     distribution_mapper)
+        log_probs_from_logits_and_actions_and_spaces(behaviour_policy_logits, actions, distribution_mapper)
     target_action_log_probs, target_step_action_dists = \
-        log_probs_from_logits_and_actions_and_spaces(target_policy_logits, actions, action_spaces, distribution_mapper)
+        log_probs_from_logits_and_actions_and_spaces(target_policy_logits, actions, distribution_mapper)
 
     log_rhos = get_log_rhos(target_action_log_probs=target_action_log_probs,
                             behaviour_action_log_probs=behaviour_action_log_probs)
-    vss = dict()
-    pg_advantagess = dict()
-    for step_key in action_spaces.keys():
+    vss = list()
+    pg_advantagess = list()
+    for step_log_rhos, step_values, step_bootstrap_values in zip(log_rhos, values, bootstrap_value):
         vs, pg_advantages = from_importance_weights(
-            log_rhos=log_rhos[step_key],
+            log_rhos=step_log_rhos,
             discounts=discounts,
             rewards=rewards,
-            values=values[step_key],
-            bootstrap_value=bootstrap_value[step_key],
+            values=step_values,
+            bootstrap_value=step_bootstrap_values,
             clip_rho_threshold=clip_rho_threshold,
             clip_pg_rho_threshold=clip_pg_rho_threshold)
-        vss[step_key] = vs.to(device) if device is not None else vs
-        pg_advantagess[step_key] = pg_advantages.to(device) if device is not None else pg_advantages
+        vss.append(vs.to(device) if device is not None else vs)
+        pg_advantagess.append(pg_advantages.to(device) if device is not None else pg_advantages)
 
     return VTraceFromLogitsReturns(
         log_rhos=log_rhos,
@@ -265,9 +262,9 @@ def from_importance_weights(log_rhos: torch.Tensor,
     return VTraceReturns(vs=vs.detach(), pg_advantages=pg_advantages.detach())
 
 
-def get_log_rhos(target_action_log_probs: Mapping[Union[str, int], Dict[str, torch.Tensor]],
-                 behaviour_action_log_probs: Mapping[Union[str, int], Dict[str, torch.Tensor]]) \
-        -> Mapping[Union[str, int], torch.Tensor]:
+def get_log_rhos(target_action_log_probs: List[TorchActionType],
+                 behaviour_action_log_probs: List[TorchActionType]) \
+        -> List[torch.Tensor]:
     """With the selected log_probs for multi-discrete actions of behavior
     and target policies we compute the log_rhos for calculating the vtrace.
 
@@ -278,16 +275,15 @@ def get_log_rhos(target_action_log_probs: Mapping[Union[str, int], Dict[str, tor
 
     :return: a list (w.r.t. the substeps of the env) of tensors, where each tensor is of the shape [T,B]
     """
-    log_rhos = dict()
+    log_rhos = list()
+    # TODO: Consider doing this for each individual action
     with torch.no_grad():
-        for step_key in target_action_log_probs.keys():
-            step_target_action_log_probs = target_action_log_probs[step_key]
-            step_behaviour_action_log_probs = behaviour_action_log_probs[step_key]
+        for step_target_action_log_probs, step_behaviour_action_log_probs in zip(target_action_log_probs,
+                                                                                 behaviour_action_log_probs):
 
-            step_target_action_log_probs_tensor = torch.stack(list(step_target_action_log_probs.values()))
-            step_behaviour_action_log_probs_tensor = torch.stack(list(step_behaviour_action_log_probs.values()))
+            target = torch.stack(list(step_target_action_log_probs.values()))
+            behaviour = torch.stack(list(step_behaviour_action_log_probs.values()))
 
-            diff = step_target_action_log_probs_tensor - step_behaviour_action_log_probs_tensor
-            step_log_rhos = torch.sum(diff, dim=0)
-            log_rhos[step_key] = step_log_rhos
+            step_log_rhos = torch.sum(target - behaviour, dim=0)
+            log_rhos.append(step_log_rhos)
     return log_rhos
