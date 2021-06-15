@@ -48,8 +48,9 @@ def build_default_cartpole_model(gym_env: str, maze_rllib_model_cls: Union[type(
             },
             'hidden': {},
             'recurrence': {}
-        }
+        },
     }
+    model_composer_config['shared_embedding_keys'] = None
     model_composer_config['policy'] = {'_target_': 'maze.perception.models.policies.ProbabilisticPolicyComposer'}
     model_composer_config['critic'] = {'_target_': 'maze.perception.models.critics.StateCriticComposer'} \
         if add_critic else None

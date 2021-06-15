@@ -4,6 +4,7 @@ import torch.nn as nn
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
+from maze.core.rollout.rollout_generator import RolloutGenerator
 
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
@@ -60,7 +61,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> A2C:
                                       stack_observations=False),
         device=algorithm_config.device)
 
-    a2c = A2C(env=envs, algorithm_config=algorithm_config, eval_env=eval_env, model=model,
+    a2c = A2C(rollout_generator=RolloutGenerator(envs), algorithm_config=algorithm_config, eval_env=eval_env, model=model,
               model_selection=None)
 
     # train agent

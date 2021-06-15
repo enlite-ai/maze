@@ -2,9 +2,10 @@
 encapsulating the set of policy and critic networks along with the distribution mapper."""
 import os
 from abc import abstractmethod, ABC
-from typing import Dict, Optional
+from typing import Dict, Optional, Union, List
 
 import gym
+from omegaconf import ListConfig, DictConfig
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchStateCritic

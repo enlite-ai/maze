@@ -1,8 +1,6 @@
 # @package model
 _target_: maze.perception.models.custom_model_composer.CustomModelComposer
 
-shared_embedding: true
-
 distribution_mapper_config:
   - action_space: gym.spaces.Box
     distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
@@ -10,7 +8,7 @@ distribution_mapper_config:
 policy:
   _target_: maze.perception.models.policies.ProbabilisticPolicyComposer
   networks:
-    - _target_: maze.perception.models.built_in.flatten_concat_shared.FlattenConcatPolicyNet
+    - _target_: maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatPolicyNet
       non_lin: torch.nn.Tanh
       hidden_units: [ 256 ]
       head_units: [ 256 ]
@@ -19,6 +17,6 @@ policy:
 critic:
   _target_: maze.perception.models.critics.SharedStateCriticComposer
   networks:
-    - _target_: maze.perception.models.built_in.flatten_concat_shared.FlattenConcatStateValueNet
+    - _target_: maze.perception.models.built_in.flatten_concat_shared_shared_embedding.FlattenConcatStateValueNet
       non_lin: torch.nn.Tanh
       head_units: [ 256 ]

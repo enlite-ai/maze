@@ -1,8 +1,10 @@
 """ Contains unit tests for custom model composers. """
 import os
 
+from maze.core.agent.random_policy import RandomPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic, \
     TorchDeltaStateCritic, TorchStepStateCritic
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.critics import DeltaStateCriticComposer
 from maze.perception.models.custom_model_composer import CustomModelComposer
@@ -35,8 +37,7 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=None,
-                                   shared_embedding=False)
+                                   critic=None)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert composer.critic is None
@@ -57,8 +58,7 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=shared_critic,
-                                   shared_embedding=False)
+                                   critic=shared_critic)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchSharedStateCritic)
@@ -84,8 +84,7 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=step_critic,
-                                   shared_embedding=False)
+                                   critic=step_critic)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchDeltaStateCritic)
@@ -110,8 +109,7 @@ def test_custom_model_composer():
              "non_lin": "torch.nn.SELU"},
             {"_target_": "maze.test.shared_test_utils.dummy_models.critic_model.DummyValueNet",
              "non_lin": "torch.nn.SELU"}
-        ],
-        'shared_embedding': 'false'
+        ]
     }
 
     # check if model config is fine
@@ -122,8 +120,7 @@ def test_custom_model_composer():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=step_critic,
-                                   shared_embedding=False)
+                                   critic=step_critic)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchStepStateCritic)
@@ -181,8 +178,7 @@ def test_custom_model_composer_with_shared_embedding():
                                    agent_counts_dict=env.agent_counts_dict,
                                    distribution_mapper_config=[],
                                    policy=policies,
-                                   critic=step_critic,
-                                   shared_embedding=True)
+                                   critic=step_critic)
 
     assert isinstance(composer.distribution_mapper, DistributionMapper)
     assert isinstance(composer.critic, TorchStepStateCritic)
@@ -200,3 +196,11 @@ def test_custom_model_composer_with_shared_embedding():
             os.remove(file_path)
     except ImportError as e:
         pass  # no output generated as pygraphviz is not installed.
+
+    rollout_generator = RolloutGenerator(env=env, record_next_observations=False)
+    policy = RandomPolicy(env.action_spaces_dict)
+    trajectory = rollout_generator.rollout(policy, n_steps=10).stack().to_torch(device='cpu')
+
+    policy_output = composer.policy.compute_policy_output(trajectory)
+    critic_input = composer.critic.build_critic_input(policy_output, trajectory)
+    critic_output = composer.critic.predict_values(critic_input)
