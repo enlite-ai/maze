@@ -115,26 +115,6 @@ class GymObservationConversion(ObservationConversionInterface):
         return observation_space
 
 
-class GymRewardAggregator(RewardAggregatorInterface):
-    """A dummy reward aggregation object simply repeating the environment's original reward.
-    """
-
-    @override(Subscriber)
-    def get_interfaces(self) -> List[Type[ABC]]:
-        """Nothing to do here
-        """
-
-    @classmethod
-    @override(RewardAggregatorInterface)
-    def to_scalar_reward(cls, reward: float) -> float:
-        """Nothing to do here for this env.
-
-        :param: reward: already a scalar reward
-        :return: the same scalar reward
-        """
-        return reward
-
-
 class GymRenderer(Renderer):
     """A Maze-style Gym renderer.
 
@@ -171,9 +151,6 @@ class GymCoreEnv(CoreEnv):
 
         # initialize renderer
         self.renderer = GymRenderer(env)
-
-        # initialize reward aggregator
-        self.reward_aggregator = GymRewardAggregator()
 
         # initialize the state
         self._maze_state: Optional[Dict] = None
