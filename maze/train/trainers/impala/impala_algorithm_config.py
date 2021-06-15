@@ -65,8 +65,5 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
         \rho_s \delta log \pi(a|x) (r + \gamma v_{s+1} - V(x_sfrom_importance_weights)). If None, no clipping is
         applied."""
 
-    reward_clipping: str = "abs_one"
-    """the type of reward clipping to be used, options 'abs_one', 'soft_asymmetric', 'None'"""
-
     device: str = "cpu"
     """Device of the learner (either cpu or cuda). Note that the actors collecting rollouts are always run on CPU."""

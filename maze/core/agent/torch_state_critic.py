@@ -5,7 +5,7 @@ from typing import Mapping, Union, List, Dict, Tuple, Optional
 import torch
 from torch import nn
 
-from maze.core.agent.state_critic import StateCritic, CriticOutput, CriticSubstepOutput, CriticInput
+from maze.core.agent.state_critic import StateCritic, CriticOutput, CriticStepOutput, CriticInput
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
@@ -103,39 +103,14 @@ class TorchStateCritic(TorchModel, StateCritic):
                 assert key in state_dict_critics, f"Could not find state dict for policy ID: {key}"
                 critic.load_state_dict(state_dict_critics[key])
 
-    # TODO: this method is also kind of obsolete now
-    def bootstrap_returns(self, record: StructuredSpacesRecord, gamma: float, gae_lambda: float,
-                          critic_output: CriticOutput) -> Dict[StepKeyType, torch.Tensor]:
-        """Bootstrap returns using the value function.
-
-        Useful for example to implement PPO or A2C.
-        Only synchronous environments supported.
-
-        :param record: Record of a structured step containing observations, rewards, and dones
-        :param gamma: Discounting factor
-        :param gae_lambda: Bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
-        :param critic_output: TODO
-        :return: Returns the computed structured returns
-        """
-        # take dones from the last sub-step -- there should not be any more sub-steps when the env is done
-        dones: torch.Tensor = record.dones[-1]
-
-        critic_output.reshape(dones.shape)
-
-        # compute returns
-        returns = self.compute_structured_return(gamma=gamma, gae_lambda=gae_lambda, rewards=record.rewards,
-                                                 values=critic_output.detached_values, dones=dones)
-
-        return returns
-
     @abstractmethod
     def compute_structured_return(self,
                                   gamma: float,
                                   gae_lambda: float,
                                   rewards: List[torch.Tensor],
-                                  values: Dict[StepKeyType, torch.Tensor],
+                                  values: List[torch.Tensor],
                                   dones: torch.Tensor,
-                                  ) -> Dict[StepKeyType, torch.Tensor]:
+                                  ) -> List[torch.Tensor]:
         """Compute bootstrapped return for the whole structured step (i.e., all sub-steps).
 
         :param gamma: Discounting factor
@@ -279,9 +254,9 @@ class TorchStepStateCritic(TorchStateCritic):
         :return: Tuple containing lists of values and detached values for individual sub-steps.
         """
         critic_output = CriticOutput()
-        for substep_key, value in critic_input.items():
-            value = self.networks[substep_key](value)["value"][..., 0]
-            critic_output[substep_key] = CriticSubstepOutput(value, value.detach())
+        for actor_id, value in critic_input:
+            value = self.networks[actor_id.step_key](value)["value"][..., 0]
+            critic_output.append(CriticStepOutput(values=value, detached_values=value.detach(), actor_id=actor_id))
 
         return critic_output
 
@@ -296,17 +271,16 @@ class TorchStepStateCritic(TorchStateCritic):
     def compute_structured_return(self,
                                   gamma: float,
                                   gae_lambda: float,
-                                  rewards: Dict[StepKeyType, torch.Tensor],
-                                  values: Dict[StepKeyType, torch.Tensor],
+                                  rewards: List[torch.Tensor],
+                                  values: List[torch.Tensor],
                                   dones: torch.Tensor,
-                                  ) -> Dict[StepKeyType, torch.Tensor]:
+                                  ) -> List[torch.Tensor]:
         """Compute returns for each sub-step separately"""
-        returns = dict()
-        for substep_key in values.keys():
+        returns = []
+        for substep_rewards, substep_values in zip(rewards, values):
             sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                                  rewards=rewards[substep_key],
-                                                  values=values[substep_key], dones=dones)
-            returns[substep_key] = sub_step_return
+                                                  rewards=substep_rewards, values=substep_values, dones=dones)
+            returns.append(sub_step_return)
 
         return returns
 

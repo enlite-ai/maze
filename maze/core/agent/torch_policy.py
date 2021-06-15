@@ -29,65 +29,72 @@ class PolicySubStepOutput:
     prob_dist: DictProbabilityDistribution
     """The respective instance of a DictProbabilityDistribution."""
 
-    # TODO
-    deterministic: bool
-    """ : """
-
     embedding_logits: Optional[Dict[str, torch.Tensor]]
     """The Embedding output if applicable, used as the input for the critic network."""
+
+    actor_id: ActorID
+    """The actor id of the output"""
 
     @property
     def entropy(self) -> torch.Tensor:
         """The entropy of the probability distribution."""
         return self.prob_dist.entropy()
 
-    # @property
-    # def sampled_actions(self) -> Dict[str, torch.Tensor]:
-    #     """The samples actions for the computed logits w.r.t. the distribution, temperature and determinism."""
-    #     if self.deterministic:
-    #         return self.prob_dist.deterministic_sample()
-    #     else:
-    #         return self.prob_dist.sample()
-
-    # def compute_action_log_porbs(self, sampled_actions: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-    #     return self.prob_dist.log_prob(sampled_actions)
-
 
 class PolicyOutput:
-    """TODO:"""
+    """A structured representation of a policy output over a full (flat) environment step."""
+
     def __init__(self):
-        self._step_policy_outputs: Dict[StepKeyType, PolicySubStepOutput] = dict()
+        self._step_policy_outputs: List[PolicySubStepOutput] = list()
 
-    def __setitem__(self, key: StepKeyType, value: PolicySubStepOutput):
-        """ Set self[key] to value. """
-        self._step_policy_outputs[key] = value
+    def __getitem__(self, item: int) -> PolicySubStepOutput:
+        """Get a specified (by index) substep output"""
+        return self._step_policy_outputs[item]
 
-    def keys(self):
-        return self._step_policy_outputs.keys()
+    def append(self, value: PolicySubStepOutput):
+        """Append a given PolicySubStepOutput."""
+        self._step_policy_outputs.append(value)
 
-    @property
-    def action_logits(self):
-        return {step_key: self._step_policy_outputs[step_key].action_logits for step_key in self.keys()}
-
-    @property
-    def prob_dist(self):
-        return {step_key: self._step_policy_outputs[step_key].prob_dist for step_key in self.keys()}
+    def actor_ids(self) -> List[ActorID]:
+        """List of actor IDs for the individual sub-steps."""
+        return list(map(lambda x: x.actor_id, self._step_policy_outputs))
 
     @property
-    def entropy(self):
-        return {step_key: self._step_policy_outputs[step_key].entropy for step_key in self.keys()}
+    def action_logits(self) -> List[Dict[str, torch.Tensor]]:
+        """List of action logits for the individual sub-steps"""
+        return [po.action_logits for po in self._step_policy_outputs]
+
+    @property
+    def prob_dist(self) -> List[DictProbabilityDistribution]:
+        """List of probability dictionaries for the individual sub-steps"""
+        return [po.prob_dist for po in self._step_policy_outputs]
+
+    @property
+    def entropy(self) -> List[torch.Tensor]:
+        """List of entropys (of the probability distribution of the individual sub-steps."""
+        return [po.entropy for po in self._step_policy_outputs]
+
+    @property
+    def embedding_logits(self) -> List[Dict[str, torch.Tensor]]:
+        """List of embedding logits for the individual sub-steps"""
+        return [po.embedding_logits for po in self._step_policy_outputs]
 
     # @property
-    # def sampled_actions(self):
-    #     return {step_key: self._step_policy_outputs[step_key].sampled_actions for step_key in self.keys()}
+    # def action_logits_dict(self):
+    #     return {po.actor_id: po.action_logits for po in self._step_policy_outputs}
+    #
+    # @property
+    # def prob_dist_dict(self):
+    #     return {po.actor_id: po.prob_dist for po in self._step_policy_outputs}
+    #
+    # @property
+    # def entropy_dict(self):
+    #     return {po.actor_id: po.entropy for po in self._step_policy_outputs}
+    #
+    # @property
+    # def embedding_logits_dict(self):
+    #     return {po.actor_id: po.embedding_logits for po in self._step_policy_outputs}
 
-    @property
-    def embedding_logits(self):
-        return {step_key: self._step_policy_outputs[step_key].embedding_logits for step_key in self.keys()}
-
-    # def compute_action_log_probs(self, sampled_actions: Dict[StepKeyType, Dict[str, torch.Tensor]]):
-    #     return {step_key: self._step_policy_outputs[step_key].compute_action_log_porbs(sampled_actions[step_key]) for step_key
-    #             in self.keys()}
 
 class TorchPolicy(TorchModel, Policy):
     """Encapsulates multiple torch policies along with a distribution mapper for training and rollouts
@@ -304,7 +311,6 @@ class TorchPolicy(TorchModel, Policy):
         network_key = actor_id if actor_id.step_key in self.substeps_with_separate_agent_nets else actor_id.step_key
         return self.networks[network_key]
 
-
     # TODO: used by: torch policy, bc loss, rllib trainer, actorcritic trainer !!!! can be deleted
     def logits_dict_to_distribution(self, logits_dict: Dict[str, torch.Tensor], temperature: float = 1.0):
         """Helper function for creation of a dict probability distribution from the given logits dictionary.
@@ -320,21 +326,24 @@ class TorchPolicy(TorchModel, Policy):
     # METHODS TO KEEP
 
     @staticmethod
-    def sample_action_from_prob_dist(policy_output: PolicyOutput, deterministic: bool):
-        """TODO:"""
-        if deterministic:
-            return {kk: vv.deterministic_sample() for kk, vv in policy_output.prob_dist.items()}
-        else:
-            return {kk: vv.sample() for kk, vv in policy_output.prob_dist.items()}
-
-    @staticmethod
-    def compute_action_log_probs(policy_output: PolicyOutput, actions: Dict[StepKeyType, TorchActionType]):
-        """TODO"""
-        return {kk: vv.log_prob(actions[kk]) for kk, vv in policy_output.prob_dist.items()}
+    def compute_action_log_probs(policy_output: PolicyOutput, actions: List[TorchActionType]) -> List[TorchActionType]:
+        """Compute the action log probs for a given policy output and actions.
+        :param policy_output: The policy output to use the log_probs from.
+        :param actions: The actions to use.
+        :return: The computed action log probabilities.
+        """
+        assert len(policy_output.prob_dist) == len(actions)
+        return [pb.log_prob(ac) for pb, ac in zip(policy_output.prob_dist, actions)]
 
     def compute_substep_policy_output(self, observation: ObservationType, actor_id: ActorID = None,
-                                      temperature: float = 1.0, deterministic: bool = False) -> PolicySubStepOutput:
-        """TODO:"""
+                                      temperature: float = 1.0) -> PolicySubStepOutput:
+        """Compute the full output of a specified policy.
+
+        :param observation: The observation to use as input.
+        :param actor_id: Optional, the actor id specifying the network to use.
+        :param temperature: Optional, the temperature to use for initializing the probability distribution.
+        :return: The computed PolicySubStepOutput.
+        """
 
         # Convert the import to torch in-place
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
@@ -361,15 +370,18 @@ class TorchPolicy(TorchModel, Policy):
         prob_dist = self.distribution_mapper.logits_dict_to_distribution(action_logits, temperature)
 
         return PolicySubStepOutput(action_logits=action_logits, prob_dist=prob_dist, embedding_logits=embedding_logits,
-                                   deterministic=deterministic)
+                                   actor_id=actor_id)
 
-    def compute_policy_output(self, record: StructuredSpacesRecord, temperature: float = 1.0,
-                              deterministic: bool = False) -> PolicyOutput:
-        """TODO"""
+    def compute_policy_output(self, record: StructuredSpacesRecord, temperature: float = 1.0) -> PolicyOutput:
+        """Compute the full Policy output for all policy networks over a full (flat) environment step.
+
+        :param record: The StructuredSpacesRecord holding the observation and actor ids.
+        :param temperature: Optional, the temperature to use for initializing the probability distribution.
+        :return: The full Policy output for the record given.
+        """
 
         structured_policy_output = PolicyOutput()
         for substep_record in record.substep_records:
-            structured_policy_output[substep_record.substep_key] = self.compute_substep_policy_output(
-                substep_record.observation, actor_id=substep_record.actor_id, temperature=temperature,
-                deterministic=deterministic)
+            structured_policy_output.append(self.compute_substep_policy_output(
+                substep_record.observation, actor_id=substep_record.actor_id, temperature=temperature))
         return structured_policy_output

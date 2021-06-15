@@ -167,7 +167,7 @@ class StructuredSpacesRecord:
         return [r.action for r in self.substep_records]
 
     @property
-    def observations(self) -> List[ObservationType]:
+    def observations(self) -> List[Union[ObservationType, TorchObservationType]]:
         """List of observations from the individual sub-steps."""
         return [r.observation for r in self.substep_records]
 
@@ -207,7 +207,7 @@ class StructuredSpacesRecord:
         return {r.substep_key: r.observation for r in self.substep_records}
 
     @property
-    def rewards_dict(self) -> Dict[StepKeyType, Union[float, np.ndarray]]:
+    def rewards_dict(self) -> Dict[StepKeyType, Union[float, np.ndarray, torch.Tensor]]:
         """Dict of rewards from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.reward for r in self.substep_records}
 
@@ -223,7 +223,7 @@ class StructuredSpacesRecord:
         return {r.substep_key: r.next_observation for r in self.substep_records}
 
     @property
-    def logits_dict(self) -> Dict[StepKeyType, Dict[str, np.ndarray]]:
+    def logits_dict(self) -> Dict[StepKeyType, Dict[str, Union[torch.Tensor, np.ndarray]]]:
         """Dict of logits from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.logits for r in self.substep_records}
 

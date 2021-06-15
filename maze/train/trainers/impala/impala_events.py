@@ -11,60 +11,6 @@ from maze.core.log_stats.event_decorators import define_stats_grouping, define_e
 class MultiStepIMPALAEvents(ABC):
     """Events specific for the impala algorithm, in order to record and analyse it's behaviour in more detail"""
 
-    @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_key')
-    def policy_loss(self, step_key: Union[int, str], value: float):
-        """Record the policy loss
-
-        :param step_key: the step_key of the multi-step env
-        :param value: the value
-        """
-
-    @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_key')
-    def policy_grad_norm(self, step_key: Union[int, str], value: float):
-        """Record the gradient norm
-
-        :param step_key: the step_key of the multi-step env
-        :param value: the value
-        """
-
-    @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_key')
-    def policy_entropy(self, step_key: Union[int, str], value: float):
-        """Record the policy entropy
-
-        :param step_key: the step_key of the multi-step env
-        :param value: the value
-        """
-
-    @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('critic_key')
-    def critic_value(self, critic_key: Union[int, str], value: float):
-        """Record the critic value
-
-        :param critic_key: the key of the critic
-        :param value: the value
-        """
-
-    @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('critic_key')
-    def critic_value_loss(self, critic_key: [int, str], value: float):
-        """Record the critic value loss
-
-        :param critic_key: the key of the critic
-        :param value: the value
-        """
-
-    @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('critic_key')
-    def critic_grad_norm(self, critic_key: Union[int, str], value: float):
-        """Record the critic gradient norm
-
-        :param critic_key: the key of the critic
-        :param value: the value
-       """
-
     @define_epoch_stats(np.nanmean, input_name='time')
     @define_epoch_stats(np.nanmean, input_name='percent')
     def time_dequeuing_actors(self, time: float, percent: float):
