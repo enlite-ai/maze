@@ -17,23 +17,6 @@ from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.rendering.renderer import Renderer
 
 
-class ExternalCoreEnvRewardAggregator(RewardAggregatorInterface):
-    """Reward aggregator for summing up rewards that come as iterables from external env. Scalar rewards
-    are just passed through."""
-
-    @classmethod
-    def to_scalar_reward(cls, reward: Any) -> float:
-        """Sum up reward if iterable, otherwise just pass through."""
-        if isinstance(reward, Iterable):
-            return sum(reward)
-        else:
-            return reward
-
-    def get_interfaces(self) -> List[Type[ABC]]:
-        """No event interfaces required."""
-        return []
-
-
 class ExternalCoreEnv(CoreEnv):
     """Acts as a CoreEnv in the env stack in agent integration scenario.
 
@@ -70,7 +53,6 @@ class ExternalCoreEnv(CoreEnv):
 
         self.last_maze_state = None
         self.step_events: Optional[List[EventRecord]] = None
-        self.reward_aggregator = ExternalCoreEnvRewardAggregator()
 
         self._actor_id = (0, 0)
         self._is_actor_done = False
