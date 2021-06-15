@@ -4,14 +4,15 @@ Loads and post-processes runner configuration for RunContext.
 import dataclasses
 import os
 import sys
-from typing import Any, Optional, Mapping, Set, Dict, Sequence
+from typing import Any, Optional, Mapping, Set, Dict, Sequence, List
 
 import hydra
 import omegaconf
+from maze.utils.log_stats_utils import clear_global_state
 from omegaconf import OmegaConf
 
 from maze.api.utils import RunMode, _PrimitiveType, _ATTRIBUTE_PROXIES, _MISSING_ARGUMENTS, _OverridesType, \
-    working_directory, InvalidSpecificationError
+    working_directory, InvalidSpecificationError, _FLAGS
 
 
 @dataclasses.dataclass
@@ -30,9 +31,9 @@ class ConfigurationLoader:
     _ephemeral_init_kwargs: Dict[str, str]
     """Inferred ephemeral initialization keyword arguments."""
 
-    _workdir: Optional[str] = dataclasses.field(default=None, init=False)
+    _workdirs: List[str] = dataclasses.field(default=None, init=False)
     """Working directory path."""
-    _config: Optional[omegaconf.DictConfig] = dataclasses.field(default=None, init=False)
+    _configs: List[omegaconf.DictConfig] = dataclasses.field(default=None, init=False)
     """Loaded DictConfig object."""
     _init_kwargs: Optional[Dict[str, _PrimitiveType]] = dataclasses.field(default=None, init=False)
     """Keyword arguments used for initialization with Hydra."""
@@ -78,22 +79,24 @@ class ConfigurationLoader:
         self._load_hydra_config()
 
         # Change to correct working directory (necessary due to being outside of Hydra scope).
-        with working_directory(self._workdir):
-            # Allow non-primitives in Hydra config.
-            with omegaconf.flag_override(self._config, "allow_objects", True) as cfg:
-                OmegaConf.set_struct(cfg, False)
+        for workdir in self._workdirs:
+            with working_directory(workdir):
+                for config in self._configs:
+                    # Allow non-primitives in Hydra config.
+                    with omegaconf.flag_override(config, "allow_objects", True) as cfg:
+                        OmegaConf.set_struct(cfg, False)
 
-                # 2. Inject instantiated objects.
-                self._inject_nonprimitive_instances_into_hydra_config(cfg)
+                        # 2. Inject instantiated objects.
+                        self._inject_nonprimitive_instances_into_hydra_config(cfg)
 
-                # 3. Resolve proxy arguments in-place.
-                self._resolve_proxy_arguments(cfg)
+                        # 3. Resolve proxy arguments in-place.
+                        self._resolve_proxy_arguments(cfg)
 
-                # 4. Postprocess loaded configuration.
-                self._postprocess_config(cfg)
+                        # 4. Postprocess loaded configuration.
+                        self._postprocess_config(cfg)
 
-                # 5. Set up and return runner.
-                OmegaConf.set_struct(cfg, True)
+                    # 5. Set up and return runner.
+                    OmegaConf.set_struct(cfg, True)
 
     def _postprocess_config(self, cfg: omegaconf.DictConfig) -> None:
         """
@@ -115,6 +118,8 @@ class ConfigurationLoader:
         """
 
         config_loader = self
+        self._configs = []
+        self._workdirs = []
         proxy_attributes = _ATTRIBUTE_PROXIES[self._run_mode]
 
         @hydra.main(config_path="../conf", config_name=self._run_mode.value)
@@ -125,16 +130,24 @@ class ConfigurationLoader:
             :return: Initialized DictConfig.
             """
 
-            # It's quite ugly to fetch the config value like this, but it doesn't seem to be possible to make
-            # @hydra.main return a value: https://github.com/facebookresearch/hydra/issues/332.
-            config_loader._config = _cfg
+            # It doesn't seem to be possible to make @hydra.main return a value:
+            # https://github.com/facebookresearch/hydra/issues/332.
+            config_loader._configs.append(_cfg)
 
             # Hydra changes the working directory given a corresponding configuration. This is switched back when
             # leaving the Hydra context though, which we don't want to - hence we grab the working directory path and
             # switch back outside the Hydra context.
-            config_loader._workdir = os.getcwd()
+            config_loader._workdirs.append(os.getcwd())
+
+        # If override was passed as list: Convert to comma-separated string to make it parseable as multirun argument.
+        if self._kwargs["multirun"]:
+            self._overrides = {
+                key: val if not isinstance(val, List) else ",".join([str(v) for v in val])
+                for key, val in self._overrides.items()
+            }
 
         # Gather arguments suitable for @hydra.main.
+        all_args = {**(self._kwargs if self._kwargs else {}), **(self._overrides if self._overrides else {})}
         self._init_kwargs = {
             # Some arguments, e.g. policy, are not supported by a run mode (for policy: training). Nonetheless we want
             # to be able to process these arguments, as they provide convenience and consistency with the CLI.
@@ -142,13 +155,17 @@ class ConfigurationLoader:
             # initializing the respective runners) removed.
             **{
                 (("+" if key in _MISSING_ARGUMENTS[self._run_mode] else "") + key): val
-                for key, val in {
-                    **(self._kwargs if self._kwargs else {}), **(self._overrides if self._overrides else {})
-                }.items()
-                if type(val) in _PrimitiveType.__args__
+                for key, val in all_args.items()
+                # Ignore complex values and flags.
+                if type(val) in _PrimitiveType.__args__ and key not in _FLAGS[self._run_mode]
             },
             **self._ephemeral_init_kwargs
         }
+
+        # Append flags, if set. Note: This assumes that flags default to _not_ being set.
+        for key in all_args:
+            if key in _FLAGS[self._run_mode] and all_args[key]:
+                self._init_kwargs["--" + str(key)] = True
 
         # Resolve proxy attributes dependents, e.g. policy.device to model.policy.device. Limitation: Potential config
         # modules may not be loaded correctly. This seems like a reasonable restriction however, since this is also not
@@ -166,7 +183,14 @@ class ConfigurationLoader:
 
         # Prepare fake command line arguments and initialize.
         self._set_variables = {key.replace("+", "") for key in self._init_kwargs.keys()}
-        sys.argv = [sys.argv[0], *[key + "=" + str(val) for key, val in self._init_kwargs.items()]]
+        sys.argv = [
+            sys.argv[0],
+            *[
+                # Don't add value for flags.
+                key + (("=" + str(val)) if key.replace("--", "") not in _FLAGS[self._run_mode] else "")
+                for key, val in self._init_kwargs.items()
+            ]
+        ]
         init_hydra()
 
         # Remove ephemeral init kwargs.
@@ -183,7 +207,12 @@ class ConfigurationLoader:
 
         self._inj_kwargs = {
             key: value for key, value in {**self._kwargs, **self._overrides}.items()
-            if key not in self._init_kwargs and ("+" + key) not in self._init_kwargs and value is not None
+            if (
+                key not in self._init_kwargs and
+                ("+" + key) not in self._init_kwargs and
+                key not in _FLAGS[self._run_mode] and
+                value is not None
+            )
         }
         self._set_variables.update(self._inj_kwargs.keys())
 
@@ -264,19 +293,19 @@ class ConfigurationLoader:
         data[keys[-1]] = val
 
     @property
-    def config(self) -> omegaconf.DictConfig:
+    def configs(self) -> List[omegaconf.DictConfig]:
         """
-        Returns loaded DictConfig.
-        :return: Loaded DictConfig.
+        Returns loaded DictConfigs.
+        :return: Loaded DictConfigs.
         """
 
-        return self._config
+        return self._configs
 
     @property
-    def workdir(self) -> str:
+    def workdirs(self) -> List[str]:
         """
-        Returns working directory.
-        :return: Working directory.
+        Returns working directories.
+        :return: Working directories.
         """
 
-        return self._workdir
+        return self._workdirs

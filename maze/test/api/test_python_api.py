@@ -6,6 +6,7 @@ from typing import Tuple
 
 import gym
 import pytest
+from hydra.errors import ConfigCompositionException
 from maze.train.trainers.ppo.ppo_trainer import PPO
 from torch import nn
 
@@ -162,8 +163,8 @@ def test_overrides() -> None:
     )
     rc.train(n_epochs=1)
 
-    train_network = rc._runners[run_context.RunMode.TRAINING]._trainer.model.policy.networks[0]
-    env = rc._runners[run_context.RunMode.TRAINING].env_factory()
+    train_network = rc.policy.networks[0]
+    env = rc.env_factory()
     assert isinstance(env.core_env, GymCoreEnv)
     assert env.core_env.env.unwrapped.spec.id == gym_env_name
     assert isinstance(train_network, FlattenConcatPolicyNet)
@@ -246,16 +247,6 @@ def test_manual_rollout() -> None:
         action = rc.policy.compute_action(obs)
         action = rc.compute_action(obs)
         obs, rewards, dones, info = env.step(action)
-
-
-def test_predefined_runner() -> None:
-    """
-    Test specification with pre-defined runner.
-    """
-
-    rc = run_context.RunContext(silent=True)
-    rc = run_context.RunContext(silent=True, runner=rc._runners[run_context.RunMode.TRAINING])
-    rc.train(n_epochs=1)
 
 
 def test_inconsistency_identification_type_1() -> None:
@@ -555,7 +546,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         configuration="test"
     )
     rc.train(1)
-    assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
+    assert rc.policy.networks[0].hidden_units == [222, 222]
 
     # With config module name parent.
     rc = run_context.RunContext(
@@ -569,7 +560,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         configuration="test"
     )
     rc.train(1)
-    assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
+    assert rc.policy.networks[0].hidden_units == [222, 222]
 
     # With config module name parent and aliased child override.
     rc = run_context.RunContext(
@@ -582,7 +573,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         configuration="test"
     )
     rc.train(1)
-    assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
+    assert rc.policy.networks[0].hidden_units == [222, 222]
 
     # With config module name parent and non-aliased child override.
     rc = run_context.RunContext(
@@ -595,7 +586,7 @@ def test_inconsistency_identification_type_4_valid() -> None:
         configuration="test"
     )
     rc.train(1)
-    assert rc._runners[run_context.RunMode.TRAINING]._model_composer.policy.networks[0].hidden_units == [222, 222]
+    assert rc.policy.networks[0].hidden_units == [222, 222]
 
 
 def test_env_type():
@@ -608,7 +599,7 @@ def test_env_type():
         overrides={"runner.normalization_samples": 1, "runner.shared_noise_table_size": 10}
     )
     rc.train(1)
-    env = rc._runners[run_context.RunMode.TRAINING].env_factory()
+    env = rc.env_factory()
 
     assert isinstance(env, MazeEnv)
     assert isinstance(env, LogStatsWrapper)
@@ -627,8 +618,8 @@ def test_experiment():
     )
     rc.train(1)
 
-    assert isinstance(rc._runners[RunMode.TRAINING]._trainer, PPO)
-    assert rc._runners[RunMode.TRAINING]._cfg.algorithm.lr == 0.0001
+    assert isinstance(rc._runners[RunMode.TRAINING][0]._trainer, PPO)
+    assert rc._runners[RunMode.TRAINING][0]._cfg.algorithm.lr == 0.0001
 
 
 def test_autoresolving_proxy_attribute():
@@ -668,7 +659,7 @@ def test_autoresolving_proxy_attribute():
         overrides=default_overrides
     )
     rc.train(n_epochs=1)
-    assert isinstance(rc._runners[RunMode.TRAINING].model_composer.critic, TorchSharedStateCritic)
+    assert isinstance(rc._runners[RunMode.TRAINING][0].model_composer.critic, TorchSharedStateCritic)
 
     rc = run_context.RunContext(
         env=cartpole_env_factory,
@@ -679,7 +670,55 @@ def test_autoresolving_proxy_attribute():
         overrides=default_overrides
     )
     rc.train(n_epochs=1)
-    assert isinstance(rc._runners[RunMode.TRAINING].model_composer.critic, TorchStepStateCritic)
+    assert isinstance(rc._runners[RunMode.TRAINING][0].model_composer.critic, TorchStepStateCritic)
+
+
+def test_multirun():
+    """
+    Tests multirun capabilities.
+    """
+
+    with pytest.raises(ConfigCompositionException):
+        rc = run_context.RunContext(
+            env=lambda: GymMazeEnv('CartPole-v0'),
+            silent=True,
+            algorithm="ppo",
+            overrides={
+                "runner.normalization_samples": 1, "runner.concurrency": 1, "algorithm.lr": "0.0001,0.0005,0.001"
+            },
+            configuration="test",
+            multirun=False
+        )
+        rc.train(n_epochs=1)
+
+    with pytest.raises(TypeError):
+        rc = run_context.RunContext(
+            env=lambda: GymMazeEnv('CartPole-v0'),
+            silent=True,
+            algorithm="ppo",
+            overrides={
+                "runner.normalization_samples": 1, "runner.concurrency": 1, "algorithm.lr": [0.0001, 0.0005, 0.001]
+            },
+            configuration="test",
+            multirun=False
+        )
+        rc.train(n_epochs=1)
+
+    rc = run_context.RunContext(
+        env=lambda: GymMazeEnv('CartPole-v0'),
+        silent=True,
+        algorithm="ppo",
+        overrides={"runner.normalization_samples": 1, "runner.concurrency": 1, "algorithm.lr": [0.0001, 0.0005, 0.001]},
+        configuration="test",
+        multirun=True
+    )
+    rc.train(n_epochs=1)
+
+    assert len(rc.policy) == 3
+    assert len(rc.run_dir) == 3
+    assert len(rc.config[RunMode.TRAINING]) == 3
+    assert len(rc.env_factory) == 3
+    assert len(rc.evaluate(1, 1)) == 3
 
 
 def test_evaluation():

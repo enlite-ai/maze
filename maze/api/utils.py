@@ -21,10 +21,15 @@ _OverridesType = Dict[str, Union[str, Mapping[str, Any], Any]]
 _PrimitiveType = Union[int, float, str, bool, enum.Enum]
 """Types considered as primitives."""
 _MISSING_ARGUMENTS = {
-    RunMode.TRAINING: {"policy", "experiment"},
-    RunMode.ROLLOUT: {"algorithm", "project.name", "critic", "experiment"}
+    RunMode.TRAINING: {"policy", "experiment", "multirun"},
+    RunMode.ROLLOUT: {"algorithm", "project.name", "critic", "experiment", "multirun"}
 }
 """List of properties missing in run modes' default configurations."""
+_FLAGS = {
+    RunMode.TRAINING: {"multirun"},
+    RunMode.ROLLOUT: {"multirun"}
+}
+"""Flags w/o directly assigned values."""
 _ATTRIBUTE_PROXIES = {
     RunMode.TRAINING: {
         "policy": {"auto_resolving": False, "to": ("model", "policy")},
