@@ -276,7 +276,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.core_env.clone_from(env.core_env)
 
         self.core_env.context.clone_from(env.core_env.context)
-        self.core_env.reward_aggregator.clone_from(env.core_env.reward_aggregator)
+
+        if self.core_env.reward_aggregator is not None:
+            self.core_env.reward_aggregator.clone_from(env.core_env.reward_aggregator)
 
     def _step_core_env(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
         """Take environment step without converting the state into and observation.
