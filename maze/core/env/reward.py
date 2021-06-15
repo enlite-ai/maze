@@ -41,10 +41,11 @@ class RewardAggregatorInterface(Subscriber):
         cutting? Did the agent attempt an invalid cut?) This method declares which events this aggregator
         should collect.
 
-        By default, this returns an empty list (as for simpler cases, no events are necessary). For more complex
-        scenarios, override this method and specify which interfaces are needed.
+        By default, this returns an empty list (as for simpler cases, maze state is enough and no events are needed).
 
-        :return: A list of event interface classes
+        For more complex scenarios, override this method and specify which interfaces are needed.
+
+        :return: A list of event interface classes to listen to
         """
         return []
 
