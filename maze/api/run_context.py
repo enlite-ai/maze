@@ -7,19 +7,10 @@ import copy
 import logging
 import os
 import sys
-from typing import Callable, TypeVar, Union, Any, Dict, Optional, Mapping, Type
+from typing import Callable, TypeVar, Union, Any, Dict, Optional, Mapping, List
 
 import hydra.plugins.launcher
 import omegaconf
-from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
-
-from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
-
-from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
-
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-
-from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from omegaconf import DictConfig
 
 from maze.api.config_auditor import ConfigurationAuditor
@@ -32,13 +23,18 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID
+from maze.core.log_stats.log_stats import LogStats, LogStatsLevel
 from maze.core.rollout.rollout_runner import RolloutRunner
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.wrapper import Wrapper
 from maze.perception.models.critics import BaseStateCriticComposer
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.policies.base_policy_composer import BasePolicyComposer
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.common.config_classes import AlgorithmConfig
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
+from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 from maze.train.trainers.common.training_runner import TrainingRunner
 
 logger = logging.getLogger(__name__)
@@ -77,8 +73,8 @@ class RunContext:
 
     :param launcher: Launcher configuration module name, Hydra configuration or instance.
 
-    :param runner: Runner configuration module name, Hydra configuration or instance. RolloutRunner configuration
-                   will be providable once rollouts are fully supported.
+    :param runner: Runner configuration module name or Hydra configuration.
+                   RolloutRunner configuration will be providable once rollouts are fully supported.
 
     :param overrides: Dictionary specifying overrides for individual properties. Overrides might specify values for
                       entire components like environments, some of their attributes or for specializations. Possible
@@ -93,6 +89,8 @@ class RunContext:
 
     :param experiment: Determines which experiment to load. Has to be specified via module name exclusively, i.e.
                        experiment="x".
+
+    :param multirun: Allows running with multiple configurations (e.g. a grid search).
 
     :param silent: Whether to suppress output to stdout.
 
@@ -112,13 +110,15 @@ class RunContext:
         policy: Optional[Union[str, Mapping[str, Any], BasePolicyComposer]] = None,
         critic: Optional[Union[str, Mapping[str, Any], BaseStateCriticComposer]] = None,
         launcher: Optional[Union[str, Mapping[str, Any], hydra.plugins.launcher.Launcher]] = None,
-        runner: Optional[Union[str, Mapping[str, Any], TrainingRunner]] = None,
+        runner: Optional[Union[str, Mapping[str, Any]]] = None,
         # Overrides.
         overrides: Optional[Dict[str, Union[Mapping[str, Any], Any]]] = None,
         # Configuration mode.
         configuration: Optional[str] = None,
         # Experiment module name.
         experiment: Optional[str] = None,
+        # Whether to run in multirun mode.
+        multirun: bool = False,
         # Whether to suppress output to stdout.
         silent: bool = False
     ):
@@ -187,19 +187,19 @@ class RunContext:
             auditor.audit()
 
         # Prepare variables for ingestion by Hydra.
-        self._configs: Dict[RunMode, Optional[DictConfig]] = {RunMode.TRAINING: None, RunMode.ROLLOUT: None}
-        self._workdir: Optional[str] = None
+        self._configs: Dict[RunMode, List[DictConfig]] = {RunMode.TRAINING: [], RunMode.ROLLOUT: []}
+        self._workdirs: List[str] = []
         self._silent = silent
-        self._runners: Dict[RunMode, Optional[Union[TrainingRunner, RolloutRunner]]] = {
-            RunMode.TRAINING: None, RunMode.ROLLOUT: None
+        self._runners: Dict[RunMode, List[Union[TrainingRunner, RolloutRunner]]] = {
+            RunMode.TRAINING: [], RunMode.ROLLOUT: []
         }
 
         # Restore original CLI arguments and working directory.
         sys.argv = argv
 
-    def _generate_runner(self, run_mode: RunMode) -> TrainingRunner:
+    def _generate_runners(self, run_mode: RunMode) -> List[TrainingRunner]:
         """
-        Generates training or rollout runner.
+        Generates training or rollout runner(s).
         :param run_mode: Run mode. See See :py:class:`~maze.maze.api.RunMode`.
         :return: Instantiated Runner instance.
         """
@@ -211,20 +211,24 @@ class RunContext:
             _ephemeral_init_kwargs=self._auditors[run_mode].ephemeral_init_kwargs
         )
         cl.load()
-        self._workdir = cl.workdir
-        self._configs[run_mode] = cl.config
+
+        self._workdirs = cl.workdirs
+        self._configs[run_mode] = cl.configs
+        runners: List[TrainingRunner] = []
 
         # Change to correct working directory (necessary due to being outside of Hydra scope).
-        with working_directory(self._workdir):
-            # Allow non-primitives in Hydra config.
-            with omegaconf.flag_override(self._configs[run_mode], "allow_objects", True) as cfg:
-                # Set up and return runner.
-                runner = Factory(
-                    base_type=TrainingRunner if run_mode == RunMode.TRAINING else RolloutRunner
-                ).instantiate(cfg.runner)
-                runner.setup(cfg)
+        for workdir, config in zip(self._workdirs, self._configs[run_mode]):
+            with working_directory(workdir):
+                # Allow non-primitives in Hydra config.
+                with omegaconf.flag_override(config, "allow_objects", True) as cfg:
+                    # Set up and return runner.
+                    runner = Factory(
+                        base_type=TrainingRunner if run_mode == RunMode.TRAINING else RolloutRunner
+                    ).instantiate(cfg.runner)
+                    runner.setup(cfg)
+                    runners.append(runner)
     
-        return runner
+        return runners
 
     def train(self, n_epochs: Optional[int] = None, **train_kwargs) -> None:
         """
@@ -236,13 +240,12 @@ class RunContext:
                              :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.run`.
         """
 
-        if self._runners[RunMode.TRAINING] is None:
-            self._runners[RunMode.TRAINING]: TrainingRunner = self._silence(
-                lambda: self._generate_runner(RunMode.TRAINING)
-            )
+        if len(self._runners[RunMode.TRAINING]) == 0:
+            self._runners[RunMode.TRAINING] = self._silence(lambda: self._generate_runners(RunMode.TRAINING))
 
-        with working_directory(self._workdir):
-            self._silence(lambda: self._runners[RunMode.TRAINING].run(n_epochs=n_epochs, **train_kwargs))
+        for workdir, runner in zip(self._workdirs, self._runners[RunMode.TRAINING]):
+            with working_directory(workdir):
+                self._silence(lambda: runner.run(n_epochs=n_epochs, **train_kwargs))
 
     # To be updated after restructuring of (Rollout) runners.
     # def rollout(
@@ -306,38 +309,48 @@ class RunContext:
         return task()
 
     @property
-    def configs(self) -> Dict[RunMode, Optional[DictConfig]]:
+    def config(self) -> Dict[RunMode, Union[Optional[DictConfig], List[DictConfig]]]:
         """
         Returns Hydra DictConfigs specifying the configuration for training and rollout runners.
 
-        :return: Dictionary with one DictConfig for training and rollout each. Note that rollout config is None until
-                 first rollout has been enacted.
+        :return: Dictionaries with DictConfig(s) for training and rollout each. Note that configurations are initialized
+                 lazily, i.e. are not available until first training or rollout are initiated.
 
         """
 
-        return self._configs
+        if len(self._workdirs) > 1:
+            return self._configs
+
+        return {key: value[0] if len(value) else None for key, value in self._configs}
 
     @property
-    def run_dir(self) -> str:
+    def run_dir(self) -> Union[Optional[str], List[str]]:
         """
-        Returns run directory.
+        Returns run directory/directories.
 
-        :return: Run directory.
+        :return: Run directory/directories. Note that run directory are initialized lazily, i.e. are not available until
+                 first training or rollout are initiated.
+                 If run in single mode, list is collapsed to a single run directory string.
 
         """
 
-        return self._workdir
+        if len(self._workdirs) > 1:
+            return self._workdirs
+
+        return self._workdirs[0] if len(self._workdirs) else None
 
     @property
-    def policy(self) -> TorchPolicy:
+    def policy(self) -> Union[TorchPolicy, List[TorchPolicy]]:
         """
-        Returns policy.
+        Returns policy/policies.
 
-        :return: Policy used for training and rollout.
+        :return: Policy/policies used for training and rollout. If run in single mode, list is collapsed to a single
+                 Policy instance.
 
         """
 
-        return self._runners[RunMode.TRAINING].model_composer.policy
+        policies = [runner.model_composer.policy for runner in self._runners[RunMode.TRAINING]]
+        return policies if len(policies) > 1 else policies[0]
 
     def compute_action(
         self,
@@ -346,15 +359,21 @@ class RunContext:
         env: Optional[BaseEnv] = None,
         actor_id: ActorID = None,
         deterministic: bool = False
-    ) -> ActionType:
+    ) -> Union[ActionType, List[ActionType]]:
         """
-        Computes action with configured policy. This wraps :meth:`maze.core.agent.policy.Policy.compute_action`.
+        Computes action(s) with configured policy/policies.
+        This wraps :meth:`maze.core.agent.policy.Policy.compute_action`.
 
-        :return: Computed action for next step.
+        :return: Computed action(s) for next step. If run in single mode, list is collapsed to a single action instance.
 
         """
 
-        return self.policy.compute_action(observation, maze_state, env, actor_id, deterministic)
+        actions = [
+            runner.model_composer.policy.compute_action(observation, maze_state, env, actor_id, deterministic)
+            for runner in self._runners[RunMode.TRAINING]
+        ]
+
+        return actions if len(actions) > 1 else actions[0]
 
     def evaluate(
         self,
@@ -363,7 +382,7 @@ class RunContext:
         model_selection: Optional[ModelSelectionBase] = None,
         deterministic: bool = False,
         parallel: bool = False
-    ) -> None:
+    ) -> Union[LogStats, List[LogStats]]:
         """
         Evaluates the trained/loaded policy with an RolloutEvaluator.
 
@@ -378,40 +397,60 @@ class RunContext:
 
         :param parallel: Whether to evaluate environments in parallel using SubprocVectorEnv.
 
+        :return: Logged statistics. One LogStats object if RunContext doesn't operate in multi-run mode, otherwise a
+                 list thereof.
+
         """
 
-        # todo Would be better if we just load the policy instead of having to initialize a training runner (e.g. after
-        #  training in a previous run and loading from its checkpoints).
-        if self._runners[RunMode.TRAINING] is None:
-            self._runners[RunMode.TRAINING]: TrainingRunner = self._silence(
-                lambda: self._generate_runner(RunMode.TRAINING)
+        env_factories = self.env_factory
+        policies = self.policy
+
+        # Wrap env factory and policy in list, if they aren't already.
+        if not isinstance(env_factories, List):
+            env_factories = [env_factories]
+            policies = [policies]
+
+        def _evaluate(_env_factory: Callable[[], MazeEnv], _policy: TorchPolicy) -> LogStats:
+            """
+            Evaluates policy on a newly generated environment.
+            :param _env_factory: Environment factory function.
+            :param _policy: Policy to evaluate.
+            :return: Collected LogStats.
+            """
+
+            evaluator = RolloutEvaluator(
+                eval_env=(SubprocVectorEnv if parallel else SequentialVectorEnv)(
+                    env_factories=[_env_factory] * n_envs
+                ),
+                n_episodes=n_episodes,
+                model_selection=model_selection,
+                deterministic=deterministic
             )
 
-        evaluator = RolloutEvaluator(
-            eval_env=(SubprocVectorEnv if parallel else SequentialVectorEnv)(
-                env_factories=[self.env_factory] * n_envs
-            ),
-            n_episodes=n_episodes,
-            model_selection=model_selection,
-            deterministic=deterministic
-        )
+            evaluator.evaluate(_policy)
 
-        evaluator.evaluate(self.policy)
+            return evaluator.eval_env.get_stats(LogStatsLevel.EPOCH).last_stats
+
+        stats = [
+            self._silence(lambda: _evaluate(env_factory, policy))
+            for env_factory, policy in zip(env_factories, policies)
+        ]
+
+        return stats[0] if len(stats) == 0 else stats
 
     @property
-    def env_factory(self) -> Callable[[], MazeEnv]:
+    def env_factory(self) -> Union[Callable[[], MazeEnv], List[Callable[[], MazeEnv]]]:
         """
         Returns a newly generated environment with wrappers applied w.r.t. the specified configuration.
 
-        :return: Environment factory function.
+        :return: Environment factory function(s). One factory function if RunContext doesn't operate in multi-run mode,
+                 otherwise a list thereof.
 
         """
 
-        if self._runners[RunMode.TRAINING]:
-            return self._runners[RunMode.TRAINING].env_factory
-        elif self._runners[RunMode.ROLLOUT]:
-            return self._runners[RunMode.ROLLOUT].env_factory
-        else:
-            raise RunContextError(
-                "Neither training nor rollout runner are instantiated. .env_factory() is not available."
-            )
+        if (len(self._runners[RunMode.TRAINING]) + len(self._runners[RunMode.ROLLOUT])) == 0:
+            self._runners[RunMode.TRAINING] = self._silence(lambda: self._generate_runners(RunMode.TRAINING))
+
+        runners = self._runners[RunMode.TRAINING]
+
+        return runners[0].env_factory if len(runners) == 1 else [runner.env_factory for runner in runners]
