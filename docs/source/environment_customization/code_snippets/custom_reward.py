@@ -33,7 +33,7 @@ class RawPieceUsageRewardAggregator(RewardAggregatorInterface):
         """
         Summarize reward based on the orders and pieces to cut, and return it as a scalar.
 
-        :param maze_state: Not used in this reward aggregator.
+        :param maze_state: Not used by this reward aggregator.
         :return: the summarized scalar reward.
         """
 

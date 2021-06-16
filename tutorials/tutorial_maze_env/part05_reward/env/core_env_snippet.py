@@ -54,10 +54,10 @@ class Cutting2DCoreEnvironment(CoreEnv):
         # step execution finished, write step statistics
         self.inventory.log_step_statistics()
 
-        # aggregate reward from events
-        reward = self.reward_aggregator.summarize_reward()
-
         # compile env state
         maze_state = self.get_maze_state()
+
+        # aggregate reward from events
+        reward = self.reward_aggregator.summarize_reward(maze_state)
 
         return maze_state, reward, False, info

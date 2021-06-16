@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Optional
 
 from maze.core.annotations import override
+from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
 from ..env.events import CuttingEvents, InventoryEvents
 
@@ -25,9 +26,10 @@ class DefaultRewardAggregator(RewardAggregatorInterface):
         return [CuttingEvents, InventoryEvents]
 
     @override(RewardAggregatorInterface)
-    def summarize_reward(self) -> List[float]:
+    def summarize_reward(self, maze_state: Optional[MazeStateType] = None) -> float:
         """Assign rewards and penalties according to respective events.
 
+        :param maze_state: Not used by this reward aggregator.
         :return: List of individual event rewards.
         """
 
