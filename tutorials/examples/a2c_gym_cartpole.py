@@ -59,8 +59,8 @@ def main(n_epochs: int) -> None:
     # initialize actor critic model
     model = TorchActorCritic(
         policy=TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device=algorithm_config.device),
-        critic=TorchSharedStateCritic(networks=critics, num_critics=1, device=algorithm_config.device,
-                                      stack_observations=False),
+        critic=TorchSharedStateCritic(networks=critics, obs_spaces_dict=env.observation_spaces_dict,
+                                      device=algorithm_config.device, stack_observations=False),
         device=algorithm_config.device)
 
     a2c = A2C(rollout_generator=RolloutGenerator(envs), eval_env=eval_env, algorithm_config=algorithm_config,

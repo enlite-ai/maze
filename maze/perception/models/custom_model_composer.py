@@ -13,7 +13,7 @@ from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.utils.factory import Factory, ConfigType
-from maze.perception.models.critics import BaseStateCriticComposer
+from maze.perception.models.critics import BaseStateCriticComposer, SharedStateCriticComposer
 from maze.perception.models.critics.base_state_action_critic_composer import BaseStateActionCriticComposer
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.models.model_composer import BaseModelComposer
@@ -73,6 +73,9 @@ class CustomModelComposer(BaseModelComposer):
             critic_type = Factory(
                 CriticComposerInterface
             ).type_from_name(critic['_target_']) if isinstance(critic, Mapping) else type(critic)
+            if issubclass(critic_type, SharedStateCriticComposer):
+                assert self.critic_input_spaces_dict == self.observation_spaces_dict, \
+                    f'Shared embedding is not yet supported for shared state critics'
 
             if issubclass(critic_type, BaseStateCriticComposer):
                 self._critics_composer = Factory(BaseStateCriticComposer).instantiate(
@@ -99,10 +102,10 @@ class CustomModelComposer(BaseModelComposer):
 
             :return: The dict holding the enw critic input spaces dict, needed for building the model.
             """
-        critic_input_spaces_dict = copy.deepcopy(self.observation_spaces_dict)
+        critic_input_spaces_dict = dict(copy.deepcopy(self.observation_spaces_dict))
         for step_key, obs_space in self.observation_spaces_dict.items():
             step_observation = obs_space.sample()
-            step_observation = map_nested_structure(step_observation, lambda x: x/100.0, in_place=True)
+            step_observation = map_nested_structure(step_observation, lambda x: x / 100.0, in_place=True)
             tmp_out = self._policy_composer.policy.compute_substep_policy_output(
                 step_observation, actor_id=ActorID(step_key, 0))
             if tmp_out.embedding_logits is not None:
@@ -115,7 +118,7 @@ class CustomModelComposer(BaseModelComposer):
                         new_observation_space[in_key] = spaces.Box(low=np.finfo(np.float32).min,
                                                                    high=np.finfo(np.float32).max,
                                                                    shape=in_value.shape, dtype=np.float32)
-                critic_input_spaces_dict[step_key] = spaces.Dict(new_observation_space)
+                critic_input_spaces_dict[step_key] = gym.spaces.Dict(dict(new_observation_space))
         return critic_input_spaces_dict
 
     @property
