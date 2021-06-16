@@ -115,12 +115,12 @@ class Cutting2DCoreEnvironment(CoreEnv):
         self.current_demand = self.static_demand[self.demand_idx]
 
         # aggregate reward from events
-        rewards = self.reward_aggregator.summarize_reward()
+        reward = self.reward_aggregator.summarize_reward()
 
         # compile env state
         maze_state = self.get_maze_state()
 
-        return maze_state, sum(rewards), False, info
+        return maze_state, reward, False, info
 
     def get_maze_state(self) -> Cutting2DMazeState:
         """Returns the current Cutting2DMazeState of the environment."""
