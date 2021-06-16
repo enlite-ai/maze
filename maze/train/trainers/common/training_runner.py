@@ -5,6 +5,7 @@ import os
 import dataclasses
 from typing import Optional, Callable, Union
 
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from omegaconf import DictConfig
 
 from maze.core.env.structured_env import StructuredEnv

@@ -5,8 +5,10 @@ algorithm:
   eval_repeats: 1
   epoch_length: 2
   n_rollout_steps: 20
+  rollout_evaluator:
+    n_episodes: 1
 
 runner:
   normalization_samples: 1
   concurrency: 2
-  eval_concurrency: 2
+  eval_concurrency: 1
