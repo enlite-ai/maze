@@ -2,6 +2,7 @@
 for both feed forward and recurrent networks."""
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.observation_stack_wrapper import ObservationStackWrapper
 from maze.perception.builders import ConcatModelBuilder
@@ -76,7 +77,8 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         distribution_mapper_config={},
         model_builder=ConcatModelBuilder(modality_config, obs_modalities_mappings),
         policy={'_target_': 'maze.perception.models.policies.ProbabilisticPolicyComposer'},
-        critic={'_target_': 'maze.perception.models.critics.StateCriticComposer'})
+        critic={'_target_': 'maze.perception.models.critics.StateCriticComposer'},
+        shared_embedding_keys=None)
 
     algorithm_config = A2CAlgorithmConfig(
         n_epochs=n_epochs,
@@ -101,8 +103,8 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         critic=template_builder.critic,
         device=algorithm_config.device)
 
-    a2c = A2C(env=envs, eval_env=eval_env, algorithm_config=algorithm_config, model=model,
-              model_selection=None)
+    a2c = A2C(rollout_generator=RolloutGenerator(envs), eval_env=eval_env, algorithm_config=algorithm_config,
+              model=model, model_selection=None)
 
     setup_logging(job_config=None)
 

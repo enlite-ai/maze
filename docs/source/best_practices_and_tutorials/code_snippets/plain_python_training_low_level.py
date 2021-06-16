@@ -8,6 +8,7 @@ import torch.nn as nn
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
+from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.general.torch_model_block import TorchModelBlock
@@ -176,8 +177,8 @@ def train(n_epochs):
     # Initialize best model selection.
     model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)
 
-    a2c_trainer = A2C(env=train_envs, eval_env=eval_envs, algorithm_config=algorithm_config,
-                      model=actor_critic_model, model_selection=model_selection)
+    a2c_trainer = A2C(rollout_generator=RolloutGenerator(train_envs), eval_env=eval_envs,
+                      algorithm_config=algorithm_config, model=actor_critic_model, model_selection=model_selection)
 
     # Train the Agent
     # ===============

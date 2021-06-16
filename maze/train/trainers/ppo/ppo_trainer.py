@@ -48,7 +48,7 @@ class PPO(ActorCritic):
         for k in range(self.algorithm_config.n_optimization_epochs):
             # iterate mini-batch updates
             indices = np.random.permutation(n_samples)
-            n_batches = n_samples // self.algorithm_config.batch_size
+            n_batches = int(np.ceil(float(n_samples) / self.algorithm_config.batch_size))
             for i_batch in range(n_batches):
                 # manually empty GPU cache
                 torch.cuda.empty_cache()

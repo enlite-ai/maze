@@ -18,6 +18,7 @@ from maze.perception.models.critics.base_state_action_critic_composer import Bas
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.policies.base_policy_composer import BasePolicyComposer
+from maze.perception.perception_utils import map_nested_structure
 
 
 class CustomModelComposer(BaseModelComposer):
@@ -80,6 +81,8 @@ class CustomModelComposer(BaseModelComposer):
                     agent_counts_dict=self.agent_counts_dict
                 )
             elif issubclass(critic_type, BaseStateActionCriticComposer):
+                assert self.critic_input_spaces_dict == self.observation_spaces_dict, \
+                    f'Shared embedding is not yet supported for state-action critics'
                 self._critics_composer = Factory(BaseStateActionCriticComposer).instantiate(
                     critic, observation_spaces_dict=self.critic_input_spaces_dict,
                     action_spaces_dict=self.action_spaces_dict
@@ -99,6 +102,7 @@ class CustomModelComposer(BaseModelComposer):
         critic_input_spaces_dict = copy.deepcopy(self.observation_spaces_dict)
         for step_key, obs_space in self.observation_spaces_dict.items():
             step_observation = obs_space.sample()
+            step_observation = map_nested_structure(step_observation, lambda x: x/100.0, in_place=True)
             tmp_out = self._policy_composer.policy.compute_substep_policy_output(
                 step_observation, actor_id=ActorID(step_key, 0))
             if tmp_out.embedding_logits is not None:

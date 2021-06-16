@@ -191,7 +191,8 @@ class TorchSharedStateCritic(TorchStateCritic):
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
         if self.stack_observations:
-            flattened_obs_t = stack_and_flatten_spaces(critic_input.logits, dim=1)
+            # TODO: dim=2 is not always the case, for example with the PPO
+            flattened_obs_t = stack_and_flatten_spaces(critic_input.logits, dim=2)
         else:
             flattened_obs_t = flatten_spaces(critic_input.logits)
 
