@@ -39,4 +39,4 @@ class StepStateCriticComposer(BaseStateCriticComposer):
     def critic(self) -> TorchStepStateCritic:
         """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
         """
-        return TorchStepStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu")
+        return TorchStepStateCritic(self._critics, obs_shapes=self._obs_shapes, device="cpu")

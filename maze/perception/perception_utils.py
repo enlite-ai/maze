@@ -1,12 +1,15 @@
 """ Contains utility functions for the perception module. """
 import collections
-import copy
 from collections import defaultdict
 from typing import Union, Dict, Any, Callable, Sequence, Iterable
 
 import gym
 import numpy as np
 import torch
+from gym import spaces
+
+from maze.core.env.structured_env import StepKeyType
+from maze.core.utils.structured_env_utils import flat_structured_space
 
 
 def observation_spaces_to_in_shapes(observation_spaces: Dict[Union[int, str], gym.spaces.Dict]) \
@@ -58,30 +61,37 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch
     return result
 
 
-def stack_and_flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]], dim: int) -> Dict[str, torch.Tensor]:
+def stack_and_flatten_spaces(input_tensor_dict: Iterable[Dict[str, torch.Tensor]],
+                             observation_spaces_dict: Dict[StepKeyType, spaces.Dict]) -> Dict[str, torch.Tensor]:
     """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
     into a single dictionary containing all the items.
 
     If one key is present in multiple elements, all its values will be concatenated in the resulting dictionary.
 
-    :param spaces: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
-    :param dim: Dimension along which to stack (usually 0 if we have a single environment, or 1 if we have a batch
-                of environments)
+    :param input_tensor_dict: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
+    :param observation_spaces_dict: The full observation_spaces dict to use in order to infer the concatenation
+        dimension
     :return: One flat dictionary, containing all keys and values form the elements of the iterable.
     """
     result = defaultdict(list)
 
     # Collect observations in flat dict
-    for space in spaces:
-        for key, obs in space.items():
+    for input_tensor in input_tensor_dict:
+        for key, obs in input_tensor.items():
             result[key].append(obs)
+
+    flattened_space = flat_structured_space(observation_spaces_dict)
+    key_0 = list(result.keys())[0]
+    concat_dim = len(result[key_0][0].shape) - len(flattened_space[key_0].shape)
+    for key in result.keys():
+        assert concat_dim == len(result[key][0].shape) - len(flattened_space[key].shape)
 
     # Concatenate all at once for efficiency
     for obs_name, observations in result.items():
         if len(observations) == 1:
             result[obs_name] = observations[0]
         else:
-            result[obs_name] = torch.stack(observations, dim=dim)
+            result[obs_name] = torch.stack(observations, dim=concat_dim)
 
     # Return an ordinary dict, not default dict
     return dict(result)

@@ -5,6 +5,7 @@ from typing import Dict, Sequence
 import gym
 import torch
 import torch.nn as nn
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
@@ -43,6 +44,7 @@ def cartpole_env_factory():
 # --------------
 class CartpolePolicyNet(nn.Module):
     """ Simple linear policy net for demonstration purposes. """
+
     def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logit_shapes: Dict[str, Sequence[int]]):
         super().__init__()
         self.net = nn.Sequential(
@@ -68,6 +70,7 @@ class CartpolePolicyNet(nn.Module):
 # -------------
 class CartpoleValueNet(nn.Module):
     """ Simple linear value net for demonstration purposes. """
+
     def __init__(self, obs_shapes: Dict[str, Sequence[int]]):
         super().__init__()
         self.value_net = nn.Sequential(nn.Linear(in_features=obs_shapes['observation'][0], out_features=1))
@@ -141,7 +144,7 @@ def train(n_epochs):
 
     # Instantiate the Value Function
     # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    torch_critic = TorchSharedStateCritic(networks=value_networks, num_policies=1, device='cpu',
+    torch_critic = TorchSharedStateCritic(networks=value_networks, num_critics=1, device='cpu',
                                           stack_observations=False)
 
     # Initializing the ActorCritic Model.

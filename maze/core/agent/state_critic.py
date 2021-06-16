@@ -1,7 +1,7 @@
 """Encapsulates state critic and queries them for values according to the provided policy ID."""
 import dataclasses
 from abc import ABC, abstractmethod
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Sequence
 
 import torch
 
@@ -53,7 +53,7 @@ class CriticOutput:
         """List of detached values for the individual sub-steps"""
         return [cso.detached_values for cso in self._step_critic_outputs]
 
-    def reshape(self, shape: torch.Size) -> None:
+    def reshape(self, shape: Sequence[int]) -> None:
         """Reshape all the elements of the critic output to the given shape"""
         for cso in self._step_critic_outputs:
             cso.values = cso.values.reshape(shape)
@@ -65,8 +65,8 @@ class CriticStepInput:
     """Critic input for a single substep of the env, holding the logits and the actor_ids corresponding to where the
         embedding logits where retrieved if applicable, otherwise just the corresponding actor."""
 
-    logits: Dict[str, torch.Tensor]
-    """The logits to use as an input for the critic."""
+    tensor_dict: Dict[str, torch.Tensor]
+    """The tensor dict to use as an input for the critic."""
 
     actor_id: ActorID
     """The actor id of the corresponding actor."""
@@ -95,9 +95,9 @@ class CriticInput:
         return self._step_critic_inputs[idx]
 
     @property
-    def logits(self) -> List[Dict[str, torch.Tensor]]:
-        """List of logits for the individual sub-steps."""
-        return [csi.logits for csi in self._step_critic_inputs]
+    def tensor_dict(self) -> List[Dict[str, torch.Tensor]]:
+        """List of tensor dicts for the individual sub-steps."""
+        return [csi.tensor_dict for csi in self._step_critic_inputs]
 
     @property
     def actor_ids(self) -> List[ActorID]:
@@ -151,10 +151,10 @@ class StateCritic(ABC):
                 f'same name as any observation.'
             combined_logits = policy_step_output.embedding_logits
             combined_logits.update(observation)
-            return CriticStepInput(logits=combined_logits,
+            return CriticStepInput(tensor_dict=combined_logits,
                                    actor_id=policy_step_output.actor_id)
         else:
-            return CriticStepInput(logits=observation, actor_id=policy_step_output.actor_id)
+            return CriticStepInput(tensor_dict=observation, actor_id=policy_step_output.actor_id)
 
     @staticmethod
     def build_critic_input(policy_output: PolicyOutput, record: StructuredSpacesRecord) -> CriticInput:

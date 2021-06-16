@@ -108,7 +108,7 @@ class CustomModelComposer(BaseModelComposer):
             if tmp_out.embedding_logits is not None:
                 new_observation_space = dict()
                 critic_input = StateCritic.build_step_critic_input(tmp_out, step_observation)
-                for in_key, in_value in critic_input.logits.items():
+                for in_key, in_value in critic_input.tensor_dict.items():
                     if in_key in critic_input_spaces_dict[step_key]:
                         new_observation_space[in_key] = critic_input_spaces_dict[step_key][in_key]
                     else:

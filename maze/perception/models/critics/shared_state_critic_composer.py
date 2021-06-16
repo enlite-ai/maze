@@ -36,6 +36,7 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
         if self.stack_observations:
             obs_shapes_flat = stacked_shapes(obs_shapes_flat, self._agent_counts_dict)
         obs_shapes_flat = flat_structured_shapes(obs_shapes_flat)
+        self._obs_shapes = {0: obs_shapes_flat}
 
         # initialize critic
         model_registry = Factory(base_type=nn.Module)
@@ -46,5 +47,5 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
     def critic(self) -> TorchSharedStateCritic:
         """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
         """
-        return TorchSharedStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu",
+        return TorchSharedStateCritic(self._critics, obs_spaces_dict=self._observation_spaces_dict, device="cpu",
                                       stack_observations=self.stack_observations)

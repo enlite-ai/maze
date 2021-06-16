@@ -6,7 +6,6 @@ from typing import Tuple
 
 import gym
 import pytest
-from maze.train.trainers.ppo.ppo_trainer import PPO
 from torch import nn
 
 from maze.api import run_context
@@ -24,6 +23,7 @@ from maze.perception.models.critics import SharedStateCriticComposer
 from maze.perception.models.custom_model_composer import CustomModelComposer
 from maze.perception.models.policies import ProbabilisticPolicyComposer
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
+from maze.train.trainers.ppo.ppo_trainer import PPO
 
 
 def _get_cartpole_setup_components() -> Tuple[
@@ -90,7 +90,7 @@ def _get_cartpole_setup_components() -> Tuple[
     # Instantiate the Value Function
     # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     torch_critic = TorchSharedStateCritic(
-        networks=value_networks, num_policies=1, device='cpu', stack_observations=True
+        networks=value_networks, num_critics=1, device='cpu', stack_observations=True
     )
 
     # Critic composer.
