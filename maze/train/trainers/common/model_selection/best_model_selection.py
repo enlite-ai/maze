@@ -34,6 +34,7 @@ class BestModelSelection(ModelSelectionBase):
         :param reward: Reward (score) used for best model selection.
         """
         self.last_improvement += 1
+
         if reward > self.best_reward:
             BColors.print_colored(f"-> new overall best model {reward:.5f}!", color=BColors.OKBLUE)
             self.best_reward = reward
@@ -45,19 +46,19 @@ class BestModelSelection(ModelSelectionBase):
                 state_dict = self.model.state_dict()
                 torch.save(state_dict, self.dump_file)
 
-            # regularly dump model
-            if self.dump_interval and self.update_count % self.dump_interval == 0:
+        # regularly dump model
+        if self.dump_interval and self.update_count % self.dump_interval == 0:
 
-                # update dump path
-                filename, file_extension = os.path.splitext(self.dump_file)
-                dump_file = f'{filename}-epoch_{self.update_count}{file_extension}'
-                if dump_file == self.dump_file:
-                    BColors.print_colored("Best model dumps get overwritten by regular model dumps!",
-                                          color=BColors.WARNING)
+            # update dump path
+            filename, file_extension = os.path.splitext(self.dump_file)
+            dump_file = f'{filename}-epoch_{self.update_count}{file_extension}'
+            if dump_file == self.dump_file:
+                BColors.print_colored("Best model dumps get overwritten by regular model dumps!",
+                                      color=BColors.WARNING)
 
-                # save state to file
-                BColors.print_colored(f"-> regular model dump to {dump_file}!", color=BColors.OKBLUE)
-                state_dict = self.model.state_dict()
-                torch.save(state_dict, dump_file)
+            # save state to file
+            BColors.print_colored(f"-> regular model dump to {dump_file}!", color=BColors.OKBLUE)
+            state_dict = self.model.state_dict()
+            torch.save(state_dict, dump_file)
 
-            self.update_count += 1
+        self.update_count += 1

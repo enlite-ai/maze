@@ -3,6 +3,7 @@ import dataclasses
 from abc import abstractmethod
 from typing import Callable, Union
 
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from omegaconf import DictConfig
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -29,6 +30,8 @@ class ACRunner(TrainingRunner):
     """The actor critic trainer class to be used."""
     concurrency: int
     """Number of concurrently executed environments."""
+    eval_concurrency: int
+    """ Number of concurrent evaluation envs """
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:
@@ -43,12 +46,6 @@ class ACRunner(TrainingRunner):
         train_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in range(self.concurrency)]
         envs.seed(train_env_instance_seeds)
 
-        # initialize the env and enable statistics collection
-        eval_env = None
-        if cfg.algorithm.eval_repeats > 0:
-            eval_env = self.create_distributed_env(self.env_factory, self.concurrency, logging_prefix="eval")
-            eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in range(self.concurrency)]
-            eval_env.seed(eval_env_instance_seeds)
         # initialize actor critic model
         model = TorchActorCritic(
             policy=self._model_composer.policy,
@@ -57,7 +54,20 @@ class ACRunner(TrainingRunner):
 
         # initialize best model selection
         self._model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=model,
-                                                   dump_interval=None)
+                                                   dump_interval=self.dump_interval)
+
+        # initialize the env and enable statistics collection
+        evaluator = None
+        if cfg.algorithm.rollout_evaluator.n_episodes > 0:
+            eval_env = self.create_distributed_env(self.env_factory, self.eval_concurrency, logging_prefix="eval")
+            eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed()
+                                       for _ in range(self.eval_concurrency)]
+            eval_env.seed(eval_env_instance_seeds)
+
+            # initialize rollout evaluator
+            evaluator = Factory(base_type=RolloutEvaluator).instantiate(cfg.algorithm.rollout_evaluator,
+                                                                        eval_env=eval_env,
+                                                                        model_selection=self._model_selection)
 
         # look up model class
         trainer_class = Factory(base_type=ActorCritic).type_from_name(self.trainer_class)
@@ -66,7 +76,7 @@ class ACRunner(TrainingRunner):
         self._trainer = trainer_class(
             algorithm_config=cfg.algorithm,
             rollout_generator=RolloutGenerator(env=envs),
-            eval_env=eval_env,
+            evaluator=evaluator,
             model=model,
             model_selection=self._model_selection
         )

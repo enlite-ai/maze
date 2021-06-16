@@ -6,3 +6,6 @@ trainer_class: maze.train.trainers.ppo.ppo_trainer.PPO
 
 # Number of concurrently executed environments
 concurrency: 8
+
+# Number of concurrent evaluation envs
+eval_concurrency: 8
