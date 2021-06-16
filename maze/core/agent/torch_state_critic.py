@@ -138,8 +138,8 @@ class TorchStateCritic(TorchModel, StateCritic):
         :param deltas: Predicted value deltas to previous sub-step with shape (n_steps, n_workers)
         :return: Per time step returns.
         """
-        assert rewards.shape == values.shape
-        assert rewards.shape == dones.shape
+        assert rewards.shape == values.shape, f'{rewards.shape} vs {values.shape}'
+        assert rewards.shape == dones.shape, f'{rewards.shape} vs {dones.shape}'
 
         # initialize returns
         returns = torch.zeros((rewards.shape[0], rewards.shape[1]), dtype=torch.float32, device=self.device)

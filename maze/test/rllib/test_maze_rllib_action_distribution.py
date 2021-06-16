@@ -22,6 +22,7 @@ class FakeRLLibModel(TorchModelV2, torch.nn.Module):
 
         class FakeModelComposer:
             """Fake Model composer"""
+
             def __init__(self2, distribution_mapper: DistributionMapper):
                 self2.distribution_mapper = distribution_mapper
 
@@ -92,7 +93,7 @@ def perform_test_maze_rllib_action_distribution(batch_dim: int):
         maze_rllib_distribution = rllib_dist.maze_dist.distribution_dict[action_head]
         if hasattr(maze_distribution, 'logits'):
             assert torch.allclose(maze_distribution.logits,
-                                  maze_rllib_distribution.tensor_dict)
+                                  maze_rllib_distribution.logits)
         if hasattr(maze_distribution, 'low'):
             assert torch.allclose(maze_distribution.low,
                                   maze_rllib_distribution.low)

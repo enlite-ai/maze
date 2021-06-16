@@ -24,8 +24,14 @@ def test_flat_structured_observations():
 def test_stack_and_flatten_spaces():
     observations = [dict(a=torch.ones(3, 4), b=torch.ones(3, 2)), dict(b=torch.ones(3, 2), c=torch.ones(3))]
     expected_shapes = dict(a=(3, 4), b=(2, 3, 2), c=(3,))
+    observation_spaces = {idx: spaces.Dict({obs_key: spaces.Box(low=np.finfo(np.float32).min,
+                                                                high=np.finfo(np.float32).max,
+                                                                shape=value.shape, dtype=np.float32)
+                                            for obs_key, value in obs_dict.items()}) for idx, obs_dict in
+                          enumerate(observations)}
 
-    for space_name, space_value in stack_and_flatten_spaces(input_tensor_dict=observations, dim=0).items():
+    for space_name, space_value in stack_and_flatten_spaces(input_tensor_dict=observations,
+                                                            observation_spaces_dict=observation_spaces).items():
         assert space_value.shape == expected_shapes[space_name]
 
 
