@@ -40,7 +40,6 @@ class ActorCritic(Trainer, ABC):
     :param eval_env: Evaluation distributed structured environment
     :param model: Structured torch actor critic model.
     :param model_selection: Optional model selection class, receives model evaluation results.
-    :param initial_state: path to initial state (policy weights, critic weights, optimizer state)
     """
 
     def __init__(
@@ -49,12 +48,9 @@ class ActorCritic(Trainer, ABC):
             rollout_generator: Union[RolloutGenerator, DistributedActors],
             eval_env: Optional[Union[StructuredVectorEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
             model: TorchActorCritic,
-            model_selection: Optional[BestModelSelection],
-            initial_state: Optional[str] = None):
+            model_selection: Optional[BestModelSelection]):
 
         super().__init__(algorithm_config)
-
-        self.initial_state = initial_state
 
         # initialize policies and critic
         self.model = model
@@ -93,10 +89,6 @@ class ActorCritic(Trainer, ABC):
         # init minimum best model selection for early stopping
         if self.model_selection is None:
             self.model_selection = BestModelSelection(dump_file=None, model=None)
-
-        # load initial policy weights
-        if self.initial_state:
-            self.load_state(self.initial_state)
 
         # preserve original training coef setting
         value_loss_coef = self.algorithm_config.value_loss_coef

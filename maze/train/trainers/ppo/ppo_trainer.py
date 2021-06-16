@@ -17,7 +17,7 @@ class PPO(ActorCritic):
 
     @override(ActorCritic)
     def _update(self) -> None:
-        """Perform ppo policy update. 25 x 10 x 10
+        """Perform ppo policy update.
         """
 
         # collect observations

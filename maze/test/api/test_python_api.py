@@ -277,8 +277,7 @@ def test_inconsistency_identification_type_2() -> None:
         'normalization_samples': 1,
         '_target_': 'maze.train.trainers.common.actor_critic.actor_critic_runners.ACDevRunner',
         "trainer_class": "maze.train.trainers.a2c.a2c_trainer.A2C",
-        'concurrency': 1,
-        "initial_state_dict": None
+        'concurrency': 1
     }
     invalid_a2c_dev_runner_config = copy.deepcopy(a2c_dev_runner_config)
     invalid_a2c_dev_runner_config["trainer_class"] = "maze.train.trainers.es.es_trainer.ESTrainer"

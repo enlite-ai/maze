@@ -29,8 +29,6 @@ class ACRunner(TrainingRunner):
     """The actor critic trainer class to be used."""
     concurrency: int
     """Number of concurrently executed environments."""
-    initial_state_dict: str
-    """Path to initial state (policy weights, critic weights, optimizer state)."""
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:
@@ -70,8 +68,7 @@ class ACRunner(TrainingRunner):
             rollout_generator=RolloutGenerator(env=envs),
             eval_env=eval_env,
             model=model,
-            model_selection=self._model_selection,
-            initial_state=self.initial_state_dict
+            model_selection=self._model_selection
         )
 
         self._init_trainer_from_input_dir(trainer=self._trainer, state_dict_dump_file=self.state_dict_dump_file,
