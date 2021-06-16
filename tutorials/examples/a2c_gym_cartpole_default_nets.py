@@ -10,6 +10,7 @@ from maze.perception.models.template_model_composer import TemplateModelComposer
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import A2C
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.utils.log_stats_utils import setup_logging
 
 
@@ -82,8 +83,6 @@ def main(n_epochs: int, rnn_steps: int) -> None:
     algorithm_config = A2CAlgorithmConfig(
         n_epochs=n_epochs,
         epoch_length=10,
-        deterministic_eval=False,
-        eval_repeats=5,
         patience=10,
         critic_burn_in_epochs=0,
         n_rollout_steps=20,
@@ -94,7 +93,10 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         value_loss_coef=0.5,
         entropy_coef=0.0,
         max_grad_norm=0.0,
-        device="cpu")
+        device="cpu",
+        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1,
+                                           model_selection=None, deterministic=True)
+    )
 
     model = TorchActorCritic(
         policy=TorchPolicy(networks=template_builder.policy.networks,
@@ -102,8 +104,11 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         critic=template_builder.critic,
         device=algorithm_config.device)
 
-    a2c = A2C(rollout_generator=RolloutGenerator(envs), eval_env=eval_env, algorithm_config=algorithm_config,
-              model=model, model_selection=None)
+    a2c = A2C(rollout_generator=RolloutGenerator(envs),
+              evaluator=algorithm_config.rollout_evaluator,
+              algorithm_config=algorithm_config,
+              model=model,
+              model_selection=None)
 
     setup_logging(job_config=None)
 

@@ -6,8 +6,6 @@ from typing import Tuple
 
 import gym
 import pytest
-from torch import nn
-
 from maze.api import run_context
 from maze.api.utils import RunMode
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -22,8 +20,11 @@ from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNe
 from maze.perception.models.critics import SharedStateCriticComposer
 from maze.perception.models.custom_model_composer import CustomModelComposer
 from maze.perception.models.policies import ProbabilisticPolicyComposer
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.ppo.ppo_trainer import PPO
+from torch import nn
 
 
 def _get_cartpole_setup_components() -> Tuple[
@@ -243,7 +244,6 @@ def test_manual_rollout() -> None:
     env = env_factory()
     obs = env.reset()
     for i in range(2):
-        action = rc.policy.compute_action(obs)
         action = rc.compute_action(obs)
         obs, rewards, dones, info = env.step(action)
 
@@ -284,8 +284,6 @@ def test_inconsistency_identification_type_2() -> None:
     a2c_alg_config = A2CAlgorithmConfig(
         n_epochs=1,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -296,7 +294,10 @@ def test_inconsistency_identification_type_2() -> None:
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu'
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SequentialVectorEnv([lambda: GymMazeEnv(env=gym_env_name)]),
+            n_episodes=1, model_selection=None, deterministic=True)
     )
     default_overrides = {"env.name": gym_env_name}
 
@@ -365,8 +366,6 @@ def test_inconsistency_identification_type_3() -> None:
     a2c_alg_config = A2CAlgorithmConfig(
         n_epochs=1,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -377,7 +376,10 @@ def test_inconsistency_identification_type_3() -> None:
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu'
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SequentialVectorEnv([lambda: GymMazeEnv(env="CartPole-v0")]),
+            n_episodes=1, model_selection=None, deterministic=True)
     )
     default_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
 
@@ -632,8 +634,6 @@ def test_autoresolving_proxy_attribute():
     alg_config = A2CAlgorithmConfig(
         n_epochs=1,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -644,7 +644,10 @@ def test_autoresolving_proxy_attribute():
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu'
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SequentialVectorEnv([cartpole_env_factory]),
+            n_episodes=1, model_selection=None, deterministic=True)
     )
     default_overrides = {"runner.normalization_samples": 1, "runner.concurrency": 1}
 

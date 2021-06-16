@@ -1,8 +1,11 @@
 """Argument parser for Impala algorithm and training"""
 
 from dataclasses import dataclass
+from typing import Union
 
+from maze.core.utils.factory import ConfigType
 from maze.train.trainers.common.config_classes import AlgorithmConfig
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 
 
 @dataclass
@@ -59,17 +62,20 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
        the agents output collected by the learner. Therefor if the all rollouts computed can be at most
        (queue_out_of_sync_factor + num_agents/actor_batch_size) out of sync with learner policy"""
 
-    actors_batch_size: int = 2
+    actors_batch_size: int
     """number of actors to combine to one batch"""
 
-    num_actors: int = 2
+    num_actors: int
     """number of actors to be run"""
 
-    vtrace_clip_rho_threshold: float = 1.0
+    vtrace_clip_rho_threshold: float
     r"""A scalar float32 tensor with the clipping threshold for importance weights
         (rho) when calculating the baseline targets (vs). rho^bar in the paper. If None, no clipping is applied."""
 
-    vtrace_clip_pg_rho_threshold: float = 1.0
+    vtrace_clip_pg_rho_threshold: float
     r"""A scalar float32 tensor with the clipping threshold on rho_s in
         \rho_s \delta log \pi(a|x) (r + \gamma v_{s+1} - V(x_sfrom_importance_weights)). If None, no clipping is
         applied."""
+
+    rollout_evaluator: Union[RolloutEvaluator, ConfigType]
+    """Rollout evaluator."""
