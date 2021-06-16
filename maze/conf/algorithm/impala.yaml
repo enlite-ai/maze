@@ -8,17 +8,8 @@ n_epochs: 0
 # number of updates per epoch
 epoch_length: 25
 
-# run evaluation in deterministic mode (argmax-policy)
-deterministic_eval: false
-
-# number of evaluation trials
-eval_repeats: 8
-
 # number of steps used for early stopping
 patience: 15
-
-# number of evaluation envs
-eval_concurrency: 8
 
 # number of critic (value function) burn in epochs
 critic_burn_in_epochs: 0
@@ -70,4 +61,12 @@ vtrace_clip_rho_threshold: 1.0
 # applied.
 vtrace_clip_pg_rho_threshold: 1.0
 
+# Rollout evaluator (used for best model selection)
+rollout_evaluator:
+  _target_: maze.train.trainers.common.evaluators.rollout_evaluator.RolloutEvaluator
 
+  # Run evaluation in deterministic mode (argmax-policy)
+  deterministic: false
+
+  # Number of evaluation trials
+  n_episodes: 8
