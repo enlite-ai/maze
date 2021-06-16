@@ -5,7 +5,6 @@ from typing import Dict, List
 
 import numpy as np
 import torch
-
 from maze.core.annotations import override
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord

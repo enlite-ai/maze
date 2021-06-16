@@ -6,9 +6,6 @@ n_epochs: 0
 # number of updates per epoch
 epoch_length: 25
 
-# run evaluation in deterministic mode (argmax-policy)
-deterministic_eval: false
-
 # number of evaluation trials
 eval_repeats: 8
 
@@ -44,3 +41,13 @@ device: cpu
 
 # bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
 gae_lambda: 1.0
+
+# Rollout evaluator (used for best model selection)
+rollout_evaluator:
+  _target_: maze.train.trainers.common.evaluators.rollout_evaluator.RolloutEvaluator
+
+  # Run evaluation in deterministic mode (argmax-policy)
+  deterministic: false
+
+  # Number of evaluation trials
+  n_episodes: 8

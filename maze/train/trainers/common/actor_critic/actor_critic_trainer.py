@@ -7,20 +7,14 @@ from typing import List, Union, Dict, Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from tqdm import tqdm
-from typing.io import BinaryIO
-
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.structured_env import ActorID
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
-from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
-from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.common.actor_critic.actor_critic_events import ActorCriticEvents
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
@@ -30,6 +24,8 @@ from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmCo
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 from maze.train.utils.train_utils import compute_gradient_norm
 from maze.utils.bcolors import BColors
+from tqdm import tqdm
+from typing.io import BinaryIO
 
 
 class ActorCritic(Trainer, ABC):
@@ -37,7 +33,7 @@ class ActorCritic(Trainer, ABC):
 
     :param algorithm_config: Algorithm parameters.
     :param rollout_generator: The rollout generator to use. This object encapsulates the env.
-    :param eval_env: Evaluation distributed structured environment
+    :param evaluator: The evaluator to use.
     :param model: Structured torch actor critic model.
     :param model_selection: Optional model selection class, receives model evaluation results.
     """
@@ -46,10 +42,10 @@ class ActorCritic(Trainer, ABC):
             self,
             algorithm_config: Union[A2CAlgorithmConfig, PPOAlgorithmConfig, ImpalaAlgorithmConfig],
             rollout_generator: Union[RolloutGenerator, DistributedActors],
-            eval_env: Optional[Union[StructuredVectorEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+            evaluator: Optional[RolloutEvaluator],
             model: TorchActorCritic,
-            model_selection: Optional[BestModelSelection]):
-
+            model_selection: Optional[BestModelSelection]
+    ):
         super().__init__(algorithm_config)
 
         # initialize policies and critic
@@ -68,9 +64,7 @@ class ActorCritic(Trainer, ABC):
 
         # other components
         self.model_selection = model_selection
-        self.evaluator = RolloutEvaluator(eval_env=eval_env, n_episodes=self.algorithm_config.eval_repeats,
-                                          model_selection=self.model_selection,
-                                          deterministic=self.algorithm_config.deterministic_eval)
+        self.evaluator = evaluator
 
         if self.algorithm_config.n_epochs <= 0:
             self.algorithm_config.n_epochs = sys.maxsize
@@ -115,7 +109,7 @@ class ActorCritic(Trainer, ABC):
 
             # compute evaluation reward
             reward = -np.inf
-            if self.algorithm_config.eval_repeats > 0:
+            if self.evaluator:
                 self.evaluate()
             # take training reward and notify best model selection manually
             else:

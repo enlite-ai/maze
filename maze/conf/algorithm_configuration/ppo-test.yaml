@@ -10,3 +10,4 @@ algorithm:
 runner:
   normalization_samples: 1
   concurrency: 2
+  eval_concurrency: 2
