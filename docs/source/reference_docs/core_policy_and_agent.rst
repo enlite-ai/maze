@@ -20,6 +20,8 @@ maze.core.agent
     ~flat_policy.FlatPolicy
     ~policy.Policy
     ~torch_policy.TorchPolicy
+    ~torch_policy.PolicySubStepOutput
+    ~torch_policy.PolicyOutput
 
     ~default_policy.DefaultPolicy
     ~random_policy.RandomPolicy
@@ -37,6 +39,11 @@ maze.core.agent
     :template: classtemplate.rst
 
     ~state_critic.StateCritic
+    ~state_critic.CriticStepOutput
+    ~state_critic.CriticOutput
+    ~state_critic.CriticStepInput
+    ~state_critic.CriticInput
+
     ~torch_state_critic.TorchStateCritic
     ~torch_state_critic.TorchSharedStateCritic
     ~torch_state_critic.TorchStepStateCritic

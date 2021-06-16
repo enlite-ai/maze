@@ -1,6 +1,6 @@
 """Encapsulation of multiple torch policies for training and rollouts in structured environments."""
 import dataclasses
-from typing import Mapping, Union, Any, List, Dict, Tuple, Sequence, Optional
+from typing import Mapping, Union, List, Dict, Tuple, Sequence, Optional
 
 import torch
 from torch import nn
@@ -21,10 +21,10 @@ from maze.perception.perception_utils import convert_to_torch, convert_to_numpy
 
 @dataclasses.dataclass
 class PolicySubStepOutput:
-    """ Dataclass for holding the output of the policy's compute full output method """
+    """Dataclass for holding the output of the policy's compute full output method"""
 
     action_logits: Dict[str, torch.Tensor]
-    """A logits dictionary [action_head: action_logits] to parameterize the distribution from."""
+    """A logits dictionary (action_head maps to action_logits) to parameterize the distribution from."""
 
     prob_dist: DictProbabilityDistribution
     """The respective instance of a DictProbabilityDistribution."""

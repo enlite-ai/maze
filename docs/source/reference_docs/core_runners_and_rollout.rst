@@ -38,6 +38,7 @@ These are interfaces, classes and utility functions for rollout runners:
     :template: classtemplate.rst
 
     ~rollout_runner.RolloutRunner
+    ~rollout_generator.RolloutGenerator
     ~sequential_rollout_runner.SequentialRolloutRunner
     ~parallel_rollout_runner.ParallelRolloutRunner
     ~parallel_rollout_runner.ParallelRolloutWorker
