@@ -6,9 +6,6 @@ n_epochs: 0
 # number of updates per epoch
 epoch_length: 25
 
-# number of evaluation trials
-eval_repeats: 8
-
 # number of steps used for early stopping
 patience: 15
 

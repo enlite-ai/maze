@@ -11,6 +11,7 @@ from maze.train.parallelization.distributed_actors.distributed_actors import Dis
 from maze.train.parallelization.distributed_actors.sequential_distributed_actors import SequentialDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmConfig
 from maze.train.trainers.impala.impala_trainer import MultiStepIMPALA
 from maze.utils.timeout import Timeout
@@ -34,12 +35,11 @@ def _policy(env: GymMazeEnv):
 
 
 def _algorithm_config():
+    eval_env = SequentialVectorEnv([_env_factory for _ in range(2)], logging_prefix='eval')
+
     return ImpalaAlgorithmConfig(
         n_epochs=2,
         epoch_length=2,
-        deterministic_eval=False,
-        eval_repeats=1,
-        eval_concurrency=1,
         queue_out_of_sync_factor=2,
         patience=15,
         n_rollout_steps=20,
@@ -54,13 +54,19 @@ def _algorithm_config():
         vtrace_clip_rho_threshold=1,
         num_actors=1,
         actors_batch_size=5,
-        critic_burn_in_epochs=0)
+        critic_burn_in_epochs=0,
+        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1,
+                                           model_selection=None, deterministic=True)
+    )
 
 
 def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> MultiStepIMPALA:
-    impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()), rollout_generator=train_actors,
-                             eval_env=SequentialVectorEnv([_env_factory], logging_prefix="eval"),
-                             algorithm_config=algorithm_config, model_selection=None)
+    impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()),
+                             rollout_generator=train_actors,
+                             evaluator=algorithm_config.rollout_evaluator,
+                             logging_prefix="eval",
+                             algorithm_config=algorithm_config,
+                             model_selection=None)
 
     impala.train(n_epochs=algorithm_config.n_epochs)
 

@@ -1,7 +1,10 @@
 """Algorithm parameters for multi-step A2C model."""
 from dataclasses import dataclass
+from typing import Union
 
+from maze.core.utils.factory import ConfigType
 from maze.train.trainers.common.config_classes import AlgorithmConfig
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 
 
 @dataclass
@@ -13,12 +16,6 @@ class PPOAlgorithmConfig(AlgorithmConfig):
 
     epoch_length: int
     """number of updates per epoch"""
-
-    deterministic_eval: bool
-    """run evaluation in deterministic mode (argmax-policy)"""
-
-    eval_repeats: int
-    """number of evaluation trials"""
 
     patience: int
     """number of steps used for early stopping"""
@@ -61,3 +58,6 @@ class PPOAlgorithmConfig(AlgorithmConfig):
 
     clip_range: float
     """Clipping parameter of surrogate loss"""
+
+    rollout_evaluator: Union[RolloutEvaluator, ConfigType]
+    """Rollout evaluator."""

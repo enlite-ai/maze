@@ -1,7 +1,6 @@
 """Contains unit tests for ppo."""
 
 import torch.nn as nn
-
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
@@ -11,6 +10,7 @@ from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 from maze.train.trainers.ppo.ppo_trainer import PPO
 
@@ -40,8 +40,6 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
     algorithm_config = PPOAlgorithmConfig(
         n_epochs=n_epochs,
         epoch_length=2,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=10,
         critic_burn_in_epochs=0,
         n_rollout_steps=20,
@@ -55,7 +53,9 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
         device="cpu",
         batch_size=10,
         n_optimization_epochs=1,
-        clip_range=0.2)
+        clip_range=0.2,
+        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True)
+    )
 
     # initialize actor critic model
     model = TorchActorCritic(
@@ -65,7 +65,9 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
                                       stack_observations=False),
         device=algorithm_config.device)
 
-    ppo = PPO(rollout_generator=RolloutGenerator(envs), algorithm_config=algorithm_config, eval_env=eval_env,
+    ppo = PPO(rollout_generator=RolloutGenerator(envs),
+              algorithm_config=algorithm_config,
+              evaluator=algorithm_config.rollout_evaluator,
               model=model,
               model_selection=None)
 
