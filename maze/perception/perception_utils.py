@@ -88,7 +88,7 @@ def stack_and_flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]], dim: int
 
 
 def convert_to_torch(stats: Any, device: Union[str, None], cast: Union[torch.dtype, None],
-                     in_place: Union[bool, str]):
+                     in_place: Union[bool, str]) -> Any:
     """Converts any struct to torch.Tensors.
 
     :param stats: Any (possibly nested) struct, the values in which will be

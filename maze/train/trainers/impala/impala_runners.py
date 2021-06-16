@@ -1,14 +1,15 @@
 """Runner implementations for multi-step IMPALA"""
 import copy
-from abc import abstractmethod
 import dataclasses
-from typing import Union, Callable, Optional, List
+from abc import abstractmethod
+from typing import Union, Callable, List
 
 from omegaconf import DictConfig
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
@@ -89,7 +90,6 @@ class ImpalaRunner(TrainingRunner):
         self._init_trainer_from_input_dir(trainer=self._trainer, state_dict_dump_file=self.state_dict_dump_file,
                                           input_dir=cfg.input_dir)
 
-
     @abstractmethod
     def create_distributed_eval_env(self,
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
@@ -131,7 +131,7 @@ class ImpalaDevRunner(ImpalaRunner):
                                            env_instance_seeds)
 
     def create_distributed_eval_env(self,
-                                    env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+                                    env_factory: Callable[[], Union[StructuredEnv, MazeEnv]],
                                     eval_concurrency: int,
                                     logging_prefix: str
                                     ) -> SequentialVectorEnv:
@@ -167,7 +167,7 @@ class ImpalaLocalRunner(ImpalaRunner):
                                         agent_instance_seeds)
 
     def create_distributed_eval_env(self,
-                                    env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+                                    env_factory: Callable[[], Union[StructuredEnv, MazeEnv]],
                                     eval_concurrency: int,
                                     logging_prefix: str
                                     ) -> SubprocVectorEnv:

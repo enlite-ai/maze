@@ -2,9 +2,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
+import numpy as np
 import torch
 from gym import spaces
-import numpy as np
 
 from maze.core.env.maze_state import MazeStateType
 

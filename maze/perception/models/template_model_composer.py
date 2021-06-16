@@ -236,7 +236,7 @@ class TemplateModelComposer(BaseModelComposer):
                                                        'critic.'
 
         if not only_discrete_spaces:
-            discrete_space = list(filter(lambda key: isinstance(action_space.spaces[key], spaces.Discrete),
+            discrete_space = list(filter(lambda kk: isinstance(action_space.spaces[kk], spaces.Discrete),
                                          action_space.spaces))
             if len(discrete_space) > 0:
                 new_action_space = {}

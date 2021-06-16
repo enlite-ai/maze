@@ -3,11 +3,11 @@ from typing import List, Dict, Union, Tuple
 
 import torch
 
-from maze.core.agent.state_critic import CriticInput, CriticOutput
+from maze.core.agent.state_critic import CriticOutput
+from maze.core.agent.torch_model import TorchModel
 from maze.core.agent.torch_policy import TorchPolicy, PolicyOutput
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.agent.torch_state_critic import TorchStateCritic
-from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
@@ -89,7 +89,7 @@ class TorchActorCritic(TorchModel):
 
     def compute_actor_critic_output(self, record: StructuredSpacesRecord, temperature: float = 1.0) -> \
             Tuple[PolicyOutput, CriticOutput]:
-        """One method to compute the policy and critic output in one go, managing the substeps, individual critic types
+        """One method to compute the policy and critic output in one go, managing the sub-steps, individual critic types
         shared embeddings of networks.
 
         :param record: The StructuredSpacesRecord holding the observation and actor ids.
@@ -102,33 +102,3 @@ class TorchActorCritic(TorchModel):
 
         critic_output = self.critic.predict_values(critic_input)
         return policy_output, critic_output
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

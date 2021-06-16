@@ -1,6 +1,6 @@
 """Custom model composer, encapsulating the set of policy and critic networks along with the distribution mapper."""
 import copy
-from typing import Dict, Union, Optional, Mapping, List
+from typing import Dict, Union, Optional, Mapping
 
 import gym
 import numpy as np
@@ -13,7 +13,7 @@ from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.utils.factory import Factory, ConfigType
-from maze.perception.models.critics import BaseStateCriticComposer, DeltaStateCriticComposer
+from maze.perception.models.critics import BaseStateCriticComposer
 from maze.perception.models.critics.base_state_action_critic_composer import BaseStateActionCriticComposer
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.models.model_composer import BaseModelComposer

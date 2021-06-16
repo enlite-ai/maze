@@ -182,17 +182,17 @@ class StructuredSpacesRecord:
         return [r.done for r in self.substep_records]
 
     @property
-    def next_observations(self) -> List[ObservationType]:
+    def next_observations(self) -> List[Union[ObservationType, TorchObservationType]]:
         """List of next observations from the individual sub-steps."""
         return [r.next_observation for r in self.substep_records]
 
     @property
-    def logits(self) -> List[Dict[str, np.ndarray]]:
+    def logits(self) -> List[Dict[str, Union[np.ndarray, torch.Tensor]]]:
         """List of logits from the individual sub-steps."""
         return [r.logits for r in self.substep_records]
 
     @property
-    def discounted_returns(self) -> List[Union[float, np.ndarray]]:
+    def discounted_returns(self) -> List[Union[float, np.ndarray, torch.Tensor]]:
         """List of discounted returns from the individual sub-steps."""
         return [r.discounted_return for r in self.substep_records]
 
@@ -212,12 +212,12 @@ class StructuredSpacesRecord:
         return {r.substep_key: r.reward for r in self.substep_records}
 
     @property
-    def dones_dict(self) -> Dict[StepKeyType, bool]:
+    def dones_dict(self) -> Dict[StepKeyType, Union[bool, torch.Tensor]]:
         """Dict of dones from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.done for r in self.substep_records}
 
     @property
-    def next_observations_dict(self) -> Dict[StepKeyType, ObservationType]:
+    def next_observations_dict(self) -> Dict[StepKeyType, Union[ObservationType, TorchObservationType]]:
         """Dict of next observations from the sub-steps, keyed by the sub-step ID
         (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.next_observation for r in self.substep_records}
@@ -228,7 +228,7 @@ class StructuredSpacesRecord:
         return {r.substep_key: r.logits for r in self.substep_records}
 
     @property
-    def discounted_returns_dict(self) -> Dict[StepKeyType, Union[float, np.ndarray]]:
+    def discounted_returns_dict(self) -> Dict[StepKeyType, Union[float, np.ndarray, torch.Tensor]]:
         """Dict of discounted returns from the sub-steps, keyed by the sub-step ID
         (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.discounted_return for r in self.substep_records}

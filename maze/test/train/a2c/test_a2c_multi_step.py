@@ -1,18 +1,18 @@
 """Contains unit tests for a2c."""
 
 import torch.nn as nn
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.rollout.rollout_generator import RolloutGenerator
-
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
+from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import A2C
-from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 
 
 def train_function(n_epochs: int, distributed_env_cls) -> A2C:
@@ -61,7 +61,8 @@ def train_function(n_epochs: int, distributed_env_cls) -> A2C:
                                       stack_observations=False),
         device=algorithm_config.device)
 
-    a2c = A2C(rollout_generator=RolloutGenerator(envs), algorithm_config=algorithm_config, eval_env=eval_env, model=model,
+    a2c = A2C(rollout_generator=RolloutGenerator(envs), algorithm_config=algorithm_config, eval_env=eval_env,
+              model=model,
               model_selection=None)
 
     # train agent

@@ -10,7 +10,6 @@ from torch import nn as nn
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
-from maze.utils.bcolors import BColors
 
 
 class InferenceBlock(PerceptionBlock):
@@ -30,19 +29,17 @@ class InferenceBlock(PerceptionBlock):
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 perception_blocks: Dict[str, PerceptionBlock],
-                 additional_out_keys: Optional[List[str]] = None):
+                 perception_blocks: Dict[str, PerceptionBlock]):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
-        additional_out_keys = [] if additional_out_keys is None else additional_out_keys
-        self._test_condition(perception_blocks, self.in_keys, self.out_keys, additional_out_keys)
+        self._test_condition(perception_blocks, self.in_keys, self.out_keys)
         self.block_keys = list(perception_blocks.keys())
         self.perception_dict = perception_blocks
-        self.additional_out_keys = additional_out_keys
         self.perception_blocks = nn.ModuleDict(perception_blocks)
         # Copy the in_keys
         self.execution_plan = self._build_execution_graph(computed_keys=self.in_keys[:], execution_plan=dict())
-        blocks_not_in_execution_graph = list(filter(lambda block_key: block_key not in sum(self.execution_plan.values(),[]),
-                                               self.perception_dict.keys()))
+        blocks_not_in_execution_graph = list(
+            filter(lambda bk: bk not in sum(self.execution_plan.values(), []),
+                   self.perception_dict.keys()))
         # Delete unused perception blocks from the inference block
         if len(blocks_not_in_execution_graph) > 0:
             print(f'Deleting unused blocks: {blocks_not_in_execution_graph}')
@@ -50,8 +47,7 @@ class InferenceBlock(PerceptionBlock):
             del self.perception_dict[block_key]
 
     @classmethod
-    def _test_condition(cls, perception_blocks: Dict[str, PerceptionBlock], in_keys: List[str], out_keys: List[str],
-                        additional_out_keys: Optional[List[str]]):
+    def _test_condition(cls, perception_blocks: Dict[str, PerceptionBlock], in_keys: List[str], out_keys: List[str]):
         """Test the defined conditions
 
         :param perception_blocks: Dictionary of perception blocks.
@@ -106,7 +102,7 @@ class InferenceBlock(PerceptionBlock):
         assert all([key in tmp_dict for key in self.out_keys]), 'All out_keys should be computed at this point'
         # compile output dictionary
         out_dict = dict()
-        for out_key in self.out_keys + self.additional_out_keys:
+        for out_key in self.out_keys:
             out_dict[out_key] = tmp_dict[out_key]
 
         return out_dict

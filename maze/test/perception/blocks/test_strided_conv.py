@@ -14,7 +14,7 @@ def test_strided_convolution_block_2d():
                                                            in_shapes=(3, 64, 64), hidden_channels=[4, 8, 16],
                                                            hidden_strides=[2, 2, 1], hidden_kernels=[3, 3, 5],
                                                            non_lin=nn.ReLU, convolution_dimension=2,
-                                                           hidden_dilations=None, hidden_padding=[1,1,1],
+                                                           hidden_dilations=None, hidden_padding=[1, 1, 1],
                                                            padding_mode='reflect')
     str(net)
     out_dict = net(in_dict)
@@ -38,7 +38,7 @@ def test_strided_convolution_block_1d():
                                                            padding_mode=None)
     str(net)
     out_dict = net(in_dict)
-    params = net.get_num_of_parameters()
+    _ = net.get_num_of_parameters()
     assert isinstance(out_dict, Dict)
     assert set(net.out_keys).issubset(set(out_dict.keys()))
     assert net.output_channels == 4

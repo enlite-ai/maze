@@ -1,3 +1,4 @@
+"""Test impala multi step."""
 import torch.nn as nn
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -20,7 +21,7 @@ def _env_factory():
 
 
 def _policy(env: GymMazeEnv):
-    distribution_mapper = DistributionMapper(action_space=_env_factory().action_space, distribution_mapper_config={})
+    distribution_mapper = DistributionMapper(action_space=env.action_space, distribution_mapper_config={})
     policies = {0: FlattenConcatPolicyNet({'observation': (4,)}, {'action': (2,)}, hidden_units=[16], non_lin=nn.Tanh)}
     critics = {0: FlattenConcatStateValueNet({'observation': (4,)}, hidden_units=[16], non_lin=nn.Tanh)}
 
