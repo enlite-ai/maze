@@ -4,8 +4,8 @@ _target_: maze.perception.models.template_model_composer.TemplateModelComposer
 shared_embedding_keys: ~
 
 distribution_mapper_config:
-    - action_space: gym.spaces.Box
-      distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
+  - action_space: gym.spaces.Box
+    distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
 
 model_builder:
   _target_: maze.perception.builders.ConcatModelBuilder
@@ -17,14 +17,14 @@ model_builder:
     feature:
       block_type: maze.perception.blocks.DenseBlock
       block_params:
-        hidden_units: [128]
+        hidden_units: [ 128 ]
         non_lin: torch.nn.Tanh
     hidden:
       block_type: maze.perception.blocks.DenseBlock
       block_params:
-        hidden_units: [128]
+        hidden_units: [ 128 ]
         non_lin: torch.nn.Tanh
-    recurrence: {}
+    recurrence: { }
 
 policy:
   _target_: maze.perception.models.policies.ProbabilisticPolicyComposer

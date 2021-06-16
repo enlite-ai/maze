@@ -94,7 +94,7 @@ def test_custom_model_composer():
     value_0 = composer.critic.networks[0](
         convert_to_torch(env.observation_spaces_dict[0].sample(), device=None, cast=None,
                          in_place=True))
-    value_1 = composer.critic.networks[1](
+    _ = composer.critic.networks[1](
         {**convert_to_torch(env.observation_spaces_dict[1].sample(), device=None, cast=None,
                             in_place=True),
          DeltaStateCriticComposer.prev_value_key: value_0['value']})
@@ -138,7 +138,7 @@ def test_custom_model_composer():
             file_path = os.path.join(os.getcwd(), model_file)
             assert os.path.exists(file_path)
             os.remove(file_path)
-    except ImportError as e:
+    except ImportError:
         pass  # no output generated as pygraphviz is not installed.
 
 
@@ -147,11 +147,11 @@ def test_custom_model_composer_with_shared_embedding():
 
     policies = {
         "_target_": "maze.perception.models.policies.ProbabilisticPolicyComposer",
-        "networks": [{"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatPolicyNet",
+        "networks": [{"_target_": "maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatSharedEmbeddingPolicyNet",
                       "non_lin": "torch.nn.SELU",
                       "hidden_units": [16],
                       "head_units": [16]},
-                     {"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatPolicyNet",
+                     {"_target_": "maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatSharedEmbeddingPolicyNet",
                       "non_lin": "torch.nn.SELU",
                       "hidden_units": [16],
                       "head_units": [16]}],
@@ -161,10 +161,10 @@ def test_custom_model_composer_with_shared_embedding():
     step_critic = {
         "_target_": "maze.perception.models.critics.StepStateCriticComposer",
         "networks": [
-            {"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatStateValueNet",
+            {"_target_": "maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatSharedEmbeddingStateValueNet",
              "non_lin": "torch.nn.SELU",
              "head_units": [16]},
-            {"_target_": "maze.perception.models.built_in.flatten_concat_shared.FlattenConcatStateValueNet",
+            {"_target_": "maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatSharedEmbeddingStateValueNet",
              "non_lin": "torch.nn.SELU",
              "head_units": [16]}
         ]
@@ -194,7 +194,7 @@ def test_custom_model_composer_with_shared_embedding():
             file_path = os.path.join(os.getcwd(), model_file)
             assert os.path.exists(file_path)
             os.remove(file_path)
-    except ImportError as e:
+    except ImportError:
         pass  # no output generated as pygraphviz is not installed.
 
     rollout_generator = RolloutGenerator(env=env, record_next_observations=False)
@@ -203,4 +203,4 @@ def test_custom_model_composer_with_shared_embedding():
 
     policy_output = composer.policy.compute_policy_output(trajectory)
     critic_input = composer.critic.build_critic_input(policy_output, trajectory)
-    critic_output = composer.critic.predict_values(critic_input)
+    _ = composer.critic.predict_values(critic_input)

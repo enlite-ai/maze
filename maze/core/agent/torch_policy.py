@@ -79,22 +79,6 @@ class PolicyOutput:
         """List of embedding logits for the individual sub-steps"""
         return [po.embedding_logits for po in self._step_policy_outputs]
 
-    # @property
-    # def action_logits_dict(self):
-    #     return {po.actor_id: po.action_logits for po in self._step_policy_outputs}
-    #
-    # @property
-    # def prob_dist_dict(self):
-    #     return {po.actor_id: po.prob_dist for po in self._step_policy_outputs}
-    #
-    # @property
-    # def entropy_dict(self):
-    #     return {po.actor_id: po.entropy for po in self._step_policy_outputs}
-    #
-    # @property
-    # def embedding_logits_dict(self):
-    #     return {po.actor_id: po.embedding_logits for po in self._step_policy_outputs}
-
 
 class TorchPolicy(TorchModel, Policy):
     """Encapsulates multiple torch policies along with a distribution mapper for training and rollouts
@@ -183,8 +167,6 @@ class TorchPolicy(TorchModel, Policy):
                 assert key in state_dict_policies, f"Could not find state dict for policy ID: {key}"
                 policy.load_state_dict(state_dict_policies[key])
 
-    # Rollout methods: -------------------------------------------------------------------------------------------------
-
     @override(Policy)
     def compute_action(self,
                        observation: ObservationType,
@@ -194,8 +176,13 @@ class TorchPolicy(TorchModel, Policy):
                        deterministic: bool = False) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy`
         """
-        action, _ = self.compute_action_with_logits(observation, actor_id, deterministic)
-        return action
+        with torch.no_grad():
+            policy_out = self.compute_substep_policy_output(observation, actor_id)
+            if deterministic:
+                action = policy_out.prob_dist.deterministic_sample()
+            else:
+                action = policy_out.prob_dist.sample()
+        return convert_to_numpy(action, cast=None, in_place=False)
 
     @override(Policy)
     def compute_top_action_candidates(self,
@@ -208,94 +195,6 @@ class TorchPolicy(TorchModel, Policy):
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy`"""
         raise NotImplementedError
-
-    # TODO: Remove this method, since it only is used by impala actor rollout
-    def compute_action_with_logits(self, observation: Any, actor_id: ActorID = None,
-                                   deterministic: bool = False) -> Tuple[Any, Dict[str, torch.Tensor]]:
-        """Compute action for the given observation and policy ID and return it together with the logits.
-
-        :param observation: Current observation of the environment
-        :param actor_id: ID of the actor (does not have to be provided if policies dict contain only 1 policy)
-        :param deterministic: Specify if the action should be computed deterministically
-        :return: Tuple of (action, logits_dict)
-        """
-        with torch.no_grad():
-            logits_dict, _ = self.compute_logits_dict(observation, actor_id)
-            prob_dist = self.logits_dict_to_distribution(logits_dict)
-            if deterministic:
-                sampled_action = prob_dist.deterministic_sample()
-            else:
-                sampled_action = prob_dist.sample()
-
-        return convert_to_numpy(sampled_action, cast=None, in_place=False), logits_dict
-
-    # Learner methods: -------------------------------------------------------------------------------------------------
-
-    # TODO: used by sac trainer
-    def compute_action_logits_entropy_dist(
-            self, actor_id: ActorID, observation: Dict[Union[str, int], torch.Tensor],
-            deterministic: bool, temperature: float) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor],
-                                                              torch.Tensor, DictProbabilityDistribution]:
-        """Compute action for the given observation and policy ID and return it together with the logits.
-
-        :param actor_id: ID of the actor to query a policy for
-        :param observation: Current observation of the environment
-        :param deterministic: Specify if the action should be computed deterministically
-        :param temperature: Controls the sampling behaviour.
-                                * 1.0 corresponds to unmodified sampling
-                                * smaller than 1.0 concentrates the action distribution towards deterministic sampling
-        :return: Tuple of (action, logits_dict, entropy, prob_dist)
-        """
-
-        obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
-        logits_dict, _ = self.compute_logits_dict(obs_t, actor_id)
-        prob_dist = self.logits_dict_to_distribution(logits_dict, temperature)
-        if deterministic:
-            sampled_action = prob_dist.deterministic_sample()
-        else:
-            sampled_action = prob_dist.sample()
-
-        return sampled_action, logits_dict, prob_dist.entropy(), prob_dist
-
-    # TODO: This method is only used by mcts policy !!! can be deleted
-    def compute_action_distribution(self, observation: Any, actor_id: ActorID = None) -> Any:
-        """Query the policy corresponding to the given ID for the action distribution.
-
-        :param observation: Observation to get action distribution for
-        :param actor_id: Actor ID corresponding to the observation
-        :return: Action distribution for the given observation
-        """
-        logits_dict, _ = self.compute_logits_dict(observation, actor_id)
-        return self.distribution_mapper.logits_dict_to_distribution(logits_dict=logits_dict, temperature=1.0)
-
-    # TODO: this is used in the torch policy, custom/template model composer (to get the desired shape) will be removed,
-    # todo: bc loss, impala learner, actor_critic_learner
-    def compute_logits_dict(self, observation: Any, actor_id: ActorID = None,
-                            return_embedding: bool = False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
-        """Get the logits for the given observation and actor ID.
-
-        :param observation: Observation to return probability distribution for
-        :param actor_id: Actor ID this observation corresponds to
-        :param return_embedding: Specify whether to return the embedding output of the policy network.
-        :return: Tuple of Logits dictionary and embedding output if return embedding is set to true.
-        """
-        obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=True)
-        network_out = self.network_for(actor_id)(obs_t)
-        # action_logits, embedding
-
-        embedding_out = None
-        if return_embedding:
-            embedding_out = dict(filter(lambda ii: ii[0] not in self.distribution_mapper.action_space.spaces.keys(),
-                                        network_out.items()))
-            assert len(embedding_out) > 0, 'If return embedding is specified the network should also produce an ' \
-                                           'embedding output.'
-
-        if any([key not in self.distribution_mapper.action_space.spaces.keys() for key in
-                network_out.keys()]):
-            network_out = dict(filter(lambda ii: ii[0] in self.distribution_mapper.action_space.spaces.keys(),
-                                      network_out.items()))
-
-        return network_out, embedding_out
 
     def network_for(self, actor_id: Optional[ActorID]) -> nn.Module:
         """Helper function for returning a network for the given policy ID (using either just the sub-step ID
@@ -310,20 +209,6 @@ class TorchPolicy(TorchModel, Policy):
 
         network_key = actor_id if actor_id.step_key in self.substeps_with_separate_agent_nets else actor_id.step_key
         return self.networks[network_key]
-
-    # TODO: used by: torch policy, bc loss, rllib trainer, actorcritic trainer !!!! can be deleted
-    def logits_dict_to_distribution(self, logits_dict: Dict[str, torch.Tensor], temperature: float = 1.0):
-        """Helper function for creation of a dict probability distribution from the given logits dictionary.
-
-        :param logits_dict: A logits dictionary [action_head: action_logits] to parameterize the distribution from.
-        :param temperature: Controls the sampling behaviour.
-                                * 1.0 corresponds to unmodified sampling
-                                * smaller than 1.0 concentrates the action distribution towards deterministic sampling
-        :return: (DictProbabilityDistribution) the respective instance of a DictProbabilityDistribution.
-        """
-        return self.distribution_mapper.logits_dict_to_distribution(logits_dict, temperature)
-
-    # METHODS TO KEEP
 
     @staticmethod
     def compute_action_log_probs(policy_output: PolicyOutput, actions: List[TorchActionType]) -> List[TorchActionType]:

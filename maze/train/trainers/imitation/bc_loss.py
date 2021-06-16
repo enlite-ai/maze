@@ -5,6 +5,8 @@ from typing import Dict, Union, Any
 import gym
 import torch
 import torch.nn as nn
+import torch.nn.functional
+
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import ActorID
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
@@ -45,16 +47,16 @@ class BCLoss:
         """
         losses = []
 
-        # Iterate over all substeps
+        # Iterate over all sub-steps
         for substep_key, observation in observation_dict.items():
             target = action_dict[substep_key]
-            logits = policy.compute_substep_policy_output(observation, actor_id=ActorID(substep_key, 0)).action_logits
-            substep_losses = self._get_substep_loss(substep_key, logits, target, self.action_spaces_dict[substep_key],
-                                                    events=events)
+            policy_output = policy.compute_substep_policy_output(observation, actor_id=ActorID(substep_key, 0))
+            substep_losses = self._get_substep_loss(substep_key, policy_output.action_logits, target,
+                                                    self.action_spaces_dict[substep_key], events=events)
             losses.append(substep_losses)
 
             # Compute and report policy entropy
-            entropy = policy.logits_dict_to_distribution(logits).entropy().mean()
+            entropy = policy_output.entropy.mean()
             events.policy_entropy(step_id=substep_key, value=entropy.item())
             if self.entropy_coef > 0:
                 losses.append(-self.entropy_coef * entropy)

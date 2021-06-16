@@ -1,19 +1,19 @@
 """Runner implementations for multi-step actor critic (ACs)"""
-from abc import abstractmethod
 import dataclasses
+from abc import abstractmethod
 from typing import Callable, Union
 
 from omegaconf import DictConfig
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.utils.factory import Factory
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
-from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import ActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
@@ -78,10 +78,10 @@ class ACRunner(TrainingRunner):
 
     @abstractmethod
     def create_distributed_env(self,
-                               env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+                               env_factory: Callable[[], Union[MazeEnv, StructuredEnv]],
                                concurrency: int,
                                logging_prefix: str
-                               ) -> VectorEnv:
+                               ) -> StructuredVectorEnv:
         """The dev and local runner implement the setup of the distribution env"""
 
 
@@ -90,7 +90,7 @@ class ACDevRunner(ACRunner):
     """Runner for single-threaded training, based on SequentialVectorEnv."""
 
     def create_distributed_env(self,
-                               env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+                               env_factory: Callable[[], Union[MazeEnv, StructuredEnv]],
                                concurrency: int,
                                logging_prefix: str
                                ) -> SequentialVectorEnv:
@@ -105,7 +105,7 @@ class ACLocalRunner(ACRunner):
     """Runner for locally distributed training, based on SubprocVectorEnv."""
 
     def create_distributed_env(self,
-                               env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+                               env_factory: Callable[[], Union[MazeEnv, StructuredEnv]],
                                concurrency: int,
                                logging_prefix: str
                                ) -> SubprocVectorEnv:

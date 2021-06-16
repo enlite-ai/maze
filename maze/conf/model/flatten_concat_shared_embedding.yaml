@@ -8,7 +8,7 @@ distribution_mapper_config:
 policy:
   _target_: maze.perception.models.policies.ProbabilisticPolicyComposer
   networks:
-    - _target_: maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatPolicyNet
+    - _target_: maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatSharedEmbeddingPolicyNet
       non_lin: torch.nn.Tanh
       hidden_units: [ 256 ]
       head_units: [ 256 ]
@@ -17,6 +17,6 @@ policy:
 critic:
   _target_: maze.perception.models.critics.SharedStateCriticComposer
   networks:
-    - _target_: maze.perception.models.built_in.flatten_concat_shared_shared_embedding.FlattenConcatStateValueNet
+    - _target_: maze.perception.models.built_in.flatten_concat_shared_embedding.FlattenConcatSharedEmbeddingStateValueNet
       non_lin: torch.nn.Tanh
       head_units: [ 256 ]

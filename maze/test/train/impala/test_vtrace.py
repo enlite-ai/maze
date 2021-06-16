@@ -29,8 +29,8 @@ import gym
 import numpy as np
 
 from maze.distributions.distribution_mapper import DistributionMapper
-from maze.train.trainers.impala import impala_vtrace
 from maze.perception.perception_utils import convert_to_torch
+from maze.train.trainers.impala import impala_vtrace
 
 
 def _shaped_arange(*shape):
@@ -79,8 +79,8 @@ def _ground_truth_calculation(discounts, log_rhos, rewards, values,
         vs.append(v_s)
     vs = np.stack(vs, axis=0)
     pg_advantages = (
-            clipped_pg_rhos * (rewards + discounts * np.concatenate(
-        [vs[1:], bootstrap_value[None, :]], axis=0) - values))
+            clipped_pg_rhos * (rewards + discounts * np.concatenate([vs[1:], bootstrap_value[None, :]], axis=0) -
+                               values))
 
     return impala_vtrace.VTraceReturns(vs=vs, pg_advantages=pg_advantages)
 

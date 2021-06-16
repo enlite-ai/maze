@@ -1,11 +1,10 @@
 """IMPALA Events"""
 
 from abc import ABC
-from typing import Union
 
 import numpy as np
 
-from maze.core.log_stats.event_decorators import define_stats_grouping, define_epoch_stats
+from maze.core.log_stats.event_decorators import define_epoch_stats
 
 
 class MultiStepIMPALAEvents(ABC):

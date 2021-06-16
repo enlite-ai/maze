@@ -12,8 +12,8 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.blocks.inference import InferenceBlock
-from maze.perception.models.critics import SharedStateCriticComposer, StepStateCriticComposer, BaseStateCriticComposer, \
-    DeltaStateCriticComposer
+from maze.perception.models.critics import SharedStateCriticComposer, StepStateCriticComposer, \
+    BaseStateCriticComposer, DeltaStateCriticComposer
 from maze.perception.models.template_model_composer import TemplateModelComposer
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, \
     build_dummy_maze_env_with_structured_core_env
@@ -92,7 +92,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
 
     policy_output = default_builder.policy.compute_policy_output(trajectory)
     critic_input = default_builder.critic.build_critic_input(policy_output, trajectory)
-    critic_output = default_builder.critic.predict_values(critic_input)
+    _ = default_builder.critic.predict_values(critic_input)
 
 
 def test_default_models() -> None:
@@ -174,7 +174,7 @@ def build_structured_with_critic_type(env,
 
     policy_output = default_builder.policy.compute_policy_output(trajectory)
     critic_input = default_builder.critic.build_critic_input(policy_output, trajectory)
-    critic_output = default_builder.critic.predict_values(critic_input)
+    _ = default_builder.critic.predict_values(critic_input)
 
 
 def test_default_models_multi_step() -> None:

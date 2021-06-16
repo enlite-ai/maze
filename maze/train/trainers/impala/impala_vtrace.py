@@ -29,16 +29,13 @@ multi_from_logits method accepts lists of tensors instead of just
 tensors.
 """
 import collections
-from typing import List, Dict, Tuple, Union, Mapping
+from typing import List, Tuple, Union
 
-import gym
 import torch
 
 from maze.core.env.action_conversion import TorchActionType
 from maze.distributions.dict import DictProbabilityDistribution
-from maze.distributions.distribution import ProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
-from maze.distributions.torch_dist import TorchProbabilityDistribution
 from maze.perception.perception_utils import convert_to_torch
 
 VTraceFromLogitsReturns = collections.namedtuple(
@@ -280,7 +277,6 @@ def get_log_rhos(target_action_log_probs: List[TorchActionType],
     with torch.no_grad():
         for step_target_action_log_probs, step_behaviour_action_log_probs in zip(target_action_log_probs,
                                                                                  behaviour_action_log_probs):
-
             target = torch.stack(list(step_target_action_log_probs.values()))
             behaviour = torch.stack(list(step_behaviour_action_log_probs.values()))
 

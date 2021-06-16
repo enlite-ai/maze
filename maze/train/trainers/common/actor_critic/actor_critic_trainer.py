@@ -2,7 +2,7 @@
 import sys
 import time
 from abc import ABC, abstractmethod
-from typing import List, Union, Dict, Tuple, Optional
+from typing import List, Union, Dict, Optional
 
 import numpy as np
 import torch
@@ -13,14 +13,14 @@ from typing.io import BinaryIO
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
-from maze.core.env.structured_env import StructuredEnv, ActorID, StepKeyType
+from maze.core.env.structured_env import ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
-from maze.train.parallelization.vector_env.vector_env import VectorEnv
+from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.common.actor_critic.actor_critic_events import ActorCriticEvents
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
@@ -47,7 +47,7 @@ class ActorCritic(Trainer, ABC):
             self,
             algorithm_config: Union[A2CAlgorithmConfig, PPOAlgorithmConfig, ImpalaAlgorithmConfig],
             rollout_generator: Union[RolloutGenerator, DistributedActors],
-            eval_env: Optional[Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+            eval_env: Optional[Union[StructuredVectorEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
             model: TorchActorCritic,
             model_selection: Optional[BestModelSelection],
             initial_state: Optional[str] = None):

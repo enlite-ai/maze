@@ -31,7 +31,7 @@ class A2C(ActorCritic):
         entropies = [entropy.mean() for entropy in policy_output.entropy]
 
         # compute advantages
-        advantages = [ret- detached_val for ret, detached_val in
+        advantages = [ret - detached_val for ret, detached_val in
                       zip(returns, critic_output.detached_values)]
 
         # normalize advantages

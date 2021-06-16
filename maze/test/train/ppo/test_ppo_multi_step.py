@@ -8,11 +8,11 @@ from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
+from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 from maze.train.trainers.ppo.ppo_trainer import PPO
-from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
 
 
 def train_function(n_epochs: int, distributed_env_cls) -> PPO:
@@ -64,7 +64,8 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
                                       stack_observations=False),
         device=algorithm_config.device)
 
-    ppo = PPO(rollout_generator=RolloutGenerator(envs), algorithm_config=algorithm_config, eval_env=eval_env, model=model,
+    ppo = PPO(rollout_generator=RolloutGenerator(envs), algorithm_config=algorithm_config, eval_env=eval_env,
+              model=model,
               model_selection=None)
 
     # train agent

@@ -84,7 +84,8 @@ class PPO(ActorCritic):
                 action_log_probs = self.model.policy.compute_action_log_probs(policy_output, batch_record.actions)
 
                 # compute advantages
-                advantages = [r[batch_idxs] - dv[batch_idxs] for r, dv in zip(returns, critic_output_old.detached_values)]
+                advantages = [r[batch_idxs] - dv[batch_idxs] for r, dv in
+                              zip(returns, critic_output_old.detached_values)]
 
                 # normalize advantages
                 advantages = self._normalize_advantages(advantages)
@@ -93,7 +94,8 @@ class PPO(ActorCritic):
                 if self.model.critic.num_critics == 1:
                     value_losses = [(returns[0][batch_idxs] - critic_output.values[0]).pow(2).mean()]
                 else:
-                    value_losses = [(ret[batch_idxs] - val).pow(2).mean() for ret, val in zip(returns, critic_output.values)]
+                    value_losses = [(ret[batch_idxs] - val).pow(2).mean() for ret, val in
+                                    zip(returns, critic_output.values)]
 
                 # compute policy loss
                 policy_losses = list()
@@ -138,7 +140,8 @@ class PPO(ActorCritic):
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)
 
-    def _flatten_sub_step_items(self, step_items: List[Dict[str, torch.Tensor]]) -> None:
+    @staticmethod
+    def _flatten_sub_step_items(step_items: List[Dict[str, torch.Tensor]]) -> None:
         """Flattens sub-step items for batch processing in PPO.
         :param step_items: Dict of items to be flattened.
         """

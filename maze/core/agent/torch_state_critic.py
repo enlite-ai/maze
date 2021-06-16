@@ -18,7 +18,6 @@ class TorchStateCritic(TorchModel, StateCritic):
     :param networks: Mapping of value functions (critic) to encapsulate.
     :param num_policies: The number of corresponding policies.
     :param device: Device the policy should be located on (cpu or cuda).
-    :param shared_embedding: Specify whether the critic shares the embedding with the policy.
     """
 
     def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str):
@@ -189,11 +188,12 @@ class TorchSharedStateCritic(TorchStateCritic):
 
     @override(StateCritic)
     def predict_values(self, critic_input: CriticInput) -> CriticOutput:
-        """Predict the shared values and repeat them for each sub-step."""
+        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
+        """
         if self.stack_observations:
-            flattened_obs_t = stack_and_flatten_spaces(critic_input.logtis, dim=1)
+            flattened_obs_t = stack_and_flatten_spaces(critic_input.logits, dim=1)
         else:
-            flattened_obs_t = flatten_spaces(critic_input.logtis)
+            flattened_obs_t = flatten_spaces(critic_input.logits)
 
         value = self.network(flattened_obs_t)["value"][..., 0]
         critic_output = CriticOutput()
@@ -242,11 +242,7 @@ class TorchStepStateCritic(TorchStateCritic):
 
     @override(StateCritic)
     def predict_values(self, critic_input: CriticInput) -> CriticOutput:
-        """Predict the values for each substep with the appropriate critic.
-
-        :param critic_input: Record of a structured step containing keys and observations for the individual sub-steps. OR
-            a dict of dicts holding the collected output of each subset policy's embedding layer.
-        :return: Tuple containing lists of values and detached values for individual sub-steps.
+        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
         critic_output = CriticOutput()
         for critic_step_input in critic_input:
