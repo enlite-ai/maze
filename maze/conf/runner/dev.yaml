@@ -3,7 +3,7 @@
 # Where to save the best model (output directory handled by hydra)
 state_dict_dump_file: "state_dict.pt"
 
-# If provided the state dict will be dumped ever 'dump_interval' epochs.
+# If provided the state dict will be dumped every 'dump_interval' epochs.
 dump_interval: ~
 
 # Where to save the env spaces configuration (output directory handled by hydra)

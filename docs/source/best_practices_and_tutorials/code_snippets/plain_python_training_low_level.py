@@ -178,8 +178,7 @@ def train(n_epochs):
     eval_envs = SequentialVectorEnv([cartpole_env_factory for _ in range(2)], logging_prefix="eval")
 
     # Initialize best model selection.
-    model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model,
-                                         dump_interval=None)
+    model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)
 
     a2c_trainer = A2C(rollout_generator=RolloutGenerator(train_envs), eval_env=eval_envs,
                       algorithm_config=algorithm_config, model=actor_critic_model, model_selection=model_selection)
