@@ -94,7 +94,8 @@ class TorchActorCritic(TorchModel):
 
         :param record: The StructuredSpacesRecord holding the observation and actor ids.
         :param temperature: (Optional) The temperature used for initializing the probability distribution of the action
-        heads.
+            heads.
+
         :returns: A tuple of the policy and critic output.
         """
         policy_output = self.policy.compute_policy_output(record, temperature=temperature)

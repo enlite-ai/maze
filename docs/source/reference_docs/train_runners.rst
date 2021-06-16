@@ -72,7 +72,6 @@ Actor-Critics (AC)
     ~impala.impala_trainer.MultiStepIMPALA
     ~impala.impala_algorithm_config.ImpalaAlgorithmConfig
     ~impala.impala_events.MultiStepIMPALAEvents
-    ~impala.impala_learner.ImpalaLearner
     ~impala.impala_runners.ImpalaRunner
     ~impala.impala_runners.ImpalaDevRunner
     ~impala.impala_runners.ImpalaLocalRunner
