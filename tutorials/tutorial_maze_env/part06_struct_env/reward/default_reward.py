@@ -45,4 +45,4 @@ class DefaultRewardAggregator(RewardAggregatorInterface):
         for _ in self.query_events(CuttingEvents.invalid_cut):
             rewards.append(self.invalid_action_penalty)
 
-        return rewards
+        return sum(rewards)

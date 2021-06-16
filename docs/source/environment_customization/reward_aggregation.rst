@@ -12,12 +12,14 @@ In case of a meaningful reward signal such a policy will be able to successfully
    :width: 80 %
    :align: center
 
-From a technical perspective, reward customization in Maze is based on the general :ref:`event system <event_system>`
-(which also serves other purposes) and is implemented via
+From a technical perspective, reward customization in Maze is based on the environment state
+in combination with the general :ref:`event system <event_system>`
+(which also serves other purposes), and is implemented via
 :class:`RewardAggregators <maze.core.env.reward.RewardAggregatorInterface>`.
-In summary, after each step, the reward aggregator gets access to all the events the environment dispatched
+In summary, after each step, the reward aggregator gets access to the environment state,
+along with all the events the environment dispatched
 during the step (e.g., a new item was replenished to inventory), and can then calculate arbitrary rewards
-based on these events. This means it is possible to modify and shape the reward signal based on
+based on these. This means it is possible to modify and shape the reward signal based on
 different events and their characteristics by plugging in different reward aggregators
 without further modifying the environment.
 
@@ -32,7 +34,8 @@ Maze event-based reward computation allows the following:
 
 - Easy experimentation with different reward signals.
 - Implementation of custom rewards without the need to modify the original environment (simulation).
-- Computing rewards based on multiple components of the environment as well as global events.
+- Computing simple rewards based on environment state, or using the full flexibility of observing
+  all events from the last step
 - Combining multiple different objectives into one multi-objective reward signal.
 - Computation of multiple rewards in the same env, each based on a different set of components (multi agent).
 
@@ -57,7 +60,9 @@ For further details on the remaining entries of this config you can read up on h
 Implementing a Custom Reward
 ----------------------------
 
-This section contains a concrete implementation of a reward aggregator for the built-in cutting environment.
+This section contains a concrete implementation of a reward aggregator for the built-in cutting environment
+(which bases its reward solely on the events from the last step, as that is more suitable than checking current
+environment state).
 
 In summary, the reward aggregator first declares which events it is interested in (the get_interfaces method).
 At the end of the step, after all the events have been accumulated, the reward aggregator is asked to calculate the

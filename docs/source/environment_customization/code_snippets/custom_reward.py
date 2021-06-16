@@ -1,7 +1,8 @@
 """Assigns negative reward for relying on raw pieces for delivering an order."""
-from typing import List
+from typing import List, Optional
 
 from maze.core.annotations import override
+from maze.core.env.maze_state import MazeStateType
 from maze.core.events.pubsub import Subscriber
 from maze_envs.logistics.cutting_2d.env.events import InventoryEvents
 from maze.core.env.reward import RewardAggregatorInterface
@@ -19,16 +20,20 @@ class RawPieceUsageRewardAggregator(RewardAggregatorInterface):
 
     @override(Subscriber)
     def get_interfaces(self) -> List:
-        """Specification of the event interfaces this subscriber wants to receive events from.
+        """
+        Specification of the event interfaces this subscriber wants to receive events from.
         Every subscriber must implement this configuration method.
 
         :return: A list of interface classes.
         """
         return [InventoryEvents]
 
-    def summarize_reward(self) -> float:
-        """Summarize reward based on the orders and pieces to cut.
+    @override(RewardAggregatorInterface)
+    def summarize_reward(self, maze_state: Optional[MazeStateType] = None) -> float:
+        """
+        Summarize reward based on the orders and pieces to cut, and return it as a scalar.
 
+        :param maze_state: Not used in this reward aggregator.
         :return: the summarized scalar reward.
         """
 
@@ -40,17 +45,4 @@ class RawPieceUsageRewardAggregator(RewardAggregatorInterface):
         # rescale reward with provided factor
         reward *= self.reward_scale
 
-        return reward
-
-    @classmethod
-    @override(RewardAggregatorInterface)
-    def to_scalar_reward(cls, reward: float) -> float:
-        """Nothing to do here for this env as the reward is already a scalar.
-
-        This method is useful for example in a multi-agent setting
-        where we could sum over multiple actors to assign a joint reward.
-
-        :param reward: Here already a scalar reward.
-        :return: The scalar reward returned by the environment.
-        """
         return reward

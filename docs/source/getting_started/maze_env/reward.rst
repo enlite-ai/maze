@@ -38,6 +38,14 @@ In this part of the tutorial we introduce how to reuse the event system for
 :ref:`reward shaping and customization <reward_aggregation>` via the
 :class:`~maze.core.env.reward.RewardAggregatorInterface`.
 
+In Maze, reward aggregators usually calculate reward from the current environment
+state, events that happened during the last step, or a combination thereof. Calculating
+reward from state is generally simpler, but not a good fit for this environment -- here,
+the reward is more concerned with what happened (was an invalid cut attempted? A new raw piece replenished?)
+than with the current state (i.e., the inventory state after the step). Hence,
+the reward calculation here is based on events (which is in general more
+flexible than using the environment state only).
+
 The ``DefaultRewardAggregator`` does the following:
 
 - Requests the required event interfaces via ``get_interfaces`` (here *CuttingEvents* and *InventoryEvents*).
@@ -59,8 +67,7 @@ We also have to make a few modifications in the ``CoreEnv``:
 
 - Initialize the reward aggregator in the constructor.
 - Instead of accumulating reward in the if-else branches of the ``step`` function we summarize it only once
-  at the end. The conversion to a scalar is performed in the ``step`` function of the
-  :class:`~maze.core.env.maze_env.MazeEnv`.
+  at the end.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part05_reward/env/core_env_snippet.py
   :language: PYTHON
@@ -77,6 +84,6 @@ Where to Go Next
 ----------------
 
 As the reward is implemented via a reward aggregator that is methodologically identical to the initial version
-there is no need to retain the model for now.
+there is no need to retrain the model for now.
 However, we highly recommend to proceed with the more advanced tutorial on
 :ref:`Structured Environments and Action Masking <struct_env_tutorial>`.
