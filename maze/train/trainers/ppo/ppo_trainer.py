@@ -1,4 +1,5 @@
 """Multi-step multi-agent PPO implementation."""
+import copy
 from collections import defaultdict
 from typing import Dict, List
 
@@ -22,30 +23,34 @@ class PPO(ActorCritic):
         # collect observations
         record = self._rollout()
 
-        # compute action log-probabilities of actions taken (aka old action log probs)
-        with torch.no_grad():
-            policy_output_old, critic_output_old = self.model.compute_actor_critic_output(record)
-            returns = self.model.critic.compute_structured_return(gamma=self.algorithm_config.gamma,
-                                                                  gae_lambda=self.algorithm_config.gae_lambda,
-                                                                  rewards=record.rewards,
-                                                                  values=critic_output_old.detached_values,
-                                                                  dones=record.dones[-1])
-            action_log_probs_old = self.model.policy.compute_action_log_probs(policy_output_old, record.actions)
-            # manually empty GPU cache
-            torch.cuda.empty_cache()
-
-        # flatten items for batch processing/
-        returns = [r.flatten() for r in returns]
-        self._flatten_sub_step_items(record.actions)
-        self._flatten_sub_step_items(record.observations)
-        self._flatten_sub_step_items(action_log_probs_old)
-        critic_output_old.reshape(returns[0].shape)
-
         # iterate ppo optimization epochs
         critic_train_stats = defaultdict(lambda: defaultdict(list))
         policy_train_stats = defaultdict(lambda: defaultdict(list))
         n_samples = self.rollout_generator.env.n_envs * self.algorithm_config.n_rollout_steps
+
+        flat_record = copy.deepcopy(record)
+        self._flatten_sub_step_items(flat_record.actions)
+        self._flatten_sub_step_items(flat_record.observations)
+
         for k in range(self.algorithm_config.n_optimization_epochs):
+            # compute action log-probabilities of actions taken (aka old action log probs)
+            with torch.no_grad():
+                policy_output_old, critic_output_old = self.model.compute_actor_critic_output(record)
+                returns = self.model.critic.compute_structured_return(gamma=self.algorithm_config.gamma,
+                                                                      gae_lambda=self.algorithm_config.gae_lambda,
+                                                                      rewards=record.rewards,
+                                                                      values=critic_output_old.detached_values,
+                                                                      dones=record.dones[-1])
+                action_log_probs_old = self.model.policy.compute_action_log_probs(policy_output_old,
+                                                                                  record.actions)
+                # manually empty GPU cache
+                torch.cuda.empty_cache()
+
+            # flatten items for batch processing/
+            returns = [r.flatten() for r in returns]
+            self._flatten_sub_step_items(action_log_probs_old)
+            critic_output_old.reshape(returns[0].shape)
+
             # iterate mini-batch updates
             indices = np.random.permutation(n_samples)
             n_batches = int(np.ceil(float(n_samples) / self.algorithm_config.batch_size))
@@ -60,7 +65,7 @@ class PPO(ActorCritic):
 
                 # get batch data into a new spaces record
                 batch_record = StructuredSpacesRecord()
-                for substep_record in record.substep_records:
+                for substep_record in flat_record.substep_records:
                     batch_substep_record = SpacesRecord(
                         actor_id=substep_record.actor_id,
                         action={},
