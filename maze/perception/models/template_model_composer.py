@@ -331,7 +331,7 @@ class TemplateModelComposer(BaseModelComposer):
                                                                  f'state critic'
             observation_space = flat_structured_space(self.observation_spaces_dict)
             critics = {0: self.template_value_net(observation_space)}
-            return TorchSharedStateCritic(networks=critics, num_policies=len(self.action_spaces_dict), device="cpu",
+            return TorchSharedStateCritic(networks=critics, obs_spaces_dict=self.observation_spaces_dict, device="cpu",
                                           stack_observations=False)
 
         elif issubclass(self._critic_type, StepStateCriticComposer):
@@ -341,7 +341,7 @@ class TemplateModelComposer(BaseModelComposer):
                     observation_space=sub_step_space, perception_net=self._shared_embedding_nets[sub_step_key],
                     shared_embedding_keys=self._shared_embedding_keys[sub_step_key])
             return TorchStepStateCritic(networks=critics,
-                                        num_policies=len(self.action_spaces_dict),
+                                        obs_spaces_dict=self.observation_spaces_dict,
                                         device="cpu")
 
         elif issubclass(self._critic_type, DeltaStateCriticComposer):
@@ -356,7 +356,7 @@ class TemplateModelComposer(BaseModelComposer):
                                                                 shared_embedding_keys=self._shared_embedding_keys[
                                                                     sub_step_key])
             return TorchDeltaStateCritic(networks=critics,
-                                         num_policies=len(self.action_spaces_dict),
+                                         obs_spaces_dict=self.observation_spaces_dict,
                                          device="cpu")
         elif issubclass(self._critic_type, SharedStateActionCriticComposer):
             assert not any(self._use_shared_embedding.values()), f'Embedding can not be shared when using a shared' \

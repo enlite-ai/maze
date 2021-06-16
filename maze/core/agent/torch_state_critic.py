@@ -3,12 +3,14 @@ from abc import abstractmethod
 from typing import Mapping, Union, List, Dict
 
 import torch
+from gym import spaces
 from torch import nn
 
 from maze.core.agent.state_critic import StateCritic, CriticOutput, CriticStepOutput, CriticInput
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import StepKeyType
 from maze.perception.perception_utils import convert_to_torch, flatten_spaces, stack_and_flatten_spaces
 
 
@@ -16,13 +18,15 @@ class TorchStateCritic(TorchModel, StateCritic):
     """Encapsulates multiple torch state critics for training in structured environments.
 
     :param networks: Mapping of value functions (critic) to encapsulate.
-    :param num_policies: The number of corresponding policies.
+    :param obs_shapes: The observation shapes of the environment.
     :param device: Device the policy should be located on (cpu or cuda).
     """
 
-    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str):
+    def __init__(self, networks: Mapping[Union[str, int], nn.Module],
+                 obs_spaces_dict: Dict[StepKeyType, spaces.Dict], device: str):
         self.networks = networks
-        self.num_policies = num_policies
+        self._num_critics = len(obs_spaces_dict)
+        self._obs_spaces_dict = dict(obs_spaces_dict)
         TorchModel.__init__(self, device=device)
 
     @override(StateCritic)
@@ -179,10 +183,10 @@ class TorchSharedStateCritic(TorchStateCritic):
 
     def __init__(self,
                  networks: Mapping[Union[str, int], nn.Module],
-                 num_policies: int,
+                 obs_spaces_dict: Dict[StepKeyType, spaces.Dict],
                  device: str,
                  stack_observations: bool):
-        super().__init__(networks=networks, num_policies=num_policies, device=device)
+        super().__init__(networks=networks, obs_spaces_dict=obs_spaces_dict, device=device)
         self.stack_observations = stack_observations
         self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
 
@@ -191,10 +195,10 @@ class TorchSharedStateCritic(TorchStateCritic):
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
         if self.stack_observations:
-            # TODO: dim=2 is not always the case, for example with the PPO
-            flattened_obs_t = stack_and_flatten_spaces(critic_input.logits, dim=2)
+            flattened_obs_t = stack_and_flatten_spaces(critic_input.tensor_dict,
+                                                       observation_spaces_dict=self._obs_spaces_dict)
         else:
-            flattened_obs_t = flatten_spaces(critic_input.logits)
+            flattened_obs_t = flatten_spaces(critic_input.tensor_dict)
 
         value = self.network(flattened_obs_t)["value"][..., 0]
         critic_output = CriticOutput()
@@ -247,7 +251,7 @@ class TorchStepStateCritic(TorchStateCritic):
         """
         critic_output = CriticOutput()
         for critic_step_input in critic_input:
-            value = self.networks[critic_step_input.actor_id.step_key](critic_step_input.logits)["value"][..., 0]
+            value = self.networks[critic_step_input.actor_id.step_key](critic_step_input.tensor_dict)["value"][..., 0]
             critic_output.append(CriticStepOutput(values=value, detached_values=value.detach(),
                                                   actor_id=critic_step_input.actor_id))
 
@@ -258,7 +262,7 @@ class TorchStepStateCritic(TorchStateCritic):
     def num_critics(self) -> int:
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
-        return self.num_policies
+        return self._num_critics
 
     @override(TorchStateCritic)
     def compute_structured_return(self,
@@ -291,14 +295,14 @@ class TorchDeltaStateCritic(TorchStateCritic):
         critic_output = CriticOutput()
         # predict values for the first state
         key_0 = critic_input[0].actor_id.step_key
-        value_0 = self.networks[key_0](critic_input[0].logits)["value"][..., 0]
+        value_0 = self.networks[key_0](critic_input[0].tensor_dict)["value"][..., 0]
         critic_output.append(CriticStepOutput(value_0, detached_values=value_0.detach(),
                                               actor_id=critic_input[0].actor_id))
 
         for step_critic_input in critic_input.substep_inputs[1:]:
             # compute value 2 as delta of value 1
             prev_values = critic_output.detached_values[-1]
-            obs = step_critic_input.logits.copy()
+            obs = step_critic_input.tensor_dict.copy()
             obs['prev_value'] = prev_values.unsqueeze(-1)
 
             value_delta = self.networks[step_critic_input.actor_id.step_key](obs)["value"][..., 0]
@@ -320,7 +324,7 @@ class TorchDeltaStateCritic(TorchStateCritic):
     def num_critics(self) -> int:
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
-        return self.num_policies
+        return self._num_critics
 
     @override(TorchStateCritic)
     def compute_structured_return(self,

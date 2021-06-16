@@ -10,7 +10,7 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 
 ActionType = Dict[str, Union[int, np.ndarray]]
-TorchActionType = Dict[str, Union[int, torch.Tensor]]
+TorchActionType = Dict[str, torch.Tensor]
 
 
 class ActionConversionInterface(ABC):

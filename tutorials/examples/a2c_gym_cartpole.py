@@ -1,18 +1,17 @@
 """Example of how to train a policy with A2C for the gym CartPole environment."""
 import torch.nn as nn
+
+from examples.cartpole_custom_net import PolicyNet, ValueNet
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.rollout.rollout_generator import RolloutGenerator
-
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import A2C
 from maze.utils.log_stats_utils import setup_logging
-
-from examples.cartpole_custom_net import PolicyNet, ValueNet
 
 
 def main(n_epochs: int) -> None:
@@ -60,7 +59,7 @@ def main(n_epochs: int) -> None:
     # initialize actor critic model
     model = TorchActorCritic(
         policy=TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device=algorithm_config.device),
-        critic=TorchSharedStateCritic(networks=critics, num_policies=1, device=algorithm_config.device,
+        critic=TorchSharedStateCritic(networks=critics, num_critics=1, device=algorithm_config.device,
                                       stack_observations=False),
         device=algorithm_config.device)
 

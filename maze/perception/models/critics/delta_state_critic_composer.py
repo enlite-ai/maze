@@ -47,4 +47,4 @@ class DeltaStateCriticComposer(BaseStateCriticComposer):
     def critic(self) -> TorchDeltaStateCritic:
         """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
         """
-        return TorchDeltaStateCritic(self._critics, num_policies=len(self._obs_shapes), device="cpu")
+        return TorchDeltaStateCritic(self._critics, obs_spaces_dict=self._observation_spaces_dict, device="cpu")
