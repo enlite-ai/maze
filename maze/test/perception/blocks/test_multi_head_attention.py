@@ -15,7 +15,7 @@ def test_attention_1d():
                                               kdim=None, vdim=None, use_key_padding_mask=False)
 
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 2
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 10)
 
@@ -31,7 +31,7 @@ def test_attention_sequential():
                                               kdim=None, vdim=None, use_key_padding_mask=False)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 7, 10)
 
@@ -48,7 +48,7 @@ def test_attention_sequential_masked():
                                               kdim=None, vdim=None, use_key_padding_mask=False)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 7, 10)
 
@@ -64,7 +64,7 @@ def test_attention_sequential_2():
                                               kdim=7, vdim=9, use_key_padding_mask=False)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 371
+    assert self_attn_block.get_num_of_parameters() == 361
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 10)
 
@@ -81,7 +81,7 @@ def test_attention_sequential_3():
                                               kdim=None, vdim=None, use_key_padding_mask=True)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 10)
 
@@ -98,6 +98,6 @@ def test_attention_sequential_masked_2():
                                               kdim=5, vdim=15, use_key_padding_mask=True)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 20, 10)

@@ -13,7 +13,7 @@ def test_self_attention_1d():
                                             add_input_to_output=True)
 
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 2
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 10)
 
@@ -27,7 +27,7 @@ def test_self_attention_sequential():
                                             add_input_to_output=False)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 7, 10)
 
@@ -43,7 +43,7 @@ def test_self_attention_sequential_masked():
                                             add_input_to_output=False)
     str(self_attn_block)
     out_dict = self_attn_block(in_dict)
-    assert self_attn_block.get_num_of_parameters() == 411
+    assert self_attn_block.get_num_of_parameters() == 401
     assert len(out_dict.keys()) == len(self_attn_block.out_keys) == 1
     assert out_dict[self_attn_block.out_keys[0]].shape == (2, 7, 10)
 

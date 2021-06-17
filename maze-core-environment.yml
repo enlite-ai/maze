@@ -6,7 +6,7 @@ channels:
 dependencies:
   - python=3.7
   - cudatoolkit=10.2
-  - pytorch=1.7.1
+  - pytorch=1.9.0
   - pygraphviz=1.7
   - jupyterlab=2.1.4
   - pip=21.1.2
