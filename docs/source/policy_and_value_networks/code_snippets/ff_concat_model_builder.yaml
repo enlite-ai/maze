@@ -1,5 +1,5 @@
 # @package model
-_target_: maze.perception.models.default_model_composer.DefaultModelComposer
+_target_: maze.perception.models.template_model_composer.TemplateModelComposer
 
 # specify distribution mapping
 # (here we use a default distribution mapping)
@@ -8,6 +8,9 @@ distribution_mapper_config: []
 # specifies the architecture of default models
 model_builder:
   _target_: maze.perception.builders.ConcatModelBuilder
+
+  # Specify up to which keys the embedding should be shared between actor and critic
+  shared_embedding_keys: ~
 
   # specifies the modality type of each observation
   observation_modality_mapping:
