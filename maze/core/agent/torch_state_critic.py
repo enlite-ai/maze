@@ -6,7 +6,8 @@ import torch
 from gym import spaces
 from torch import nn
 
-from maze.core.agent.state_critic import StateCritic, CriticOutput, CriticStepOutput, CriticInput
+from maze.core.agent.state_critic import StateCritic
+from maze.core.agent.state_critic_input_output import CriticStepOutput, CriticOutput, CriticInput
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
@@ -18,7 +19,7 @@ class TorchStateCritic(TorchModel, StateCritic):
     """Encapsulates multiple torch state critics for training in structured environments.
 
     :param networks: Mapping of value functions (critic) to encapsulate.
-    :param obs_shapes: The observation shapes of the environment.
+    :param obs_spaces_dict: The observation spaces dict of the environment.
     :param device: Device the policy should be located on (cpu or cuda).
     """
 

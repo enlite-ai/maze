@@ -102,7 +102,8 @@ class TemplateModelComposer(BaseModelComposer):
         :param observation_space: The input observations for the perception network.
         :param action_space: The action space that defines the network action heads.
         :param shared_embedding_keys: The list of embedding keys for this substep's model.
-        :return: A policy network (actor) InferenceBlock.
+        :return: A policy network (actor) InferenceBlock, as well as the embedding net InferenceBlock if shared keys
+            have been specified.
         """
 
         # build perception net
@@ -143,8 +144,8 @@ class TemplateModelComposer(BaseModelComposer):
 
         :param observation_space: The input observations for the perception network.
         :param shared_embedding_keys: The shared embedding keys for this substep's model (input)
-        :param perception_net: A initial network to continue from.
-                (e.g. useful for shared weights. Model building continues from the key 'latent'.)
+        :param perception_net: The embedding network of the policy network if shared keys have been specified, in order
+            reuse the block and share the embedding.
         :return: A value network (critic) InferenceBlock.
         """
 
