@@ -1,5 +1,4 @@
 """Encapsulation of multiple torch policies for training and rollouts in structured environments."""
-import dataclasses
 from typing import Mapping, Union, List, Dict, Tuple, Sequence, Optional
 
 import torch
@@ -7,77 +6,16 @@ from torch import nn
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_model import TorchModel
+from maze.core.agent.torch_policy_output import PolicySubStepOutput, PolicyOutput
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType, TorchActionType
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID, StepKeyType
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
-from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch, convert_to_numpy
-
-
-@dataclasses.dataclass
-class PolicySubStepOutput:
-    """Dataclass for holding the output of the policy's compute full output method"""
-
-    action_logits: Dict[str, torch.Tensor]
-    """A logits dictionary (action_head maps to action_logits) to parameterize the distribution from."""
-
-    prob_dist: DictProbabilityDistribution
-    """The respective instance of a DictProbabilityDistribution."""
-
-    embedding_logits: Optional[Dict[str, torch.Tensor]]
-    """The Embedding output if applicable, used as the input for the critic network."""
-
-    actor_id: ActorID
-    """The actor id of the output"""
-
-    @property
-    def entropy(self) -> torch.Tensor:
-        """The entropy of the probability distribution."""
-        return self.prob_dist.entropy()
-
-
-class PolicyOutput:
-    """A structured representation of a policy output over a full (flat) environment step."""
-
-    def __init__(self):
-        self._step_policy_outputs: List[PolicySubStepOutput] = list()
-
-    def __getitem__(self, item: int) -> PolicySubStepOutput:
-        """Get a specified (by index) substep output"""
-        return self._step_policy_outputs[item]
-
-    def append(self, value: PolicySubStepOutput):
-        """Append a given PolicySubStepOutput."""
-        self._step_policy_outputs.append(value)
-
-    def actor_ids(self) -> List[ActorID]:
-        """List of actor IDs for the individual sub-steps."""
-        return list(map(lambda x: x.actor_id, self._step_policy_outputs))
-
-    @property
-    def action_logits(self) -> List[Dict[str, torch.Tensor]]:
-        """List of action logits for the individual sub-steps"""
-        return [po.action_logits for po in self._step_policy_outputs]
-
-    @property
-    def prob_dist(self) -> List[DictProbabilityDistribution]:
-        """List of probability dictionaries for the individual sub-steps"""
-        return [po.prob_dist for po in self._step_policy_outputs]
-
-    @property
-    def entropy(self) -> List[torch.Tensor]:
-        """List of entropys (of the probability distribution of the individual sub-steps."""
-        return [po.entropy for po in self._step_policy_outputs]
-
-    @property
-    def embedding_logits(self) -> List[Dict[str, torch.Tensor]]:
-        """List of embedding logits for the individual sub-steps"""
-        return [po.embedding_logits for po in self._step_policy_outputs]
 
 
 class TorchPolicy(TorchModel, Policy):
@@ -209,16 +147,6 @@ class TorchPolicy(TorchModel, Policy):
 
         network_key = actor_id if actor_id.step_key in self.substeps_with_separate_agent_nets else actor_id.step_key
         return self.networks[network_key]
-
-    @staticmethod
-    def compute_action_log_probs(policy_output: PolicyOutput, actions: List[TorchActionType]) -> List[TorchActionType]:
-        """Compute the action log probs for a given policy output and actions.
-        :param policy_output: The policy output to use the log_probs from.
-        :param actions: The actions to use.
-        :return: The computed action log probabilities.
-        """
-        assert len(policy_output.prob_dist) == len(actions)
-        return [pb.log_prob(ac) for pb, ac in zip(policy_output.prob_dist, actions)]
 
     def compute_substep_policy_output(self, observation: ObservationType, actor_id: ActorID = None,
                                       temperature: float = 1.0) -> PolicySubStepOutput:

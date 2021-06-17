@@ -1,14 +1,14 @@
 # @package model
 _target_: maze.perception.models.template_model_composer.TemplateModelComposer
 
-shared_embedding_keys: ~
-
 distribution_mapper_config:
   - action_space: gym.spaces.Box
     distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
 
 model_builder:
   _target_: maze.perception.builders.ConcatModelBuilder
+
+  shared_embedding_keys: ~
 
   observation_modality_mapping:
     observation: feature

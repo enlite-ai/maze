@@ -1,5 +1,5 @@
 """ Contains a concatenation model builder. """
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, Optional, List
 
 from gym import spaces
 
@@ -37,14 +37,22 @@ class ConcatModelBuilder(BaseModelBuilder):
     In a next step the latent representations of the previous step are concatenated along the last dimension and
     once more processed with a :class:`~maze.perception.blocks.feed_forward.dense.DenseBlock`.
 
-    :param: modality_config: dictionary mapping perception modalities to blocks and block config parameters.
+    :param modality_config: dictionary mapping perception modalities to blocks and block config parameters.
     :param observation_modality_mapping: A mapping of observation keys to perception modalities.
+    :param shared_embedding_keys: The shared embedding keys to use as an input to the critic network where the value
+        can be one of the following:
+        - None, empty list or dict of empty lists: No shared embeddings are used.
+        - A list of str values: The shared embedding keys to use for creating the critic network in each substep
+        (the same keys).
+        - A dict of lists: Here the keys have to refer to the step-keys of the environment, the corresponding lists
+        specify the input keys to the critic network in this step.
     """
 
     def __init__(self, modality_config: Dict[str, Union[str, Dict[str, Any]]],
-                 observation_modality_mapping: Dict[str, str]):
+                 observation_modality_mapping: Dict[str, str],
+                 shared_embedding_keys: Optional[Union[List[str], Dict[str, List[str]]]]):
         self._check_modality_config(modality_config)
-        super().__init__(modality_config, observation_modality_mapping)
+        super().__init__(modality_config, observation_modality_mapping, shared_embedding_keys)
 
         # map modalities to blocks
         self.obs_to_block: Dict[str, PerceptionBlock] = dict()

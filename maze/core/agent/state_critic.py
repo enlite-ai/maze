@@ -5,7 +5,7 @@ from typing import Union, List, Dict, Sequence
 
 import torch
 
-from maze.core.agent.torch_policy import PolicyOutput, PolicySubStepOutput
+from maze.core.agent.torch_policy_output import PolicySubStepOutput, PolicyOutput
 from maze.core.env.observation_conversion import ObservationType, TorchObservationType
 from maze.core.env.structured_env import ActorID
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord

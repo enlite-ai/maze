@@ -124,7 +124,7 @@ class MultiStepIMPALA(ActorCritic):
         value_losses = list(map(lambda x: x / 2.0, value_losses))
 
         # compute entropy loss
-        entropy_losses = [entropy.mean() for entropy in learner_policy_output.entropy]
+        entropy_losses = [entropy.mean() for entropy in learner_policy_output.entropies]
 
         after_loss_computation_time = time.time()
 

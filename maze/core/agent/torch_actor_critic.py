@@ -5,7 +5,8 @@ import torch
 
 from maze.core.agent.state_critic import CriticOutput
 from maze.core.agent.torch_model import TorchModel
-from maze.core.agent.torch_policy import TorchPolicy, PolicyOutput
+from maze.core.agent.torch_policy import TorchPolicy
+from maze.core.agent.torch_policy_output import PolicyOutput
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override

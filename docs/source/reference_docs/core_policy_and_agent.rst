@@ -20,8 +20,8 @@ maze.core.agent
     ~flat_policy.FlatPolicy
     ~policy.Policy
     ~torch_policy.TorchPolicy
-    ~torch_policy.PolicySubStepOutput
-    ~torch_policy.PolicyOutput
+    ~torch_policy_output.PolicySubStepOutput
+    ~torch_policy_output.PolicyOutput
 
     ~default_policy.DefaultPolicy
     ~random_policy.RandomPolicy
