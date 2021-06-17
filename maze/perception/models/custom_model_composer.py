@@ -7,6 +7,7 @@ import numpy as np
 from gym import spaces
 
 from maze.core.agent.state_critic import StateCritic
+from maze.core.agent.state_critic_input_output import StateCriticStepInput
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.agent.torch_state_critic import TorchStateCritic
@@ -110,7 +111,7 @@ class CustomModelComposer(BaseModelComposer):
                 step_observation, actor_id=ActorID(step_key, 0))
             if tmp_out.embedding_logits is not None:
                 new_observation_space = dict()
-                critic_input = StateCritic.build_step_critic_input(tmp_out, step_observation)
+                critic_input = StateCriticStepInput.build(tmp_out, step_observation)
                 for in_key, in_value in critic_input.tensor_dict.items():
                     if in_key in critic_input_spaces_dict[step_key]:
                         new_observation_space[in_key] = critic_input_spaces_dict[step_key][in_key]

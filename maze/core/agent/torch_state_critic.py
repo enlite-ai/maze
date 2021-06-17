@@ -7,7 +7,7 @@ from gym import spaces
 from torch import nn
 
 from maze.core.agent.state_critic import StateCritic
-from maze.core.agent.state_critic_input_output import CriticStepOutput, CriticOutput, CriticInput
+from maze.core.agent.state_critic_input_output import StateCriticStepOutput, StateCriticOutput, StateCriticInput
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
@@ -192,7 +192,7 @@ class TorchSharedStateCritic(TorchStateCritic):
         self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
 
     @override(StateCritic)
-    def predict_values(self, critic_input: CriticInput) -> CriticOutput:
+    def predict_values(self, critic_input: StateCriticInput) -> StateCriticOutput:
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
         if self.stack_observations:
@@ -202,9 +202,9 @@ class TorchSharedStateCritic(TorchStateCritic):
             flattened_obs_t = flatten_spaces(critic_input.tensor_dict)
 
         value = self.network(flattened_obs_t)["value"][..., 0]
-        critic_output = CriticOutput()
+        critic_output = StateCriticOutput()
         for actor_id in critic_input.actor_ids:
-            critic_output.append(CriticStepOutput(values=value, detached_values=value.detach(), actor_id=actor_id))
+            critic_output.append(StateCriticStepOutput(values=value, detached_values=value.detach(), actor_id=actor_id))
 
         return critic_output
 
@@ -247,14 +247,14 @@ class TorchStepStateCritic(TorchStateCritic):
     """
 
     @override(StateCritic)
-    def predict_values(self, critic_input: CriticInput) -> CriticOutput:
+    def predict_values(self, critic_input: StateCriticInput) -> StateCriticOutput:
         """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
         """
-        critic_output = CriticOutput()
+        critic_output = StateCriticOutput()
         for critic_step_input in critic_input:
             value = self.networks[critic_step_input.actor_id.step_key](critic_step_input.tensor_dict)["value"][..., 0]
-            critic_output.append(CriticStepOutput(values=value, detached_values=value.detach(),
-                                                  actor_id=critic_step_input.actor_id))
+            critic_output.append(StateCriticStepOutput(values=value, detached_values=value.detach(),
+                                                       actor_id=critic_step_input.actor_id))
 
         return critic_output
 
@@ -290,15 +290,15 @@ class TorchDeltaStateCritic(TorchStateCritic):
     """
 
     @override(StateCritic)
-    def predict_values(self, critic_input: CriticInput) -> CriticOutput:
+    def predict_values(self, critic_input: StateCriticInput) -> StateCriticOutput:
         """implementation of :class:`~maze.core.agent.state_critic.StateCritic`"""
 
-        critic_output = CriticOutput()
+        critic_output = StateCriticOutput()
         # predict values for the first state
         key_0 = critic_input[0].actor_id.step_key
         value_0 = self.networks[key_0](critic_input[0].tensor_dict)["value"][..., 0]
-        critic_output.append(CriticStepOutput(value_0, detached_values=value_0.detach(),
-                                              actor_id=critic_input[0].actor_id))
+        critic_output.append(StateCriticStepOutput(value_0, detached_values=value_0.detach(),
+                                                   actor_id=critic_input[0].actor_id))
 
         for step_critic_input in critic_input.substep_inputs[1:]:
             # compute value 2 as delta of value 1
@@ -309,8 +309,8 @@ class TorchDeltaStateCritic(TorchStateCritic):
             value_delta = self.networks[step_critic_input.actor_id.step_key](obs)["value"][..., 0]
             next_values = critic_output.detached_values[-1] + value_delta
 
-            critic_output.append(CriticStepOutput(next_values, detached_values=next_values.detach(),
-                                                  actor_id=step_critic_input.actor_id))
+            critic_output.append(StateCriticStepOutput(next_values, detached_values=next_values.detach(),
+                                                       actor_id=step_critic_input.actor_id))
 
         return critic_output
 

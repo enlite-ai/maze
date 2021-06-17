@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Tuple
 
 import torch
 
-from maze.core.agent.state_critic_input_output import CriticOutput
+from maze.core.agent.state_critic_input_output import StateCriticOutput, StateCriticInput
 from maze.core.agent.torch_model import TorchModel
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_policy_output import PolicyOutput
@@ -89,7 +89,7 @@ class TorchActorCritic(TorchModel):
         self.critic.load_state_dict(state_dict)
 
     def compute_actor_critic_output(self, record: StructuredSpacesRecord, temperature: float = 1.0) -> \
-            Tuple[PolicyOutput, CriticOutput]:
+            Tuple[PolicyOutput, StateCriticOutput]:
         """One method to compute the policy and critic output in one go, managing the sub-steps, individual critic types
         shared embeddings of networks.
 
@@ -100,7 +100,7 @@ class TorchActorCritic(TorchModel):
         :returns: A tuple of the policy and critic output.
         """
         policy_output = self.policy.compute_policy_output(record, temperature=temperature)
-        critic_input = self.critic.build_critic_input(policy_output, record)
+        critic_input = StateCriticInput.build(policy_output, record)
 
         critic_output = self.critic.predict_values(critic_input)
         return policy_output, critic_output

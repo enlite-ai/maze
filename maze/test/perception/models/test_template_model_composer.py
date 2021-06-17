@@ -5,6 +5,7 @@ import pytest
 from torch import nn
 
 from maze.core.agent.random_policy import RandomPolicy
+from maze.core.agent.state_critic_input_output import StateCriticInput
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic, \
     TorchDeltaStateCritic, TorchStepStateCritic, TorchStateCritic
 from maze.core.env.structured_env import StepKeyType
@@ -94,7 +95,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
     trajectory = rollout_generator.rollout(policy, n_steps=10).stack().to_torch(device='cpu')
 
     policy_output = default_builder.policy.compute_policy_output(trajectory)
-    critic_input = default_builder.critic.build_critic_input(policy_output, trajectory)
+    critic_input = StateCriticInput.build(policy_output, trajectory)
     _ = default_builder.critic.predict_values(critic_input)
 
 
@@ -176,7 +177,7 @@ def build_structured_with_critic_type(env,
     trajectory = rollout_generator.rollout(policy, n_steps=10).stack().to_torch(device='cpu')
 
     policy_output = default_builder.policy.compute_policy_output(trajectory)
-    critic_input = default_builder.critic.build_critic_input(policy_output, trajectory)
+    critic_input = StateCriticInput.build(policy_output, trajectory)
     _ = default_builder.critic.predict_values(critic_input)
 
 

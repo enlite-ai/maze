@@ -2,6 +2,7 @@
 import os
 
 from maze.core.agent.random_policy import RandomPolicy
+from maze.core.agent.state_critic_input_output import StateCriticInput
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic, \
     TorchDeltaStateCritic, TorchStepStateCritic
 from maze.core.rollout.rollout_generator import RolloutGenerator
@@ -202,5 +203,5 @@ def test_custom_model_composer_with_shared_embedding():
     trajectory = rollout_generator.rollout(policy, n_steps=10).stack().to_torch(device='cpu')
 
     policy_output = composer.policy.compute_policy_output(trajectory)
-    critic_input = composer.critic.build_critic_input(policy_output, trajectory)
+    critic_input = StateCriticInput.build(policy_output, trajectory)
     _ = composer.critic.predict_values(critic_input)
