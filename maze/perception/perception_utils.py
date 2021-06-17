@@ -80,11 +80,15 @@ def stack_and_flatten_spaces(input_tensor_dict: Iterable[Dict[str, torch.Tensor]
         for key, obs in input_tensor.items():
             result[key].append(obs)
 
+    # Infer the concatenation dimension based on raw (unbatched) observation shapes, and then verify it matches for all
+    #   keys
     flattened_space = flat_structured_space(observation_spaces_dict)
     key_0 = list(result.keys())[0]
     concat_dim = len(result[key_0][0].shape) - len(flattened_space[key_0].shape)
     for key in result.keys():
-        assert concat_dim == len(result[key][0].shape) - len(flattened_space[key].shape)
+        assert concat_dim == len(result[key][0].shape) - len(flattened_space[key].shape), \
+            f'Batch dimensions do not seem to align across observations keys.. specifically for ' \
+            f'{(key, result[key][0].shape)} vs {(key_0, result[key_0][0].shape)}'
 
     # Concatenate all at once for efficiency
     for obs_name, observations in result.items():

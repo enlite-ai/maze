@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Tuple
 
 import torch
 
-from maze.core.agent.state_critic import CriticOutput
+from maze.core.agent.state_critic_input_output import CriticOutput
 from maze.core.agent.torch_model import TorchModel
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_policy_output import PolicyOutput

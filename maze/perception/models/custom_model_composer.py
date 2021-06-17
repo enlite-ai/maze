@@ -98,10 +98,10 @@ class CustomModelComposer(BaseModelComposer):
 
     def _build_critic_input_space_dict(self) -> Dict[StepKeyType, spaces.Dict]:
         """Build the critic input from the given observation input and a dummy pass through the policy network (in case
-            shared embeddings are used.
+        shared embeddings are used).
 
-            :return: The dict holding the enw critic input spaces dict, needed for building the model.
-            """
+        :return: The dict holding the enw critic input spaces dict, needed for building the model.
+        """
         critic_input_spaces_dict = dict(copy.deepcopy(self.observation_spaces_dict))
         for step_key, obs_space in self.observation_spaces_dict.items():
             step_observation = obs_space.sample()

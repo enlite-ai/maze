@@ -16,7 +16,8 @@ class FlattenConcatSharedEmbeddingPolicyNet(FlattenConcatBaseNet):
 
     :param obs_shapes: Dictionary mapping of observation names to shapes.
     :param action_logits_shapes: Dictionary mapping of observation names to shapes.
-    :param hidden_units: Dictionary mapping of action names to shapes.
+    :param hidden_units: List of hidden units to use for the embedding.
+    :param head_units: List of hidden units to use for the action/value head.
     :param non_lin: The non-linearity to apply.
     """
 
@@ -59,7 +60,7 @@ class FlattenConcatSharedEmbeddingStateValueNet(nn.Module):
     """Flatten and concatenation state value model.
 
     :param obs_shapes: Dictionary mapping of observation names to shapes.
-    :param hidden_units: Dictionary mapping of action names to shapes.
+    :param head_units: List of hidden units to use for the action/value head.
     :param non_lin: The non-linearity to apply.
     """
 

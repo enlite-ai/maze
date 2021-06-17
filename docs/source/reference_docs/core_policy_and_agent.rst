@@ -39,10 +39,10 @@ maze.core.agent
     :template: classtemplate.rst
 
     ~state_critic.StateCritic
-    ~state_critic.CriticStepOutput
-    ~state_critic.CriticOutput
-    ~state_critic.CriticStepInput
-    ~state_critic.CriticInput
+    ~state_critic_input_output.CriticStepOutput
+    ~state_critic_input_output.CriticOutput
+    ~state_critic_input_output.CriticStepInput
+    ~state_critic_input_output.CriticInput
 
     ~torch_state_critic.TorchStateCritic
     ~torch_state_critic.TorchSharedStateCritic
