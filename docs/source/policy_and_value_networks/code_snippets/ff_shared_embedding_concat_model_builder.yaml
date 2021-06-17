@@ -10,11 +10,12 @@ model_builder:
   _target_: maze.perception.builders.ConcatModelBuilder
 
   # Specify up to which keys the embedding should be shared between actor and critic
-  shared_embedding_keys: ~
+  shared_embedding_keys: ['latent']
 
   # specifies the modality type of each observation
   observation_modality_mapping:
-    observation: feature
+    observation_inventory: feature
+    observation_screen: image
 
   # specifies with which block to process a modality
   modality_config:
@@ -24,8 +25,18 @@ model_builder:
       block_params:
         hidden_units: [32, 32]
         non_lin: torch.nn.ReLU
+    image:
+      block_type: maze.perception.blocks.VGGConvolutionDenseBlock
+      block_params:
+        hidden_channels: [8, 16, 32]
+        hidden_units: [32]
+        non_lin: torch.nn.ReLU
     # preserved keys for the model builder
-    hidden: {}
+    hidden:
+      block_type: maze.perception.blocks.DenseBlock
+      block_params:
+        hidden_units: [128]
+        non_lin: torch.nn.ReLU
     recurrence: {}
 
 # select policy type

@@ -29,6 +29,7 @@ The custom model composer supports the following features:
  - Stores a graphical rendering of the networks if the
    :class:`InferenceBlock <maze.perception.blocks.inference.InferenceBlock>` is utilized.
  - Custom weight initialization and action head biasing.
+ - Custom shared embedding between actor and critic.
 
 .. image:: perception_custom_model_composer.png
 
@@ -179,6 +180,41 @@ An example config for the model composer could then look like this:
 .. note::
     Since we do not use the :ref:`inference block <inference_graph_visualization>` in this example, no visual
     representation of the model can be rendered.
+
+.. _custom_example_4:
+
+Example 4: Custom Shared embeddings with Perception Blocks
+----------------------------------------------------------
+
+For this example we want to showcase the capabilities for using shared embeddings referring to
+:ref:`Example 2: <custom_example_2>` for the setup of the observations and actions. Now lets consider the case where
+we would like to share the observation_screen embedding *only*.
+
+Here the policy will look very similar to :ref:`Example 2: <custom_example_2>`, using the same latent net. The only
+difference here is that we specify an additional *out_key* when creating the inference block:
+
+.. literalinclude:: code_snippets/custom_shared_complex_policy_net.py
+  :language: PYTHON
+
+Now for the critic, we already get the specified additional *out_key* as part of the obs_shapes dict and can therefore
+be used as such:
+
+.. literalinclude:: code_snippets/custom_shared_complex_critic_net.py
+  :language: PYTHON
+
+The yaml file would look the same as for :ref:`Example 2: <custom_example_2>`, we only specify different networks.
+
+.. literalinclude:: code_snippets/custom_shared_complex_net.yaml
+  :language: YAML
+
+The resulting inference graphs for a recurrent shared actor-critic model are shown below.
+
+.. image:: perception_custom_complex_shared_policy_graph.png
+    :width: 49 %
+.. image:: perception_custom_complex_shared_critic_graph.png
+    :width: 49 %
+
+
 
 Where to Go Next
 ----------------

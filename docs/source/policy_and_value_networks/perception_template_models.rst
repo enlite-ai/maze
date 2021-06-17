@@ -27,6 +27,8 @@ A template model supports the following features:
    **Maze Model Builders**.
  - Cooperates with the :ref:`Distributions Module <action_spaces_and_distributions_module>` supporting customization
    of action and value outputs.
+ - Allows to individually specify shared embedding keys for actor critic models; this enables shared embeddings
+   between actor and critic.
 
 .. image:: template_model_builder.png
 
@@ -93,6 +95,7 @@ Details:
  - Models are composed by the Maze :ref:`TemplateModelComposer <model_composers>`.
  - No specific action space and probability distribution overrides are specified.
  - The model is based on the ConcatModelBuilder architecture template.
+ - No shared embedding is used.
  - Observation *observation_inventory* is mapped to the user specified custom modality *feature*.
  - Observation *observation_screen* is mapped to the user specified custom modality *image*.
  - Modality Config:
@@ -163,6 +166,30 @@ Details:
 - When there is only one observation, as for the present example,
   concatenation acts simply as an identity mapping of the previous output tensor
   (in this case *observation_DenseBlock*).
+
+.. _template_shared_feed_forward:
+
+Example 4: Shared Embedding Feed Forward Model
+----------------------------------------------
+
+In case of large dimensional input spaces it might sometimes be useful to share the embedding between the actor and
+critic network when training with an actor-critic algorithm. In this example we showcase how this can be done with
+the template model composer on the :ref:`Example 1 <template_feed_forward>`. Here everything stays the same, with one
+small exception: Now we specify the shared embedding key in the model builder config to be `['latent']` as can be seen
+below.
+
+The model config is defined as:
+
+.. literalinclude:: code_snippets/ff_shared_embedding_concat_model_builder.yaml
+  :language: YAML
+
+Now the output of the perception block `'latent'` will be used as the input to the critic network. The resulting
+inference graphs for an actor-critic model are shown below:
+
+.. image:: ff_shared_policy_graph.png
+    :width: 49 %
+.. image:: ff_shared_critic_graph.png
+    :width: 49 %
 
 Where to Go Next
 ----------------
