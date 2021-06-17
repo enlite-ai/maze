@@ -54,7 +54,7 @@ def test_concat_model_builder() -> None:
             modality_config["recurrence"] = {}
 
         # build models
-        model_builder = ConcatModelBuilder(modality_config, obs_modalities)
+        model_builder = ConcatModelBuilder(modality_config, obs_modalities, None)
         model = model_builder.from_observation_space(observation_space=dict_space)
         assert isinstance(model, InferenceBlock)
         assert "latent" in model.out_keys

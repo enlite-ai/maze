@@ -41,8 +41,7 @@ class PPO(ActorCritic):
                                                                       rewards=record.rewards,
                                                                       values=critic_output_old.detached_values,
                                                                       dones=record.dones[-1])
-                action_log_probs_old = self.model.policy.compute_action_log_probs(policy_output_old,
-                                                                                  record.actions)
+                action_log_probs_old = policy_output_old.log_probs_for_actions(record.actions)
                 # manually empty GPU cache
                 torch.cuda.empty_cache()
 
@@ -86,7 +85,7 @@ class PPO(ActorCritic):
                 policy_output, critic_output = self.model.compute_actor_critic_output(batch_record)
 
                 # Compute action log probabilities with the original actions
-                action_log_probs = self.model.policy.compute_action_log_probs(policy_output, batch_record.actions)
+                action_log_probs = policy_output.log_probs_for_actions(batch_record.actions)
 
                 # compute advantages
                 advantages = [r[batch_idxs] - dv[batch_idxs] for r, dv in

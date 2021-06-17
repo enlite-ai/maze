@@ -44,7 +44,8 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
 
     model_builder = {'_target_': 'maze.perception.builders.concat.ConcatModelBuilder',
                      'modality_config': modality_config,
-                     'observation_modality_mapping': obs_modalities}
+                     'observation_modality_mapping': obs_modalities,
+                     'shared_embedding_keys': shared_embedding_keys}
 
     # initialize default model builder
     default_builder = TemplateModelComposer(action_spaces_dict={0: action_space},
@@ -53,8 +54,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
                                             distribution_mapper_config={},
                                             model_builder=model_builder,
                                             policy={'_target_': policy_composer_type},
-                                            critic={'_target_': critics_composer_type},
-                                            shared_embedding_keys=shared_embedding_keys)
+                                            critic={'_target_': critics_composer_type})
 
     # create model pdf
     default_builder.save_models()
@@ -79,8 +79,11 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
 
     if shared_embedding_keys is not None:
         if isinstance(shared_embedding_keys, list):
+            assert all([shared_key in policy_net.out_keys for shared_key in shared_embedding_keys])
             assert all([shared_key in value_net.in_keys for shared_key in shared_embedding_keys])
         else:
+            assert all([shared_key in policy_net.out_keys for shared_keylist in shared_embedding_keys.values() for
+                        shared_key in shared_keylist])
             assert all([shared_key in value_net.in_keys for shared_keylist in shared_embedding_keys.values() for
                         shared_key in shared_keylist])
     else:
@@ -144,7 +147,8 @@ def build_structured_with_critic_type(env,
 
     model_builder = {'_target_': 'maze.perception.builders.concat.ConcatModelBuilder',
                      'modality_config': modality_config,
-                     'observation_modality_mapping': obs_modalities}
+                     'observation_modality_mapping': obs_modalities,
+                     'shared_embedding_keys': shared_embedding_keys}
 
     # initialize default model builder
     default_builder = TemplateModelComposer(
@@ -154,8 +158,7 @@ def build_structured_with_critic_type(env,
         distribution_mapper_config={},
         model_builder=model_builder,
         policy={'_target_': policy_composer_type},
-        critic={'_target_': critics_composer_type},
-        shared_embedding_keys=shared_embedding_keys)
+        critic={'_target_': critics_composer_type})
 
     # create model pdf
     default_builder.save_models()

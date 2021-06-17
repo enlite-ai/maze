@@ -28,7 +28,7 @@ class A2C(ActorCritic):
                                                               dones=record.dones[-1])
 
         # compute entropies
-        entropies = [entropy.mean() for entropy in policy_output.entropy]
+        entropies = [entropy.mean() for entropy in policy_output.entropies]
 
         # compute advantages
         advantages = [ret - detached_val for ret, detached_val in
@@ -44,7 +44,7 @@ class A2C(ActorCritic):
             value_losses = [(ret - val).pow(2).mean() for ret, val in zip(returns, critic_output.values)]
 
         # compute policy loss, iterating across all sub-steps
-        action_log_probs = self.model.policy.compute_action_log_probs(policy_output, record.actions)
+        action_log_probs = policy_output.log_probs_for_actions(record.actions)
         policy_losses = []
         for advantage, action_log_probs_dict in zip(advantages, action_log_probs):
 

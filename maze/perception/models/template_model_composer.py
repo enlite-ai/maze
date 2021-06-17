@@ -3,7 +3,6 @@ import functools
 from typing import Optional, Dict, Union, Type, Tuple, List
 
 from gym import spaces
-from omegaconf import ListConfig, DictConfig
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchSharedStateActionCritic, \
@@ -64,30 +63,19 @@ class TemplateModelComposer(BaseModelComposer):
                  distribution_mapper_config: ConfigType,
                  model_builder: Union[ConfigType, Type[BaseModelBuilder]],
                  policy: ConfigType,
-                 critic: ConfigType,
-                 shared_embedding_keys: Optional[Union[List[str], Dict[str, List[str]]]]):
+                 critic: ConfigType):
 
         super().__init__(action_spaces_dict, observation_spaces_dict, agent_counts_dict, distribution_mapper_config)
-
-        # Init shared embedding keys
-        self._shared_embedding_keys = list() if shared_embedding_keys is None else shared_embedding_keys
-        if isinstance(self._shared_embedding_keys, (list, ListConfig)):
-            self._shared_embedding_keys = {step_key: list(self._shared_embedding_keys) for step_key in
-                                           self.action_spaces_dict.keys()}
-        else:
-            assert isinstance(self._shared_embedding_keys, (dict, DictConfig)), f'type: ' \
-                                                                                f'{type(self._shared_embedding_keys)}'
-            self._shared_embedding_keys = {step_key: list(shared_keys) for step_key, shared_keys in
-                                           self._shared_embedding_keys.items()}
-        self._use_shared_embedding: Dict[StepKeyType, bool] = {step_key: len(shared_keys) > 0 for step_key, shared_keys
-                                                               in self._shared_embedding_keys.items()}
-        self._shared_embedding_nets: Dict[StepKeyType, InferenceBlock] = dict()
 
         self._policy_type = Factory(BasePolicyComposer).type_from_name(policy['_target_']) \
             if policy is not None else None
         self._critic_type = Factory(CriticComposerInterface).type_from_name(critic['_target_']) \
             if critic is not None else None
         self.model_builder = Factory(BaseModelBuilder).instantiate(model_builder)
+
+        self.model_builder.init_shared_embedding_keys(self.action_spaces_dict.keys())
+        assert self.model_builder.shared_embedding_keys.keys() == self.observation_spaces_dict.keys()
+        self._shared_embedding_nets: Dict[StepKeyType, InferenceBlock] = dict()
 
         self.save_models()
 
@@ -310,7 +298,7 @@ class TemplateModelComposer(BaseModelComposer):
                 networks[sub_step_key], self._shared_embedding_nets[sub_step_key] = self.template_policy_net(
                     observation_space=self.observation_spaces_dict[sub_step_key],
                     action_space=self.action_spaces_dict[sub_step_key],
-                    shared_embedding_keys=self._shared_embedding_keys[sub_step_key])
+                    shared_embedding_keys=self.model_builder.shared_embedding_keys[sub_step_key])
 
             return TorchPolicy(networks=networks, distribution_mapper=self.distribution_mapper, device="cpu")
 
@@ -327,8 +315,8 @@ class TemplateModelComposer(BaseModelComposer):
             return None
 
         elif issubclass(self._critic_type, SharedStateCriticComposer):
-            assert not any(self._use_shared_embedding.values()), f'Embedding can not be shared when using a shared ' \
-                                                                 f'state critic'
+            assert not any(self.model_builder.use_shared_embedding.values()), \
+                f'Embedding can not be shared when using a shared state critic'
             observation_space = flat_structured_space(self.observation_spaces_dict)
             critics = {0: self.template_value_net(observation_space)}
             return TorchSharedStateCritic(networks=critics, obs_spaces_dict=self.observation_spaces_dict, device="cpu",
@@ -339,7 +327,7 @@ class TemplateModelComposer(BaseModelComposer):
             for sub_step_key, sub_step_space in self.observation_spaces_dict.items():
                 critics[sub_step_key] = self.template_value_net(
                     observation_space=sub_step_space, perception_net=self._shared_embedding_nets[sub_step_key],
-                    shared_embedding_keys=self._shared_embedding_keys[sub_step_key])
+                    shared_embedding_keys=self.model_builder.shared_embedding_keys[sub_step_key])
             return TorchStepStateCritic(networks=critics,
                                         obs_spaces_dict=self.observation_spaces_dict,
                                         device="cpu")
@@ -350,17 +338,17 @@ class TemplateModelComposer(BaseModelComposer):
                 if idx > 0:
                     sub_step_space = spaces.Dict({**sub_step_space.spaces,
                                                   **DeltaStateCriticComposer.prev_value_space.spaces})
-                critics[sub_step_key] = self.template_value_net(observation_space=sub_step_space,
-                                                                perception_net=self._shared_embedding_nets[
-                                                                    sub_step_key],
-                                                                shared_embedding_keys=self._shared_embedding_keys[
-                                                                    sub_step_key])
+                critics[sub_step_key] = self.template_value_net(
+                    observation_space=sub_step_space, perception_net=self._shared_embedding_nets[sub_step_key],
+                    shared_embedding_keys=self.model_builder.shared_embedding_keys[sub_step_key])
+
             return TorchDeltaStateCritic(networks=critics,
                                          obs_spaces_dict=self.observation_spaces_dict,
                                          device="cpu")
         elif issubclass(self._critic_type, SharedStateActionCriticComposer):
-            assert not any(self._use_shared_embedding.values()), f'Embedding can not be shared when using a shared' \
-                                                                 f' state action critic'
+            assert not any(self.model_builder.use_shared_embedding.values()), \
+                f'Embedding can not be shared when using a shared state action critic'
+
             observation_space = flat_structured_space(self.observation_spaces_dict)
             action_space = flat_structured_space(self.action_spaces_dict)
             only_discrete_spaces = self._only_discrete_spaces()
@@ -373,8 +361,8 @@ class TemplateModelComposer(BaseModelComposer):
                                                 action_spaces_dict={0: action_space})
 
         elif issubclass(self._critic_type, StepStateActionCriticComposer):
-            assert not any(self._use_shared_embedding.values()), f'Embedding can not be shared when using a step ' \
-                                                                 f'state action critic'
+            assert not any(self.model_builder.use_shared_embedding.values()), \
+                f'Embedding can not be shared when using a step state action critic'
             critics = dict()
             only_discrete_spaces = self._only_discrete_spaces()
             for sub_step_key, sub_step_space in self.observation_spaces_dict.items():
