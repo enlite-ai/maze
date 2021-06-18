@@ -1,5 +1,5 @@
-Rollout and Training Examples
-=============================
+Cheat Sheet
+===========
 
 Run a rollout to test an environment with random action sampling:
 
