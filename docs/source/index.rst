@@ -188,16 +188,16 @@ but most importantly also provide code snippets and minimum working examples to 
    :caption: Best Practices and Tutorials
 
    best_practices_and_tutorials/tricks_of_the_trade.rst
+   best_practices_and_tutorials/example_cmds.rst
    best_practices_and_tutorials/integrating_gym_environment.rst
    best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/maze_and_other_frameworks.rst
-   best_practices_and_tutorials/example_cmds.rst
    best_practices_and_tutorials/plain_python_training_example_high_level.rst
    best_practices_and_tutorials/plain_python_training_example_low_level.rst
 
 .. toctree::
    :maxdepth: -1
-   :caption: Logging
+   :caption: Logging and Monitoring
 
    logging/log_stats_writer_and_tensorboard.rst
    logging/event_kpi_logging.rst
