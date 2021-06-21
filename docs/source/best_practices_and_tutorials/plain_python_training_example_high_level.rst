@@ -39,8 +39,6 @@ We use A2C for this example. The algorithm_config for A2C can be found :ref:`her
     algorithm_config = A2CAlgorithmConfig(
         n_epochs=5,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -51,8 +49,14 @@ We use A2C for this example. The algorithm_config for A2C can be found :ref:`her
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu'
-   )
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SequentialVectorEnv([cartpole_env_factory]),
+            n_episodes=1,
+            model_selection=None,
+            deterministic=True
+        )
+    )
 
 ----
 
@@ -275,6 +279,7 @@ If we want to train in a distributed manner, it is sufficient to pick the approp
 
 .. code-block:: python
 
+    algorithm_config.rollout_evaluator.eval_env = SubprocVectorEnv([cartpole_env_factory])
     rc = run_context.RunContext(
         env=cartpole_env_factory,
         algorithm=algorithm_config,

@@ -6,6 +6,13 @@ from typing import Tuple
 
 import gym
 import pytest
+
+from maze.core.env.base_env_events import BaseEnvEvents
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
+from maze.train.trainers.ppo.ppo_trainer import PPO
+from torch import nn
+
 from maze.api import run_context
 from maze.api.utils import RunMode
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -269,7 +276,8 @@ def test_inconsistency_identification_type_2() -> None:
         'normalization_samples': 1,
         '_target_': 'maze.train.trainers.es.ESDevRunner',
         'n_eval_rollouts': 1,
-        'shared_noise_table_size': 10
+        'shared_noise_table_size': 10,
+        "dump_interval": None
     }
     a2c_dev_runner_config = {
         'state_dict_dump_file': 'state_dict.pt',
@@ -277,10 +285,13 @@ def test_inconsistency_identification_type_2() -> None:
         'normalization_samples': 1,
         '_target_': 'maze.train.trainers.common.actor_critic.actor_critic_runners.ACDevRunner',
         "trainer_class": "maze.train.trainers.a2c.a2c_trainer.A2C",
-        'concurrency': 1
+        'concurrency': 1,
+        "dump_interval": None,
+        "eval_concurrency": 1
     }
     invalid_a2c_dev_runner_config = copy.deepcopy(a2c_dev_runner_config)
     invalid_a2c_dev_runner_config["trainer_class"] = "maze.train.trainers.es.es_trainer.ESTrainer"
+
     a2c_alg_config = A2CAlgorithmConfig(
         n_epochs=1,
         epoch_length=25,
@@ -296,8 +307,11 @@ def test_inconsistency_identification_type_2() -> None:
         max_grad_norm=0.0,
         device='cpu',
         rollout_evaluator=RolloutEvaluator(
-            eval_env=SequentialVectorEnv([lambda: GymMazeEnv(env=gym_env_name)]),
-            n_episodes=1, model_selection=None, deterministic=True)
+            eval_env=SequentialVectorEnv([lambda: GymMazeEnv(gym_env_name)]),
+            n_episodes=1,
+            model_selection=None,
+            deterministic=True
+        )
     )
     default_overrides = {"env.name": gym_env_name}
 
@@ -346,6 +360,14 @@ def test_inconsistency_identification_type_2() -> None:
         runner=a2c_dev_runner_config,
         silent=True,
         overrides=default_overrides
+    )
+    rc.train(1)
+
+    rc = run_context.RunContext(
+        algorithm=a2c_alg_config,
+        silent=True,
+        overrides=default_overrides,
+        runner="local"
     )
     rc.train(1)
 
@@ -719,7 +741,7 @@ def test_multirun():
     assert len(rc.run_dir) == 3
     assert len(rc.config[RunMode.TRAINING]) == 3
     assert len(rc.env_factory) == 3
-    assert len(rc.evaluate(1, 1)) == 3
+    assert len(rc.evaluate()) == 3
 
 
 def test_evaluation():
@@ -727,15 +749,48 @@ def test_evaluation():
     Tests evaluation.
     """
 
+    # Test with ES: No rollout evaluator in config.
     rc = run_context.RunContext(
         env=lambda: GymMazeEnv(env=gym.make("CartPole-v0")),
         silent=True,
+        configuration="test",
         overrides={"runner.normalization_samples": 1, "runner.shared_noise_table_size": 10}
     )
     rc.train(1)
+    stats = rc.evaluate(n_episodes=5)
+    assert len(stats) == 1
+    assert stats[0][(BaseEnvEvents.reward, "episode_count", None)] in (5, 6)
 
-    # Evaluate sequentially.
-    rc.evaluate(5, 5)
+    # Test with A2C: Partially specified rollout evaluator in config.
+    rc = run_context.RunContext(
+        env=lambda: GymMazeEnv(env=gym.make("CartPole-v0")),
+        silent=True,
+        algorithm="a2c",
+        configuration="test",
+        overrides={"runner.concurrency": 1}
+    )
+    rc.train(1)
+    stats = rc.evaluate(n_episodes=2)
+    assert len(stats) == 1
+    assert stats[0][(BaseEnvEvents.reward, "episode_count", None)] in (2, 3)
 
-    # Evaluate in parallel.
-    rc.evaluate(5, 5, parallel=True)
+    # Test with A2C and instanatiated RolloutEvaluator.
+    rc = run_context.RunContext(
+        env=lambda: GymMazeEnv(env=gym.make("CartPole-v0")),
+        silent=True,
+        algorithm="a2c",
+        configuration="test",
+        overrides={
+            "runner.concurrency": 1,
+            "algorithm.rollout_evaluator": RolloutEvaluator(
+                eval_env=SequentialVectorEnv([lambda: GymMazeEnv("CartPole-v0")]),
+                n_episodes=1,
+                model_selection=None,
+                deterministic=True
+            )
+        }
+    )
+    rc.train(1)
+    stats = rc.evaluate(n_episodes=5)
+    assert len(stats) == 1
+    assert stats[0][(BaseEnvEvents.reward, "episode_count", None)] in (1, 2)

@@ -81,7 +81,7 @@ class CloudpickleWrapper(object):
     """
     Uses cloudpickle to serialize contents (otherwise multiprocessing tries to use pickle).
 
-    :param var: (Any) the variable you wish to wrap for pickling with cloudpickle
+    :param var: (Any) the variable you wish to wrap for pickling with cloudpickle.
     """
 
     def __init__(self, var):

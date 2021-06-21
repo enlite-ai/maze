@@ -228,8 +228,6 @@ for A2C is A2CAlgorithmConfig. We will use the default parameters, which can als
     algorithm_config = A2CAlgorithmConfig(
         n_epochs=5,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -240,7 +238,14 @@ for A2C is A2CAlgorithmConfig. We will use the default parameters, which can als
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu')
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SequentialVectorEnv([cartpole_env_factory]),
+            n_episodes=1,
+            model_selection=None,
+            deterministic=True
+        )
+    )
 
 In order to use the distributed trainers, we create a vector environment (i.e., multiple environment
 instances encapsulated to be stepped simultaneously) using the environment factory function:
@@ -269,8 +274,13 @@ We can now instantiate an A2C trainer:
 
 .. code-block:: python
 
-    a2c_trainer = MultiStepA2C(env=train_envs, eval_env=eval_envs,
-        algorithm_config=algorithm_config, model=actor_critic_model, model_selection=None)
+    a2c_trainer = A2C(
+        env=train_envs,
+        algorithm_config=algorithm_config,
+        model=actor_critic_model,
+        model_selection=model_selection,
+        evaluator=algorithm_config.rollout_evaluator
+    )
 
 
 Train the Agent

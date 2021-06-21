@@ -5,7 +5,7 @@ import os
 import dataclasses
 from typing import Optional, Callable, Union
 
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
+import omegaconf
 from omegaconf import DictConfig
 
 from maze.core.env.structured_env import StructuredEnv
@@ -71,13 +71,14 @@ class TrainingRunner(Runner):
 
         with SwitchWorkingDirectoryToInput(cfg.input_dir):
             assert isinstance(cfg.env, DictConfig) or isinstance(cfg.env, Callable)
-            wrapper_cfg = cfg.wrappers if "wrappers" in cfg else {}
+            wrapper_cfg = omegaconf.OmegaConf.to_object(cfg["wrappers"]) if "wrappers" in cfg else {}
 
             # if the observation normalization is already available, read it from the input directory
             if isinstance(cfg.env, DictConfig):
-                self.env_factory = EnvFactory(cfg.env, wrapper_cfg)
+                self.env_factory = EnvFactory(omegaconf.OmegaConf.to_object(cfg["env"]), wrapper_cfg)
             elif isinstance(cfg.env, Callable):
-                self.env_factory = lambda: WrapperFactory.wrap_from_config(cfg.env(), wrapper_cfg)
+                env_fn = omegaconf.OmegaConf.to_container(cfg)["env"]
+                self.env_factory = lambda: WrapperFactory.wrap_from_config(env_fn(), wrapper_cfg)
 
             normalization_env = self.env_factory()
             normalization_env.seed(self.maze_seeding.generate_env_instance_seed())
@@ -165,3 +166,12 @@ class TrainingRunner(Runner):
         """
 
         return self._model_composer
+
+    @property
+    def cfg(self) -> DictConfig:
+        """
+        Returns Hydra config.
+        :return: Hydra config.
+        """
+
+        return self._cfg

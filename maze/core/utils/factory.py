@@ -5,6 +5,7 @@ import copy
 import importlib
 from typing import TypeVar, Type, Dict, Union, Any, List, Mapping, Generic, Tuple, Sequence, Callable
 
+import omegaconf
 from hydra.utils import instantiate
 from omegaconf import open_dict, DictConfig
 
@@ -62,6 +63,10 @@ class Factory(Generic[BaseType]):
         """
         if config is None:
             return None
+
+        # To ensure full Hydra compatibility: Convert config to OmegaConf, if necessary.
+        if isinstance(config, dict):
+            config = omegaconf.OmegaConf.create(config, flags={"allow_objects": True})
 
         if not isinstance(config, DictConfig) and isinstance(config, self.base_type):
             # nothing to do, object is already instantiated

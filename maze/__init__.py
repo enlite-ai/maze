@@ -1,5 +1,6 @@
 """ MazeRL init """
 import os
+
 from maze.utils.bcolors import BColors
 
 __version__ = "0.1.7"
@@ -17,3 +18,4 @@ if "OMP_NUM_THREADS" not in os.environ:
         "INFO: Setting OMP_NUM_THREADS=1 to avoid performance drop when using distributed environments!",
         color=BColors.OKBLUE)
     os.environ["OMP_NUM_THREADS"] = "1"
+

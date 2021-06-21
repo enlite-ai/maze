@@ -8,6 +8,7 @@ from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.policies import ProbabilisticPolicyComposer
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 
@@ -155,8 +156,6 @@ def test_concepts_and_structures_run_context_overview():
     alg_config = A2CAlgorithmConfig(
         n_epochs=1,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -167,7 +166,13 @@ def test_concepts_and_structures_run_context_overview():
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu'
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SequentialVectorEnv([lambda: GymMazeEnv("CartPole-v0")]),
+            n_episodes=1,
+            model_selection=None,
+            deterministic=True
+        )
     )
 
     rc = RunContext(
