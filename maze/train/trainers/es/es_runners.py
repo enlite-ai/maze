@@ -58,7 +58,7 @@ class ESMasterRunner(TrainingRunner, ABC):
                                           input_dir=cfg.input_dir)
 
         self._model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=policy,
-                                                   dump_interval=None)
+                                                   dump_interval=self.dump_interval)
 
     @abstractmethod
     def create_distributed_rollouts(

@@ -11,10 +11,13 @@ import omegaconf
 
 from maze.api.utils import RunMode, InvalidSpecificationError, _PrimitiveType, _OverridesType, _ATTRIBUTE_PROXIES
 from maze.runner import Runner
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import A2C
 from maze.train.trainers.common.actor_critic.actor_critic_runners import ACRunner, ACDevRunner, ACLocalRunner
 from maze.train.trainers.common.config_classes import AlgorithmConfig
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.es.es_algorithm_config import ESAlgorithmConfig
 from maze.train.trainers.es.es_runners import ESDevRunner
 from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig
@@ -64,7 +67,7 @@ class ConfigurationAuditor:
         :return: (1) Explicitly set kwargs and (2) overrides prepared for Hydra initialization.
         """
 
-        kwargs = copy.deepcopy(self._args)
+        kwargs = copy.copy(self._args)
         run_dir: str = kwargs.get("run_dir")
         overrides: _OverridesType = self._args["overrides"] if self._args["overrides"] else {}
 
@@ -166,20 +169,21 @@ class ConfigurationAuditor:
             alg_module_names = {
                 # Fetch module names for components. If multiple are retrieved, fetch any (algorithm should always be
                 # the same).
-                comp: self._map_comp_spec_to_conf_module_names(comp, all_args[comp]).get("algorithm")
+                comp: self._map_comp_spec_to_conf_module_names(comp, all_args[comp])
                 for comp in ("algorithm", "runner")
             }
 
             # If config module names are explicitly specified (via string argument), ephemeral attributes are not
             # necessary.
-            if (
-                alg_module_names["algorithm"] and alg_module_names["runner"] and
-                next(iter(alg_module_names["algorithm"])) != next(iter(alg_module_names["runner"]))
-            ):
-                raise InvalidSpecificationError(
-                    "The specified 'algorithm' object refers to a different algorithm than the specified 'runner' "
-                    "object. Please make sure that both components are compatible."
-                )
+            if alg_module_names["algorithm"] and alg_module_names["runner"]:
+                for key in ("algorithm", "runner"):
+                    via_alg = alg_module_names["algorithm"].get(key)
+                    via_runner = alg_module_names["runner"].get(key)
+                    if via_runner and via_alg and next(iter(via_runner)) != next(iter(via_alg)):
+                        raise InvalidSpecificationError(
+                            "The specified 'algorithm' object refers to a different algorithm than the specified "
+                            "'runner' object. Please make sure that both components are compatible."
+                        )
 
     def _generate_ephemeral_init_kwargs(self) -> Dict[str, str]:
         """
@@ -293,7 +297,9 @@ class ConfigurationAuditor:
         if arg_name == "algorithm":
             if not issubclass(_class, AlgorithmConfig):
                 raise InvalidSpecificationError()
-            _class_map: Dict[Type[AlgorithmConfig], Dict[str, Set[str]]] = {
+
+            # Map to algorithm.
+            class_map: Dict[Type[AlgorithmConfig], Dict[str, Set[str]]] = {
                 A2CAlgorithmConfig: {"algorithm": {"a2c"}},
                 BCAlgorithmConfig: {"algorithm": {"bc"}},
                 ESAlgorithmConfig: {"algorithm": {"es"}},
@@ -301,12 +307,12 @@ class ConfigurationAuditor:
                 PPOAlgorithmConfig: {"algorithm": {"ppo"}}
             }
 
-            return _class_map[_class]
+            return class_map[_class]
 
         elif arg_name == "runner":
             if not issubclass(_class, Runner):
                 raise InvalidSpecificationError()
-            _class_map: Dict[Type[Runner], Dict[str, Set[str]]] = {
+            class_map: Dict[Type[Runner], Dict[str, Set[str]]] = {
                 # ACDevRunner is ambiguous, could also be PPO.
                 ACDevRunner: {"algorithm": {"a2c", "ppo"}, "runner": {"dev"}},
                 ACLocalRunner: {"algorithm": {"a2c", "ppo"}, "runner": {"local"}},
@@ -335,13 +341,13 @@ class ConfigurationAuditor:
                         .format(alg=str(_trainer_class))
                     )
 
-                return {"algorithm": {alg}, "runner": _class_map[_class]["runner"]}
+                return {"algorithm": {alg}, "runner": class_map[_class]["runner"]}
         else:
             raise InvalidSpecificationError(
                 "Extracting config module name for argument '{a}' is not supported.".format(a=arg_name)
             )
 
-        return _class_map[_class]
+        return class_map[_class]
 
     @property
     def kwargs(self) -> Dict[str, Any]:

@@ -52,8 +52,6 @@ As mentioned previously, the :class:`~maze.api.run_context.RunContext` API is la
         alg_config = A2CAlgorithmConfig(
             n_epochs=1,
             epoch_length=25,
-            deterministic_eval=False,
-            eval_repeats=2,
             patience=15,
             critic_burn_in_epochs=0,
             n_rollout_steps=100,
@@ -64,7 +62,13 @@ As mentioned previously, the :class:`~maze.api.run_context.RunContext` API is la
             value_loss_coef=0.5,
             entropy_coef=0.00025,
             max_grad_norm=0.0,
-            device='cpu'
+            device='cpu',
+            rollout_evaluator=RolloutEvaluator(
+                eval_env=SequentialVectorEnv([lambda: GymMazeEnv("CartPole-v0")]),
+                n_episodes=1,
+                model_selection=None,
+                deterministic=True
+            )
         )
 
         rc = RunContext(

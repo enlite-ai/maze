@@ -4,6 +4,8 @@ Tests for RunContext examples given in maze/docs/source/concepts_and_structure/r
 import omegaconf
 import pytest
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
@@ -12,17 +14,18 @@ from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.api.run_context import RunContext
 
 
-def _get_alg_config() -> A2CAlgorithmConfig:
+def _get_alg_config(env_name: str, runner_type: str) -> A2CAlgorithmConfig:
     """
     Returns algorithm config used in tests.
+    :param env_name: Env name for rollout evaluator.
+    :param runner_type: Runner type. "dev" or "local".
     :return: A2CAlgorithmConfig instance.
     """
 
+    env_factory = lambda: GymMazeEnv(env_name)
     return A2CAlgorithmConfig(
         n_epochs=1,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -33,7 +36,11 @@ def _get_alg_config() -> A2CAlgorithmConfig:
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu'
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SubprocVectorEnv([env_factory]) if runner_type == "local" else SequentialVectorEnv([env_factory]),
+            n_episodes=1, model_selection=None, deterministic=True
+        )
     )
 
 
@@ -47,6 +54,7 @@ def test_examples_part1():
     a2c_overrides = {"runner.concurrency": 1}
     es_overrides = {"algorithm.n_epochs": 1, "algorithm.n_rollouts_per_update": 1}
     env_factory = lambda: GymMazeEnv('CartPole-v0')
+    alg_config = _get_alg_config("CartPole-v0", "dev")
 
     # ------------------------------------------------------------------
 
@@ -62,7 +70,6 @@ def test_examples_part1():
 
     # ------------------------------------------------------------------
 
-    alg_config = _get_alg_config()
     rc = RunContext(
         algorithm=alg_config,
         overrides={"env.name": "CartPole-v0", **a2c_overrides},
@@ -124,7 +131,7 @@ def test_examples_part2():
     a2c_overrides = {"runner.concurrency": 1}
     es_overrides = {"algorithm.n_epochs": 1, "algorithm.n_rollouts_per_update": 1}
     env_factory = lambda: GymMazeEnv('CartPole-v0')
-    alg_config = _get_alg_config()
+    alg_config = _get_alg_config('CartPole-v0', "dev")
 
     # ------------------------------------------------------------------
 

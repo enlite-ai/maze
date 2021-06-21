@@ -59,5 +59,6 @@ class PPOAlgorithmConfig(AlgorithmConfig):
     clip_range: float
     """Clipping parameter of surrogate loss"""
 
-    rollout_evaluator: Union[RolloutEvaluator, ConfigType]
+    # Should be Union[RolloutEvaluator, ConfigType], which Hydra does not support (yet).
+    rollout_evaluator: RolloutEvaluator
     """Rollout evaluator."""

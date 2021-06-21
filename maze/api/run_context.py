@@ -179,7 +179,8 @@ class RunContext:
         argv = copy.deepcopy(sys.argv)
 
         # Prepare and audit arguments.
-        args = copy.deepcopy(locals())
+        args = copy.copy(locals())
+
         self._auditors = {
             run_mode: ConfigurationAuditor(run_mode, args) for run_mode in (RunMode.TRAINING,)
         }
@@ -375,65 +376,61 @@ class RunContext:
 
         return actions if len(actions) > 1 else actions[0]
 
-    def evaluate(
-        self,
-        n_envs: int,
-        n_episodes: int,
-        model_selection: Optional[ModelSelectionBase] = None,
-        deterministic: bool = False,
-        parallel: bool = False
-    ) -> Union[LogStats, List[LogStats]]:
+    def evaluate(self, **eval_kwargs) -> Union[LogStats, List[LogStats]]:
         """
-        Evaluates the trained/loaded policy with an RolloutEvaluator.
+        Evaluates the trained/loaded policy with an RolloutEvaluator. By default 8 episodes are evaluated sequentially.
 
-        :param n_envs: Number of environments.
-
-        :param n_episodes: Number of evaluation episodes to run. Note that the actual number might be slightly larger
-                           due to the distributed nature of the environment.
-
-        :param model_selection: Model selection to notify about the recorded rewards.
-
-        :param deterministic: Whether to compute the policy action deterministically.
-
-        :param parallel: Whether to evaluate environments in parallel using SubprocVectorEnv.
+        :param eval_kwargs: kwargs to overwrite set (or default) initialization parameters for RolloutEvaluator. Note
+                            that these arguments are ignored if RolloutRunner was passed as instance in AlgorithmConfig.
 
         :return: Logged statistics. One LogStats object if RunContext doesn't operate in multi-run mode, otherwise a
                  list thereof.
 
         """
 
+        # Collect env factories and policies, wrap them in lists if they aren't already.
         env_factories = self.env_factory
         policies = self.policy
-
-        # Wrap env factory and policy in list, if they aren't already.
         if not isinstance(env_factories, List):
             env_factories = [env_factories]
             policies = [policies]
 
-        def _evaluate(_env_factory: Callable[[], MazeEnv], _policy: TorchPolicy) -> LogStats:
-            """
-            Evaluates policy on a newly generated environment.
-            :param _env_factory: Environment factory function.
-            :param _policy: Policy to evaluate.
-            :return: Collected LogStats.
-            """
+        # Generate rollout evaluators.
+        rollout_evaluators: List[RolloutEvaluator] = []
+        for runner, env_fn in zip(self._runners[RunMode.TRAINING], env_factories):
+            # If rollout evaluator is not specified at all, create incomplete config with target.
+            try:
+                ro_eval = runner.cfg.algorithm.rollout_evaluator
+            except omegaconf.errors.ConfigAttributeError:
+                ro_eval = {"_target_": "maze.train.trainers.common.evaluators.rollout_evaluator.RolloutEvaluator"}
 
-            evaluator = RolloutEvaluator(
-                eval_env=(SubprocVectorEnv if parallel else SequentialVectorEnv)(
-                    env_factories=[_env_factory] * n_envs
-                ),
-                n_episodes=n_episodes,
-                model_selection=model_selection,
-                deterministic=deterministic
-            )
+            # Override with specified arguments.
+            if isinstance(ro_eval, DictConfig):
+                ro_eval = omegaconf.OmegaConf.to_object(ro_eval)
+            if isinstance(ro_eval, dict):
+                ro_eval = {**ro_eval, **eval_kwargs}
 
-            evaluator.evaluate(_policy)
-
-            return evaluator.eval_env.get_stats(LogStatsLevel.EPOCH).last_stats
-
+            # Try to instantiate rollout runner directly from config. Works if completely specified in config or present
+            # as instance of RolloutEvaluator.
+            try:
+                ro_eval = Factory(RolloutEvaluator).instantiate(ro_eval)
+            # Merge with default values in case of incomplete RolloutEvaluator config.
+            except TypeError:
+                default_params = {
+                    "eval_env": SequentialVectorEnv(env_factories=[env_fn]),
+                    "n_episodes": 8,
+                    "model_selection": None,
+                    "deterministic": False
+                }
+                ro_eval = Factory(RolloutEvaluator).instantiate({**default_params, **ro_eval})
+            finally:
+                rollout_evaluators.append(ro_eval)
+        # Evaluate policies.
         stats = [
-            self._silence(lambda: _evaluate(env_factory, policy))
-            for env_factory, policy in zip(env_factories, policies)
+            self._silence(
+                lambda: [ro_eval.evaluate(policy), ro_eval.eval_env.get_stats(LogStatsLevel.EPOCH).last_stats][-1]
+            )
+            for env_factory, policy, ro_eval in zip(env_factories, policies, rollout_evaluators)
         ]
 
         return stats[0] if len(stats) == 0 else stats
@@ -448,7 +445,7 @@ class RunContext:
 
         """
 
-        if (len(self._runners[RunMode.TRAINING]) + len(self._runners[RunMode.ROLLOUT])) == 0:
+        if len(self._runners[RunMode.TRAINING]) == 0:
             self._runners[RunMode.TRAINING] = self._silence(lambda: self._generate_runners(RunMode.TRAINING))
 
         runners = self._runners[RunMode.TRAINING]

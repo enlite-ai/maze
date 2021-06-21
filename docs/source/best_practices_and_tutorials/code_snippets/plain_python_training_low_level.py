@@ -16,6 +16,7 @@ from maze.perception.blocks.general.torch_model_block import TorchModelBlock
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import A2C
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.utils.log_stats_utils import setup_logging
 
@@ -153,11 +154,10 @@ def train(n_epochs):
 
     # Instantiating the Trainer
     # =========================
+
     algorithm_config = A2CAlgorithmConfig(
         n_epochs=n_epochs,
         epoch_length=25,
-        deterministic_eval=False,
-        eval_repeats=2,
         patience=15,
         critic_burn_in_epochs=0,
         n_rollout_steps=100,
@@ -168,7 +168,14 @@ def train(n_epochs):
         value_loss_coef=0.5,
         entropy_coef=0.00025,
         max_grad_norm=0.0,
-        device='cpu')
+        device='cpu',
+        rollout_evaluator=RolloutEvaluator(
+            eval_env=SequentialVectorEnv([cartpole_env_factory]),
+            n_episodes=1,
+            model_selection=None,
+            deterministic=True
+        )
+    )
 
     # Distributed Environments
     # ------------------------
@@ -180,8 +187,11 @@ def train(n_epochs):
     # Initialize best model selection.
     model_selection = BestModelSelection(dump_file="params.pt", model=actor_critic_model)
 
-    a2c_trainer = A2C(rollout_generator=RolloutGenerator(train_envs), eval_env=eval_envs,
-                      algorithm_config=algorithm_config, model=actor_critic_model, model_selection=model_selection)
+    a2c_trainer = A2C(rollout_generator=RolloutGenerator(train_envs),
+                      evaluator=algorithm_config.rollout_evaluator,
+                      algorithm_config=algorithm_config,
+                      model=actor_critic_model,
+                      model_selection=model_selection)
 
     # Train the Agent
     # ===============
