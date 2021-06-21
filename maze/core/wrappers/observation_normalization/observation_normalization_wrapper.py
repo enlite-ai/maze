@@ -4,22 +4,20 @@ import os
 import pickle
 from collections import defaultdict
 from types import ModuleType
-from typing import Any, Dict, Union, List, Optional, Tuple
+from typing import Any, Dict, Union, List, Optional
 
 import gym
 import numpy as np
-from maze.core.env.action_conversion import ActionType
-from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
-from omegaconf import DictConfig
-
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.normalization_strategies.base import \
     ObservationNormalizationStrategy, StructuredStatisticsType
 from maze.core.wrappers.wrapper import ObservationWrapper
+from omegaconf import DictConfig
 
 
 class ObservationNormalizationWrapper(ObservationWrapper[MazeEnv]):

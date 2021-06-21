@@ -1,16 +1,13 @@
 """Acts as a core env in an Agent Integration setting."""
-from abc import ABC
 from queue import Queue
 from threading import Event
-from typing import Tuple, Any, Dict, Union, Iterable, Optional, List, Type
+from typing import Tuple, Any, Dict, Union, Iterable, Optional, List
 
 import numpy as np
-
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
-from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.structured_env import StepKeyType, ActorID
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator

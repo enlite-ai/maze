@@ -1,10 +1,8 @@
 import pytest
-from hydra.errors import HydraException
-
 from maze.core.utils.factory import Factory
+from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion \
     as DummyObservationConversion
-from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 
 
 class CustomDummyObservationConversion(DummyObservationConversion):

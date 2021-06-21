@@ -3,13 +3,15 @@ An empty reward aggregator which just passes the reward through
 """
 
 from abc import ABC
-from typing import List, Type
+from typing import List, Type, Optional
 
+from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
 
 
 class DummyEnvEvents(ABC):
     """Minimal event class for the DummyCoreEnv"""
+
     def twice_per_step(self, value: int):
         """A dummy event that is called twice per step."""
 
@@ -24,7 +26,7 @@ class RewardAggregator(RewardAggregatorInterface):
         """
         return [DummyEnvEvents]
 
-    def summarize_reward(self) -> float:
+    def summarize_reward(self, maze_state: Optional[MazeStateType] = None) -> float:
         """Summarize reward based on the orders and pieces to cut.
 
         :return: the summarized scalar reward.

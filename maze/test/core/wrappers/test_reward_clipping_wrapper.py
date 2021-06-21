@@ -19,7 +19,6 @@ def test_reward_clipping_wrapper():
 
     action = env.action_space.sample()
     np.random.seed(1234)
-    original_reward = env.step(action)[1]
 
     wrapped_env = RewardClippingWrapper(env, min_val=-0.1, max_val=0.1)
     np.random.seed(1234)

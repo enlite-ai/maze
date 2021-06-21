@@ -1,11 +1,11 @@
 """Interface specifying the computation of scalar rewards from aggregated reward events."""
 from abc import abstractmethod, ABC
-from typing import Any, Union, List, Type, Optional
+from typing import Union, List, Type, Optional
 
+import numpy as np
 from maze.core.annotations import override
 from maze.core.env.maze_state import MazeStateType
 from maze.core.events.pubsub import Subscriber
-import numpy as np
 
 
 class RewardAggregatorInterface(Subscriber):

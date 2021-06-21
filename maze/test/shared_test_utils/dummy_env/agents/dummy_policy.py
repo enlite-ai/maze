@@ -1,10 +1,9 @@
 """
 Implementation of a dummy policy for the DummyEnvironment.
 """
-from typing import Sequence, Tuple, Union, Optional
+from typing import Sequence, Tuple, Optional
 
 import numpy as np
-
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType

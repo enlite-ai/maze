@@ -5,8 +5,6 @@ from typing import Dict, Union, Optional, Mapping
 import gym
 import numpy as np
 from gym import spaces
-
-from maze.core.agent.state_critic import StateCritic
 from maze.core.agent.state_critic_input_output import StateCriticStepInput
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic

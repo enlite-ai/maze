@@ -3,7 +3,6 @@ from abc import abstractmethod, ABC
 from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, Callable
 
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.maze_action import MazeActionType

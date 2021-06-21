@@ -4,7 +4,6 @@ from typing import Callable, Optional
 from typing import TypeVar, Union, Any, Tuple, Dict
 
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.environment_context import EnvironmentContext

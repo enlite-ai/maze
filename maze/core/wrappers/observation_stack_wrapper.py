@@ -1,13 +1,11 @@
 """ Implements observation stacking as an environment wrapper. """
 import copy
-import warnings
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 from gym import spaces
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType

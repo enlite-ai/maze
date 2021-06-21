@@ -8,7 +8,6 @@ from typing import Any, Optional, Mapping, Set, Dict, Sequence, List
 
 import hydra
 import omegaconf
-from maze.utils.log_stats_utils import clear_global_state
 from omegaconf import OmegaConf
 
 from maze.api.utils import RunMode, _PrimitiveType, _ATTRIBUTE_PROXIES, _MISSING_ARGUMENTS, _OverridesType, \

@@ -8,16 +8,12 @@ from typing import Dict, Any, Tuple, Union, Mapping, Set, Type, Optional
 
 import hydra
 import omegaconf
-
 from maze.api.utils import RunMode, InvalidSpecificationError, _PrimitiveType, _OverridesType, _ATTRIBUTE_PROXIES
 from maze.runner import Runner
-from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
-from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.a2c.a2c_algorithm_config import A2CAlgorithmConfig
 from maze.train.trainers.a2c.a2c_trainer import A2C
 from maze.train.trainers.common.actor_critic.actor_critic_runners import ACRunner, ACDevRunner, ACLocalRunner
 from maze.train.trainers.common.config_classes import AlgorithmConfig
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.es.es_algorithm_config import ESAlgorithmConfig
 from maze.train.trainers.es.es_runners import ESDevRunner
 from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig

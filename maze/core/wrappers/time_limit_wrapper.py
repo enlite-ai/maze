@@ -3,7 +3,6 @@
 from typing import TypeVar, Union, Dict, Tuple, Any, Optional
 
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType

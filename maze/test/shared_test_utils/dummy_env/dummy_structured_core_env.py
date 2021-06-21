@@ -1,15 +1,12 @@
 """Dummy structured (multi-agent, with two agents) core environment."""
 
-from typing import Tuple, Dict, Any, Union, Optional
+from typing import Tuple, Dict, Any, Optional
 
 import gym
 import numpy as np
-
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.structured_env import StepKeyType, ActorID
-from maze.core.events.pubsub import Pubsub
-from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator, DummyEnvEvents
 
 
 class DummyStructuredCoreEnvironment(CoreEnv):

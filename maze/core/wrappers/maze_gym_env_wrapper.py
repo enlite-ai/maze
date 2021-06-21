@@ -1,24 +1,20 @@
 """Contains wrapper transforming a standard gym environment into a maze environment."""
-from abc import ABC
 from copy import copy, deepcopy
-from typing import Tuple, Union, Any, Dict, Optional, List, Type
+from typing import Tuple, Union, Any, Dict, Optional
 
 import gym
 import numpy as np
 from gym.envs.classic_control import CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv
 from gym.wrappers import TimeLimit
-
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionConversionInterface
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
-from maze.core.env.reward import RewardAggregatorInterface
-from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationConversionInterface
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StepKeyType, ActorID
-from maze.core.events.pubsub import Subscriber
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
 

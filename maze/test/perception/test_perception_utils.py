@@ -63,7 +63,7 @@ def test_map_nested_structure_mutable():
 def test_map_nested_structure_inmutable():
     test_value = tuple(torch.rand((2, 4)))
     with pytest.raises(Exception) as e_info:
-        out_value = map_nested_structure(test_value, mapping=lambda x: x * 2, in_place=True)
+        map_nested_structure(test_value, mapping=lambda x: x * 2, in_place=True)
 
     test_value = list(torch.rand((2, 4)))
     out_value = map_nested_structure(test_value, mapping=lambda x: x * 2, in_place=True)
@@ -88,7 +88,7 @@ def test_convert_to_torch():
     if torch.cuda.is_available():
         test_value = torch.randn((2, 4))
         with pytest.raises(Exception) as e_info:
-            out_value = convert_to_torch(test_value, device='cuda', cast=None, in_place=True)
+            convert_to_torch(test_value, device='cuda', cast=None, in_place=True)
 
     if torch.cuda.is_available():
         test_value = torch.randn((2, 4))
@@ -97,7 +97,7 @@ def test_convert_to_torch():
 
     test_value = torch.randn((2, 4))
     with pytest.raises(Exception) as e_info:
-        out_value = convert_to_torch(test_value, device=None, cast=torch.float64, in_place=True)
+        convert_to_torch(test_value, device=None, cast=torch.float64, in_place=True)
 
 
 def test_base_types():

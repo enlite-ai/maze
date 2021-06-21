@@ -65,7 +65,8 @@ def compute_gradient_norm(params: Iterable[torch.Tensor]) -> float:
     return total_norm
 
 
-def stack_torch_dict_list(dict_list: List[Dict[str, Union[torch.Tensor, np.ndarray]]], dim: int = 0) -> Dict[str, torch.Tensor]:
+def stack_torch_dict_list(dict_list: List[Dict[str, Union[torch.Tensor, np.ndarray]]], dim: int = 0)\
+        -> Dict[str, torch.Tensor]:
     """Stack list of dictionaries holding torch tensors as values.
 
     Similar to :func:`~maze.train.utils.train_utils.stack_numpy_dict_list`, but for tensors.

@@ -1,21 +1,18 @@
 """Generate trajectory data for the wrapped environment."""
 
 import uuid
-import warnings
 from copy import deepcopy
 from typing import Union, Any, Tuple, Dict, Optional
 
 import gym
-
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
+from maze.core.env.maze_state import MazeStateType
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
-from maze.core.env.maze_state import MazeStateType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection

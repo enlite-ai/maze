@@ -1,13 +1,9 @@
 """This file holds the rllib runner, which uses the maze model-builder as well as the maze distribution
     mapper in order to train the maze env with RLlib algorithms"""
 from dataclasses import dataclass
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Optional
 
 import ray
-from omegaconf import DictConfig, OmegaConf
-from ray import tune
-from ray.rllib.models import ModelCatalog, MODEL_DEFAULTS
-
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.core.utils.seeding import MazeSeeding
@@ -17,6 +13,9 @@ from maze.rllib.maze_rllib_env import build_maze_rllib_env_factory
 from maze.rllib.maze_rllib_models.maze_rllib_base_model import MazeRLlibBaseModel
 from maze.rllib.maze_tune_callback_save_model import MazeRLlibSaveModelCallback
 from maze.runner import Runner
+from omegaconf import DictConfig, OmegaConf
+from ray import tune
+from ray.rllib.models import ModelCatalog
 
 
 @dataclass
