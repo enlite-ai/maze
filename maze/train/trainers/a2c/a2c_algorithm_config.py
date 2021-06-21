@@ -1,8 +1,6 @@
 """Algorithm parameters for multi-step A2C model."""
 from dataclasses import dataclass
-from typing import Union
 
-from maze.core.utils.factory import ConfigType
 from maze.train.trainers.common.config_classes import AlgorithmConfig
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 

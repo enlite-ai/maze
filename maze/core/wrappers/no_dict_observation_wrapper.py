@@ -1,9 +1,8 @@
 """Contains a dictionary-space removal observation wrapper."""
-from typing import Dict, Union, Any, Tuple
+from typing import Dict, Union, Any
 
 import gym
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.wrappers.wrapper import ObservationWrapper, EnvType

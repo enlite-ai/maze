@@ -2,11 +2,7 @@
 import copy
 import dataclasses
 from abc import abstractmethod
-from typing import Union, Callable, Optional, List
-
-from maze.core.utils.factory import Factory
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from omegaconf import DictConfig
+from typing import Union, Callable, List
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
@@ -15,16 +11,19 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats_env import LogStatsEnv
+from maze.core.utils.factory import Factory
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.train.parallelization.distributed_actors.sequential_distributed_actors import SequentialDistributedActors
 from maze.train.parallelization.distributed_actors.subproc_distributed_actors import SubprocDistributedActors
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.impala.impala_trainer import MultiStepIMPALA
 from maze.utils.bcolors import BColors
+from omegaconf import DictConfig
 
 
 @dataclasses.dataclass

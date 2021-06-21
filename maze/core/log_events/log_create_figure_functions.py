@@ -8,7 +8,7 @@ import numpy as np
 from maze.core.annotations import unused
 
 
-def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], List[float]], **kwargs):
+def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], List[float]], **kwargs) -> plt.Figure:
     """ Checks the type of value and calls the correct plotting function accordingly.
 
     :param value: Output of an reducer function
@@ -26,7 +26,7 @@ def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], Lis
     return fig
 
 
-def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[float]], **kwargs):
+def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[float]], **kwargs) -> plt.Figure:
     """ Checks the type of value and calls the correct plotting function accordingly.
 
     :param value: Output of an reducer function
@@ -47,7 +47,7 @@ def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[
     return fig
 
 
-def create_histogram(value):
+def create_histogram(value) -> plt.Figure:
     """
     Creates simple matplotlib histogram of value.
 
@@ -59,7 +59,7 @@ def create_histogram(value):
     return fig
 
 
-def create_multi_binary_relative_bar_plot(value: List[Tuple[np.ndarray, int]]):
+def create_multi_binary_relative_bar_plot(value: List[Tuple[np.ndarray, int]]) -> plt.Figure:
     """
     Counts the categories in value and prepares a relative bar plot of these.
 
@@ -82,7 +82,7 @@ def create_multi_binary_relative_bar_plot(value: List[Tuple[np.ndarray, int]]):
     return fig
 
 
-def create_relative_bar_plot(value: List[Tuple[int, int]]):
+def create_relative_bar_plot(value: List[Tuple[int, int]]) -> plt.Figure:
     """
     Counts the categories in value and prepares a relative bar plot of these.
 
@@ -111,7 +111,7 @@ def create_relative_bar_plot(value: List[Tuple[int, int]]):
     return fig
 
 
-def create_violin_distribution(value: List[np.ndarray], **kwargs) -> None:
+def create_violin_distribution(value: List[np.ndarray], **kwargs) -> plt.Figure:
     """
     Creates simple matplotlib violin plot of value.
 

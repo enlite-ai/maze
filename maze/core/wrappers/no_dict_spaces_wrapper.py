@@ -4,7 +4,6 @@ from typing import Union, Dict, Any, Tuple, Optional
 import gym
 import numpy as np
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType

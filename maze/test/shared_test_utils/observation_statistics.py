@@ -2,14 +2,10 @@
 Auxiliary routines for tests related to observation statistics.
 """
 
-import base64
-import hashlib
-from typing import Tuple, Any, List, Callable, Union, Iterable
+from typing import Any, Callable, Iterable
 
 import gym
 import numpy as np
-
-from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
 

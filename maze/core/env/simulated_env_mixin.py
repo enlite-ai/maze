@@ -1,8 +1,6 @@
 """Environment interface for simulated environments (used e.g. by Monte Carlo Tree Search)."""
 from abc import ABC, abstractmethod
-from typing import Any, Tuple, Dict
 
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.structured_env import StructuredEnv
 
 

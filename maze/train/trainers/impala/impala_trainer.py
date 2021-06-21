@@ -1,20 +1,16 @@
 """Multi-step IMPALA implementation."""
 import time
 from collections import defaultdict
-from typing import Union, Optional
+from typing import Optional
 
 import torch
-
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
-from maze.core.env.structured_env import StructuredEnv
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.perception.perception_utils import map_nested_structure
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
-from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import ActorCritic
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.impala import impala_vtrace
@@ -26,13 +22,13 @@ class MultiStepIMPALA(ActorCritic):
     """Multi step advantage actor critic.
     """
 
-    def __init__(self, algorithm_config: ImpalaAlgorithmConfig,
+    def __init__(self,
+                 algorithm_config: ImpalaAlgorithmConfig,
                  rollout_generator: DistributedActors,
-                 eval_env: Optional[Union[VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+                 evaluator: Optional[RolloutEvaluator],
                  model: TorchActorCritic,
-                 model_selection: Optional[BestModelSelection],
-                 initial_state: Optional[str] = None):
-        super().__init__(algorithm_config, rollout_generator, eval_env, model, model_selection, initial_state)
+                 model_selection: Optional[BestModelSelection]):
+        super().__init__(algorithm_config, rollout_generator, evaluator, model, model_selection)
 
         # inject statistics directly into the epoch log
         epoch_stats = self.rollout_generator.get_epoch_stats_aggregator()

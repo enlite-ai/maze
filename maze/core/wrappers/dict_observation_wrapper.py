@@ -1,10 +1,8 @@
 """Contains a dictionary observation space wrapper."""
-from typing import Tuple, Any, Dict
 
 import gym
 import numpy as np
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 
 from maze.core.wrappers.wrapper import ObservationWrapper

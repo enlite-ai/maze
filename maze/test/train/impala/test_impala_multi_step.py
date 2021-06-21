@@ -64,7 +64,6 @@ def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlg
     impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()),
                              rollout_generator=train_actors,
                              evaluator=algorithm_config.rollout_evaluator,
-                             logging_prefix="eval",
                              algorithm_config=algorithm_config,
                              model_selection=None)
 

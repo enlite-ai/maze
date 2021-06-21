@@ -5,11 +5,10 @@ import numpy as np
 import pytest
 import torch
 from gym import spaces
-from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
-
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch
 from maze.rllib.maze_rllib_action_distribution import MazeRLlibActionDistribution
+from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 
 
 class FakeRLLibModel(TorchModelV2, torch.nn.Module):

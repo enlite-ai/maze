@@ -1,6 +1,6 @@
 """Composer for policy (actor) networks."""
 from abc import ABC, abstractmethod
-from typing import Dict, Union
+from typing import Dict
 
 from gym import spaces
 

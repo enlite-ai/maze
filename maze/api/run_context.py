@@ -11,11 +11,9 @@ from typing import Callable, TypeVar, Union, Any, Dict, Optional, Mapping, List
 
 import hydra.plugins.launcher
 import omegaconf
-from omegaconf import DictConfig
-
 from maze.api.config_auditor import ConfigurationAuditor
 from maze.api.config_loader import ConfigurationLoader
-from maze.api.utils import RunMode, InvalidSpecificationError, working_directory, RunContextError
+from maze.api.utils import RunMode, InvalidSpecificationError, working_directory
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
@@ -31,11 +29,10 @@ from maze.perception.models.critics import BaseStateCriticComposer
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.policies.base_policy_composer import BasePolicyComposer
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
-from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.common.config_classes import AlgorithmConfig
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 from maze.train.trainers.common.training_runner import TrainingRunner
+from omegaconf import DictConfig
 
 logger = logging.getLogger(__name__)
 

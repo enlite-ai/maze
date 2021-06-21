@@ -1,11 +1,9 @@
 """Configuration of environment spaces (action & observation) used for model config."""
 
 import pickle
-from typing import Union, Dict, Any
+from typing import Dict, Any
 
 import gym
-from omegaconf import DictConfig
-
 from maze.core.env.structured_env import StepKeyType
 
 

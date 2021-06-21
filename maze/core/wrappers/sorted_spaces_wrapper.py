@@ -3,9 +3,7 @@
 from typing import Optional, Tuple, Dict, Union, Any
 
 import gym
-
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin

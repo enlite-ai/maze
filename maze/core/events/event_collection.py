@@ -1,7 +1,7 @@
 """Implements a collection of EventRecord instances to have a stable interface regardless of
    potential data structure optimizations."""
 from collections import deque
-from typing import Callable, Iterable, MutableSequence, Union, List
+from typing import Callable, Iterable, MutableSequence, Union
 
 from maze.core.events.event_service import EventRecord
 

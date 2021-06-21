@@ -6,18 +6,12 @@ from typing import Tuple
 
 import gym
 import pytest
-
-from maze.core.env.base_env_events import BaseEnvEvents
-from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from maze.train.trainers.ppo.ppo_trainer import PPO
-from torch import nn
-
 from maze.api import run_context
 from maze.api.utils import RunMode
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic, TorchStepStateCritic
+from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymCoreEnv, GymMazeEnv

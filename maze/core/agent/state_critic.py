@@ -2,10 +2,8 @@
 from abc import ABC, abstractmethod
 from typing import Union
 
-from maze.core.agent.state_critic_input_output import StateCriticStepOutput, StateCriticOutput, StateCriticStepInput, StateCriticInput
-from maze.core.agent.torch_policy_output import PolicySubStepOutput, PolicyOutput
-from maze.core.env.observation_conversion import ObservationType, TorchObservationType
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.agent.state_critic_input_output import StateCriticStepOutput, StateCriticOutput, StateCriticInput
+from maze.core.env.observation_conversion import ObservationType
 
 
 class StateCritic(ABC):

@@ -1,9 +1,7 @@
 """Argument parser for Impala algorithm and training"""
 
 from dataclasses import dataclass
-from typing import Union
 
-from maze.core.utils.factory import ConfigType
 from maze.train.trainers.common.config_classes import AlgorithmConfig
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 
@@ -17,12 +15,6 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
 
     epoch_length: int
     """number of updates per epoch"""
-
-    deterministic_eval: bool
-    """run evaluation in deterministic mode (argmax-policy)"""
-
-    eval_repeats: int
-    """number of evaluation trials"""
 
     patience: int
     """number of steps used for early stopping"""
@@ -53,9 +45,6 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
 
     device: str
     """Either "cpu" or "cuda" """
-
-    eval_concurrency: int
-    """Number of concurrently executed evaluation environments."""
 
     queue_out_of_sync_factor: float
     """this factor multiplied by the actor_batch_size gives the size of the queue for

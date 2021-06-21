@@ -2,9 +2,7 @@
 from typing import Any, Union, Optional, Dict, Tuple
 
 import numpy as np
-
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv

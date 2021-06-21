@@ -14,7 +14,7 @@ states from the agent integration and passes MazeActions back.
 """
 from queue import Queue
 from threading import Event, Thread
-from typing import Any, Dict, Union, Tuple, List, Type, Optional
+from typing import Any, Dict, Union, List, Type, Optional
 
 import numpy as np
 

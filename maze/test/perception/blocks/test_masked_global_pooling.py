@@ -1,8 +1,6 @@
 """ Unit tests for masked global pooling perception blocks. """
-from typing import Dict
 
 import pytest
-from pytest import raises
 
 from maze.perception.blocks.general.masked_global_pooling import MaskedGlobalPoolingBlock
 from maze.test.perception.perception_test_utils import build_multi_input_dict

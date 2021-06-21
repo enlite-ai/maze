@@ -1,13 +1,9 @@
 """Contains performance unit tests."""
 import glob
-import os
 from typing import Dict
 
 import numpy as np
-
 import pytest
-from hydra.experimental import compose, initialize_config_module
-from maze.maze_cli import maze_run
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
 from maze.utils.timeout import Timeout

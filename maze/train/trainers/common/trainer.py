@@ -1,12 +1,10 @@
 """Contains an interface for trainers."""
-import dataclasses
 from abc import ABC, abstractmethod
-from typing import Union, Optional, TypeVar, ClassVar
-
-from typing.io import BinaryIO
+from typing import Union, Optional, TypeVar
 
 from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.common.config_classes import AlgorithmConfig
+from typing.io import BinaryIO
 
 
 class Trainer(ABC):
