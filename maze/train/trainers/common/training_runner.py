@@ -59,7 +59,7 @@ class TrainingRunner(Runner):
     def setup(self, cfg: DictConfig) -> None:
         """
         Sets up prerequisites to training.
-        Includes wrapping the environment for obseration normalization, instantiating the model composer etc.
+        Includes wrapping the environment for observation normalization, instantiating the model composer etc.
         :param cfg: DictConfig defining components to initialize.
         """
 
