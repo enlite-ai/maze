@@ -33,5 +33,5 @@ class BaseReplayBuffer:
     def __len__(self) -> int:
         """Retrieve the current fill state of the buffer.
 
-        :return: Return the current fill state of the buffer
+        :return: Return the current fill state of the buffer.
         """

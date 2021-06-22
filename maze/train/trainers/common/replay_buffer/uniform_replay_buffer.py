@@ -6,7 +6,7 @@ import numpy as np
 from maze.core.annotations import override
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
-from maze.train.trainers.common.replay_buffer import BaseReplayBuffer
+from maze.train.trainers.common.replay_buffer.replay_buffer import BaseReplayBuffer
 
 
 class UniformReplayBuffer(BaseReplayBuffer):
@@ -38,7 +38,7 @@ class UniformReplayBuffer(BaseReplayBuffer):
     @override(BaseReplayBuffer)
     def add_rollout(self, actor_rollout: Union[SpacesTrajectoryRecord, StructuredSpacesRecord, np.ndarray, List]) \
             -> None:
-        """implementation of :class:`~maze.train.trainers.common.replay_buffer.BaseReplayBuffer`
+        """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
         if isinstance(actor_rollout, np.ndarray) or isinstance(actor_rollout, list):
             for elem in actor_rollout:
@@ -51,7 +51,7 @@ class UniformReplayBuffer(BaseReplayBuffer):
     @override(BaseReplayBuffer)
     def sample_batch(self, n_samples: int, learner_device: str) -> \
             List[Union[StructuredSpacesRecord, SpacesTrajectoryRecord]]:
-        """implementation of :class:`~maze.train.trainers.common.replay_buffer.BaseReplayBuffer`
+        """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
         indices = self.buffer_rng.permutation(len(self))[:n_samples]
         sample_batch = self._buffer[indices]
@@ -61,6 +61,6 @@ class UniformReplayBuffer(BaseReplayBuffer):
 
     @override(BaseReplayBuffer)
     def __len__(self) -> int:
-        """implementation of :class:`~maze.train.trainers.common.replay_buffer.BaseReplayBuffer`
+        """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
         return self._fill_state

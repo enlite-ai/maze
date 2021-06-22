@@ -15,7 +15,7 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.utils.factory import Factory
-from maze.train.trainers.common.uniform_replay_buffer import UniformReplayBuffer
+from maze.train.trainers.common.replay_buffer.uniform_replay_buffer import UniformReplayBuffer
 
 
 class BaseDistributedWorkersWithBuffer:

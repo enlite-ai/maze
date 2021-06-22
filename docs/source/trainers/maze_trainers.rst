@@ -54,7 +54,7 @@ as well as a critic, predicting the state value function.
 By setting the number of rollout steps as well as the number of parallel environments
 one can control the batch size used for updating the policy and value function in each iteration.
 
-Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T., Harley, T., Silver, D., & Kavukcuoglu, K. (2016, June).
+Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T., Harley, T., Silver, D., & Kavukcuoglu, K. (2016).
 `Asynchronous methods for deep reinforcement learning. <http://proceedings.mlr.press/v48/mniha16.html>`_
 In International conference on machine learning (pp. 1928-1937).
 
@@ -64,7 +64,7 @@ In International conference on machine learning (pp. 1928-1937).
 
     .. code-tab:: console
 
-        maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
+        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
 
     .. code-tab:: python
 
@@ -121,7 +121,7 @@ arXiv preprint arXiv:1707.06347.
 
     .. code-tab:: console
 
-        maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
+        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
 
     .. code-tab:: python
 
@@ -179,7 +179,7 @@ arXiv preprint arXiv:1802.01561.
 
     .. code-tab:: console
 
-        maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
+        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
 
     .. code-tab:: python
 
@@ -217,6 +217,62 @@ arXiv preprint arXiv:1802.01561.
 :raw-html:`</details>`
 
 .. _maze_trainers-bc:
+
+Soft Actor-Critic (SAC)
+-----------------------
+
+An off-policy actor-critic algorithm based on the maximum entropy reinforcement learning framework
+with the goal of maximizing expected reward while at the same time maximizing entropy.
+SAC exhibits high sample efficiency, is stable across different random seeds,
+and achieves competitive performance especially for continuous control tasks.
+In contrast to A2C, PPO and IMPALA it utilizes a stochastic state-action critic.
+
+Haarnoja, T., Zhou, A., Abbeel, P., Levine, S. (2018).
+`Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor. <https://arxiv.org/abs/1801.01290>`_
+https://arxiv.org/abs/1801.01290
+
+**Example**
+
+.. tabs::
+
+    .. code-tab:: console
+
+        $ maze-run -cn conf_train env.name=Pendulum-v0 algorithm=sac model=vector_obs critic=template_state_action
+
+    .. code-tab:: python
+
+        rc = RunContext(
+            algorithm="sac",
+            overrides={"env.name": "Pendulum-v0"},
+            model="vector_obs",
+            critic="template_state_action"
+        )
+        rc.train()
+
+**Algorithm Parameters** | :class:`~maze.train.trainers.sac.sac_algorithm_config.SACAlgorithmConfig`
+
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm/sac.yaml)</summary>`
+
+.. literalinclude:: ../../../maze/conf/algorithm/sac.yaml
+  :language: YAML
+
+:raw-html:`</details>`
+
+**Runner Parameters** | :class:`~maze.train.trainers.sac.sac_runners.SACRunner`
+
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sac-dev.yaml)</summary>`
+
+.. literalinclude:: ../../../maze/conf/algorithm_runner/sac-dev.yaml
+  :language: YAML
+
+:raw-html:`</details>`
+
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sac-local.yaml)</summary>`
+
+.. literalinclude:: ../../../maze/conf/algorithm_runner/sac-local.yaml
+  :language: YAML
+
+:raw-html:`</details>`
 
 Behavioural Cloning (BC)
 ------------------------
@@ -275,7 +331,7 @@ arXiv preprint arXiv:1703.03864.
 
     .. code-tab:: console
 
-        maze-run -cn conf_train env.name=CartPole-v0 algorithm=es model=vector_obs
+        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=es model=vector_obs
 
     .. code-tab:: python
 
