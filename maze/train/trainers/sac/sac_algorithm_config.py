@@ -51,10 +51,11 @@ class SACAlgorithmConfig(AlgorithmConfig):
        org paper)"""
 
     target_entropy_multiplier: float
-    """Specify an optional multiplier for the target entropy. This value is multiplied with the default target entropy
-       computation (this is called alpha tuning in the org paper):
-            discrete spaces: target_entropy = target_entropy_multiplier * ( - 0.98 * (-log (1 / |A|))
-            continues spaces: target_entropy = target_entropy_multiplier * (- dim(A)) (e.g., -6 for HalfCheetah-v1)"""
+    """Specify an optional multiplier for the target entropy.
+    This value is multiplied with the default target entropy computation (called alpha tuning in the paper):
+        
+        - discrete spaces: target_entropy = target_entropy_multiplier * ( - 0.98 * (-log (1 / cardinality(A)))
+        - continues spaces: target_entropy = target_entropy_multiplier * (- dim(A)) (e.g., -6 for HalfCheetah-v1)"""
 
     entropy_coef_lr: float
     """Learning for entropy tuning"""

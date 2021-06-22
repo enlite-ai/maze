@@ -41,3 +41,5 @@ These are interfaces, classes and utility functions for distributed actors:
     ~subproc_distributed_actors.SubprocDistributedActors
     ~subproc_distributed_actors.MyManager
     ~broadcasting_container.BroadcastingContainer
+    ~base_distributed_workers_with_buffer.BaseDistributedWorkersWithBuffer
+    ~dummy_distributed_workers_with_buffer.DummyDistributedWorkersWithBuffer

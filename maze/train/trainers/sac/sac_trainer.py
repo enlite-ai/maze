@@ -133,6 +133,7 @@ class SACTrainer(Trainer):
 
     def load_state_dict(self, state_dict: Dict) -> None:
         """Set the model and optimizer state.
+
         :param state_dict: The state dict.
         """
         self.learner_model.load_state_dict(state_dict)
@@ -231,8 +232,10 @@ class SACTrainer(Trainer):
                                                                                  time_evaluation / total_time))
 
     def _update(self) -> None:
-        """Perform update. That is collect the actor trajectories, compute the learner action logits, compute the loss
-            and backprob it thought the networks
+        """Perform update.
+
+        That is collect the actor trajectories, compute the learner action logits, compute the loss
+        and backprob it thought the networks.
         """
 
         start_update_time = time.time()
@@ -344,7 +347,7 @@ class SACTrainer(Trainer):
 
     def _compute_critic_loss(self, worker_output: StructuredSpacesRecord) -> \
             Tuple[List[Dict[Union[str, int], torch.Tensor]], List[Dict[Union[str, int], torch.Tensor]]]:
-        """Compute the critic losses
+        """Compute the critic losses.
 
         :param worker_output: The batched output of the workers.
         :return: Return the critic losses as a list w.r.t. the number of critics used + mean values for stats.
@@ -422,7 +425,7 @@ class SACTrainer(Trainer):
                   Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]],
                   Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]],
                   Dict[Union[str, int], torch.Tensor]]:
-        """Compute the critic losses
+        """Compute the critic losses.
 
         :param worker_output: The batched output of the workers.
         :return: The policy losses as well a few other metrics needed for the entropy loss computation and stats.

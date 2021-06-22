@@ -40,6 +40,9 @@ These are general interfaces, classes and utility functions for trainers and tra
     ~common.value_transform.support_to_scalar
     ~common.value_transform.scalar_to_support
 
+    ~common.replay_buffer.replay_buffer.BaseReplayBuffer
+    ~common.replay_buffer.uniform_replay_buffer.UniformReplayBuffer
+
 .. _trainers_ref:
 
 Trainers
@@ -79,6 +82,12 @@ Actor-Critics (AC)
     ~impala.impala_vtrace.from_logits
     ~impala.impala_vtrace.from_importance_weights
     ~impala.impala_vtrace.get_log_rhos
+
+    ~sac.sac_trainer.SACTrainer
+    ~sac.sac_algorithm_config.SACAlgorithmConfig
+    ~sac.sac_events.SACEvents
+    ~sac.sac_runners.SACRunner
+    ~sac.sac_runners.SACDevRunner
 
 Evolutionary Strategies (ES)
 """"""""""""""""""""""""""""
