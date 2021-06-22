@@ -1,0 +1,5 @@
+# @package runner
+_target_: "maze.train.trainers.sac.sac_runners.SACDevRunner"
+
+# Number of concurrent evaluation envs
+eval_concurrency: 8

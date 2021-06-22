@@ -1,0 +1,8 @@
+# @package model
+
+critic:
+  _target_: maze.perception.models.critics.StateActionCriticComposer
+  networks:
+    - _target_: maze.perception.models.built_in.flatten_concat.FlattenConcatStateActionValueNet
+      non_lin: torch.nn.Tanh
+      hidden_units: [256, 256]
