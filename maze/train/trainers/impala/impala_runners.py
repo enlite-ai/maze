@@ -21,7 +21,7 @@ from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
-from maze.train.trainers.impala.impala_trainer import MultiStepIMPALA
+from maze.train.trainers.impala.impala_trainer import IMPALA
 from maze.utils.bcolors import BColors
 from omegaconf import DictConfig
 
@@ -86,7 +86,7 @@ class ImpalaRunner(TrainingRunner):
                                                                 train_agent_instance_seeds)
 
         # initialize optimizer
-        self._trainer = MultiStepIMPALA(
+        self._trainer = IMPALA(
             algorithm_config=cfg.algorithm,
             rollout_generator=rollout_actors,
             evaluator=evaluator,

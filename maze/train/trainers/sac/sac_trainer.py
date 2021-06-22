@@ -25,7 +25,7 @@ from maze.train.trainers.sac.sac_events import SACEvents
 from torch.distributions.utils import logits_to_probs
 
 
-class SACTrainer(Trainer):
+class SAC(Trainer):
     """Multi step soft actor critic.
 
     :param algorithm_config: Algorithm options.

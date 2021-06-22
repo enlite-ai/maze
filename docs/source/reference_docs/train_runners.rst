@@ -72,9 +72,9 @@ Actor-Critics (AC)
     ~ppo.ppo_trainer.PPO
     ~ppo.ppo_algorithm_config.PPOAlgorithmConfig
 
-    ~impala.impala_trainer.MultiStepIMPALA
+    ~impala.impala_trainer.IMPALA
     ~impala.impala_algorithm_config.ImpalaAlgorithmConfig
-    ~impala.impala_events.MultiStepIMPALAEvents
+    ~impala.impala_events.ImpalaEvents
     ~impala.impala_runners.ImpalaRunner
     ~impala.impala_runners.ImpalaDevRunner
     ~impala.impala_runners.ImpalaLocalRunner
@@ -83,7 +83,7 @@ Actor-Critics (AC)
     ~impala.impala_vtrace.from_importance_weights
     ~impala.impala_vtrace.get_log_rhos
 
-    ~sac.sac_trainer.SACTrainer
+    ~sac.sac_trainer.SAC
     ~sac.sac_algorithm_config.SACAlgorithmConfig
     ~sac.sac_events.SACEvents
     ~sac.sac_runners.SACRunner

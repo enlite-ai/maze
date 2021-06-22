@@ -15,10 +15,10 @@ from maze.train.trainers.common.model_selection.best_model_selection import Best
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.impala import impala_vtrace
 from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmConfig
-from maze.train.trainers.impala.impala_events import MultiStepIMPALAEvents
+from maze.train.trainers.impala.impala_events import ImpalaEvents
 
 
-class MultiStepIMPALA(ActorCritic):
+class IMPALA(ActorCritic):
     """Multi step advantage actor critic.
     """
 
@@ -32,7 +32,7 @@ class MultiStepIMPALA(ActorCritic):
 
         # inject statistics directly into the epoch log
         epoch_stats = self.rollout_generator.get_epoch_stats_aggregator()
-        self.impala_events = epoch_stats.create_event_topic(MultiStepIMPALAEvents)
+        self.impala_events = epoch_stats.create_event_topic(ImpalaEvents)
 
     @override(Trainer)
     def train(self, n_epochs: Optional[int] = None) -> None:

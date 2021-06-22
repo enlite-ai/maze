@@ -13,7 +13,7 @@ from maze.train.parallelization.distributed_actors.subproc_distributed_actors im
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmConfig
-from maze.train.trainers.impala.impala_trainer import MultiStepIMPALA
+from maze.train.trainers.impala.impala_trainer import IMPALA
 from maze.utils.timeout import Timeout
 
 
@@ -60,12 +60,12 @@ def _algorithm_config():
     )
 
 
-def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> MultiStepIMPALA:
-    impala = MultiStepIMPALA(model=_policy(train_actors.env_factory()),
-                             rollout_generator=train_actors,
-                             evaluator=algorithm_config.rollout_evaluator,
-                             algorithm_config=algorithm_config,
-                             model_selection=None)
+def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> IMPALA:
+    impala = IMPALA(model=_policy(train_actors.env_factory()),
+                    rollout_generator=train_actors,
+                    evaluator=algorithm_config.rollout_evaluator,
+                    algorithm_config=algorithm_config,
+                    model_selection=None)
 
     impala.train(n_epochs=algorithm_config.n_epochs)
 
@@ -80,7 +80,7 @@ def test_impala_multi_step_dummy():
                                                batch_size=algorithm_config.actors_batch_size,
                                                actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)])
     impala = _train_function(train_actors, algorithm_config)
-    assert isinstance(impala, MultiStepIMPALA)
+    assert isinstance(impala, IMPALA)
 
 
 def test_impala_multi_step_distributed():
@@ -95,4 +95,4 @@ def test_impala_multi_step_distributed():
                                             actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)])
     with Timeout(seconds=30):
         impala = _train_function(train_actors, algorithm_config)
-    assert isinstance(impala, MultiStepIMPALA)
+    assert isinstance(impala, IMPALA)
