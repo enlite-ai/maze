@@ -48,7 +48,7 @@ FROM ${BASE_IMAGE} as maze_core_env
 
 # Install system dependencies and Maze.
 RUN apt-get update && \
-    apt-get install -y xvfb htop redis-server python-opengl && \
+    apt-get install -y xvfb htop redis-server python-opengl build-essential g++ && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy conda environment.
