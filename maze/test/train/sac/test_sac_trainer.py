@@ -21,7 +21,7 @@ from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvalu
 from maze.train.parallelization.distributed_actors.dummy_distributed_workers_with_buffer import \
     DummyDistributedWorkersWithBuffer
 from maze.train.trainers.sac.sac_algorithm_config import SACAlgorithmConfig
-from maze.train.trainers.sac.sac_trainer import SACTrainer
+from maze.train.trainers.sac.sac_trainer import SAC
 
 
 class PolicyNet(nn.Module):
@@ -108,7 +108,7 @@ class QCriticNetContinuous(nn.Module):
 
 
 def train_function(n_epochs: int, epoch_length: int, deterministic_eval: bool,
-                   eval_repeats: int, distributed_env_cls, split_rollouts_into_transitions: bool) -> SACTrainer:
+                   eval_repeats: int, distributed_env_cls, split_rollouts_into_transitions: bool) -> SAC:
     """Implements the lunar lander continuous env and performs tests on it w.r.t. the sac trainer.
     """
 
@@ -184,7 +184,7 @@ def train_function(n_epochs: int, epoch_length: int, deterministic_eval: bool,
                                      device='cpu')
 
     # initialize trainer
-    sac = SACTrainer(
+    sac = SAC(
         learner_model=learner_model,
         distributed_actors=distributed_actors,
         algorithm_config=algorithm_config,
@@ -203,12 +203,12 @@ def test_sac_trainer_keeping_rollouts():
     sac = train_function(n_epochs=2, epoch_length=2, deterministic_eval=False,
                          eval_repeats=1, distributed_env_cls=SequentialVectorEnv,
                          split_rollouts_into_transitions=False)
-    assert isinstance(sac, SACTrainer)
+    assert isinstance(sac, SAC)
 
     sac = train_function(n_epochs=2, epoch_length=2, deterministic_eval=False,
                          eval_repeats=0, distributed_env_cls=SequentialVectorEnv,
                          split_rollouts_into_transitions=False)
-    assert isinstance(sac, SACTrainer)
+    assert isinstance(sac, SAC)
 
 
 def test_sac_trainer_splitting_rollouts():
@@ -216,9 +216,9 @@ def test_sac_trainer_splitting_rollouts():
     sac = train_function(n_epochs=2, epoch_length=2, deterministic_eval=False,
                          eval_repeats=1, distributed_env_cls=SequentialVectorEnv,
                          split_rollouts_into_transitions=True)
-    assert isinstance(sac, SACTrainer)
+    assert isinstance(sac, SAC)
 
     sac = train_function(n_epochs=2, epoch_length=2, deterministic_eval=False,
                          eval_repeats=0, distributed_env_cls=SequentialVectorEnv,
                          split_rollouts_into_transitions=True)
-    assert isinstance(sac, SACTrainer)
+    assert isinstance(sac, SAC)

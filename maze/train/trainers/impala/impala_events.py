@@ -7,7 +7,7 @@ import numpy as np
 from maze.core.log_stats.event_decorators import define_epoch_stats
 
 
-class MultiStepIMPALAEvents(ABC):
+class ImpalaEvents(ABC):
     """Events specific for the impala algorithm, in order to record and analyse it's behaviour in more detail"""
 
     @define_epoch_stats(np.nanmean, input_name='time')

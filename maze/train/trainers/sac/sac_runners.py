@@ -20,7 +20,7 @@ from maze.train.parallelization.distributed_actors.base_distributed_workers_with
     BaseDistributedWorkersWithBuffer
 from maze.train.parallelization.distributed_actors.dummy_distributed_workers_with_buffer import \
     DummyDistributedWorkersWithBuffer
-from maze.train.trainers.sac.sac_trainer import SACTrainer
+from maze.train.trainers.sac.sac_trainer import SAC
 from omegaconf import DictConfig
 
 
@@ -82,7 +82,7 @@ class SACRunner(TrainingRunner):
                                                                         model_selection=self._model_selection)
 
         # initialize trainer
-        self._trainer = SACTrainer(
+        self._trainer = SAC(
             algorithm_config=cfg.algorithm,
             learner_model=model,
             distributed_actors=distributed_actors,
