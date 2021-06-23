@@ -11,14 +11,18 @@ from maze.utils.timeout import Timeout
 # Configurations to be tested
 trainings = [
     # PPO
-    [180, {"algorithm": "ppo", "algorithm.n_epochs": "2", "algorithm.eval_repeats": "0",
+    [180, {"algorithm": "ppo", "algorithm.n_epochs": "2", "algorithm.rollout_evaluator.n_episodes": "0",
            "env": "gym_env", "env.name": "CartPole-v0"}],
     # A2C
-    [180, {"algorithm": "a2c", "algorithm.n_epochs": "3", "algorithm.eval_repeats": "0",
+    [180, {"algorithm": "a2c", "algorithm.n_epochs": "3", "algorithm.rollout_evaluator.n_episodes": "0",
            "env": "gym_env", "env.name": "CartPole-v0"}],
     # IMPALA
-    [180, {"algorithm": "impala", "algorithm.n_epochs": "4", "algorithm.eval_repeats": "0",
+    [180, {"algorithm": "impala", "algorithm.n_epochs": "4", "algorithm.rollout_evaluator.n_episodes": "0",
            "env": "gym_env", "env.name": "CartPole-v0"}],
+    # SAC
+    [180, {"algorithm": "sac", "algorithm.n_epochs": "30", "algorithm.rollout_evaluator.n_episodes": "0",
+           "env": "gym_env", "env.name": "CartPole-v0",
+           "model": "vector_obs", "critic": "template_state_action"}],
     # ES
     [180, {"algorithm": "es", "algorithm.n_epochs": "100", "algorithm.n_rollouts_per_update": "20",
            "env": "gym_env", "env.name": "CartPole-v0"}],
@@ -38,5 +42,5 @@ def test_train(hydra_overrides: Dict[str, str], target_reward: float):
     events_df = tensorboard_to_pandas(tf_summary_files[0])
 
     # check if target reward was reached
-    max_mean_reward = np.max(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
+    max_mean_reward = np.nanmax(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
     assert max_mean_reward >= target_reward
