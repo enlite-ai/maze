@@ -245,6 +245,10 @@ class RunContext:
             with working_directory(workdir):
                 self._silence(lambda: runner.run(n_epochs=n_epochs, **train_kwargs))
 
+                # reset policy to overall best state
+                runner.trainer.load_state(runner.state_dict_dump_file)
+                self.policy.load_state_dict(state_dict=runner.trainer.state_dict())
+
     # To be updated after restructuring of (Rollout) runners.
     # def rollout(
     #     self,

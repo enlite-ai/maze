@@ -140,6 +140,12 @@ class SAC(Trainer):
         self.distributed_workers.broadcast_updated_policy(self.learner_model.policy.state_dict())
 
     @override(Trainer)
+    def state_dict(self):
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
+        """
+        return self.learner_model.state_dict()
+
+    @override(Trainer)
     def load_state(self, file_path: Union[str, BinaryIO]) -> None:
         """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
         """
