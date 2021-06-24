@@ -94,7 +94,8 @@ Getting Started
    getting_started/api_contents.rst
 
 - For installing Maze just follow the :ref:`installation instructions <installation>`.
-- To see Maze in action check out :ref:`a first example <first_example>`.
+- To see Maze in action check out :ref:`a first example <first_example>`
+  and our `Getting Started Notebooks <https://github.com/enlite-ai/maze/tree/main/tutorials/notebooks>`_.
 - :ref:`Try your own Gym env <tutorial_gym_env>` or visit our :ref:`Maze step-by-step tutorial <env_from_scratch>`.
 - Clone this `project template repo <https://github.com/enlite-ai/maze-cartpole>`_ to start your own Maze project.
 

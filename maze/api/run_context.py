@@ -231,6 +231,7 @@ class RunContext:
     def train(self, n_epochs: Optional[int] = None, **train_kwargs) -> None:
         """
         Trains for specified number of epochs.
+        After training the trainer is reset to the overall best state encountered.
 
         :param n_epochs: Number of epochs to train for.
 
