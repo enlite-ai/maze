@@ -102,6 +102,12 @@ class ESTrainer(Trainer):
         self.policy.load_state_dict(state_dict)
 
     @override(Trainer)
+    def state_dict(self):
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
+        """
+        return self.policy.state_dict()
+
+    @override(Trainer)
     def load_state(self, file_path: Union[str, BinaryIO]) -> None:
         """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
         """

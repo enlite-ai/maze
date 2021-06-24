@@ -1,6 +1,6 @@
 """Contains an interface for trainers."""
 from abc import ABC, abstractmethod
-from typing import Union, Optional, TypeVar
+from typing import Union, Optional, TypeVar, Dict
 
 from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.common.config_classes import AlgorithmConfig
@@ -33,6 +33,13 @@ class Trainer(ABC):
         This is required for resuming training or model fine tuning with different parameters.
 
         :param file_path: Path from where to load the state.
+        """
+
+    @abstractmethod
+    def state_dict(self) -> Dict:
+        """Returns the state dict composed of all encapsulated trainer components.
+
+        :return: The trainer's state dict.
         """
 
     @abstractmethod

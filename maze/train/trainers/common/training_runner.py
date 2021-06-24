@@ -175,3 +175,10 @@ class TrainingRunner(Runner):
         """
 
         return self._cfg
+
+    @property
+    def trainer(self) -> Trainer:
+        """Returns the runners training instance.
+        :return: Instantiated trainer.
+        """
+        return self._trainer

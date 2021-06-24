@@ -149,6 +149,12 @@ class ActorCritic(Trainer, ABC):
         """Perform evaluation on eval env."""
         self.evaluator.evaluate(self.model.policy)
 
+    @override(Trainer)
+    def state_dict(self):
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
+        """
+        return self.model.state_dict()
+
     def load_state_dict(self, state_dict: Dict) -> None:
         """Set the model and optimizer state.
         :param state_dict: The state dict.
