@@ -6,6 +6,8 @@ distribution_mapper_config: []
 model_builder:
   _target_: maze.perception.builders.ConcatModelBuilder
 
+  shared_embedding_keys: ~
+
   observation_modality_mapping:
     inventory-flatten: feature
     ordered_piece: feature
