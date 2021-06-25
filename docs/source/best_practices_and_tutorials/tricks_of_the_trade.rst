@@ -61,7 +61,7 @@ or :ref:`manually shape your reward <reward_aggregation>`.
 
 When optimizing multi-target objectives (e.g., a weighted sum of sub-rewards)
 consider to monitor the contributing rewards on an individual basis.
-Event though the overall reward appears to not improve anymore
+Even though the overall reward appears to not improve anymore
 it might still be the case that the contributing sub-rewards change or fluctuate in the background.
 This indicates that the policy and in turn the behaviour of your agent is still changing.
 In such settings we recommend to watch the learning progress by :ref:`monitoring KPIs <event_kpi_log>`.
