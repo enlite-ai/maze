@@ -3,7 +3,7 @@
 Customizing / Shaping Rewards
 =============================
 In a reinforcement learning problem the overall goal is defined via an appropriate reward signal.
-In particular, reward is attributed to certain, problem specific key events.
+In particular, reward is attributed to certain, problem specific key events and the current environment state.
 During the training process the agent then has to discover a policy (behaviour)
 that maximizes the cumulative future reward over time.
 In case of a meaningful reward signal such a policy will be able to successfully address the decision problem at hand.
