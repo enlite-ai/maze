@@ -5,7 +5,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.7
-  - cudatoolkit=10.2
+  - cudatoolkit=11.1
   - pytorch=1.9.0
   - pygraphviz=1.7
   - jupyterlab=2.1.4
