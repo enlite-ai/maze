@@ -9,7 +9,7 @@ ARG BASE_IMAGE="condaforge/mambaforge:4.9.2-5"
 # Image for conda/mamba environment building.
 ###################################################
 
-FROM condaforge/mambaforge:4.9.2-5 as maze_core_env_build
+FROM condaforge/mambaforge:4.10.1-0 as maze_core_env_build
 
 # build-arg for optional pip installs.
 ARG opt_pip_installs
