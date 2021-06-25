@@ -249,9 +249,8 @@ class RunContext:
                 # reset the runner and its policy to their overall best state if already dumped
                 if os.path.exists(runner.state_dict_dump_file):
                     runner.trainer.load_state(runner.state_dict_dump_file)
-                    policy = self.policy
-                    if len(self._runners[RunMode.TRAINING]) > 1:
-                        policy = policy[0]
+                    # cope for --multirun setting
+                    policy = self.policy[i_runner] if len(self._runners[RunMode.TRAINING]) > 1 else self.policy
                     policy.load_state_dict(state_dict=runner.trainer.state_dict())
 
     # To be updated after restructuring of (Rollout) runners.
