@@ -242,13 +242,17 @@ class RunContext:
         if len(self._runners[RunMode.TRAINING]) == 0:
             self._runners[RunMode.TRAINING] = self._silence(lambda: self._generate_runners(RunMode.TRAINING))
 
-        for workdir, runner in zip(self._workdirs, self._runners[RunMode.TRAINING]):
+        for i_runner, (workdir, runner) in enumerate(zip(self._workdirs, self._runners[RunMode.TRAINING])):
             with working_directory(workdir):
                 self._silence(lambda: runner.run(n_epochs=n_epochs, **train_kwargs))
 
-                # reset policy to overall best state
-                runner.trainer.load_state(runner.state_dict_dump_file)
-                self.policy.load_state_dict(state_dict=runner.trainer.state_dict())
+                # reset the runner and its policy to their overall best state if already dumped
+                if os.path.exists(runner.state_dict_dump_file):
+                    runner.trainer.load_state(runner.state_dict_dump_file)
+                    policy = self.policy
+                    if len(self._runners[RunMode.TRAINING]) > 1:
+                        policy = policy[0]
+                    policy.load_state_dict(state_dict=runner.trainer.state_dict())
 
     # To be updated after restructuring of (Rollout) runners.
     # def rollout(
