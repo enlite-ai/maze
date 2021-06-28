@@ -33,6 +33,18 @@ class EventRecord(object):
 
         return self.attributes[argument_name]
 
+    def __repr__(self):
+        result = f"EventRecord {self.interface_method}:\n"
+        for key, value in self.attributes.items():
+            # represent value as string
+            value_str = str(value)
+            # indent every line by 4 characters
+            value_str = "\n".join([" " * 4 + s for s in value_str.split('\n')])
+
+            result += f"- {key}: {value_str}\n"
+
+        return result
+
     # Pickle support
     # --------------
     # Methods below need to be overriden because pickle attempts to call them first (before the default
