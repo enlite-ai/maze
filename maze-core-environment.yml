@@ -10,6 +10,8 @@ dependencies:
   - pygraphviz=1.7
   - jupyterlab=2.1.4
   - pip=21.1.2
+  - pandas=1.2.5
+  - numpy=1.19.5
   - pip:
       - tensorboard==2.4.1
       - pyyaml==5.3.1
@@ -20,8 +22,6 @@ dependencies:
       - hydra-nevergrad-sweeper==1.1.5
       - gym[box2d]==0.18.0; python_version < '3.8'
       - gym==0.18.0; python_version >= '3.8'
-      - pandas==1.2.5
-      - numpy==1.21.0
       - networkx==2.4
       - matplotlib==3.2.2
       - seaborn==0.10.1

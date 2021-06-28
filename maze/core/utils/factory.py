@@ -49,7 +49,7 @@ class Factory(Generic[BaseType]):
 
         * Provides type hinting
         * Asserts the returned type matches the `base_type`
-        * Throws an error if there the field '_target_' is missing (Hydra's instantiate() return the config object
+        * Throws an error if there the field '_target_' is missing (Hydra's instantiate() returns the config object
           in this case)
         * In case `config` is already an instantiated object, immediately return this existing instance (useful in
           the frequent case of a constructor that accepts either a config object or an already instantiated
