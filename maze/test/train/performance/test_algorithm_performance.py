@@ -11,13 +11,13 @@ from maze.utils.timeout import Timeout
 # Configurations to be tested
 trainings = [
     # PPO
-    [180, {"algorithm": "ppo", "algorithm.n_epochs": "2", "algorithm.rollout_evaluator.n_episodes": "0",
+    [180, {"algorithm": "ppo", "algorithm.n_epochs": "5", "algorithm.rollout_evaluator.n_episodes": "0",
            "env": "gym_env", "env.name": "CartPole-v0"}],
     # A2C
-    [180, {"algorithm": "a2c", "algorithm.n_epochs": "3", "algorithm.rollout_evaluator.n_episodes": "0",
+    [180, {"algorithm": "a2c", "algorithm.n_epochs": "5", "algorithm.rollout_evaluator.n_episodes": "0",
            "env": "gym_env", "env.name": "CartPole-v0"}],
     # IMPALA
-    [180, {"algorithm": "impala", "algorithm.n_epochs": "4", "algorithm.rollout_evaluator.n_episodes": "0",
+    [180, {"algorithm": "impala", "algorithm.n_epochs": "5", "algorithm.rollout_evaluator.n_episodes": "0",
            "env": "gym_env", "env.name": "CartPole-v0"}],
     # SAC
     [180, {"algorithm": "sac", "algorithm.n_epochs": "30", "algorithm.rollout_evaluator.n_episodes": "0",
