@@ -18,13 +18,6 @@ def test_adj_matrix_construction_wrong_input_format():
     with pytest.raises(AssertionError):
         _ = GraphConvBlock.preprocess_adj_to_adj_hat(adj)
 
-    adj = torch.tensor([[0, 1, 1],
-                        [0, 0, 0],
-                        [0, 0, 0]])
-
-    with pytest.raises(AssertionError):
-        _ = GraphConvBlock.preprocess_adj_to_adj_hat(adj)
-
 
 def construct_pre_processing_matrix() -> Tuple[torch.Tensor, torch.Tensor]:
     """Construct the test input, and output matrix

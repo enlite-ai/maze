@@ -67,7 +67,6 @@ class GraphAdjacencyMethods:
         # nodes that represent edges in the original graph (see Section 5.1 for details).
         # - https://arxiv.org/abs/1609.02907 THUS --> adjacency matrix has to be symmetric (-> thus square)
         assert adj.shape[-1] == adj.shape[-2], 'The adj matrix should be a square matrix'
-        assert torch.allclose(adj, torch.transpose(adj, dim0=-2, dim1=-1)), 'The adj matrix should be symmetric'
 
         # Add the feature of the node itself. For example, the first row of the result matrix should contain features of
         # node A too.
@@ -110,7 +109,6 @@ class GraphAdjacencyMethods:
         # nodes that represent edges in the original graph (see Section 5.1 for details).
         # - https://arxiv.org/abs/1609.02907 THUS --> adjacency matrix has to be symmetric (-> thus square)
         assert adj.shape[-1] == adj.shape[-2], 'The adj matrix should be a square matrix'
-        assert torch.allclose(adj, torch.transpose(adj, dim0=-2, dim1=-1)), 'The adj matrix should be symmetric'
 
         # Add the feature of the node itself. For example, the first row of the result matrix should contain features of
         # node A too.
