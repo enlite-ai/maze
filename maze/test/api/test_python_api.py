@@ -2,7 +2,7 @@
 Tests for Supervisor run_context.
 """
 import copy
-from typing import Tuple
+from typing import Tuple, Dict, List
 
 import gym
 import pytest
@@ -258,9 +258,11 @@ def test_inconsistency_identification_type_1() -> None:
         run_context.RunContext(runner="parallel").train(1)
 
 
-def test_inconsistency_identification_type_2() -> None:
+def _generate_inconsistency_type_2_configs() -> Tuple[Dict, Dict, Dict, A2CAlgorithmConfig, Dict]:
     """
-    Tests identification of inconsistency due to codependent components.
+    Returns configsf for tests of inconsistencies of type 2.
+    :return: es_dev_runner_config, a2c_dev_runner_config, invalid_a2c_dev_runner_config, a2c_alg_config,
+             default_overrides.
     """
 
     gym_env_name = "CartPole-v0"
@@ -309,6 +311,17 @@ def test_inconsistency_identification_type_2() -> None:
     )
     default_overrides = {"env.name": gym_env_name}
 
+    return es_dev_runner_config, a2c_dev_runner_config, invalid_a2c_dev_runner_config, a2c_alg_config, default_overrides
+
+
+def test_inconsistency_identification_type_2_a() -> None:
+    """
+    Tests identification of inconsistency due to codependent components.
+    """
+
+    es_dev_runner_config, a2c_dev_runner_config, invalid_a2c_dev_runner_config, a2c_alg_config, default_overrides = \
+        _generate_inconsistency_type_2_configs()
+
     with pytest.raises(run_context.InvalidSpecificationError):
         run_context.RunContext(
             algorithm="a2c",
@@ -356,6 +369,14 @@ def test_inconsistency_identification_type_2() -> None:
         overrides=default_overrides
     )
     rc.train(1)
+
+
+def test_inconsistency_identification_type_2_b() -> None:
+    """
+    Tests identification of inconsistency due to codependent components.
+    """
+
+    _, _, _, a2c_alg_config, default_overrides = _generate_inconsistency_type_2_configs()
 
     rc = run_context.RunContext(
         algorithm=a2c_alg_config,
