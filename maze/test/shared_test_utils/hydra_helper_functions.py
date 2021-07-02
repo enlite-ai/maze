@@ -3,7 +3,7 @@ from typing import List, Dict
 
 import pytest
 from hydra.core.global_hydra import GlobalHydra
-from hydra.experimental import initialize_config_module, compose
+from hydra import initialize_config_module, compose
 from omegaconf import DictConfig
 from torch import nn
 

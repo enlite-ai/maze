@@ -6,7 +6,7 @@ from typing import Mapping, Union, Sequence
 import hydra
 import yaml
 from hydra.core.hydra_config import HydraConfig
-from hydra.experimental import initialize_config_module, compose
+from hydra import initialize_config_module, compose
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType

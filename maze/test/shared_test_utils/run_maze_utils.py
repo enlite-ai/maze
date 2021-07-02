@@ -3,7 +3,7 @@ import subprocess
 from typing import Dict
 
 from hydra.core.hydra_config import HydraConfig
-from hydra.experimental import initialize_config_module, compose
+from hydra import initialize_config_module, compose
 from omegaconf import open_dict, DictConfig
 
 from maze.maze_cli import maze_run
