@@ -19,7 +19,7 @@ RUN echo "BUILD_VERSION: $BUILD_VERSION"
 
 # Install environment.
 COPY maze-core-environment.yml .
-RUN --mount=type=cache,target=/opt/conda/pkgs mamba env create -p /env --file maze-core-environment.yml
+RUN mamba env create -p /env --file maze-core-environment.yml
 RUN echo "conda activate /env" >> /root/.bashrc
 ENV PATH /env/bin:$PATH
 
