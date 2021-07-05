@@ -42,7 +42,7 @@ def _run_job(cfg: DictConfig) -> None:
         cfg.seeding.agent_base_seed = MazeSeeding.generate_seed_from_random_state(np.random.RandomState(None))
 
     # print and log config
-    config_str = yaml.dump(OmegaConf.to_container(cfg, resolve=True))
+    config_str = yaml.dump(OmegaConf.to_container(cfg, resolve=True), sort_keys=False)
     with open("hydra_config.yaml", "w") as fp:
         fp.write("\n" + config_str)
     BColors.print_colored(config_str, color=BColors.HEADER)
