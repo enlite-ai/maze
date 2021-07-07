@@ -37,7 +37,9 @@ def get_obs_action_hash_for_env_agent(env: MazeEnv, policy: Policy, env_seed: in
         actor_id = env.actor_id()
 
         maze_state = env.get_maze_state() if policy.needs_state() else None
-        action = policy.compute_action(obs, actor_id=actor_id, maze_state=maze_state, deterministic=False, env=None)
+        compute_action_env = env if policy.needs_env() else None
+        action = policy.compute_action(obs, actor_id=actor_id, maze_state=maze_state, deterministic=False,
+                                       env=compute_action_env)
 
         obs, _, done, _ = env.step(action)
         if done:
