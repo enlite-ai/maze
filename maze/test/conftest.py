@@ -1,6 +1,5 @@
 """Setup testing fixtures"""
 import os
-
 import matplotlib
 import pytest
 
