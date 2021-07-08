@@ -16,7 +16,7 @@ jobs:
     steps:
 
       - name: Free up disk space.
-        run: sudo rm -rf "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY" "/usr/share/dotnet/"
+        run: sudo rm -rf "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY" "/usr/share/dotnet/" "/usr/local/lib/android"
 
       - name: Set up Docker Buildx.
         uses: docker/setup-buildx-action@v1
