@@ -160,11 +160,4 @@ def test_examples_part2():
 
     rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), overrides=es_overrides, runner="dev", configuration="test")
     rc.train()
-
-    evaluator = RolloutEvaluator(
-        # Environment has to be have statistics logging capabilities for RolloutEvaluator.
-        eval_env=LogStatsWrapper.wrap(env_factory(), logging_prefix="eval"),
-        n_episodes=1,
-        model_selection=None
-    )
-    evaluator.evaluate(rc.policy)
+    rc.evaluate()
