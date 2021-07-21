@@ -12,10 +12,11 @@ import torch
 from torch.utils.data import Dataset, Subset
 from tqdm import tqdm
 
-from maze.core.env.maze_env import MazeEnv
-from maze.core.trajectory_recording.records.state_record import StateRecord
+from maze.core.trajectory_recording.datasets.trajectory_processor import \
+    TrajectoryProcessor
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
+from maze.core.utils.factory import ConfigType, Factory
 from maze.utils.exception_report import ExceptionReport
 
 logger = logging.getLogger(__name__)
@@ -32,15 +33,17 @@ class InMemoryDataset(Dataset, ABC):
             wrappers etc.) determines the format of the actions and observations that will be derived
             from the recorded MazeActions and MazeStates (e.g. multi-step observations/actions etc.).
     :param n_workers: Number of worker processes to load data in.
+    :param trajectory_processor: The processor object for converting processing and converting individual trajectories.
     """
 
     def __init__(self,
-                 dir_or_file: Optional[Union[str, Path]] = None,
-                 conversion_env_factory: Optional[Callable] = None,
-                 n_workers: int = 1):
+                 dir_or_file: Optional[Union[str, Path]],
+                 conversion_env_factory: Optional[Callable],
+                 n_workers: int, trajectory_processor: Union[TrajectoryProcessor, ConfigType]):
         self.conversion_env_factory = conversion_env_factory
         self.conversion_env = self.conversion_env_factory() if self.conversion_env_factory else None
         self.n_workers = n_workers
+        self.trajectory_processor = Factory(TrajectoryProcessor).instantiate(trajectory_processor)
 
         self.step_records = []
         self.trajectory_references = []
@@ -99,7 +102,8 @@ class InMemoryDataset(Dataset, ABC):
 
             p = Process(
                 target=DataLoadWorker.run,
-                args=(self.conversion_env_factory, trajectories_chunk, self.reporting_queue),
+                args=(self.conversion_env_factory, trajectories_chunk, self.reporting_queue,
+                      self.trajectory_processor),
                 daemon=True
             )
             p.start()
@@ -157,7 +161,7 @@ class InMemoryDataset(Dataset, ABC):
 
         :param trajectory: Trajectory to append.
         """
-        spaces_records = self.convert_trajectory(trajectory, self.conversion_env)
+        spaces_records = self.trajectory_processor.process(trajectory, self.conversion_env)
         self._store_loaded_trajectory(spaces_records)
 
     @staticmethod
@@ -219,39 +223,6 @@ class InMemoryDataset(Dataset, ABC):
                 file_paths.append(file_path)
 
         return file_paths
-
-    @staticmethod
-    def convert_trajectory(trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[StructuredSpacesRecord]:
-        """Convert an episode trajectory record into an array of observations and actions using the given env.
-
-        :param trajectory: Episode record to load
-        :param conversion_env: Env to use for conversion of MazeStates and MazeActions into observations and actions.
-                               Required only if state records are being loaded (i.e. conversion to raw actions and
-                               observations is needed).
-        :return: Loaded observations and actions. I.e., a tuple (observation_list, action_list). Each of the
-                 lists contains observation/action dictionaries, with keys corresponding to IDs of structured
-                 sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
-        """
-        step_records = []
-
-        for step_id, step_record in enumerate(trajectory.step_records):
-
-            # Process and convert in case we are dealing with state records (otherwise no conversion needed)
-            if isinstance(step_record, StateRecord):
-                assert conversion_env is not None, "when conversion from Maze states is needed, conversion env " \
-                                                   "needs to be present."
-
-                # Drop incomplete records (e.g. at the end of episode)
-                if step_record.maze_state is None or step_record.maze_action is None:
-                    continue
-                # Convert to spaces
-                step_record = StructuredSpacesRecord.converted_from(step_record, conversion_env=conversion_env,
-                                                                    first_step_in_episode=step_id == 0)
-
-            step_records.append(step_record)
-
-        return step_records
 
     def _store_loaded_trajectory(self, records: List[StructuredSpacesRecord]) -> None:
         """Stores the step records, keeping a reference that they belong to the same episode.
@@ -331,12 +302,13 @@ class DataLoadWorker:
     @staticmethod
     def run(env_factory: Callable,
             trajectories_or_paths: List[Union[Path, str, TrajectoryRecord]],
-            reporting_queue: Queue) -> None:
+            reporting_queue: Queue, trajectory_processor: TrajectoryProcessor) -> None:
         """Load trajectory data from the provided trajectory file paths. Report exceptions to the main process.
 
         :param env_factory: Function for creating an environment for MazeState and MazeAction conversion.
         :param trajectories_or_paths: Either file paths to load, or already loaded trajectories to convert.
         :param reporting_queue: Queue for reporting loaded data and exceptions back to the main process.
+        :param pickled_preprocessing_func: A pickled preprocessing method.
         """
         try:
             env = env_factory() if env_factory else None
@@ -345,12 +317,12 @@ class DataLoadWorker:
                 # If we got a file path, then deserialize, convert, and report all trajectories in it
                 if isinstance(trajectory_or_path, Path) or isinstance(trajectory_or_path, str):
                     for trajectory in InMemoryDataset.deserialize_trajectories(trajectory_or_path):
-                        step_records = InMemoryDataset.convert_trajectory(trajectory, env)
+                        step_records = trajectory_processor.process(trajectory, env)
                         reporting_queue.put(step_records)
 
                 # If we got an already-loaded trajectory, then just convert and report it
                 elif isinstance(trajectory_or_path, TrajectoryRecord):
-                    step_records = InMemoryDataset.convert_trajectory(trajectory_or_path, env)
+                    step_records = trajectory_processor.process(trajectory_or_path, env)
                     reporting_queue.put(step_records)
 
                 else:
