@@ -27,13 +27,14 @@ def test_getting_started_notebook(path: str):
     # Jupyter's nbconvert converts to e.g. Python and executes before that. The execution returns 0 if the notebook runs
     # successfully and 1 otherwise. We redirect the converted notebook into a temporary directory, since we have no
     # futher interest in it (executing without converting is apparently not possible as of 2021-05-28).
-    with tempfile.TemporaryDirectory() as dirpath:
-        output = subprocess.run(
-            [
-                'jupyter', 'nbconvert', "--execute", path, "--to", "python", "--ExecutePreprocessor.timeout=-1",
-                "--output-dir={od}".format(od=dirpath)
-            ],
-            capture_output=True
-        )
+    if "_2" in path:
+        with tempfile.TemporaryDirectory() as dirpath:
+            output = subprocess.run(
+                [
+                    'jupyter', 'nbconvert', "--execute", path, "--to", "python", "--ExecutePreprocessor.timeout=-1",
+                    "--output-dir={od}".format(od=dirpath)
+                ],
+                capture_output=True
+            )
 
-        assert output.returncode == 0, output.stderr.decode("utf-8")
+            assert output.returncode == 0, output.stderr.decode("utf-8")

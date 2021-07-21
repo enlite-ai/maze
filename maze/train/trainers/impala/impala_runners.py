@@ -25,6 +25,8 @@ from maze.train.trainers.impala.impala_trainer import IMPALA
 from maze.utils.bcolors import BColors
 from omegaconf import DictConfig
 
+from maze.utils.process import query_cpu
+
 
 @dataclasses.dataclass
 class ImpalaRunner(TrainingRunner):
@@ -32,6 +34,14 @@ class ImpalaRunner(TrainingRunner):
 
     eval_concurrency: int
     """ Number of concurrent evaluation envs """
+
+    def __post_init__(self):
+        """
+        Adjusts initial values where necessary.
+        """
+
+        if self.eval_concurrency <= 0:
+            self.eval_concurrency = query_cpu()
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:

@@ -27,6 +27,7 @@ from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.bc_trainer import BCTrainer
 from maze.train.trainers.imitation.bc_validation_evaluator import BCValidationEvaluator
+from maze.utils.process import query_cpu
 
 
 @dataclasses.dataclass
@@ -42,6 +43,14 @@ class BCRunner(TrainingRunner):
     """Number of concurrent evaluation envs."""
 
     evaluators: Optional[List[BCValidationEvaluator]] = dataclasses.field(default=None, init=False)
+
+    def __post_init__(self):
+        """
+        Adjusts initial values where necessary.
+        """
+
+        if self.eval_concurrency <= 0:
+            self.eval_concurrency = query_cpu()
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:
