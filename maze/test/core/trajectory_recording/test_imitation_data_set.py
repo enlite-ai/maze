@@ -8,6 +8,7 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
+from maze.core.trajectory_recording.datasets.trajectory_processor import IdentityTrajectoryProcessor
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.state_record import StateRecord
@@ -92,8 +93,9 @@ def _env_factory():
 
 
 def test_state_record_load():
-    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory)
-    step_records = dataset.convert_trajectory(_mock_spaces_trajectory_record(5), dataset.conversion_env)
+    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, dir_or_file=None,
+                              trajectory_processor=IdentityTrajectoryProcessor())
+    step_records = dataset.trajectory_processor.process(_mock_spaces_trajectory_record(5), dataset.conversion_env)
 
     # All steps should be loaded
     assert len(step_records) == 5
@@ -110,8 +112,9 @@ def test_state_record_load():
 
 
 def test_spaces_record_load():
-    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory)
-    step_records = dataset.convert_trajectory(_mock_state_trajectory_record(5), dataset.conversion_env)
+    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, dir_or_file=None,
+                              trajectory_processor=IdentityTrajectoryProcessor())
+    step_records = dataset.trajectory_processor.process(_mock_state_trajectory_record(5), dataset.conversion_env)
 
     # Last step should be skipped, as no maze_action is available
     assert len(step_records) == 4
@@ -128,8 +131,10 @@ def test_spaces_record_load():
 
 
 def test_data_load_with_stateful_wrapper():
-    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=lambda: _MockObservationStackWrapper.wrap(_env_factory()))
-    step_records = dataset.convert_trajectory(_mock_state_trajectory_record(4), dataset.conversion_env)
+    dataset = InMemoryDataset(n_workers=1,
+                              conversion_env_factory=lambda: _MockObservationStackWrapper.wrap(_env_factory()),
+                              dir_or_file=None, trajectory_processor=IdentityTrajectoryProcessor())
+    step_records = dataset.trajectory_processor.process(_mock_state_trajectory_record(4), dataset.conversion_env)
 
     expected_observations = [
         {0: {"observation": [None, 0]}},
@@ -144,7 +149,8 @@ def test_data_split():
         """Extract observation values from array of imitation samples of (obs, act) tuples"""
         return list(map(lambda sample: sample[0][0]["observation"], imitation_samples))
 
-    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory)
+    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, dir_or_file=None,
+                              trajectory_processor=IdentityTrajectoryProcessor())
 
     # Fill dataset with two episodes with 5 usable steps each
     for _ in range(2):
@@ -219,7 +225,8 @@ def test_parallel_data_load_from_directory():
     dataset = InMemoryDataset(
         n_workers=2,
         conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
-        dir_or_file="trajectory_data"
+        dir_or_file="trajectory_data",
+        trajectory_processor=IdentityTrajectoryProcessor()
     )
 
     assert len(dataset) == 5 * 3
@@ -233,7 +240,8 @@ def test_parallel_data_load_from_file():
     dataset = InMemoryDataset(
         n_workers=2,
         conversion_env_factory=None,
-        dir_or_file="trajectories.pkl"
+        dir_or_file="trajectories.pkl",
+        trajectory_processor=IdentityTrajectoryProcessor()
     )
 
     assert len(dataset) == 5 * 10

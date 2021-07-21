@@ -9,3 +9,5 @@ dataset:
   _target_: maze.core.trajectory_recording.datasets.in_memory_dataset.InMemoryDataset
   dir_or_file: trajectory_data
   n_workers: 5
+  trajectory_processor:
+    _target_: maze.core.trajectory_recording.datasets.trajectory_processor.IdentityTrajectoryProcessor
