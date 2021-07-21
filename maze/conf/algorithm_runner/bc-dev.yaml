@@ -2,7 +2,7 @@
 _target_: maze.train.trainers.imitation.bc_runners.BCDevRunner
 
 # Number of concurrent evaluation envs
-eval_concurrency: 1
+eval_concurrency: 0
 
 # Specify the Dataset class used to load the trajectory data for training
 dataset:

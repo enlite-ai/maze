@@ -2,6 +2,7 @@
 Tests for Supervisor run_context.
 """
 import copy
+import os
 from typing import Tuple, Dict, List
 
 import gym
@@ -381,7 +382,11 @@ def test_inconsistency_identification_type_2_b() -> None:
     rc = run_context.RunContext(
         algorithm=a2c_alg_config,
         silent=True,
-        overrides=default_overrides,
+        overrides={
+            **default_overrides,
+            "runner.concurrency": 2,
+            "runner.eval_concurrency": 1,
+        },
         runner="local"
     )
     rc.train(1)

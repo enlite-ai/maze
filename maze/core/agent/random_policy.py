@@ -17,6 +17,7 @@ from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
 from maze.train.utils.train_utils import stack_numpy_dict_list
+from maze.utils.process import query_cpu
 
 
 class RandomPolicy(Policy):
@@ -82,7 +83,7 @@ class DistributedRandomPolicy(RandomPolicy):
 
     def __init__(self, action_spaces_dict: Dict[Union[str, int], spaces.Space], concurrency: int):
         super().__init__(action_spaces_dict)
-        self.concurrency = concurrency
+        self.concurrency = concurrency if concurrency > 0 else query_cpu()
 
     def compute_action(self,
                        observation: ObservationType,

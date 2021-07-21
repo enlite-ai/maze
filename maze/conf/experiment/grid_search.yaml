@@ -7,7 +7,7 @@ defaults:
 
 # set training runner concurrency
 runner:
-  concurrency: 2
+  concurrency: 0
 
 # set grid search concurrency
 hydra:

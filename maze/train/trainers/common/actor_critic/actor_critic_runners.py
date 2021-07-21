@@ -18,6 +18,7 @@ from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVect
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import ActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
+from maze.utils.process import query_cpu
 
 
 @dataclasses.dataclass
@@ -32,6 +33,16 @@ class ACRunner(TrainingRunner):
     """Number of concurrently executed environments."""
     eval_concurrency: int
     """ Number of concurrent evaluation envs """
+
+    def __post_init__(self):
+        """
+        Adjusts initial values where necessary.
+        """
+
+        if self.concurrency <= 0:
+            self.concurrency = query_cpu()
+        if self.eval_concurrency <= 0:
+            self.eval_concurrency = query_cpu()
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:

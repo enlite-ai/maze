@@ -9,7 +9,7 @@ defaults:
 
 # set training runner concurrency
 runner:
-  concurrency: 2
+  concurrency: 0
 
 # overrides
 hydra:

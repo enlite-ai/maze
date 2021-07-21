@@ -5,4 +5,4 @@ _target_: "maze.train.trainers.impala.impala_runners.ImpalaLocalRunner"
 start_method: forkserver
 
 # Number of concurrent evaluation envs
-eval_concurrency: 8
+eval_concurrency: 0
