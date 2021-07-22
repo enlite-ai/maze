@@ -149,6 +149,7 @@ class StructuredSpacesRecord:
 
         :return: true if the episode ended during this structured step
         """
+        assert not self.is_batched(), "cannot determine done state for batched trajectory."
         return self.substep_records[-1].done
 
     @property

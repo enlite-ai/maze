@@ -33,7 +33,7 @@ class InMemoryDataset(Dataset, ABC):
             wrappers etc.) determines the format of the actions and observations that will be derived
             from the recorded MazeActions and MazeStates (e.g. multi-step observations/actions etc.).
     :param n_workers: Number of worker processes to load data in.
-    :param trajectory_processor: The processor object for converting processing and converting individual trajectories.
+    :param trajectory_processor: The processor object for processing and converting individual trajectories.
     """
 
     def __init__(self,
@@ -308,7 +308,7 @@ class DataLoadWorker:
         :param env_factory: Function for creating an environment for MazeState and MazeAction conversion.
         :param trajectories_or_paths: Either file paths to load, or already loaded trajectories to convert.
         :param reporting_queue: Queue for reporting loaded data and exceptions back to the main process.
-        :param pickled_preprocessing_func: A pickled preprocessing method.
+        :param trajectory_processor: A trajectory processor class.
         """
         try:
             env = env_factory() if env_factory else None

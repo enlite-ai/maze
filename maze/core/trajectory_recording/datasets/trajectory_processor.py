@@ -12,14 +12,14 @@ from maze.core.trajectory_recording.records.trajectory_record import TrajectoryR
 
 
 class TrajectoryProcessor:
-    """Interface for processing individual trajectories."""
+    """Base class for processing individual trajectories."""
 
     @abstractmethod
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Preprocess a given trajectory before passing it through the wrapper stack.
 
         :param trajectory: The trajectory to preprocess.
-        :return: The preprocessed trajectory method.
+        :return: The pre-processed trajectory.
         """
 
     @staticmethod
@@ -79,7 +79,7 @@ class IdentityTrajectoryProcessor(TrajectoryProcessor):
 
     @override(TrajectoryProcessor)
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_preprocessing_methods.TrajectoryProcessor` interface.
+        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
         return trajectory
 
@@ -92,7 +92,7 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
 
     @override(TrajectoryProcessor)
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_preprocessing_methods.TrajectoryProcessor` interface.
+        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
         last_record = trajectory.step_records[-1]
         if isinstance(last_record, StateRecord):
@@ -104,7 +104,6 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
             if last_record.observations is None or last_record.observations is [] or last_record.actions is [] \
                     or last_record.actions is None:
                 trajectory.step_records = trajectory.step_records[:-1]
-            assert not trajectory.step_records[-1].is_batched(), "cannot determine done state for batched trajectory."
             is_done = trajectory.step_records[-1].is_done()
             info = trajectory.step_records[-1].substep_records[0].info
         else:

@@ -13,6 +13,10 @@ These are interfaces, classes and utility functions for recording trajectory dat
     ~datasets.in_memory_dataset.InMemoryDataset
     ~datasets.in_memory_dataset.DataLoadWorker
 
+    ~datasets.trajectory_processor.TrajectoryProcessor
+    ~datasets.trajectory_processor.IdentityTrajectoryProcessor
+    ~datasets.trajectory_processor.DeadEndClippingTrajectoryProcessor
+
     ~records.spaces_record.SpacesRecord
     ~records.structured_spaces_record.StepKeyType
     ~records.structured_spaces_record.StructuredSpacesRecord
