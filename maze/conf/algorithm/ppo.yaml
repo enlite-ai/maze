@@ -42,7 +42,7 @@ device: cpu
 # The batch size used for policy and value updates
 batch_size: 100
 
-# Number of epochs for for policy and value optimization
+# Number of epochs for policy and value optimization
 n_optimization_epochs: 4
 
 # Clipping parameter of surrogate loss
@@ -53,7 +53,7 @@ rollout_evaluator:
   _target_: maze.train.trainers.common.evaluators.rollout_evaluator.RolloutEvaluator
 
   # Run evaluation in deterministic mode (argmax-policy)
-  deterministic: false
+  deterministic: true
 
   # Number of evaluation trials
   n_episodes: 8
