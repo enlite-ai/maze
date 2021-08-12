@@ -11,7 +11,7 @@ To be able to use custom configuration files, you first
 need to :ref:`create your config module and add it to the Hydra search path<hydra-custom-search_path>`.
 Then, you can either
 
-- create :ref:`your own config modules<hydra-custom-components>`
+- create :ref:`your own config components<hydra-custom-components>`
   (e.g., when you just need to customize the environment config),
 - create dedicated :ref:`experiment config files <hydra-custom-experiments>` based on the default (master) config,
 - or :ref:`create your own root config file<hydra-custom-root_config>` if you have more custom needs.
@@ -24,7 +24,20 @@ Step 1: Custom Config Module in Hydra Search Path
 For this, first, create a module where your config will reside
 (let's say ``your_project.conf``) and place an ``__init__.py`` file in there.
 
-Then, add this config module to the Hydra search path by creating the following Hydra plugin
+Second, to make your project available to Hydra, make sure it is either installed
+using :code:`pip install -e .`, or added to your Python path manually, using for example
+:code:`export PYTHONPATH="$PYTHONPATH:$PWD/"` when in the project directory.
+
+As a final step, you need to tell Hydra to look for your config files.
+This is can be done either by specifying your config directory along with each
+:code:`maze-run` command using the :code:`-cd` flag:
+
+.. code:: console
+
+   $ maze-run -cd your_project/conf ...
+
+Or, to avoid specifying this with every command, you can add your config module
+to the Hydra search path by creating the following Hydra plugin
 (substitute ``your_project.conf`` with your actual config module path):
 
 .. literalinclude:: code_snippets/custom_search_path.py
