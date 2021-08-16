@@ -54,18 +54,19 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         """
 
         substep_name = self._get_substep_name()
+        agent_name = self._get_agent_name()
 
         # take wrapped env step
         obs, rew, done, info = self.env.step(action)
 
         if self.action_logging:
-            self._log_action(substep_name, action)
+            self._log_action(substep_name, agent_name, action)
 
         if self.observation_logging:
-            self._log_observation(substep_name, obs)
+            self._log_observation(substep_name, agent_name, obs)
 
         if self.reward_logging:
-            self.reward_events.reward_processed(step_key=substep_name, value=rew)
+            self.reward_events.reward_processed(step_key=substep_name, agent_name=agent_name, value=rew)
 
         # update action space
         self._action_space = self.env.action_space
@@ -86,7 +87,8 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
 
         if self.observation_logging:
             substep_name = self._get_substep_name()
-            self._log_observation(substep_name, obs)
+            agent_name = self._get_agent_name()
+            self._log_observation(substep_name, agent_name, obs)
 
         return obs
 
@@ -98,25 +100,31 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
 
+    def _get_agent_name(self):
+        if isinstance(self.env, StructuredEnv):
+            return f"agent_{self.env.actor_id()[1]}"
+        else:
+            return None
+
     def _get_substep_name(self):
         if isinstance(self.env, StructuredEnv):
             return f"step_key_{self.env.actor_id()[0]}"
         else:
             return None
 
-    def _log_observation(self, substep_name: Union[str, int], observation: ObservationType) -> None:
+    def _log_observation(self, substep_name: Union[str, int], agent_name: str, observation: ObservationType) -> None:
 
         # log processed observations
         for observation_name, observation_value in observation.items():
             self.observation_events.observation_processed(
-                step_key=substep_name, name=observation_name, value=observation_value)
+                step_key=substep_name,agent_name=agent_name, name=observation_name, value=observation_value)
 
         # log original observations
         for observation_name, observation_value in self.observation_original.items():
             self.observation_events.observation_original(
-                step_key=substep_name, name=observation_name, value=observation_value)
+                step_key=substep_name,agent_name=agent_name, name=observation_name, value=observation_value)
 
-    def _log_action(self, substep_name: Union[str, int], action: ActionType) -> None:
+    def _log_action(self, substep_name: Union[str, int], agent_name: str,  action: ActionType) -> None:
         assert isinstance(action, Dict), "The action space of your env has to be a dict action space."
 
         for actor_name, actor_action_space in self._action_space.spaces.items():
@@ -130,7 +138,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
                 actor_action = action[actor_name]
                 if isinstance(actor_action, np.ndarray):
                     actor_action = actor_action.item()
-                self.action_events.discrete_action(step_key=substep_name, name=actor_name,
+                self.action_events.discrete_action(step_key=substep_name, name=actor_name, agent_name=agent_name,
                                                    value=actor_action, action_dim=actor_action_space.n)
 
             # Check for multi-discrete sub-action space
@@ -138,6 +146,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
                 for sub_actor_idx, sub_action_space in enumerate(actor_action_space.nvec):
                     # a multi-discrete action space consists of several discrete action spaces
                     self.action_events.discrete_action(step_key=substep_name,
+                                                       agent_name=agent_name,
                                                        name=f'{actor_name}_{sub_actor_idx}',
                                                        value=action[actor_name][..., sub_actor_idx],
                                                        action_dim=actor_action_space.nvec[sub_actor_idx])
