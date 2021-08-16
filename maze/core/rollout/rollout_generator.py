@@ -1,5 +1,5 @@
 """General interface for performing and recording policy rollouts during training."""
-
+from copy import deepcopy
 from typing import Union, Optional, Any, Callable
 
 import numpy as np
@@ -182,7 +182,7 @@ class RolloutGenerator:
 
         # Reset the env if done and keep the terminal observation
         if not self.is_vectorized and record.done:
-            record.info["terminal_observation"] = self.last_observation
+            record.info["terminal_observation"] = deepcopy(self.last_observation)
             self.last_observation = self.env.reset()
 
         return record

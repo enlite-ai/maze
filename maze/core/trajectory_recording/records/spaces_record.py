@@ -57,6 +57,7 @@ class SpacesRecord:
         """
 
         assert len(set([r.substep_key for r in records])) == 1, "Cannot batch records for different sub-step keys."
+        assert len(set([r.agent_id for r in records])) == 1, "Cannot batch records for different agent ids."
 
         stacked_record = SpacesRecord(
             actor_id=records[0].actor_id,

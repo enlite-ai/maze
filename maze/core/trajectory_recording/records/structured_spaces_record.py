@@ -65,6 +65,9 @@ class StructuredSpacesRecord:
         """
         stacked_substeps = []
 
+        assert len(set([len(r) for r in records])) == 1, f'record are not all of equal length: ' \
+                                                         f'{[len(r) for r in records]}'
+
         for substep_records in zip(*[r.substep_records for r in records]):
             stacked_substeps.append(SpacesRecord.stack(substep_records))
 
