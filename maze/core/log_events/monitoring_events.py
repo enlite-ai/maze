@@ -21,15 +21,15 @@ class ActionEvents(ABC):
     @define_episode_stats(histogram)
     @define_step_stats(None)
     @define_stats_grouping("step_key", "name")
-    def multi_binary_action(self, step_key: str, name: str, value: int, num_binary_actions: int):
+    def multi_binary_action(self, step_key: str, agent_name: str, name: str, value: int, num_binary_actions: int):
         """ action taken """
 
     @define_plot(create_figure_function=create_categorical_plot, input_name=None)
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
-    @define_stats_grouping("step_key", "name")
-    def discrete_action(self, step_key: str, name: str, value: int, action_dim: int):
+    @define_stats_grouping("step_key", "name", 'agent_name')
+    def discrete_action(self, step_key: str, agent_name: str, name: str, value: int, action_dim: int):
         """ action taken and dimensionality of discrete action space """
 
     @define_plot(create_figure_function=create_violin_distribution, input_name=None)
@@ -37,7 +37,7 @@ class ActionEvents(ABC):
     @define_episode_stats(histogram)
     @define_step_stats(None)
     @define_stats_grouping("step_key", "name")
-    def continuous_action(self, step_key: str, name: str, value: int):
+    def continuous_action(self, step_key: str, agent_name: str, name: str, value: int):
         """ action taken and shape of box action space """
 
 
@@ -53,8 +53,8 @@ class RewardEvents(ABC):
     @define_epoch_stats(np.std, input_name="sum", output_name="std")
     @define_episode_stats(np.sum, output_name="sum")
     @define_step_stats(sum)
-    @define_stats_grouping("step_key")
-    def reward_processed(self, step_key: str, value: float):
+    @define_stats_grouping("step_key", 'agent_name')
+    def reward_processed(self, step_key: str, agent_name: str, value: float):
         """ reward after being processed by reward wrappers """
 
     @define_epoch_stats(np.max, input_name="sum", output_name="max")
@@ -81,12 +81,12 @@ class ObservationEvents(ABC):
     @define_episode_stats(histogram)
     @define_step_stats(None)
     @define_stats_grouping("step_key", "name")
-    def observation_processed(self, step_key: str, name: str, value: int):
+    def observation_processed(self, step_key: str, agent_name: str,  name: str, value: int):
         """ observation after being processed by observation wrappers """
 
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
     @define_stats_grouping("step_key", "name")
-    def observation_original(self, step_key: str, name: str, value: int):
+    def observation_original(self, step_key: str, agent_name: str, name: str, value: int):
         """ original MazeEnv observation before being processed be observation wrappers """
