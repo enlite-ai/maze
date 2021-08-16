@@ -117,12 +117,12 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         # log processed observations
         for observation_name, observation_value in observation.items():
             self.observation_events.observation_processed(
-                step_key=substep_name,agent_name=agent_name, name=observation_name, value=observation_value)
+                step_key=substep_name, agent_name=agent_name, name=observation_name, value=observation_value)
 
         # log original observations
         for observation_name, observation_value in self.observation_original.items():
             self.observation_events.observation_original(
-                step_key=substep_name,agent_name=agent_name, name=observation_name, value=observation_value)
+                step_key=substep_name, agent_name=agent_name, name=observation_name, value=observation_value)
 
     def _log_action(self, substep_name: Union[str, int], agent_name: str,  action: ActionType) -> None:
         assert isinstance(action, Dict), "The action space of your env has to be a dict action space."
@@ -154,13 +154,14 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
             elif isinstance(actor_action_space, spaces.MultiBinary):
                 actor_action = action[actor_name]
                 assert isinstance(actor_action, np.ndarray)
-                self.action_events.multi_binary_action(step_key=substep_name, name=actor_name,
+                self.action_events.multi_binary_action(step_key=substep_name, name=actor_name, agent_name=agent_name,
                                                        value=actor_action, num_binary_actions=actor_action_space.n)
 
             # Check for box sub-action space
             elif isinstance(actor_action_space, spaces.Box):
                 actor_action = action[actor_name]
-                self.action_events.continuous_action(step_key=substep_name, name=actor_name, value=actor_action)
+                self.action_events.continuous_action(step_key=substep_name, agent_name=agent_name, name=actor_name,
+                                                     value=actor_action)
 
     @override(SimulatedEnvMixin)
     def clone_from(self, env: 'MazeEnvMonitoringWrapper') -> None:
