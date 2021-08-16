@@ -85,19 +85,13 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         return stacked_trajectory
 
     @property
-    def actions(self) -> List[Dict[StepKeyType, ActionType]]:
-        """Convenience access to all structured action dicts from this trajectory."""
-        return [step_record.actions for step_record in self.step_records]
+    def actions_dicts(self) -> List[Dict[StepKeyType, ActionType]]:
+        """Convenience access to all structured action dicts from this trajectory.
 
-    @property
-    def observations(self) -> List[Dict[StepKeyType, ObservationType]]:
-        """Convenience access to all structured observation dicts from this trajectory."""
-        return [step_record.observations for step_record in self.step_records]
-
-    @property
-    def rewards(self) -> List[Dict[StepKeyType, Union[float, np.ndarray]]]:
-        """Convenience access to all structured reward dicts from this trajectory."""
-        return [step_record.rewards for step_record in self.step_records]
+        TODO: Does not support multi agent scenarios (where the substep (dict) key is the same for all agents)
+            This method is only used in alpha zero though.
+        """
+        return [step_record.actions_dict for step_record in self.step_records]
 
     def is_done(self) -> bool:
         """Convenience method for checking whether the end of this trajectory represents also the end of an episode."""

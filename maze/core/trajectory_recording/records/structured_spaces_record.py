@@ -65,7 +65,7 @@ class StructuredSpacesRecord:
         """
         stacked_substeps = []
 
-        assert len(set([len(r) for r in records])) == 1, f'record are not all of equal length: ' \
+        assert len(set([len(r) for r in records])) == 1, f'records are not all of equal length: ' \
                                                          f'{[len(r) for r in records]}'
 
         for substep_records in zip(*[r.substep_records for r in records]):
@@ -202,7 +202,8 @@ class StructuredSpacesRecord:
 
     @property
     def actions_dict(self) -> Dict[StepKeyType, Union[ActionType, TorchActionType]]:
-        """Dict of actions from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        """Dict of actions from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios).
+        """
         return {r.substep_key: r.action for r in self.substep_records}
 
     @property

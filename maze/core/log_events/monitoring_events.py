@@ -20,7 +20,7 @@ class ActionEvents(ABC):
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
-    @define_stats_grouping("step_key", "name")
+    @define_stats_grouping("step_key", 'agent_name', "name")
     def multi_binary_action(self, step_key: str, agent_name: str, name: str, value: int, num_binary_actions: int):
         """ action taken """
 
@@ -28,7 +28,7 @@ class ActionEvents(ABC):
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
-    @define_stats_grouping("step_key", "name", 'agent_name')
+    @define_stats_grouping("step_key", 'agent_name', "name")
     def discrete_action(self, step_key: str, agent_name: str, name: str, value: int, action_dim: int):
         """ action taken and dimensionality of discrete action space """
 
@@ -36,7 +36,7 @@ class ActionEvents(ABC):
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
-    @define_stats_grouping("step_key", "name")
+    @define_stats_grouping("step_key", 'agent_name', "name")
     def continuous_action(self, step_key: str, agent_name: str, name: str, value: int):
         """ action taken and shape of box action space """
 
@@ -80,13 +80,13 @@ class ObservationEvents(ABC):
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
-    @define_stats_grouping("step_key", "name")
+    @define_stats_grouping("step_key", 'agent_name', "name")
     def observation_processed(self, step_key: str, agent_name: str,  name: str, value: int):
         """ observation after being processed by observation wrappers """
 
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
-    @define_stats_grouping("step_key", "name")
+    @define_stats_grouping("step_key", 'agent_name', "name")
     def observation_original(self, step_key: str, agent_name: str, name: str, value: int):
         """ original MazeEnv observation before being processed be observation wrappers """
