@@ -4,7 +4,7 @@ from typing import List, Optional, Any, TypeVar, Generic, Dict, Union
 
 import numpy as np
 
-from maze.core.env.action_conversion import ActionType, TorchActionType
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.rendering.renderer import Renderer
 from maze.core.trajectory_recording.records.state_record import StateRecord
@@ -92,12 +92,6 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
             This method is only used in alpha zero though.
         """
         return [step_record.actions_dict for step_record in self.step_records]
-
-    @property
-    def actions(self) -> List[List[Union[ActionType, TorchActionType]]]:
-        """Convenience access to all structured action dicts from this trajectory.
-        """
-        return [step_record.actions for step_record in self.step_records]
 
     def is_done(self) -> bool:
         """Convenience method for checking whether the end of this trajectory represents also the end of an episode."""

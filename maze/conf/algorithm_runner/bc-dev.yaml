@@ -7,8 +7,7 @@ eval_concurrency: 0
 # Specify the Dataset class used to load the trajectory data for training
 dataset:
   _target_: maze.core.trajectory_recording.datasets.in_memory_dataset.InMemoryDataset
-  input_data: trajectory_data
+  dir_or_file: trajectory_data
   n_workers: 1
-  deserialize_in_main_thread: false
   trajectory_processor:
     _target_: maze.core.trajectory_recording.datasets.trajectory_processor.IdentityTrajectoryProcessor
