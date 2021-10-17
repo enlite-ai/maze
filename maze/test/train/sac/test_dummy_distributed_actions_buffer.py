@@ -13,8 +13,6 @@ from maze.perception.perception_utils import observation_spaces_to_in_shapes
 from maze.test.shared_test_utils.hydra_helper_functions import load_hydra_config
 from maze.train.parallelization.distributed_actors.dummy_distributed_workers_with_buffer import \
     DummyDistributedWorkersWithBuffer
-from maze.train.trainers.common.replay_buffer.uniform_replay_buffer import UniformReplayBuffer
-from maze.train.trainers.sac.sac_runners import SACRunner
 
 
 def create_dummy_distributed_actors(rollouts_per_iteration: int, n_rollout_steps: int,
@@ -45,21 +43,20 @@ def create_dummy_distributed_actors(rollouts_per_iteration: int, n_rollout_steps
     batch_size = 20
     replay_buffer_size = 40
 
-    replay_buffer = UniformReplayBuffer(buffer_size=replay_buffer_size, seed=1234)
-    SACRunner.init_replay_buffer(replay_buffer=replay_buffer, initial_sampling_policy=initial_sampling_policy,
-                                 initial_buffer_size=initial_buffer_size, replay_buffer_seed=1234,
-                                 split_rollouts_into_transitions=split_rollouts_into_transitions,
-                                 n_rollout_steps=n_rollout_steps, env_factory=env_factory)
-
     distributed_actors = DummyDistributedWorkersWithBuffer(
         env_factory=env_factory, worker_policy=model_composer.policy, n_rollout_steps=n_rollout_steps,
-        n_workers=n_actors, batch_size=batch_size,  rollouts_per_iteration=rollouts_per_iteration,
+        n_workers=n_actors, batch_size=batch_size, replay_buffer_size=replay_buffer_size,
+        initial_buffer_size=initial_buffer_size,
+        initial_sampling_policy=initial_sampling_policy, rollouts_per_iteration=rollouts_per_iteration,
         split_rollouts_into_transitions=split_rollouts_into_transitions, env_instance_seeds=list(range(n_actors)),
-        replay_buffer=replay_buffer)
+        replay_buffer_seed=1234)
 
     print(len(distributed_actors.replay_buffer))
     assert len(distributed_actors.replay_buffer) == initial_buffer_size
     _, _, _ = distributed_actors.collect_rollouts()
+    actor_output = distributed_actors.sample_batch('cpu')
+    assert isinstance(actor_output, StructuredSpacesRecord)
+    assert hasattr(actor_output, 'observations')
     if n_rollout_steps == 1 or not split_rollouts_into_transitions:
         assert len(distributed_actors.replay_buffer) == min(initial_buffer_size + rollouts_per_iteration,
                                                             replay_buffer_size)
@@ -67,9 +64,7 @@ def create_dummy_distributed_actors(rollouts_per_iteration: int, n_rollout_steps
         assert len(distributed_actors.replay_buffer) == min(initial_buffer_size +
                                                             rollouts_per_iteration * n_rollout_steps,
                                                             replay_buffer_size)
-    actor_output = distributed_actors.sample_batch('cpu')
-    assert isinstance(actor_output, StructuredSpacesRecord)
-    assert hasattr(actor_output, 'observations')
+
     obs_shapes = observation_spaces_to_in_shapes(normalization_env.observation_spaces_dict)
 
     for step_key in obs_shapes.keys():
