@@ -1,26 +1,22 @@
 """Trainer class for behavioral cloning."""
 
 from dataclasses import dataclass
-from typing import Dict, Union, Optional, List
+from typing import Tuple, Dict, Any, Union, Optional
 
 import torch
-from torch.optim import Optimizer
-from torch.utils.data import DataLoader
-from typing.io import BinaryIO
-
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
-from maze.core.env.action_conversion import ActionType, TorchActionType
-from maze.core.env.observation_conversion import ObservationType, TorchObservationType
-from maze.core.env.structured_env import ActorID
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, increment_log_step
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig
 from maze.train.trainers.imitation.bc_loss import BCLoss
+from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
-from maze.train.utils.train_utils import compute_gradient_norm, debatch_actor_ids
+from maze.train.utils.train_utils import compute_gradient_norm
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
+from typing.io import BinaryIO
 
 
 @dataclass
@@ -52,12 +48,12 @@ class BCTrainer(Trainer):
     """Imitation-specific training events"""
 
     def __init__(
-            self,
-            algorithm_config: BCAlgorithmConfig,
-            data_loader: DataLoader,
-            policy: TorchPolicy,
-            optimizer: Optimizer,
-            loss: BCLoss
+        self,
+        algorithm_config: BCAlgorithmConfig,
+        data_loader: DataLoader,
+        policy: TorchPolicy,
+        optimizer: Optimizer,
+        loss: BCLoss
     ):
         super().__init__(algorithm_config)
 
@@ -68,7 +64,7 @@ class BCTrainer(Trainer):
 
     @override(Trainer)
     def train(
-            self, evaluator: Evaluator, n_epochs: Optional[int] = None, eval_every_k_iterations: Optional[int] = None
+        self, evaluator: Evaluator, n_epochs: Optional[int] = None, eval_every_k_iterations: Optional[int] = None
     ) -> None:
         """
         Run training.
@@ -89,8 +85,7 @@ class BCTrainer(Trainer):
             increment_log_step()
 
             for iteration, data in enumerate(self.data_loader, 0):
-                observations, actions, actor_ids = data
-                self._run_iteration(observations=observations, actions=actions, actor_ids=actor_ids)
+                self._run_iteration(data)
 
                 # Evaluate after each k iterations if set
                 if eval_every_k_iterations is not None and \
@@ -122,33 +117,22 @@ class BCTrainer(Trainer):
         state_dict = torch.load(file_path, map_location=torch.device(self.policy.device))
         self.load_state_dict(state_dict)
 
-    def _run_iteration(self, observations: List[Union[ObservationType, TorchObservationType]],
-                       actions: List[Union[ActionType, TorchActionType]], actor_ids: List[ActorID]) -> None:
-        """Run a single training iterations of the behavioural cloning.
-
-        :param observations: A list (w.r.t. the substeps/agents) of batched observations.
-        :param actions: A list (w.r.t. the substeps/agents) of batched actions.
-        :param actor_ids: A list (w.r.t. the substeps/agents) of the corresponding batched actor_ids.
-        """
+    def _run_iteration(self, data: Tuple[Dict[Union[int, str], Any], Dict[Union[int, str], Any]]) -> None:
         self.policy.train()
         self.optimizer.zero_grad()
 
-        # The actor ids of a given batch should be all the same. Thus we can debatch them.
-        actor_ids = debatch_actor_ids(actor_ids)
+        observation_dict, action_dict = data
+        convert_to_torch(action_dict, device=self.policy.device, cast=None, in_place=True)
 
-        # Convert only actions to torch, since observations are converted in policy.compute_substep_policy_output method
-        actions = convert_to_torch(actions, device=self.policy.device, cast=None, in_place=True)
-        total_loss = self.loss.calculate_loss(policy=self.policy, observations=observations,
-                                              actions=actions, actor_ids=actor_ids, events=self.imitation_events)
+        total_loss = self.loss.calculate_loss(policy=self.policy, observation_dict=observation_dict,
+                                              action_dict=action_dict, events=self.imitation_events)
         total_loss.backward()
         self.optimizer.step()
 
         # Report additional policy-related stats
-        for actor_id in actor_ids:
-            l2_norm = sum([param.norm() for param in self.policy.network_for(actor_id).parameters()])
-            grad_norm = compute_gradient_norm(self.policy.network_for(actor_id).parameters())
+        for policy_id in observation_dict.keys():
+            l2_norm = sum([param.norm() for param in self.policy.networks[policy_id].parameters()])
+            grad_norm = compute_gradient_norm(self.policy.networks[policy_id].parameters())
 
-            self.imitation_events.policy_l2_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                                 value=l2_norm.item())
-            self.imitation_events.policy_grad_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                                   value=grad_norm)
+            self.imitation_events.policy_l2_norm(step_id=policy_id, value=l2_norm.item())
+            self.imitation_events.policy_grad_norm(step_id=policy_id, value=grad_norm)
