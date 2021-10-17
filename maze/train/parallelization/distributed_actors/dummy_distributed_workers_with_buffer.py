@@ -54,9 +54,8 @@ class DummyDistributedWorkersWithBuffer(BaseDistributedWorkersWithBuffer):
         interface
         """
 
-        assert len(self.replay_buffer) >= self.batch_size, \
-            f'The replay buffer should hold more transitions ({len(self.replay_buffer)}) than the batch size ' \
-            f'({self.batch_size}) at all times'
+        assert len(self.replay_buffer) >= self.batch_size, 'The replay buffer should hold more rollouts than the ' \
+                                                           'batch size at all times'
 
         start_wait_time = time.time()
 
@@ -71,9 +70,9 @@ class DummyDistributedWorkersWithBuffer(BaseDistributedWorkersWithBuffer):
                                                                        n_steps=self.n_rollout_steps)
 
             if self.split_rollouts_into_transitions:
-                self.replay_buffer.add_rollout(trajectory)
+                self.replay_buffer.add_rollout(trajectory.step_records)
             else:
-                self.replay_buffer.add_transition(trajectory)
+                self.replay_buffer.add_rollout(trajectory)
 
             self.current_worker_idx = self.current_worker_idx + 1 if self.current_worker_idx < len(
                 self.workers) - 1 else 0
