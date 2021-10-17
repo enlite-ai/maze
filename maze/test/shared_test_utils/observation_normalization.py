@@ -23,11 +23,7 @@ def estimate_normalization_statistics(env: ObservationNormalizationWrapper) -> O
     env.reset()
     for _ in range(100):
         action = env.action_space.sample()
-        _, _, done, _ = env.step(action)
-
-        if done:
-            break
-
+        env.step(action)
     env.estimate_statistics()
     env.set_observation_collection(status=False)
 
@@ -48,14 +44,11 @@ def conduct_observation_normalization_test(env: ObservationNormalizationWrapper,
     act_conv_space: gym.spaces.space = env.action_conversion.space()
 
     for step in range(n_steps):
-        observation, _, done, _ = env.step(act_conv_space.sample())
+        observation = env.step(act_conv_space.sample())[0]
         for obs_key in observation:
             if obs_key not in env.exclude:
                 assert validation_callback(observation[obs_key]), \
                     f"validation_callback not True for observation '{obs_key}'"
-
-        if done:
-            break
 
 
 def match_observation_space_structure(space_a: Iterable, space_b: Iterable) -> bool:
@@ -142,9 +135,6 @@ def observation_shape_match_test(env_factory: Callable[[], StructuredEnv],
 
     env: CoreEnvType = env_factory()
     env_norm: ObservationNormalizationWrapper = wrapper_factory()
-
-    env.reset()
-    env_norm.reset()
 
     assert match_observation_space_structure(
         env.step(env.action_conversion.space().sample())[0],

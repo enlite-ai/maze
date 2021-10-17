@@ -8,8 +8,6 @@ import numpy as np
 import torch
 from typing.io import BinaryIO
 
-from maze.core.agent.policy import Policy
-from maze.core.agent.torch_model import TorchModel
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
@@ -31,28 +29,21 @@ class ESTrainer(Trainer):
     """Trainer class for OpenAI Evolution Strategies.
 
     :param algorithm_config: Algorithm parameters.
-    :param torch_policy: Multi-step policy encapsulating the policy networks
+    :param policy: Multi-step policy encapsulating the policy networks
     :param shared_noise: The noise table, with the same content for every worker and the master.
     :param normalization_stats: Normalization statistics as calculated by the NormalizeObservationWrapper.
     """
 
     def __init__(self,
                  algorithm_config: ESAlgorithmConfig,
-                 torch_policy: TorchPolicy,
+                 policy: TorchPolicy,
                  shared_noise: SharedNoiseTable,
                  normalization_stats: Optional[Dict[str, Tuple[np.ndarray, np.ndarray]]]) -> None:
         super().__init__(algorithm_config)
 
         # --- training setup ---
         self.model_selection: Optional[ModelSelectionBase] = None
-        self.policy: Union[Policy, TorchModel] = torch_policy
-        # support policy wrapping
-        if algorithm_config.policy_wrapper:
-            policy = Factory(Policy).instantiate(
-                algorithm_config.policy_wrapper, torch_policy=torch_policy)
-            assert isinstance(policy, Policy) and isinstance(policy, TorchModel)
-            self.policy = policy
-
+        self.policy = policy
         self.shared_noise = shared_noise
         self.normalization_stats = normalization_stats
 
@@ -68,10 +59,10 @@ class ESTrainer(Trainer):
 
     @override(Trainer)
     def train(
-            self,
-            distributed_rollouts: ESDistributedRollouts,
-            n_epochs: Optional[int] = None,
-            model_selection: Optional[ModelSelectionBase] = None
+        self,
+        distributed_rollouts: ESDistributedRollouts,
+        n_epochs: Optional[int] = None,
+        model_selection: Optional[ModelSelectionBase] = None
     ) -> None:
         """
         Run the ES training loop.
@@ -191,7 +182,7 @@ class ESTrainer(Trainer):
         # statistics logging
         self.es_events.update_ratio(update_ratio)
 
-        for i in self.policy.state_dict().keys():
+        for i in self.policy.networks.keys():
             self.es_events.policy_grad_norm(policy_id=i, value=np.square(g).sum() ** 0.5)
             self.es_events.policy_norm(policy_id=i, value=np.square(theta).sum() ** 0.5)
 

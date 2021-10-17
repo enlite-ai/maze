@@ -1,8 +1,6 @@
 """Algorithm parameters for evolution strategies model."""
 from dataclasses import dataclass
-from typing import Any, Optional
-
-from maze.core.agent.policy import Policy
+from typing import Any
 from maze.train.trainers.common.config_classes import AlgorithmConfig
 
 
@@ -33,6 +31,3 @@ class ESAlgorithmConfig(AlgorithmConfig):
 
     noise_stddev: float
     """The scaling factor of the random noise applied during training."""
-
-    policy_wrapper: Optional[Policy]
-    """Support for simulation logic or heuristics on top of a TorchPolicy."""
