@@ -71,7 +71,6 @@ def conduct_env_reproducibility_test(env: MazeEnv, pick_action: Callable, n_step
     # Store hashed step states.
     observations: List[ObservationType] = list()
 
-    env.reset()
     for step in range(n_steps):
         policy_id, actor_id = env.actor_id()
 
