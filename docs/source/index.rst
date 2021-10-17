@@ -142,7 +142,6 @@ but most importantly also provide code snippets and minimum working examples to 
 
    workflow/training.rst
    workflow/rollouts.rst
-   workflow/deployment.rst
    workflow/rollouts_trajectories_viewer.rst
    workflow/imitation_and_fine_tuning.rst
    workflow/experimenting.rst

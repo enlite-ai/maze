@@ -1,24 +1,23 @@
-"""Executes the provided policies in an Agent Deployment setting."""
+"""Executes the provided policies in an Agent Integration setting."""
 import traceback
 from collections import namedtuple
-from queue import Queue
 from threading import Event
 
 from maze.core.agent.policy import Policy
-from maze.core.agent_deployment.external_core_env import ExternalCoreEnv
-from maze.core.agent_deployment.maze_action_candidates import ActionCandidates
+from maze.core.agent_integration.external_core_env import ExternalCoreEnv
+from maze.core.agent_integration.maze_action_candidates import ActionCandidates
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 
 ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
 """Tuple for passing error back to the main thread."""
 
 
-class PolicyExecutor:
-    """Executes the provided policies in an Agent Deployment setting.
+class AgentExecution:
+    """Executes the provided policies in an Agent Integration setting.
 
     Policies are executed until the rollout_done event is set, indicating that the rollout has been finished.
     Then, a final reset is sent and execution stops. Expected to be run on a separate thread alongside the
-    agent deployment running on the main thread.
+    agent integration running on the main thread.
 
     :param env: Environment to step.
     :param policy: Structured policy working with structured environments.
@@ -29,15 +28,13 @@ class PolicyExecutor:
                  env: ExternalCoreEnv,
                  policy: Policy,
                  rollout_done_event: Event,
-                 exception_queue: Queue,
                  num_candidates: int):
         self.env = env
         self.policy = policy
         self.rollout_done_event = rollout_done_event
-        self.exception_queue = exception_queue
         self.num_candidates = num_candidates
 
-    def run_rollout_loop(self):
+    def run_rollout_maze(self):
         """Step the environment until the rollout is done."""
         try:
             # We need to reset first, otherwise no observation is available
@@ -50,11 +47,13 @@ class PolicyExecutor:
 
                 # Get either a single action or multiple candidates wrapped in action candidates object
                 if self.num_candidates > 1:
-                    action = ActionCandidates(self.policy.compute_top_action_candidates(observation=observation,
-                                                                                        num_candidates=self.num_candidates,
-                                                                                        maze_state=maze_state, env=env,
-                                                                                        actor_id=actor_id)
-                                              )
+                    action = ActionCandidates(self.policy.compute_top_action_candidates(
+                        observation=observation,
+                        maze_state=maze_state,
+                        env=env,
+                        num_candidates=self.num_candidates,
+                        actor_id=actor_id)
+                    )
                 else:
                     action = self.policy.compute_action(
                         observation=observation,
@@ -74,5 +73,5 @@ class PolicyExecutor:
         except Exception as exception:
             # Send exception along with a traceback to the main thread
             exception_report = ExceptionReport(exception, traceback.format_exc())
-            self.exception_queue.put(exception_report)
+            self.env.maze_action_queue.put(exception_report)
             raise

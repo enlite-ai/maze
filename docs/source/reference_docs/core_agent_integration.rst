@@ -1,17 +1,17 @@
-Agent Deployment
+Agent Integration
 =================
 
-This page contains the reference documentation for the Maze agent deployment components.
+This page contains the reference documentation for the Maze agent integration components.
 
-.. currentmodule:: maze.core.agent_deployment
+.. currentmodule:: maze.core.agent_integration
 
 .. autosummary::
     :toctree: generated
     :nosignatures:
     :template: classtemplate.rst
 
-    ~agent_deployment.AgentDeployment
-    ~policy_executor.PolicyExecutor
+    ~agent_execution.AgentExecution
+    ~agent_integration.AgentIntegration
     ~maze_action_candidates.ActionCandidates
     ~maze_action_candidates.MazeActionCandidates
     ~maze_action_candidates.ActionConversionCandidatesInterface
