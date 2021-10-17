@@ -272,8 +272,7 @@ class ObservationNormalizationWrapper(ObservationWrapper[MazeEnv]):
         :param observation: The observation to collect.
         """
         for key in observation.keys():
-            if key not in self.exclude:
-                self._collected_observation[key].append(observation[key][np.newaxis])
+            self._collected_observation[key].append(observation[key][np.newaxis])
 
     def _has_manual_config(self, observation_key) -> bool:
         """Checks if the observation space path has a manual config provided.

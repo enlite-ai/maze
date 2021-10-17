@@ -2,7 +2,7 @@
     InMemoryDataset"""
 import dataclasses
 from abc import abstractmethod
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
@@ -15,15 +15,11 @@ class TrajectoryProcessor:
     """Base class for processing individual trajectories."""
 
     @abstractmethod
-    def pre_process(self, trajectory: TrajectoryRecord) -> Union[TrajectoryRecord, List[TrajectoryRecord]]:
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Preprocess a given trajectory before passing it through the wrapper stack.
 
-        In order to deal with pre-processing methods that create multiple trajectories from a single one
-        (e.g. data augmentation by permutation of subsets) a single trajectory can be returned as well as a list of
-        multiple trajectories.
-
         :param trajectory: The trajectory to preprocess.
-        :return: The pre-processed trajectory or a list of multiple pre-processed trajectories.
+        :return: The pre-processed trajectory.
         """
 
     @staticmethod
@@ -60,26 +56,21 @@ class TrajectoryProcessor:
         return step_records
 
     def process(self, trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[List[StructuredSpacesRecord]]:
+            -> List[StructuredSpacesRecord]:
         """Convert an individual trajectory, by calling the pre_processing method followed by the
         convert_trajectory_with_env
 
-        :param trajectory: Episode record to load.
+        :param trajectory: Episode record to load
         :param conversion_env: Env to use for conversion of MazeStates and MazeActions into observations and actions.
                                Required only if state records are being loaded (i.e. conversion to raw actions and
                                observations is needed).
-        :return: A list (corresponding to the trajectories) of lists (corresponding to the steps of a individual
-                 trajectory) of Structured Spaces Records. Each Structures Spaces Record holds a single environment
-                 step with all corresponding information such as sub-step observations and actions as well as rewards
-                 and actor ids.
+        :return: Loaded observations and actions. I.e., a tuple (observation_list, action_list). Each of the
+                 lists contains observation/action dictionaries, with keys corresponding to IDs of structured
+                 sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
         """
 
         pre_processed_trajectories = self.pre_process(trajectory)
-        if not isinstance(pre_processed_trajectories, list):
-            pre_processed_trajectories = [pre_processed_trajectories]
-
-        env_processed_trajectories = [self.convert_trajectory_with_env(pre_processed_trajectory, conversion_env)
-                                      for pre_processed_trajectory in pre_processed_trajectories]
+        env_processed_trajectories = self.convert_trajectory_with_env(pre_processed_trajectories, conversion_env)
         return env_processed_trajectories
 
 
@@ -118,77 +109,8 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
         else:
             raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
 
-        # Check whether the given trajectory died due to a self inflicted mistake
-        if is_done and (info is None or 'TimeLimit.truncated' not in info):
-            # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
-            if len(trajectory) > self.clip_k:
-                trajectory.step_records = trajectory.step_records[:-self.clip_k]
-            else:
-                trajectory.step_records = list()
+        if len(trajectory) > self.clip_k and is_done and \
+                (info is None or 'TimeLimit.truncated' not in info):
+            trajectory.step_records = trajectory.step_records[:-self.clip_k]
 
-        return trajectory
-
-
-class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
-    """A preprocessor used for the soft actor critic from demonstrations.
-
-    This preprocessor reads trajectories and adds the next observation to the current transition, as they are needed
-    for the state-action critic of the sac.
-    """
-
-    @staticmethod
-    @override(TrajectoryProcessor)
-    def convert_trajectory_with_env(trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[StructuredSpacesRecord]:
-        """Convert an episode trajectory record into an array of observations and actions using the given env.
-
-        :param trajectory: Episode record to load
-        :param conversion_env: Env to use for conversion of MazeStates and MazeActions into observations and actions.
-                               Required only if state records are being loaded (i.e. conversion to raw actions and
-                               observations is needed).
-        :return: Loaded observations and actions. I.e., a tuple (observation_list, action_list). Each of the
-                 lists contains observation/action dictionaries, with keys corresponding to IDs of structured
-                 sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
-        """
-        spaces_records = []
-
-        for step_id, step_record in enumerate(trajectory.step_records[::-1]):
-
-            # Process and convert in case we are dealing with state records (otherwise no conversion needed)
-            if isinstance(step_record, StateRecord):
-                assert conversion_env is not None, "when conversion from Maze states is needed, conversion env " \
-                                                   "needs to be present."
-
-                # Drop incomplete records (e.g. at the end of episode)
-                if step_record.maze_state is None or step_record.maze_action is None:
-                    if step_id == 0:
-                        step_record.maze_action = trajectory.step_records[1].maze_action
-                    else:
-                        continue
-
-                # Convert to spaces
-                spaces_record: StructuredSpacesRecord = StructuredSpacesRecord.converted_from(step_record,
-                                                                                            conversion_env=conversion_env,
-                                                                                            first_step_in_episode=step_id == len(
-                                                                                                trajectory.step_records))
-                assert len(spaces_record.substep_records) == 1, f'Only spaces with one substep are supported at this ' \
-                                                                f'point'
-                spaces_record.substep_records[-1].reward = step_record.reward
-            else:
-                spaces_record = step_record
-
-            if step_id > 0:
-                for substep, next_substep in zip(spaces_record.substep_records, spaces_records[-1].substep_records):
-                    substep.next_observation = next_substep.observation
-
-            spaces_records.append(spaces_record)
-
-        spaces_records = spaces_records[1:][::-1]
-
-        return spaces_records
-
-    @override(TrajectoryProcessor)
-    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
-        """
         return trajectory

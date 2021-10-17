@@ -41,7 +41,6 @@ def test_discrete_action_wrapper() -> None:
         assert isinstance(env.action_space[action_name], spaces.Discrete)
         assert env.action_space[action_name].n == new_action_config['num_bins']
 
-    env.reset()
     action = env.action_space.sample()
     reverse_action = env.action(action)
     restored_action = env.reverse_action(reverse_action)
@@ -73,7 +72,6 @@ def _test_dummy_env_for_discretization_config(discretization_config: Dict[str, D
             assert np.all(env.action_space[action_name].nvec == \
                           np.array([new_action_config['num_bins']] * base_env.action_space[action_name].shape[-1]))
 
-    env.reset()
     for i in range(1):
         action = env.action_space.sample()
         env.step(action)
