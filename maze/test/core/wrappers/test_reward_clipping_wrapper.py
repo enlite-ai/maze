@@ -17,7 +17,6 @@ def test_reward_clipping_wrapper():
         action_conversion=[DictActionConversion()],
         observation_conversion=[observation_conversion])
 
-    env.reset()
     action = env.action_space.sample()
     np.random.seed(1234)
 

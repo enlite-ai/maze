@@ -103,17 +103,8 @@ class CustomModelComposer(BaseModelComposer):
         """
         critic_input_spaces_dict = dict(copy.deepcopy(self.observation_spaces_dict))
         for step_key, obs_space in self.observation_spaces_dict.items():
-            step_observation = dict()
-            for obs_key, obs in obs_space.spaces.items():
-                if isinstance(obs, spaces.Box) and np.any(obs_space[obs_key].low == np.finfo(np.float32).min) or \
-                        np.any(obs_space[obs_key].high == np.finfo(np.float32).max):
-                    # In case any of the lower or upper bounds of the space are infinite, resample the values.
-                    step_observation[obs_key] = np.random.randn(*obs.shape).astype(np.float32)
-                else:
-                    # Set random generator to None.. In case the observation spaces have been loaded from
-                    #   a file not setting this may lead to problems
-                    obs._np_random = None
-                    step_observation[obs_key] = obs.sample()
+            step_observation = obs_space.sample()
+            step_observation = map_nested_structure(step_observation, lambda x: x / 100.0, in_place=True)
             tmp_out = self._policy_composer.policy.compute_substep_policy_output(
                 step_observation, actor_id=ActorID(step_key, 0))
             if tmp_out.embedding_logits is not None:

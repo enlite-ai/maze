@@ -25,7 +25,7 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
     SKIPPING_MODES = ['sticky', 'noop']
 
     def __init__(self, env: Union[StructuredEnvSpacesMixin, MazeEnv], n_steps: int, skip_mode: str):
-        super().__init__(env)
+        super().__init__(env, keep_inner_hooks=True)
 
         # initialize observation skipping
         self.n_steps = n_steps

@@ -2,7 +2,6 @@
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.monitoring_events import RewardEvents
-from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.step_skip_wrapper import StepSkipWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -99,7 +98,6 @@ def test_observation_skipping_wrapper_sticky_flat():
     # instantiate env
     env = GymMazeEnv("CartPole-v0")
     env = StepSkipWrapper.wrap(env, n_steps=n_steps, skip_mode='sticky')
-    env = LogStatsWrapper.wrap(env)  # for accessing events from previous steps
 
     # reset environment and run interaction loop
     env.reset()
@@ -109,7 +107,8 @@ def test_observation_skipping_wrapper_sticky_flat():
         obs, reward, done, info = env.step(action)
         cum_rew += reward
 
-        assert len(env.get_last_step_events(query=RewardEvents.reward_original)) == 1
+        events = env.get_step_events()
+        assert (len([e for e in events if e.interface_method == RewardEvents.reward_original]) == 1)
 
     assert cum_rew == 6
 
