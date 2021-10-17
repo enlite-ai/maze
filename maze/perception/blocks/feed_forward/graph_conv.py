@@ -260,8 +260,7 @@ class GraphConvBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         assert feat_tensor.ndim == self.in_num_dims[0]
         assert adj_tensor.ndim == self.in_num_dims[1]
 
-        assert feat_tensor.shape[-1] == self.input_features, f'Feature dimension should fit: {feat_tensor.shape[-1]} ' \
-                                                             f'vs {self.input_features}'
+        assert feat_tensor.shape[-1] == self.input_features, 'Feature dimension should fit'
         assert feat_tensor.shape[-2] == adj_tensor.shape[-2] == adj_tensor.shape[-1], 'Node dimension should fit'
 
         # Preprocess adj matrix
