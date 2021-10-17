@@ -1,6 +1,7 @@
 """Actors distributed across multiple processing using multiprocessing."""
 
 import time
+from multiprocessing.managers import BaseManager
 from typing import Callable, Union, Tuple, Dict, List
 
 import cloudpickle
@@ -15,10 +16,14 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.broadcasting_container import BroadcastingContainer, \
-    BroadcastingManager
+from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.utils.exception_report import ExceptionReport
+
+
+class MyManager(BaseManager):
+    """Basic wrapper for the BaseManager class"""
+    pass
 
 
 class SubprocDistributedActors(DistributedActors):
@@ -52,8 +57,8 @@ class SubprocDistributedActors(DistributedActors):
         ctx = self.get_multiprocessing_context(start_method)
         self.actor_output_queue = ctx.Queue(maxsize=self.max_queue_size)
 
-        BroadcastingManager.register('BroadcastingContainer', BroadcastingContainer)
-        manager = BroadcastingManager()
+        MyManager.register('BroadcastingContainer', BroadcastingContainer)
+        manager = MyManager()
         manager.start()
         self.broadcasting_container = manager.BroadcastingContainer()
 

@@ -181,8 +181,6 @@ def test_multiple_runs() -> None:
     rc = run_context.RunContext(
         silent=True,
         overrides={
-            "algorithm": "es",
-            "runner": "dev",
             "runner.normalization_samples": 1,
             "runner.n_eval_rollouts": 1,
             "runner.shared_noise_table_size": 10
@@ -198,8 +196,6 @@ def test_template_model_composer() -> None:
     """
 
     default_overrides = {
-        "algorithm": "es",
-        "runner": "dev",
         "runner.normalization_samples": 1,
         "runner.n_eval_rollouts": 1,
         "runner.shared_noise_table_size": 10

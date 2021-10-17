@@ -1,4 +1,4 @@
-"""Acts as a core env in an Agent Deployment setting."""
+"""Acts as a core env in an Agent Integration setting."""
 from queue import Queue
 from threading import Event
 from typing import Tuple, Any, Dict, Union, Iterable, Optional, List
@@ -6,8 +6,6 @@ from typing import Tuple, Any, Dict, Union, Iterable, Optional, List
 import numpy as np
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
-from maze.core.env.environment_context import EnvironmentContext
-from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import StepKeyType, ActorID
@@ -17,44 +15,42 @@ from maze.core.rendering.renderer import Renderer
 
 
 class ExternalCoreEnv(CoreEnv):
-    """Acts as a CoreEnv in the env stack in agent deployment scenario.
+    """Acts as a CoreEnv in the env stack in agent integration scenario.
 
-    Designed to be run on a separate thread, alongside the agent deployment running on the main thread.
+    Designed to be run on a separate thread, alongside the agent integration running on the main thread.
 
-    Hence, the control flow is: External env (like a Unity env) controlling the agent deployment object,
+    Hence, the control flow is: External env (like a Unity env) controlling the agent integration object,
     which in turn controls this external core env, which controls the execution of rollout loop by suspending it
-    until the next state is available from the agent deployment object.
+    until the next state is available from the agent integration object.
 
     Wrappers of this env and the agents acting on top of it see it as ordinary CoreEnv, but no actual
-    logic happens here -- instead, states and associated info are obtained from the agent deployment
-    running on the main thread, and executions produced by the agents are passed back to the agent deployment.
+    logic happens here -- instead, states and associated info are obtained from the agent integration
+    running on the main thread, and executions produced by the agents are passed back to the agent integration.
 
     During the step function, the execution of this thread is suspended while waiting for the next state
-    from the agent deployment.
+    from the agent integration.
 
-    :param state_queue: Queue this core env uses to get states from agent deployment object
-    :param maze_action_queue: Queue this core env uses to pass executions back to agent deployment object
-    :param rollout_done_event: Set by the agent deployment object. Used for detection of the end of rollout period.
+    :param state_queue: Queue this core env uses to get states from agent integration object
+    :param maze_action_queue: Queue this core env uses to pass executions back to agent integration object
+    :param rollout_done_event: Set by the agent integration object. Used for detection of the end of rollout period.
     :param renderer: If available, what renderer should be associated with the state data (for rendering, plus
                      to be serialized with trajectory data)
     """
 
     def __init__(self,
-                 context: EnvironmentContext,
                  state_queue: Queue,
                  maze_action_queue: Queue,
                  rollout_done_event: Event,
-                 renderer: Optional[Renderer] = None,
-                 kpi_calculator: Optional[KpiCalculator] = None):
+                 renderer: Optional[Renderer]):
         super().__init__()
-        self.context = context
         self.state_queue = state_queue
         self.maze_action_queue = maze_action_queue
         self.rollout_done_event = rollout_done_event
         self.renderer = renderer
-        self.kpi_calculator = kpi_calculator
 
         self.last_maze_state = None
+        self.step_events: Optional[List[EventRecord]] = None
+
         self._actor_id = (0, 0)
         self._is_actor_done = False
 
@@ -73,15 +69,14 @@ class ExternalCoreEnv(CoreEnv):
         # If the external env has been declared done, just return the last state again (as no more states are available)
         if not self.rollout_done_event.is_set():
             self.last_maze_state, _, _, _, events = self.state_queue.get()
-            self._replay_events(events)
-
+            self.step_events = events
         return self.last_maze_state
 
     @override(CoreEnv)
     def step(self, maze_action: MazeActionType) -> Tuple[
         MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
-        """Relays the execution back to the agent deployment. Then suspends thread execution until
-        the next state is provided by agent deployment."""
+        """Relays the execution back to the agent integration. Then suspends thread execution until
+        the next state is provided by agent integration."""
         self.maze_action_queue.put(maze_action)
 
         # Here, thread execution is suspended until the next state object is put in the queue by AIW.
@@ -89,7 +84,7 @@ class ExternalCoreEnv(CoreEnv):
 
         state, reward, done, info, events = self.state_queue.get()
         self.last_maze_state = state
-        self._replay_events(events)
+        self.step_events = events
 
         # Increment step and clear events - structured core environments are not supported
         self.context.increment_env_step()
@@ -99,21 +94,21 @@ class ExternalCoreEnv(CoreEnv):
     # --- Structured env methods and setters ---
 
     def set_actor_id(self, new_value: ActorID):
-        """Hook for the agent deployment to set actor_id before querying execution."""
+        """Hook for the agent integration to set actor_id before querying execution."""
         self._actor_id = new_value
 
     @override(CoreEnv)
     def actor_id(self) -> ActorID:
-        """Current actor ID set by the agent deployment."""
+        """Current actor ID set by the agent integration."""
         return self._actor_id
 
     def set_is_actor_done(self, new_value: bool):
-        """Hook for the agent deployment to set the actor_done flag before querying execution."""
+        """Hook for the agent integration to set the actor_done flag before querying execution."""
         self._is_actor_done = new_value
 
     @override(CoreEnv)
     def is_actor_done(self) -> bool:
-        """Whether last actor is done, as set by the agent deployment."""
+        """Whether last actor is done, as set by the agent integration."""
         return self._is_actor_done
 
     @property
@@ -126,27 +121,27 @@ class ExternalCoreEnv(CoreEnv):
 
     @override(CoreEnv)
     def get_maze_state(self) -> MazeStateType:
-        """Return the last state obtained from the external env through agent deployment."""
+        """Return the last state obtained from the external env through agent integration."""
         return self.last_maze_state
 
     @override(CoreEnv)
     def get_renderer(self) -> Optional[Renderer]:
-        """Renderer provided by the agent deployment. Might be None if not available. """
+        """Renderer provided by the agent integration. Might be None if not available. """
         return self.renderer
 
-    @override(EventEnvMixin)
+    @override(CoreEnv)
     def get_step_events(self) -> Iterable[EventRecord]:
-        """Get all events recorded in the current step from the EventService."""
-        return self.context.event_service.iterate_event_records()
+        """Return events provided by the agent integration."""
+        return self.step_events if self.step_events is not None else []
 
     @override(CoreEnv)
     def get_kpi_calculator(self) -> Optional[KpiCalculator]:
-        """KPI calculator provided by the agent deployment. Might be None if not available. """
-        return self.kpi_calculator
+        """No KPI calculator available."""
+        return None
 
     @override(CoreEnv)
     def get_serializable_components(self) -> Dict[str, Any]:
-        """No components available."""
+        """No components required."""
         return {}
 
     @override(CoreEnv)
@@ -158,12 +153,3 @@ class ExternalCoreEnv(CoreEnv):
     def close(self) -> None:
         """No cleanup required."""
         pass
-
-    # -- External core env helpers --
-
-    def _replay_events(self, events: Optional[Iterable[EventRecord]]) -> None:
-        """Notify the event service about each of the events passed in from outside."""
-        if events:
-            for event in events:
-                self.context.event_service.notify_event(event)
-

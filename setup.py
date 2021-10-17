@@ -25,7 +25,7 @@ setup(name="maze-rl",
       # python 3.5: we run into conflicts with hydra 1.0.4
       # python 3.9: no ray distribution available
       # gym[box2d] and atari-py included in ray[rllib] is not compatible with python 3.8
-      python_requires=">=3.7",
+      python_requires=">=3.6",
 
       classifiers=[
           # How mature is this project? Common values are
@@ -45,6 +45,7 @@ setup(name="maze-rl",
           # matches "license" above
           'License :: Other/Proprietary License',
 
+          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',

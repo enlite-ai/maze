@@ -7,8 +7,7 @@ from typing import TypeVar, Union
 import numpy as np
 import torch
 
-from maze.core.agent.policy import Policy
-from maze.core.agent.torch_model import TorchModel
+from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.log_stats.log_stats_env import LogStatsEnv
@@ -50,7 +49,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
     T = TypeVar("T")
 
-    def rollout(self, policy: Union[Policy, TorchModel]) -> None:
+    def rollout(self, policy: TorchPolicy) -> None:
         """Use the passed policy to step the environment until it is done.
 
         This method does not return any results, query the episode statistics instead to process the results.
@@ -66,12 +65,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
                 raise ESAbortException()
 
             with torch.no_grad():
-                action = policy.compute_action(
-                    observation=observation,
-                    actor_id=self.actor_id(),
-                    maze_state=self.get_maze_state() if policy.needs_state() else None,
-                    env=self if policy.needs_env() else None,
-                    deterministic=False)
+                action = policy.compute_action(observation, actor_id=self.actor_id(), deterministic=False)
 
             observation, reward, done, _ = self.step(convert_to_numpy(action, cast=None, in_place=False))
 
@@ -83,7 +77,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
         logger.debug(f"Rollout took {(time.time() - start_time) :.1f} seconds")
 
-    def generate_evaluation(self, policy: Union[Policy, TorchModel]) -> ESRolloutResult:
+    def generate_evaluation(self, policy: TorchPolicy) -> ESRolloutResult:
         """Generate a single evaluation rollout.
 
            :param policy: Multi-step policy encapsulating the policy networks
@@ -98,7 +92,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
         return r
 
-    def generate_training(self, policy: Union[Policy, TorchModel], noise_stddev: float) -> ESRolloutResult:
+    def generate_training(self, policy: TorchPolicy, noise_stddev: float) -> ESRolloutResult:
         """Generate a single training sample, consisting of two rollouts, obtained by adding and subtracting the
            same random perturbation vector from the policy.
 

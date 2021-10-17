@@ -26,9 +26,8 @@ def test_sequential_data_load_from_directory():
     dataset = InMemoryDataset(
         n_workers=1,
         conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
-        input_data="trajectory_data",
-        trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2),
-        deserialize_in_main_thread=False,
+        dir_or_file="trajectory_data",
+        trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2)
     )
 
     # Env not done
@@ -55,9 +54,8 @@ def test_sequential_data_load_from_directory_clipped():
     dataset = InMemoryDataset(
         n_workers=1,
         conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
-        input_data="trajectory_data",
-        trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2),
-        deserialize_in_main_thread=False
+        dir_or_file="trajectory_data",
+        trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2)
     )
 
     assert len(dataset) == 17
@@ -83,9 +81,8 @@ def test_parallel_data_load_from_directory_clipped():
     dataset = InMemoryDataset(
         n_workers=2,
         conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
-        input_data="trajectory_data",
-        trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2),
-        deserialize_in_main_thread=False
+        dir_or_file="trajectory_data",
+        trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2)
     )
 
     assert len(dataset) == 11 + 17
@@ -112,8 +109,7 @@ def test_parallel_data_load_from_directory_clipped_from_hydra():
         '_target_': 'maze.core.trajectory_recording.datasets.in_memory_dataset.InMemoryDataset',
         'n_workers': 2,
         'conversion_env_factory': lambda: make_gym_maze_env("CartPole-v0"),
-        'input_data': 'trajectory_data',
-        'deserialize_in_main_thread': False,
+        'dir_or_file': 'trajectory_data',
         'trajectory_processor': {
             '_target_': 'maze.core.trajectory_recording.datasets.trajectory_processor.DeadEndClippingTrajectoryProcessor',
             'clip_k': 2

@@ -1,11 +1,8 @@
 """Runner implementations for Evolution Strategies"""
-import dataclasses
 from abc import abstractmethod, ABC
+import dataclasses
 from typing import Union, Optional
 
-from maze.core.agent.policy import Policy
-from maze.core.agent.torch_model import TorchModel
-from maze.core.utils.factory import Factory
 from omegaconf import DictConfig
 
 from maze.core.agent.torch_policy import TorchPolicy
@@ -17,10 +14,8 @@ from maze.train.trainers.common.model_selection.model_selection_base import Mode
 from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.es.distributed.es_distributed_rollouts import ESDistributedRollouts
 from maze.train.trainers.es.distributed.es_dummy_distributed_rollouts import ESDummyDistributedRollouts
-from maze.train.trainers.es.distributed.es_subproc_distributed_rollouts import ESSubprocDistributedRollouts
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_trainer import ESTrainer
-from maze.utils.bcolors import BColors
 
 
 @dataclasses.dataclass
@@ -46,22 +41,14 @@ class ESMasterRunner(TrainingRunner, ABC):
         self.shared_noise = SharedNoiseTable(count=self.shared_noise_table_size)
 
         # --- initialize policies ---
-
-        torch_policy = TorchPolicy(networks=self._model_composer.policy.networks,
-                                   distribution_mapper=self._model_composer.distribution_mapper, device="cpu")
-        torch_policy.seed(self.maze_seeding.agent_global_seed)
-
-        # support policy wrapping
-        if self._cfg.algorithm.policy_wrapper:
-            policy = Factory(Policy).instantiate(
-                self._cfg.algorithm.policy_wrapper, torch_policy=torch_policy)
-            assert isinstance(policy, Policy) and isinstance(policy, TorchModel)
-            torch_policy = policy
-
+        policy = TorchPolicy(networks=self._model_composer.policy.networks,
+                             distribution_mapper=self._model_composer.distribution_mapper, device="cpu")
+        policy.seed(self.maze_seeding.agent_global_seed)
+        
         print("********** Trainer Setup **********")
         self._trainer = ESTrainer(
             algorithm_config=cfg.algorithm,
-            torch_policy=torch_policy,
+            policy=policy,
             shared_noise=self.shared_noise,
             normalization_stats=self._normalization_statistics
         )
@@ -70,30 +57,52 @@ class ESMasterRunner(TrainingRunner, ABC):
         self._init_trainer_from_input_dir(trainer=self._trainer, state_dict_dump_file=self.state_dict_dump_file,
                                           input_dir=cfg.input_dir)
 
-        self._model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=torch_policy,
+        self._model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=policy,
                                                    dump_interval=self.dump_interval)
 
     @abstractmethod
     def create_distributed_rollouts(
-            self,
-            env: Union[StructuredEnv, StructuredEnvSpacesMixin],
-            shared_noise: SharedNoiseTable,
-            agent_instance_seed: int
+        self,
+        env: Union[StructuredEnv, StructuredEnvSpacesMixin],
+        shared_noise: SharedNoiseTable,
+        agent_instance_seed: int,
+        n_eval_rollouts: int
     ) -> ESDistributedRollouts:
         """Abstract method, derived runners like ESDevRunner return an appropriate rollout generator.
 
         :param env: The one and only environment.
         :param shared_noise: Noise table to be shared by all workers.
         :param agent_instance_seed: The agent seed to be used.
+        :param n_eval_rollouts: Number of evaluation rollouts.
         :return: A newly instantiated rollout generator.
         """
 
+
+@dataclasses.dataclass
+class ESDevRunner(ESMasterRunner):
+    """
+    Runner config for single-threaded training, based on ESDummyDistributedRollouts.
+    """
+
+    n_eval_rollouts: int
+    """Fixed number of evaluation runs per epoch."""
+
+    @classmethod
+    @override(ESMasterRunner)
+    def create_distributed_rollouts(
+        cls, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
+        agent_instance_seed: int,  n_eval_rollouts: int
+    ) -> ESDistributedRollouts:
+        """use single-threaded rollout generation"""
+        return ESDummyDistributedRollouts(env=env, shared_noise=shared_noise, n_eval_rollouts=n_eval_rollouts,
+                                          agent_instance_seed=agent_instance_seed)
+
     @override(TrainingRunner)
     def run(
-            self,
-            n_epochs: Optional[int] = None,
-            distributed_rollouts: Optional[ESDistributedRollouts] = None,
-            model_selection: Optional[ModelSelectionBase] = None
+        self,
+        n_epochs: Optional[int] = None,
+        distributed_rollouts: Optional[ESDistributedRollouts] = None,
+        model_selection: Optional[ModelSelectionBase] = None
     ) -> None:
         """
         See :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.run`.
@@ -111,62 +120,8 @@ class ESMasterRunner(TrainingRunner, ABC):
         self._trainer.train(
             n_epochs=self._cfg.algorithm.n_epochs if n_epochs is None else n_epochs,
             distributed_rollouts=self.create_distributed_rollouts(
-                env=env, shared_noise=self.shared_noise,
+                env=env, shared_noise=self.shared_noise, n_eval_rollouts=self.n_eval_rollouts,
                 agent_instance_seed=self.maze_seeding.generate_agent_instance_seed()
             ) if distributed_rollouts is None else distributed_rollouts,
             model_selection=self._model_selection if model_selection is None else model_selection
-        )
-
-
-@dataclasses.dataclass
-class ESDevRunner(ESMasterRunner):
-    """
-    Runner config for single-threaded training, based on ESDummyDistributedRollouts.
-    """
-
-    n_eval_rollouts: int
-    """Fixed number of evaluation runs per epoch."""
-
-    @override(ESMasterRunner)
-    def create_distributed_rollouts(
-            self, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
-            agent_instance_seed: int,
-    ) -> ESDistributedRollouts:
-        """use single-threaded rollout generation"""
-        return ESDummyDistributedRollouts(env=env, shared_noise=shared_noise, n_eval_rollouts=self.n_eval_rollouts,
-                                          agent_instance_seed=agent_instance_seed)
-
-
-@dataclasses.dataclass
-class ESLocalRunner(ESMasterRunner):
-    """
-    Runner config for multi-process training, based on ESSubprocDistributedRollouts.
-    """
-
-    n_train_workers: int
-    """Number of worker processes to spawn for training"""
-
-    n_eval_workers: int
-    """Number of worker processes to spawn for evaluation"""
-
-    start_method: str
-    """Type of start method used for multiprocessing ('forkserver', 'spawn', 'fork')."""
-
-    @override(ESMasterRunner)
-    def create_distributed_rollouts(
-            self, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
-            agent_instance_seed: int,
-    ) -> ESDistributedRollouts:
-        """use multi-process rollout generation"""
-        BColors.print_colored('Determinism by seeding of the ES algorithm with the Local runner can not be '
-                              'guarantied due to the asynchronicity of the implementation.', BColors.WARNING)
-        n_workers = self.n_train_workers + self.n_eval_workers
-        return ESSubprocDistributedRollouts(
-            env_factory=self.env_factory,
-            n_training_workers=self.n_train_workers,
-            n_eval_workers=self.n_eval_workers,
-            shared_noise=self.shared_noise,
-            env_seeds=[self.maze_seeding.generate_env_instance_seed() for _ in range(n_workers)],
-            agent_seed=agent_instance_seed,
-            start_method=self.start_method
         )

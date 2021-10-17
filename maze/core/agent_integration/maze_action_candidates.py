@@ -1,4 +1,4 @@
-"""Allow getting multiple MazeAction candidates from the policy through the agent deployment wrapper,
+"""Allow getting multiple MazeAction candidates from the policy through the agent integration wrapper,
 with all the MazeActions being passed through the whole wrapper stack."""
 
 from typing import Sequence, Any, Tuple

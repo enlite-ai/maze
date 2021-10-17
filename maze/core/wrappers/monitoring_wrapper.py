@@ -83,7 +83,14 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         self._action_space = self.env.action_space
 
         # reset env
-        return self.env.reset()
+        obs = self.env.reset()
+
+        if self.observation_logging:
+            substep_name = self._get_substep_name()
+            agent_name = self._get_agent_name()
+            self._log_observation(substep_name, agent_name, obs)
+
+        return obs
 
     @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
