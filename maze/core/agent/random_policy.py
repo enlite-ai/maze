@@ -60,9 +60,13 @@ class RandomPolicy(Policy):
         return action_space.sample()
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: ActorID = None) \
+    def compute_top_action_candidates(self,
+                                      observation: ObservationType,
+                                      num_candidates: Optional[int],
+                                      maze_state: Optional[MazeStateType] = None,
+                                      env: Optional[BaseEnv] = None,
+                                      actor_id: ActorID = None,
+                                      deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """Random policy does not provide top action candidates."""
 

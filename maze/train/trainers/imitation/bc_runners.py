@@ -1,6 +1,6 @@
 """Runner implementations for Behavioral Cloning."""
-import dataclasses
 from abc import abstractmethod
+import dataclasses
 from typing import Tuple, Callable, Union, Optional, List
 
 import numpy as np
@@ -16,19 +16,17 @@ from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
-from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
-from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
-from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
+from maze.train.parallelization.vector_env.vector_env import VectorEnv
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVectorEnv
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.bc_trainer import BCTrainer
 from maze.train.trainers.imitation.bc_validation_evaluator import BCValidationEvaluator
-from maze.utils.bcolors import BColors
-from maze.utils.get_size_of_objects import getsize
 from maze.utils.process import query_cpu
 
 
@@ -69,20 +67,18 @@ class BCRunner(TrainingRunner):
 
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
-        size_in_byte, size_in_gbyte = getsize(dataset)
-        BColors.print_colored(f'Size of loaded dataset: {size_in_byte} -> {size_in_gbyte} GB', BColors.OKBLUE)
         validation, train = self._split_dataset(dataset, cfg.algorithm.validation_percentage,
                                                 self.maze_seeding.generate_env_instance_seed())
 
         # Create data loaders
         torch_generator = torch.Generator().manual_seed(self.maze_seeding.generate_env_instance_seed())
         train_data_loader = DataLoader(train, shuffle=True, batch_size=cfg.algorithm.batch_size,
-                                       generator=torch_generator, num_workers=self.dataset.n_workers)
+                                       generator=torch_generator)
+        validation_data_loader = DataLoader(validation, batch_size=cfg.algorithm.batch_size,
+                                            generator=torch_generator)
 
-        policy = TorchPolicy(
-            networks=self._model_composer.policy.networks,
-            distribution_mapper=self._model_composer.distribution_mapper, device=cfg.algorithm.device,
-            substeps_with_separate_agent_nets=self._model_composer.policy.substeps_with_separate_agent_nets)
+        policy = TorchPolicy(networks=self._model_composer.policy.networks,
+                             distribution_mapper=self._model_composer.distribution_mapper, device=cfg.algorithm.device)
         policy.seed(self.maze_seeding.agent_global_seed)
 
         self._model_selection = BestModelSelection(self.state_dict_dump_file, policy,
@@ -103,14 +99,10 @@ class BCRunner(TrainingRunner):
         )
 
         # evaluate using the validation set
-        self.evaluators = []
-        if len(validation) > 0:
-            validation_data_loader = DataLoader(validation, shuffle=True, batch_size=cfg.algorithm.batch_size,
-                                                generator=torch_generator, num_workers=self.dataset.n_workers)
-            self.evaluators += [BCValidationEvaluator(
-                data_loader=validation_data_loader, loss=loss, logging_prefix="eval-validation",
-                model_selection=self._model_selection  # use the validation set evaluation to select the best model
-            )]
+        self.evaluators = [BCValidationEvaluator(
+            data_loader=validation_data_loader, loss=loss, logging_prefix="eval-validation",
+            model_selection=self._model_selection  # use the validation set evaluation to select the best model
+        )]
 
         # if evaluation episodes are set, perform additional evaluation by policy rollout
         if cfg.algorithm.n_eval_episodes > 0:
@@ -125,10 +117,10 @@ class BCRunner(TrainingRunner):
 
     @override(TrainingRunner)
     def run(
-            self,
-            n_epochs: Optional[int] = None,
-            evaluator: Optional[Evaluator] = None,
-            eval_every_k_iterations: Optional[int] = None
+        self,
+        n_epochs: Optional[int] = None,
+        evaluator: Optional[Evaluator] = None,
+        eval_every_k_iterations: Optional[int] = None
     ) -> None:
         """
         Run the training master node.
@@ -159,17 +151,16 @@ class BCRunner(TrainingRunner):
 
         :return: Tuple of subsets: (validation, train).
         """
-        validation_size = int(np.round(validation_percentage * len(dataset) / 100.0))
+        validation_size = int(np.round(validation_percentage * len(dataset) / 100))
 
         method = getattr(dataset, 'random_split', None)
         if method is not None and callable(method):
             return method([validation_size, len(dataset) - validation_size], torch.Generator().manual_seed(1234))
         else:
-            validation_set, train_set = torch.utils.data.random_split(
+            return torch.utils.data.random_split(
                 dataset=dataset,
                 lengths=[validation_size, len(dataset) - validation_size],
                 generator=torch.Generator().manual_seed(env_seed))
-            return validation_set, train_set
 
     @classmethod
     @abstractmethod
@@ -177,7 +168,7 @@ class BCRunner(TrainingRunner):
                                     env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
                                     eval_concurrency: int,
                                     logging_prefix: str
-                                    ) -> StructuredVectorEnv:
+                                    ) -> VectorEnv:
         """The individual runners implement the setup of the distributed eval env"""
 
 
@@ -188,10 +179,10 @@ class BCDevRunner(BCRunner):
     @classmethod
     @override(BCRunner)
     def create_distributed_eval_env(
-            cls,
-            env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
-            eval_concurrency: int,
-            logging_prefix: str
+        cls,
+        env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+        eval_concurrency: int,
+        logging_prefix: str
     ) -> SequentialVectorEnv:
         """create single-threaded env distribution"""
         return SequentialVectorEnv([env_factory for _ in range(eval_concurrency)], logging_prefix=logging_prefix)
@@ -204,10 +195,10 @@ class BCLocalRunner(BCRunner):
     @classmethod
     @override(BCRunner)
     def create_distributed_eval_env(
-            cls,
-            env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
-            eval_concurrency: int,
-            logging_prefix: str
+        cls,
+        env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+        eval_concurrency: int,
+        logging_prefix: str
     ) -> SubprocVectorEnv:
         """create multi-process env distribution"""
         return SubprocVectorEnv([env_factory for _ in range(eval_concurrency)], logging_prefix=logging_prefix)

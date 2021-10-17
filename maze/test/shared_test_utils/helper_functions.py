@@ -17,8 +17,6 @@ from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironmen
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_structured_core_env import DummyStructuredCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
-from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict_discrete import \
-    DictDiscreteActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
 
 
@@ -89,17 +87,6 @@ def build_dummy_maze_env_with_structured_core_env() -> DummyEnvironment:
     return DummyEnvironment(
         core_env=DummyStructuredCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
-    )
-
-
-def build_dummy_maze_environment_with_discrete_action_space() -> DummyEnvironment:
-    """Instantiates a dummy Maze env with discrete actions space."""
-    observation_conversion = ObservationConversion()
-
-    return DummyEnvironment(
-        core_env=DummyCoreEnvironment(observation_conversion.space()),
-        action_conversion=[DictDiscreteActionConversion()],
         observation_conversion=[observation_conversion]
     )
 
