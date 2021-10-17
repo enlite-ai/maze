@@ -11,6 +11,8 @@ several benefits
 import uuid
 from typing import Callable
 
+from maze.utils.bcolors import BColors
+
 
 class EnvironmentContext:
     """
@@ -26,10 +28,6 @@ class EnvironmentContext:
       analysis and drill-down across these different levels possible.
     - Step ID: Tracks ID of the core env step we are currently in. Helps wrappers recognize core env steps in multi-step
       scenarios.
-    - Post-step callbacks: Handles registration of post-step callbacks and provides a utility to run them (usually
-                           triggered from the outer-most wrapper)
-    - Step lifecycle flags: Flags partially managed from the wrapper stack, helping the wrappers to determine
-                            where we are in the step lifecycle and which one is the outer-most one
     """
 
     def __init__(self):
@@ -38,13 +36,11 @@ class EnvironmentContext:
         self.event_service = EventService()
         self.step_id = 0
         self._episode_id = None
-        self._last_cleared_events_at = self.step_id
 
-        # Step lifecycle flags - partially managed by wrappers to help them orient in the step lifecycle
-        self.step_in_progress = False  # True during the whole env.step
-        self.step_is_initiating = False  # True while descending through the wrapper stack, until the env time increment
+        self._should_clear_events = True
 
-        self._post_step_callbacks = []
+        self._pre_step_callbacks = []
+        self._increment_env_step_warning_printed = False
 
     @property
     def episode_id(self) -> str:
@@ -68,43 +64,45 @@ class EnvironmentContext:
          - Clear event logs (used for statistics for the current step)
          - Increment step_id, which is used as env_time by default
         """
+        if self._should_clear_events and not self._increment_env_step_warning_printed:
+            BColors.print_colored("Events have not been cleared at the start of the current step!"
+                                  "If you called the step function inside a wrapper, look into the "
+                                  "`Wrapper.keep_inner_hooks` flag.", BColors.WARNING)
+            # log only once
+            self._increment_env_step_warning_printed = True
+
         self.step_id += 1
-        self.step_is_initiating = False
+        self._should_clear_events = True
 
     def reset_env_episode(self) -> None:
         """
         This must be called when resetting the environment, to notify the context about the start of a new episode.
         """
         self.step_id = 0
-        self.step_in_progress = False
-        self.step_is_initiating = False
-        self._last_cleared_events_at = self.step_id
-
         self._episode_id = None  # Reset episode ID
         self.event_service.clear_events()
         self.event_service.clear_pubsub()
 
-    def register_post_step(self, callback: Callable) -> None:
+    def register_pre_step(self, callback: Callable) -> None:
         """
-        Register a function to be called after every single step, just before the events of the
+        Register a function to be called before every single step, just before the events of the
         previous step are cleared.
+        """
+        self._pre_step_callbacks.append(callback)
 
-        In case multiple env steps are initiated from a wrapper's step function (e.g. during step skipping),
-        these callbacks will be called in between these individual steps as well.
-        """
-        self._post_step_callbacks.append(callback)
+    def pre_step(self) -> None:
+        """Prepare the event system for a new step.
 
-    def run_post_step_callbacks(self) -> None:
+        Checks internally if this has already been done for the current env step, in this case nothing happens.
         """
-        Run callbacks registered for post-step execution and then clear out the events from this step.
-        """
-        for callback in self._post_step_callbacks:
+        if not self._should_clear_events:
+            return
+
+        for callback in self._pre_step_callbacks:
             callback()
 
-        # Only clear events out if env time changed (important in multi-step scenarios)
-        if self._last_cleared_events_at != self.step_id:
-            self.event_service.clear_events()
-            self._last_cleared_events_at = self.step_id
+        self._should_clear_events = False
+        self.event_service.clear_events()
 
     def clone_from(self, context: 'EnvironmentContext') -> None:
         """ Clone environment by resetting to the provided context.
@@ -118,3 +116,7 @@ class EnvironmentContext:
 
         self.step_id = context.step_id
         self._episode_id = context._episode_id
+
+        self._should_clear_events = context._should_clear_events
+
+        self._increment_env_step_warning_printed = context._increment_env_step_warning_printed

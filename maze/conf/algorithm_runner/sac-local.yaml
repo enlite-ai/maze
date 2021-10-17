@@ -3,7 +3,3 @@ _target_: "maze.train.trainers.sac.sac_runners.SACDevRunner"
 
 # Number of concurrent evaluation envs
 eval_concurrency: 0
-
-# Specify the Dataset class used to load the trajectory data for training, otherwise the initial replay buffer is
-#   sampled with the provided initial_sampling_policy
-initial_demonstration_trajectories: ~

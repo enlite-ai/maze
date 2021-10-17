@@ -15,7 +15,6 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.utils.factory import Factory
-from maze.train.trainers.common.replay_buffer.replay_buffer import BaseReplayBuffer
 from maze.train.trainers.common.replay_buffer.uniform_replay_buffer import UniformReplayBuffer
 
 
@@ -31,10 +30,16 @@ class BaseDistributedWorkersWithBuffer:
     :param n_workers: Number of distributed workers to run simultaneously
     :param batch_size: Size of the batch the rollouts are collected in
     :param rollouts_per_iteration: The number of rollouts to collect each time the collect_rollouts method is called.
+    :param initial_sampling_policy: The policy used to sample trajectories from to fill the buffer initially (before
+                                    training starts).
+    :param replay_buffer_size: The max size of the replay buffer.
+    :param initial_buffer_size: The initial size of the replay buffer filled by sampling from the
+    :param initial_sampling_policy: Initial sampling policy to fill the buffer with initial_buffer_size initial
+                                    samples.
     :param split_rollouts_into_transitions: Specify whether all computed rollouts should be split into
                                             transitions before processing them
     :param env_instance_seeds: A list of seeds for each workers envs.
-    :param replay_buffer: The replay buffer to use.
+    :param replay_buffer_seed: A seed for initializing and sampling from the replay buffer.
     """
 
     def __init__(self,
@@ -44,16 +49,18 @@ class BaseDistributedWorkersWithBuffer:
                  n_workers: int,
                  batch_size: int,
                  rollouts_per_iteration: int,
+                 initial_sampling_policy: Union[DictConfig, Policy],
+                 replay_buffer_size: int,
+                 initial_buffer_size: int,
                  split_rollouts_into_transitions: bool,
                  env_instance_seeds: List[int],
-                 replay_buffer: BaseReplayBuffer):
+                 replay_buffer_seed: int):
 
         self.env_factory = env_factory
         self._worker_policy = worker_policy
         self.n_rollout_steps = n_rollout_steps
         self.n_workers = n_workers
         self.batch_size = batch_size
-        self.replay_buffer = replay_buffer
 
         self.env_instance_seeds = env_instance_seeds
 
@@ -63,6 +70,8 @@ class BaseDistributedWorkersWithBuffer:
         self.rollouts_per_iteration = rollouts_per_iteration
         self.split_rollouts_into_transitions = split_rollouts_into_transitions
 
+        self.replay_buffer = UniformReplayBuffer(replay_buffer_size, seed=replay_buffer_seed)
+        self.init_replay_buffer(initial_sampling_policy, initial_buffer_size, replay_buffer_seed)
         self._init_workers()
 
     @abstractmethod
@@ -87,6 +96,39 @@ class BaseDistributedWorkersWithBuffer:
 
         :param state_dict: State of the new policy version to broadcast.
         """
+
+    def init_replay_buffer(self, initial_sampling_policy: Union[DictConfig, Policy],
+                           initial_buffer_size: int, replay_buffer_seed: int) -> None:
+        """Fill the buffer with initial_buffer_size rollouts by rolling out the
+            initial_sampling_policy.
+
+        :param initial_sampling_policy: The initial sampling policy used to fill the buffer to the initial fill state.
+        :param initial_buffer_size: The initial size of the replay buffer filled by sampling from the initial sampling
+            policy.
+        :param replay_buffer_seed: A seed for initializing and sampling from the replay buffer.
+        """
+        dummy_env = self.env_factory()
+        dummy_env.seed(replay_buffer_seed)
+        sampling_policy: Policy = \
+            Factory(Policy).instantiate(initial_sampling_policy, action_spaces_dict=dummy_env.action_spaces_dict)
+        sampling_policy.seed(replay_buffer_seed)
+        rollout_generator = RolloutGenerator(env=dummy_env,
+                                             record_next_observations=True,
+                                             record_episode_stats=True)
+
+        print(f'******* Starting to fill the replay buffer with {initial_buffer_size} trajectories *******')
+        while len(self.replay_buffer) < initial_buffer_size:
+            trajectory = rollout_generator.rollout(policy=sampling_policy, n_steps=self.n_rollout_steps)
+
+            if self.split_rollouts_into_transitions:
+                self.replay_buffer.add_rollout(trajectory.step_records)
+            else:
+                self.replay_buffer.add_rollout(trajectory)
+
+            # collect episode statistics
+            for step_record in trajectory.step_records:
+                if step_record.episode_stats is not None:
+                    self.epoch_stats.receive(step_record.episode_stats)
 
     def sample_batch(self, learner_device: str) -> StructuredSpacesRecord:
         """Sample a batch from the buffer and return it as a batched structured spaces record.

@@ -14,7 +14,6 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID, StepKeyType
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
-from maze.distributions.categorical import CategoricalProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch, convert_to_numpy
 
@@ -124,25 +123,16 @@ class TorchPolicy(TorchModel, Policy):
         return convert_to_numpy(action, cast=None, in_place=False)
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: ActorID = None) \
+    def compute_top_action_candidates(self,
+                                      observation: ObservationType,
+                                      num_candidates: Optional[int],
+                                      maze_state: Optional[MazeStateType] = None,
+                                      env: Optional[BaseEnv] = None,
+                                      actor_id: ActorID = None,
+                                      deterministic: bool = False) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy`"""
-        with torch.no_grad():
-            policy_out = self.compute_substep_policy_output(observation, actor_id)
-            actions = list()
-            probs = list()
-            for k, dist in policy_out.prob_dist.distribution_dict.items():
-                if isinstance(dist, CategoricalProbabilityDistribution):
-                    for aa in dist.logits.argsort(-1, descending=True)[:num_candidates]:
-                        actions.append({k: aa.numpy()})
-                        probs.append(dist.dist.probs[aa])
-                else:
-                    raise NotImplementedError('Compute top action candidates only supports discrete action in torch '
-                                              'policy')
-        convert_to_numpy(actions, cast=None, in_place=False)
-        return actions, probs
+        raise NotImplementedError
 
     def network_for(self, actor_id: Optional[ActorID]) -> nn.Module:
         """Helper function for returning a network for the given policy ID (using either just the sub-step ID
