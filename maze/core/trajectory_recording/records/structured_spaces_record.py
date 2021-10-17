@@ -109,8 +109,6 @@ class StructuredSpacesRecord:
             done=None
         ) for substep_key in obs.keys()]
 
-        substep_records[-1].done = state_record.done
-
         return StructuredSpacesRecord(substep_records=substep_records)
 
     def to_numpy(self) -> 'StructuredSpacesRecord':

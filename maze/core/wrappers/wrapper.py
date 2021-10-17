@@ -1,6 +1,6 @@
 """Extension of gym Wrapper to support environment interfaces"""
 from abc import abstractmethod, ABC
-from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional
+from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, Callable
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -49,10 +49,15 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     gym.core.Wrapper assumes the existence of certain attributes (action_space, observation_space, reward_range,
     metadata) and duplicates these attributes. This behaviour is unnecessary, because __getattr__ makes these
     members of the inner environment transparently available anyway.
+
+    :param keep_inner_hooks: Set this to True if the Wrapper calls additional step() functions, as e.g. in a frame
+                             skip scenario. In that case the hooks are not only invoked at the root of the wrapper
+                             hierarchy, but additionally also by this wrapper.
     """
 
-    def __init__(self, env: EnvType):
+    def __init__(self, env: EnvType, keep_inner_hooks=False):
         self.env = env
+        self.keep_inner_hooks = keep_inner_hooks
 
         base_classes = self._base_classes(env)
         base_classes = list(dict.fromkeys(base_classes))
@@ -64,40 +69,49 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
         self.fake_class = _FakeClass
 
-        # wrap step function in callbacks (i.e., replace it with self.step_with_callbacks call)
-        # env context is necessary to correctly detect when callbacks should be triggered
+        # intercept the first step function call in the wrapper hierarchy for
+        # a reliable place to trigger the event system reset
         if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
-            self.__step = self.step
-            self.step = self.step_with_callbacks
+            assert isinstance(env.context, EnvironmentContext)
+            self._register_hook("step", env.context.pre_step)
 
-    def step_with_callbacks(self, *args, **kwargs) -> Any:
-        """A wrapper for the env.step function. Checks whether callbacks for this step have already been process
-        (i.e., detects whether this is the outermost wrapper). Triggers the post-step callbacks if required."""
+    @classmethod
+    def _create_proxy(cls, original_fn: Callable, pre_fn: Callable) -> Callable:
+        def _proxy_function(*args, **kwargs) -> Any:
+            pre_fn()
+            return original_fn(*args, **kwargs)
 
-        # check if new step has been initiated before fully completing the previous one (= step-skipping etc.)
-        if self.context.step_in_progress and not self.context.step_is_initiating:
-            # we are starting a second step from the middle of the wrapper hierarchy
-            # without having fully completed the previous step (as is done e.g. during step-skipping)
-            # => call the post-step callbacks here to allow clearing events etc. between skipped steps
-            self.context.run_post_step_callbacks()
-            self.context.step_is_initiating = True
+        return _proxy_function
 
-        # if the step has not been marked as in progress yet, we know that this is the outer-most wrapper in the stack
-        is_outermost_wrapper = not self.context.step_in_progress
-        if is_outermost_wrapper:
-            self.context.step_in_progress = True
-            self.context.step_is_initiating = True
-            # once pre-step callbacks are supported, they can be called here
+    def _register_hook(self, name: str, pre_fn: Callable) -> None:
+        """Intercept the given list of methods (e.g. the "step" method) and trigger the pre function.
 
-        # now do the step (env step + any functionality this wrapper implements on top of that)
-        return_value = self.__step(*args, **kwargs)
+        Pre-functions are usually only invoked on the outermost Wrapper of the entire wrapper - environment stack.
+        But there is no guarantee, that hooks will be invoked exactly once per step, see the `keep_inner_hooks` flag.
 
-        # if this is the outer-most wrapper, mark the step as done and trigger post-step callbacks
-        if is_outermost_wrapper:
-            self.context.step_in_progress = False
-            self.context.run_post_step_callbacks()
+        :param name: The method as function name, which will be overwritten by the proxy function.
+        """
+        # We register hooks only for the outermost wrapper. In case this wrapper was added to an existing wrapper
+        # stack, we need to remove the hooks from the previous wrapper.
+        if isinstance(self.env, Wrapper) and not self.keep_inner_hooks:
+            self.env.unregister_hook(name)
 
-        return return_value
+        original_fn = getattr(self, name, None)
+        proxy_function = self._create_proxy(original_fn, pre_fn)
+        if proxy_function:
+            # safe the original function
+            setattr(self, f"__{name}", original_fn)
+            # make the proxy function the new step function
+            setattr(self, name, proxy_function)
+
+    def unregister_hook(self, method_name: str) -> None:
+        """Remove the method interception hook, by restoring the original method functions.
+
+        :param method_name: The method as function name, which will be restored.
+        """
+        original_fn = getattr(self, f"__{method_name}", None)
+        if original_fn:
+            setattr(self, method_name, original_fn)
 
     @property
     def __class__(self):
