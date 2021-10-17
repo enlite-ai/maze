@@ -1,6 +1,6 @@
 """Generate basic statistics for any gym environment."""
 import uuid
-from typing import Callable, Optional, Iterable
+from typing import Callable, Optional
 from typing import TypeVar, Union, Any, Tuple, Dict
 
 from maze.core.annotations import override
@@ -15,7 +15,6 @@ from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.time_env_mixin import TimeEnvMixin
-from maze.core.events.event_collection import EventCollection
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
@@ -52,15 +51,15 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
             self.epoch_stats.register_consumer(get_stats_logger(logging_prefix))
 
         self.last_env_time: Optional[int] = None
-        self.reward_events = EventCollection()
-        self.episode_event_log: Optional[EpisodeEventLog] = None
+        self.step_event_log: Optional[StepEventLog] = None
+        self.episode_event_log = self._build_episode_event_log()
 
         self.step_stats_renderer = EventStatsRenderer()
 
-        # register a post-step callback, so stats are recorded even in case that a wrapper
-        # in the middle of the stack steps the environment (as done e.g. during step-skipping)
+        # get notified at the beginning of a step call (relevant if the step originated
+        # within the wrapper hierarchy, e.g. frame skipping)
         if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
-            env.context.register_post_step(self._record_stats_if_ready)
+            env.context.register_pre_step(self._pre_step)
 
     T = TypeVar("T")
 
@@ -81,6 +80,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
     def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
         """Collect the rewards for the logging statistics
         """
+        assert self.episode_event_log is not None, "Environment must be reset before stepping."
 
         # get identifier of current substep
         substep_id, _ = self.env.actor_id() if isinstance(self.env, StructuredEnv) else (None, None)
@@ -89,18 +89,32 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         obs, rew, done, info = self.env.step(action)
 
         # record the reward
-        self.reward_events.append(EventRecord(BaseEnvEvents, BaseEnvEvents.reward, dict(value=rew)))
+        self.step_event_log.append(EventRecord(BaseEnvEvents, BaseEnvEvents.reward, dict(value=rew)))
 
         self._record_stats_if_ready()
 
         return obs, rew, done, info
 
-    def _record_stats_if_ready(self) -> None:
-        """Checks if stats are ready to record based on env time (for structured envs, we wait till the end
-        of the whole structured step) and if so, does the recording.
+    def _pre_step(self) -> None:
         """
-        if self.last_env_time is None:
-            self.last_env_time = self.env.initial_env_time
+        Get notified of a new step method call, just before the events of the previous step are cleared by the
+        event system (see :py:meth:`~maze.core.env.environment_context.EnvironmentContext.pre_step`).
+        """
+        self._record_stats_if_ready()
+
+    def _record_stats_if_ready(self) -> None:
+        """Record the event log and statistics from the preceding step, if these are available and ready to record.
+
+        - If the episode event log has not been initialized yet (just after env reset), just performs the initialization
+        - Otherwise, checks if stats are ready to record based on env time (for structured envs, we wait till the end
+          of the whole structured step) and if so, does the recording
+        """
+        # If not yet initialized, reset timing data and initialize new step event log for the first step
+        if self.episode_event_log is None:
+            self.episode_event_log = self._build_episode_event_log()
+            self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
+            self.step_event_log = StepEventLog(self.last_env_time)
+            return
 
         # Recording of event logs and stats happens:
         #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
@@ -108,44 +122,35 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         if isinstance(self.env, TimeEnvMixin) and self.env.get_env_time() == self.last_env_time:
             return
 
-        step_event_log = StepEventLog(env_time=self.last_env_time, events=self.reward_events)
-        self.reward_events = EventCollection()
+        self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
 
         if isinstance(self.env, EventEnvMixin):
-            step_event_log.extend(self.env.get_step_events())
+            self.step_event_log.extend(self.env.get_step_events())
 
         # add all recorded events to the step aggregator
-        for event_record in step_event_log.events:
+        for event_record in self.step_event_log.events:
             self.step_stats.add_event(event_record)
 
         # trigger logging statistics calculation
         self.step_stats.reduce()
 
-        # lazy init new episode event log if needed
-        if not self.episode_event_log:
-            episode_id = self.env.get_episode_id() if isinstance(self.env, RecordableEnvMixin) else str(uuid.uuid4())
-            self.episode_event_log = EpisodeEventLog(episode_id)
-
         # log raw events and init new step log
-        self.episode_event_log.step_event_logs.append(step_event_log)
-
-        # update the time of last stats recording
-        self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
+        self.episode_event_log.step_event_logs.append(self.step_event_log)
+        self.step_event_log = StepEventLog(self.last_env_time)
 
     @override(BaseEnv)
     def reset(self) -> Any:
         """Reset the environment and trigger the episode statistics calculation of the previous run.
         """
-        # Generate the episode stats from the previous rollout if any
+        # generate the episode stats from the previous rollout
         self._calculate_kpis()
         self.episode_stats.reduce()
+
         self._write_episode_event_log()
+        observation = self.env.reset()
+        self._record_stats_if_ready()
 
-        # Initialize recording for the new episode (so we can record events already during env reset)
-        self.last_env_time = None
-        self.reward_events = EventCollection()
-
-        return self.env.reset()
+        return observation
 
     @override(BaseEnv)
     def close(self):
@@ -162,12 +167,12 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
     def write_epoch_stats(self):
         """Implementation of the LogStatsEnv interface, call reduce on the episode aggregator.
         """
-        if self.episode_event_log:
+        if len(self.episode_event_log.step_event_logs) > 0:
             self._calculate_kpis()
             self.episode_stats.reduce()
         self.epoch_stats.reduce()
         self._write_episode_event_log()
-        self.episode_event_log = None
+        self.episode_event_log = self._build_episode_event_log()
 
     @override(LogStatsEnv)
     def get_stats_value(self,
@@ -206,7 +211,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
 
     def _calculate_kpis(self):
         """Calculate KPIs and append them to both aggregated and logged events."""
-        if not isinstance(self.env, EventEnvMixin) or not self.episode_event_log:
+        if not isinstance(self.env, EventEnvMixin) or len(self.episode_event_log.step_event_logs) == 0:
             return
 
         kpi_calculator = self.env.get_kpi_calculator()
@@ -226,10 +231,15 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
 
     def _write_episode_event_log(self):
         """Send the episode event log to writers."""
-        if self.episode_event_log:
+        if len(self.episode_event_log.step_event_logs) > 0:
             LogEventsWriterRegistry.record_event_logs(self.episode_event_log)
 
         self.episode_event_log = None
+
+    def _build_episode_event_log(self) -> EpisodeEventLog:
+        """Build a new episode record with episode ID from the env (if provided) or generated one (if not provided)."""
+        episode_id = self.env.get_episode_id() if isinstance(self.env, RecordableEnvMixin) else str(uuid.uuid4())
+        return EpisodeEventLog(episode_id)
 
     @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
@@ -243,18 +253,3 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
     def clone_from(self, env: 'LogStatsWrapper') -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         raise RuntimeError("Cloning the 'LogStatsWrapper' is not supported.")
-
-    def get_last_step_events(self, query: Union[Callable, Iterable[Callable]] = None):
-        """Convenience accessor to all events recorded during the last step.
-
-        :param query: Specify which events to return (one or more interface methods)
-        :return: Recorded events from the last step (all if no query is present)
-        """
-        if not self.episode_event_log or len(self.episode_event_log.step_event_logs) == 0:
-            return []
-
-        last_step_log = self.episode_event_log.step_event_logs[-1]
-        if query:
-            return list(last_step_log.events.query_events(query))
-        else:
-            return list(last_step_log.events.events)

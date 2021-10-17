@@ -3,7 +3,6 @@
 import numpy as np
 
 from maze.core.log_events.monitoring_events import ObservationEvents, RewardEvents, ActionEvents
-from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.monitoring_wrapper import MazeEnvMonitoringWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
@@ -38,7 +37,6 @@ def test_observation_monitoring():
     env = build_dummy_maze_env()
 
     env = MazeEnvMonitoringWrapper.wrap(env, observation_logging=True, action_logging=False, reward_logging=False)
-    env = LogStatsWrapper.wrap(env)  # for accessing events from previous steps
     env.reset()
 
     # test application of wrapper
@@ -46,10 +44,9 @@ def test_observation_monitoring():
         # Observation will get reported in the next step (when the agent is actually acting on it)
         obs = env.step(env.action_space.sample())[0]
 
-        observation_events = env.get_last_step_events(query=[ObservationEvents.observation_original,
-                                                             ObservationEvents.observation_processed])
-        assert len(observation_events) == 4
-        for event in observation_events:
+        assert len(env.core_env.context.event_service.topics[ObservationEvents].events) == 4
+
+        for event in env.core_env.context.event_service.topics[ObservationEvents].events:
             assert issubclass(event.interface_class, ObservationEvents)
             obs_name = event.attributes['name']
             assert obs_name in ['observation_0', 'observation_1']
@@ -64,7 +61,6 @@ def test_reward_monitoring():
     env = build_dummy_maze_env()
 
     env = MazeEnvMonitoringWrapper.wrap(env, observation_logging=False, action_logging=False, reward_logging=True)
-    env = LogStatsWrapper.wrap(env)  # for accessing events from previous steps
     env.reset()
     env.step(env.action_space.sample())
 
@@ -72,11 +68,8 @@ def test_reward_monitoring():
     for ii in range(2):
         env.step(env.action_space.sample())
 
-        reward_events = env.get_last_step_events(query=[RewardEvents.reward_original,
-                                                             RewardEvents.reward_processed])
-
-        assert len(reward_events) == 2
-        for event in reward_events:
+        assert len(env.core_env.context.event_service.topics[RewardEvents].events) == 2
+        for event in env.core_env.context.event_service.topics[RewardEvents].events:
             assert issubclass(event.interface_class, RewardEvents)
             assert event.attributes['value'] == 10
             assert event.interface_method in [RewardEvents.reward_original, RewardEvents.reward_processed]
@@ -89,19 +82,14 @@ def test_action_monitoring():
     env = build_dummy_maze_env()
 
     env = MazeEnvMonitoringWrapper.wrap(env, observation_logging=False, action_logging=True, reward_logging=False)
-    env = LogStatsWrapper.wrap(env)  # for accessing events from previous steps
     env.reset()
 
     # test application of wrapper
     for ii in range(2):
         env.step(env.action_space.sample())
 
-        action_events = env.get_last_step_events(query=[ActionEvents.discrete_action,
-                                                        ActionEvents.continuous_action,
-                                                        ActionEvents.multi_binary_action])
-
-        assert len(action_events) == 7
-        for event in action_events:
+        assert len(env.core_env.context.event_service.topics[ActionEvents].events) == 7
+        for event in env.core_env.context.event_service.topics[ActionEvents].events:
             if event.attributes['name'] in ['action_0_0', 'action_0_1_0', 'action_0_1_1', 'action_1_0']:
                 assert event.interface_method == ActionEvents.discrete_action
             elif event.attributes['name'] in ['action_0_2', 'action_2_0']:

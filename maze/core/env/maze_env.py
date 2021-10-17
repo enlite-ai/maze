@@ -88,9 +88,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         agent_counts = self.core_env.agent_counts_dict
         self.is_single_substep_env = len(agent_counts) == 1 and sum(agent_counts.values()) == 1
 
-        # Initial env time: Env time this episode started at
-        self.initial_env_time = None
-
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
@@ -98,7 +95,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :param action: the action the agent wants to take.
         :return: observation, reward, done, info
         """
-        assert self.initial_env_time is not None, "Environment must be reset before stepping."
 
         # first, take step without observation
         reward, done, info = self._step_core_env(action)
@@ -119,8 +115,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         maze_state = self.core_env.reset()
 
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
-        self.initial_env_time = self.get_env_time()
-
         for key, value in observation.items():
             assert not (isinstance(value, np.ndarray) and value.dtype == np.float64), \
                    f"observation contains numpy arrays with float64, please convert observation '{key}' to float32"
@@ -285,8 +279,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         if self.core_env.reward_aggregator is not None:
             self.core_env.reward_aggregator.clone_from(env.core_env.reward_aggregator)
-
-        self.initial_env_time = env.initial_env_time
 
     def _step_core_env(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
         """Take environment step without converting the state into and observation.

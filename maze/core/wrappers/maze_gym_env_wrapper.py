@@ -20,7 +20,7 @@ from maze.core.rendering.renderer import Renderer
 
 try:
     from gym.envs.atari import AtariEnv
-except (ImportError, gym.error.DependencyNotInstalled):
+except gym.error.DependencyNotInstalled:
     AtariEnv = None
 
 

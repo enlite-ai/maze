@@ -5,9 +5,8 @@ from typing import Mapping, Union, Sequence
 
 import hydra
 import yaml
-from hydra import initialize_config_module, compose
 from hydra.core.hydra_config import HydraConfig
-from omegaconf import DictConfig
+from hydra import initialize_config_module, compose
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
@@ -75,22 +74,6 @@ def make_env(env: ConfigType, wrappers: CollectionOfConfigType) -> MazeEnv:
     return env_factory()
 
 
-def read_hydra_config(config_module: str,
-                      config_name: str = None,
-                      **hydra_overrides: str) -> DictConfig:
-    """Read and assemble a hydra config, given the config module, name, and overrides.
-
-    :param config_module: Python module path of the hydra configuration package
-    :param config_name: Name of the defaults configuration yaml file within `config_module`
-    :param hydra_overrides: Overrides as kwargs, e.g. env="cartpole", configuration="test"
-    :return: Hydra DictConfig instance, assembled according to the given module, name, and overrides.
-    """
-    with initialize_config_module(config_module):
-        cfg = compose(config_name, overrides=[key + "=" + value for key, value in hydra_overrides.items()])
-
-    return cfg
-
-
 def make_env_from_hydra(config_module: str,
                         config_name: str = None,
                         **hydra_overrides: str) -> MazeEnv:
@@ -100,9 +83,11 @@ def make_env_from_hydra(config_module: str,
     :param hydra_overrides: Overrides as kwargs, e.g. env="cartpole", configuration="test"
     :return: The newly instantiated environment
     """
-    cfg = read_hydra_config(config_module, config_name, **hydra_overrides)
-    env_factory = EnvFactory(cfg.env, cfg.wrappers if "wrappers" in cfg else {})
-    return env_factory()
+    with initialize_config_module(config_module):
+        # config is relative to a module
+        cfg = compose(config_name, overrides=[key + "=" + value for key, value in hydra_overrides.items()])
+        env_factory = EnvFactory(cfg.env, cfg.wrappers if "wrappers" in cfg else {})
+        return env_factory()
 
 
 class SwitchWorkingDirectoryToInput:

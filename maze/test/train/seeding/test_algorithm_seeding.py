@@ -19,8 +19,7 @@ trainings = [
     {"algorithm": "a2c", "configuration": "test",
      "env": "gym_env", "env.name": "CartPole-v0"},
 
-    # Only dev ES runner is deterministic.
-    {"algorithm": "es", "configuration": "test", "runner": "dev",
+    {"algorithm": "es", "configuration": "test",
      "env": "gym_env", "env.name": "CartPole-v0"}
 ]
 

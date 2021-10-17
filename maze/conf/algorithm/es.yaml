@@ -25,6 +25,3 @@ l2_penalty: 0.005
 
 # The scaling factor of the random noise applied during training.
 noise_stddev: 0.02
-
-# Support for simulation logic or heuristics on top of a TorchPolicy.
-policy_wrapper: ~
