@@ -170,15 +170,6 @@ class LogStatsAggregator(LogStatsConsumer):
         """
         self.consumers.append(consumer)
 
-    def remove_consumer(self, consumer: LogStatsConsumer) -> None:
-        """
-        Remove a registered consumer of this aggregator.
-
-        :param consumer: The consumer to remove
-        """
-        assert consumer in self.consumers
-        self.consumers.pop(self.consumers.index(consumer))
-
     def _hook_on_log_step(self) -> None:
         """This method is invoked on incrementing the global log step."""
         # skip auto-reduce if a manual update already took place
