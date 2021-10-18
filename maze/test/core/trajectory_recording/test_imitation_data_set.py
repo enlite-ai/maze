@@ -2,6 +2,7 @@ import pickle
 from typing import Any, Dict, Union, Tuple, List, Optional
 
 import gym
+import numpy as np
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
@@ -75,8 +76,8 @@ def _mock_spaces_trajectory_record(step_count: int):
     for i in range(step_count):
         substep_record = SpacesRecord(
             actor_id=ActorID(0, 0),
-            observation=dict(observation=i),
-            action=dict(action=i),
+            observation=dict(observation=np.array(i)),
+            action=dict(action=np.array(i)),
             reward=0,
             done=i == step_count - 1
         )
@@ -95,8 +96,11 @@ def _env_factory():
 def test_state_record_load():
     dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, dir_or_file=None,
                               trajectory_processor=IdentityTrajectoryProcessor())
-    step_records = dataset.trajectory_processor.process(_mock_spaces_trajectory_record(5), dataset.conversion_env)
+    trajectories = dataset.trajectory_processor.process(_mock_spaces_trajectory_record(5), dataset.conversion_env)
 
+    assert len(trajectories) == 1
+
+    step_records = trajectories[0]
     # All steps should be loaded
     assert len(step_records) == 5
 
@@ -114,8 +118,11 @@ def test_state_record_load():
 def test_spaces_record_load():
     dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, dir_or_file=None,
                               trajectory_processor=IdentityTrajectoryProcessor())
-    step_records = dataset.trajectory_processor.process(_mock_state_trajectory_record(5), dataset.conversion_env)
+    trajectories = dataset.trajectory_processor.process(_mock_state_trajectory_record(5), dataset.conversion_env)
 
+    assert len(trajectories) == 1
+
+    step_records = trajectories[0]
     # Last step should be skipped, as no maze_action is available
     assert len(step_records) == 4
 
@@ -134,7 +141,9 @@ def test_data_load_with_stateful_wrapper():
     dataset = InMemoryDataset(n_workers=1,
                               conversion_env_factory=lambda: _MockObservationStackWrapper.wrap(_env_factory()),
                               dir_or_file=None, trajectory_processor=IdentityTrajectoryProcessor())
-    step_records = dataset.trajectory_processor.process(_mock_state_trajectory_record(4), dataset.conversion_env)
+    trajectories = dataset.trajectory_processor.process(_mock_state_trajectory_record(4), dataset.conversion_env)
+    assert len(trajectories)
+    step_records = trajectories[0]
 
     expected_observations = [
         {0: {"observation": [None, 0]}},
