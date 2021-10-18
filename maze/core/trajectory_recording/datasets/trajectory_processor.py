@@ -2,7 +2,7 @@
     InMemoryDataset"""
 import dataclasses
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
@@ -15,11 +15,15 @@ class TrajectoryProcessor:
     """Base class for processing individual trajectories."""
 
     @abstractmethod
-    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
+    def pre_process(self, trajectory: TrajectoryRecord) -> Union[TrajectoryRecord, List[TrajectoryRecord]]:
         """Preprocess a given trajectory before passing it through the wrapper stack.
 
+        In order to deal with pre-processing methods that create multiple trajectories from a single one
+        (e.g. data augmentation by permutation of subsets) a single trajectory can be returned as well as a list of
+        multiple trajectories.
+
         :param trajectory: The trajectory to preprocess.
-        :return: The pre-processed trajectory.
+        :return: The pre-processed trajectory or a list of multiple pre-processed trajectories.
         """
 
     @staticmethod
@@ -56,21 +60,26 @@ class TrajectoryProcessor:
         return step_records
 
     def process(self, trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[StructuredSpacesRecord]:
+            -> List[List[StructuredSpacesRecord]]:
         """Convert an individual trajectory, by calling the pre_processing method followed by the
         convert_trajectory_with_env
 
-        :param trajectory: Episode record to load
+        :param trajectory: Episode record to load.
         :param conversion_env: Env to use for conversion of MazeStates and MazeActions into observations and actions.
                                Required only if state records are being loaded (i.e. conversion to raw actions and
                                observations is needed).
-        :return: Loaded observations and actions. I.e., a tuple (observation_list, action_list). Each of the
-                 lists contains observation/action dictionaries, with keys corresponding to IDs of structured
-                 sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
+        :return: A list (corresponding to the trajectories) of lists (corresponding to the steps of a individual
+                 trajectory) of Structured Spaces Records. Each Structures Spaces Record holds a single environment
+                 step with all corresponding information such as sub-step observations and actions as well as rewards
+                 and actor ids.
         """
 
         pre_processed_trajectories = self.pre_process(trajectory)
-        env_processed_trajectories = self.convert_trajectory_with_env(pre_processed_trajectories, conversion_env)
+        if not isinstance(pre_processed_trajectories, list):
+            pre_processed_trajectories = [pre_processed_trajectories]
+
+        env_processed_trajectories = [self.convert_trajectory_with_env(pre_processed_trajectory, conversion_env)
+                                      for pre_processed_trajectory in pre_processed_trajectories]
         return env_processed_trajectories
 
 
@@ -109,8 +118,9 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
         else:
             raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
 
-        if len(trajectory) > self.clip_k and is_done and \
-                (info is None or 'TimeLimit.truncated' not in info):
+        if len(trajectory) > self.clip_k * 2 and is_done and (info is None or 'TimeLimit.truncated' not in info):
             trajectory.step_records = trajectory.step_records[:-self.clip_k]
+        elif len(trajectory) < self.clip_k * 2:
+            trajectory.step_records = list()
 
         return trajectory
