@@ -9,6 +9,7 @@ from typing import Callable, List, Union, Optional
 from typing import Tuple, Dict, Any, Sequence, Generator
 
 import torch
+from omegaconf import ListConfig
 from torch.utils.data import Dataset, Subset
 from tqdm import tqdm
 
@@ -40,6 +41,7 @@ class InMemoryDataset(Dataset, ABC):
                  dir_or_file: Optional[Union[str, Path]],
                  conversion_env_factory: Optional[Callable],
                  n_workers: int, trajectory_processor: Union[TrajectoryProcessor, ConfigType]):
+
         self.conversion_env_factory = conversion_env_factory
         self.conversion_env = self.conversion_env_factory() if self.conversion_env_factory else None
         self.n_workers = n_workers
@@ -67,12 +69,33 @@ class InMemoryDataset(Dataset, ABC):
         else:
             self._load_data_parallel(dir_or_file)
 
-    def _load_data_sequential(self, dir_or_file: Union[str, Path]) -> None:
+    @classmethod
+    def _read_input_data_to_list(cls, input_data: Union[Union[str, Path], List[Union[str, Path]]]) -> List[str]:
+        """Read the input data: either a directory, a list of files or a single file to a list of files.
+
+        :param input_data: The input data.
+        :return: A list of files to be loaded.
+        """
+        if isinstance(input_data, (list, ListConfig)):
+            trajectory_save_paths = list(input_data)
+        elif Path(input_data).is_file():
+            trajectory_save_paths = [input_data]
+        elif Path(input_data).is_dir():
+            trajectory_save_paths = cls.list_trajectory_files(input_data)
+        else:
+            raise ValueError(f'Unsupported type of data given: {type(input_data)}')
+
+        return trajectory_save_paths
+
+    def _load_data_sequential(self, dir_or_file: Union[Union[str, Path], List[Union[str, Path]]]) -> None:
         """Load data in a sequential fashion."""
         logger.info(f"Started loading trajectory data from: {dir_or_file}")
 
-        for trajectory in self.deserialize_trajectories(dir_or_file):
-            self.append(trajectory)
+        trajectory_save_paths = self._read_input_data_to_list(input_data=dir_or_file)
+
+        for file_path in tqdm(trajectory_save_paths, desc='Files', position=0):
+            for trajectory in self.deserialize_trajectory(file_path):
+                self.append(trajectory)
 
         logger.info(f"Loaded trajectory data from: {dir_or_file}")
         logger.info(f"Current length is {len(self)} steps in total.")
@@ -81,16 +104,11 @@ class InMemoryDataset(Dataset, ABC):
         """Load data in a parallel fashion."""
         logger.info(f"Started loading trajectory data from: {dir_or_file}")
 
-        if Path(dir_or_file).is_file():
-            logger.info(f"Loading single file => deserializing the file in the main process, then loading in workers")
-            paths_or_trajectories = [t for t in self.deserialize_trajectories(dir_or_file)]
-        else:
-            logger.info(f"Loading a directory => deserialization of files split across workers")
-            paths_or_trajectories = self.list_trajectory_files(dir_or_file)
+        trajectory_save_paths = self._read_input_data_to_list(input_data=dir_or_file)
 
         # Split trajectories across workers
         chunks = [[] for _ in range(self.n_workers)]
-        for i, trajectory in enumerate(paths_or_trajectories):
+        for i, trajectory in enumerate(trajectory_save_paths):
             chunks[i % self.n_workers].append(trajectory)
 
         # Configure and launch the processes
@@ -161,53 +179,47 @@ class InMemoryDataset(Dataset, ABC):
 
         :param trajectory: Trajectory to append.
         """
-        spaces_records = self.trajectory_processor.process(trajectory, self.conversion_env)
-        self._store_loaded_trajectory(spaces_records)
+        spaces_records_list = self.trajectory_processor.process(trajectory, self.conversion_env)
+        for spaces_record in spaces_records_list:
+            self._store_loaded_trajectory(spaces_record)
 
     @staticmethod
-    def deserialize_trajectories(dir_or_file: Union[str, Path]) -> Generator[TrajectoryRecord, None, None]:
-        """Deserialize all trajectories located in a particular directory or file.
+    def deserialize_trajectory(trajectory_file: Union[str, Path]) -> Generator[TrajectoryRecord, None, None]:
+        """Deserialize all trajectories located in the given file path.
 
-        If a file path is passed in, will attempt to load it. Supports pickled TrajectoryRecords, or lists or
+        Will attempt to load the given trajectory file. Supports pickled TrajectoryRecords, or lists or
         dictionaries containing TrajectoryRecords as values.
-
-        If a directory is passed in, locates all pickle files (with `pkl` suffix) in this directory, then
-        attempts to load each of them (again supporting also lists and dictionaries of trajectory records.
 
         Returns a generator that will yield the individual trajectory records, no matter in which form
         (i.e., individual, list, or dict) they were loaded.
 
-        :param dir_or_file: Directory of file to load trajectory data from
-        :return: Generator yielding the individual trajectory records.
+        :param trajectory_file: File to load trajectory data from.
+        :return: Loaded trajectory record.
         """
-        dir_or_file = Path(dir_or_file)
-        if dir_or_file.is_dir():
-            file_paths = InMemoryDataset.list_trajectory_files(dir_or_file)
+        trajectory_file = Path(trajectory_file)
+        assert trajectory_file.is_file()
+
+        with open(str(trajectory_file), "rb") as in_f:
+            record = pickle.load(in_f)
+
+        # Loading trajectory record directly
+        if isinstance(record, TrajectoryRecord):
+            yield record
+
+        # Loading a list of trajectory records
+        elif isinstance(record, List):
+            for item in record:
+                assert isinstance(item, TrajectoryRecord)
+                yield item
+
+        # Loading a dict of trajectory records
+        elif isinstance(record, Dict):
+            for item in record.values():
+                assert isinstance(item, TrajectoryRecord)
+                yield item
+
         else:
-            file_paths = [dir_or_file]
-
-        for file_path in file_paths:
-            with open(str(file_path), "rb") as in_f:
-                record = pickle.load(in_f)
-
-            # Loading trajectory record directly
-            if isinstance(record, TrajectoryRecord):
-                yield record
-
-            # Loading a list of trajectory records
-            elif isinstance(record, List):
-                for item in record:
-                    assert isinstance(item, TrajectoryRecord)
-                    yield item
-
-            # Loading a dict of trajectory records
-            elif isinstance(record, Dict):
-                for item in record.values():
-                    assert isinstance(item, TrajectoryRecord)
-                    yield item
-
-            else:
-                raise RuntimeError("Unsupported data type, expected a TrajectoryRecord, or list or dict thereof")
+            raise RuntimeError("Unsupported data type, expected a TrajectoryRecord, or list or dict thereof")
 
     @staticmethod
     def list_trajectory_files(data_dir: Union[str, Path]) -> List[Path]:
@@ -301,32 +313,26 @@ class DataLoadWorker:
 
     @staticmethod
     def run(env_factory: Callable,
-            trajectories_or_paths: List[Union[Path, str, TrajectoryRecord]],
+            trajectory_files: List[Union[Path, str, TrajectoryRecord]],
             reporting_queue: Queue, trajectory_processor: TrajectoryProcessor) -> None:
         """Load trajectory data from the provided trajectory file paths. Report exceptions to the main process.
 
         :param env_factory: Function for creating an environment for MazeState and MazeAction conversion.
-        :param trajectories_or_paths: Either file paths to load, or already loaded trajectories to convert.
+        :param trajectory_files: Trajectory files to be loaded.
         :param reporting_queue: Queue for reporting loaded data and exceptions back to the main process.
         :param trajectory_processor: A trajectory processor class.
         """
         try:
             env = env_factory() if env_factory else None
-            for trajectory_or_path in trajectories_or_paths:
+            for trajectory_file in trajectory_files:
 
                 # If we got a file path, then deserialize, convert, and report all trajectories in it
-                if isinstance(trajectory_or_path, Path) or isinstance(trajectory_or_path, str):
-                    for trajectory in InMemoryDataset.deserialize_trajectories(trajectory_or_path):
-                        step_records = trajectory_processor.process(trajectory, env)
-                        reporting_queue.put(step_records)
-
-                # If we got an already-loaded trajectory, then just convert and report it
-                elif isinstance(trajectory_or_path, TrajectoryRecord):
-                    step_records = trajectory_processor.process(trajectory_or_path, env)
-                    reporting_queue.put(step_records)
-
+                if isinstance(trajectory_file, Path) or isinstance(trajectory_file, str):
+                    for trajectory in InMemoryDataset.deserialize_trajectory(trajectory_file):
+                        for step_record in trajectory_processor.process(trajectory, env):
+                            reporting_queue.put(step_record)
                 else:
-                    raise RuntimeError(f"Expected a path or a loaded trajectory record, got {type(trajectory_or_path)}")
+                    raise RuntimeError(f"Expected a path or a loaded trajectory record, got {type(trajectory_file)}")
 
             reporting_queue.put(DataLoadWorker.DONE_TOKEN)
 
