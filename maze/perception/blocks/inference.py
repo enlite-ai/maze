@@ -59,7 +59,7 @@ class InferenceBlock(PerceptionBlock):
 
         # 2. All out_keys used when creating the blocks have to be unique
         all_out_keys = sum([block.out_keys for block in perception_blocks.values()], [])
-        assert len(set(all_out_keys)) == len(list(all_out_keys))
+        assert len(set(all_out_keys)) == len(list(all_out_keys)), f'{all_out_keys}, {len(set(all_out_keys))} vs {len(list(all_out_keys))}'
 
         # 3. All block keys in the perception_blocks dict have to sub-strings of all their corresponding out_keys
         for block_key, block in perception_blocks.items():
