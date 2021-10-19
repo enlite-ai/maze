@@ -3,13 +3,18 @@ import itertools
 import logging
 import pickle
 from abc import ABC
+from collections import namedtuple
 from itertools import chain
 from multiprocessing import Queue, Process
 from pathlib import Path
-from typing import Callable, List, Union, Optional
+from typing import Callable, List, Union, Optional, NamedTuple
 from typing import Tuple, Dict, Any, Sequence, Generator
 
 import torch
+from omegaconf import ListConfig
+from maze.core.env.action_conversion import ActionType, TorchActionType
+from maze.core.env.observation_conversion import ObservationType, TorchObservationType
+from maze.core.env.structured_env import ActorID
 from omegaconf import ListConfig
 from torch.utils.data import Dataset, Subset
 from tqdm import tqdm
@@ -22,6 +27,8 @@ from maze.core.utils.factory import ConfigType, Factory
 from maze.utils.exception_report import ExceptionReport
 
 logger = logging.getLogger(__name__)
+
+DataType = namedtuple('data', ['observations', 'actions', 'actor_ids'])
 
 
 class InMemoryDataset(Dataset, ABC):
@@ -185,14 +192,16 @@ class InMemoryDataset(Dataset, ABC):
         """
         return len(self.step_records)
 
-    def __getitem__(self, index: int) -> Tuple[Dict[Union[int, str], Any], Dict[Union[int, str], Any]]:
+    def __getitem__(self, index: int) -> NamedTuple[List[ObservationType], List[ActionType], List[ActorID]]:
         """Get a record.
 
         :param index: Index of the record to get.
         :return: A tuple of (observation_dict, action_dict). Note that the dictionaries only have multiple entries
                  in structured scenarios.
         """
-        return self.step_records[index].observations_dict, self.step_records[index].actions_dict
+
+        return DataType(self.step_records[index].observations, self.step_records[index].actions,
+                        self.step_records[index].actor_ids)
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
