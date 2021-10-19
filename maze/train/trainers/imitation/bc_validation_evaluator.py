@@ -8,12 +8,14 @@ from torch.utils.data import DataLoader
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
+from maze.core.env.structured_env import ActorID
 from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, get_stats_logger
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
+from maze.train.utils.train_utils import debatch_actor_ids
 
 
 class BCValidationEvaluator(Evaluator):
@@ -53,12 +55,14 @@ class BCValidationEvaluator(Evaluator):
             total_loss = []
 
             for iteration, data in enumerate(self.data_loader, 0):
-                observation_dict, action_dict = data[:2]
-                convert_to_torch(action_dict, device=policy.device, cast=None, in_place=True)
+                actor_ids = debatch_actor_ids(data.actor_ids)
+                # Convert only actions to torch, since observations are converted in
+                #   policy.compute_substep_policy_output method
+                actions = convert_to_torch(data.actions, device=policy.device, cast=None, in_place=True)
 
                 total_loss.append(
-                    self.loss.calculate_loss(policy=policy, observation_dict=observation_dict, action_dict=action_dict,
-                                             events=self.eval_events).item())
+                    self.loss.calculate_loss(policy=policy, observations=data.observations, actions=actions,
+                                             events=self.eval_events, actor_ids=actor_ids).item())
 
             if self.model_selection:
                 self.model_selection.update(-np.mean(total_loss).item())
