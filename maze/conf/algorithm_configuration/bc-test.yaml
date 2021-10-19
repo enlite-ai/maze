@@ -2,9 +2,9 @@
 
 algorithm:
   device: cpu
-  batch_size: 1
+  batch_size: 5
   validation_percentage: 50
-  n_epochs: 1
+  n_epochs: 10
   eval_every_k_iterations: 1
   n_eval_episodes: 2
   max_episode_steps: 2
