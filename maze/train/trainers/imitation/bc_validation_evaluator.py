@@ -30,20 +30,23 @@ class BCValidationEvaluator(Evaluator):
                  loss: BCLoss,
                  model_selection: Optional[ModelSelectionBase],
                  data_loader: DataLoader,
-                 logging_prefix: str = "eval"):
+                 logging_prefix: Optional[str] = "eval"):
         self.loss = loss
         self.data_loader = data_loader
         self.model_selection = model_selection
 
         self.env = None
-        self.eval_stats = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger(logging_prefix))
+        if logging_prefix:
+            self.eval_stats = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger(logging_prefix))
+        else:
+            self.eval_stats = LogStatsAggregator(LogStatsLevel.EPOCH)
         self.eval_events = self.eval_stats.create_event_topic(ImitationEvents)
 
     @override(Evaluator)
     def evaluate(self, policy: TorchPolicy) -> None:
         """Evaluate given policy (results are stored in stat logs) and dump the model if the reward improved.
 
-        :param policy: Policy to evaluate
+        :param policy: Policy to evaluate.
         """
         policy.eval()
         with torch.no_grad():
