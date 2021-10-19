@@ -118,9 +118,12 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
         else:
             raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
 
-        if len(trajectory) > self.clip_k * 2 and is_done and (info is None or 'TimeLimit.truncated' not in info):
-            trajectory.step_records = trajectory.step_records[:-self.clip_k]
-        elif len(trajectory) < self.clip_k * 2:
-            trajectory.step_records = list()
+        # Check whether the given trajectory died due to a self inflicted mistake
+        if is_done and (info is None or 'TimeLimit.truncated' not in info):
+            # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
+            if len(trajectory) > self.clip_k:
+                trajectory.step_records = trajectory.step_records[:-self.clip_k]
+            else:
+                trajectory.step_records = list()
 
         return trajectory
