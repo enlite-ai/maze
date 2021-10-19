@@ -5,6 +5,8 @@ from typing import List, Dict, Iterable, Union
 import numpy as np
 import torch
 
+from maze.core.env.structured_env import ActorID
+
 
 def stack_numpy_dict_list(dict_list: List[Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
     """Stack list of dictionaries holding numpy arrays as values.
@@ -109,3 +111,22 @@ def stack_torch_array_list(array_list: List[Union[np.ndarray, torch.Tensor]], ex
         stacked_list = torch.cat(list_array, dim=dim)
 
     return stacked_list
+
+
+def debatch_actor_ids(actor_ids: List[ActorID]) -> List[ActorID]:
+    """If actor ids are returned by the dataloader they are batched in the step_key and agent_id fields. Since a single
+        batch of value should correlate in agent_id and step key, this holds redundant information and should be
+        reversed for it to work properly with all other parts of the framework. """
+    for idx in range(len(actor_ids)):
+        actor_id_tmp = actor_ids[idx]
+        if isinstance(actor_id_tmp.agent_id, torch.Tensor) and isinstance(actor_id_tmp.step_key, torch.Tensor):
+            assert len(set(actor_id_tmp.agent_id.tolist())) == 1, actor_id_tmp.agent_id
+            assert len(set(actor_id_tmp.step_key.tolist())) == 1, actor_id_tmp.step_key
+            actor_ids[idx] = ActorID(step_key=actor_id_tmp.step_key[0].item(),
+                                     agent_id=actor_id_tmp.agent_id[0].item())
+        elif isinstance(actor_id_tmp.agent_id, int) and isinstance(actor_id_tmp.step_key, (int, str)):
+            pass
+        else:
+            raise NotImplementedError(f'Not implemented batched actor id type found: {type(actor_id_tmp.agent_id)}')
+
+    return actor_ids
