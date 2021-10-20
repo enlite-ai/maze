@@ -3,22 +3,20 @@ import itertools
 import logging
 import pickle
 from abc import ABC
-from collections import namedtuple
 from itertools import chain
 from multiprocessing import Queue, Process
 from pathlib import Path
 from typing import Callable, List, Union, Optional, NamedTuple
-from typing import Tuple, Dict, Any, Sequence, Generator
+from typing import Dict, Sequence, Generator
 
 import torch
-from omegaconf import ListConfig
-from maze.core.env.action_conversion import ActionType, TorchActionType
-from maze.core.env.observation_conversion import ObservationType, TorchObservationType
-from maze.core.env.structured_env import ActorID
 from omegaconf import ListConfig
 from torch.utils.data import Dataset, Subset
 from tqdm import tqdm
 
+from maze.core.env.action_conversion import ActionType, TorchActionType
+from maze.core.env.observation_conversion import ObservationType, TorchObservationType
+from maze.core.env.structured_env import ActorID
 from maze.core.trajectory_recording.datasets.trajectory_processor import \
     TrajectoryProcessor
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
@@ -28,7 +26,9 @@ from maze.utils.exception_report import ExceptionReport
 
 logger = logging.getLogger(__name__)
 
-DataType = namedtuple('data', ['observations', 'actions', 'actor_ids'])
+InMemoryDataType = NamedTuple('data', [('observations', List[Union[ObservationType, TorchObservationType]]),
+                                       ('actions', List[Union[ActionType, TorchActionType]]),
+                                       ('actor_ids', List[ActorID])])
 
 
 class InMemoryDataset(Dataset, ABC):
@@ -192,16 +192,16 @@ class InMemoryDataset(Dataset, ABC):
         """
         return len(self.step_records)
 
-    def __getitem__(self, index: int) -> NamedTuple[List[ObservationType], List[ActionType], List[ActorID]]:
+    def __getitem__(self, index: int) -> InMemoryDataType:
         """Get a record.
 
         :param index: Index of the record to get.
-        :return: A tuple of (observation_dict, action_dict). Note that the dictionaries only have multiple entries
-                 in structured scenarios.
+        :return: A named tuple of (observations, actions and actor_ids each as lists corresponding
+            to the substep of the env (actor_id or step_id)).
         """
 
-        return DataType(self.step_records[index].observations, self.step_records[index].actions,
-                        self.step_records[index].actor_ids)
+        return InMemoryDataType(self.step_records[index].observations, self.step_records[index].actions,
+                                self.step_records[index].actor_ids)
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
