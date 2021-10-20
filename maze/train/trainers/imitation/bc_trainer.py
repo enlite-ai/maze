@@ -89,7 +89,8 @@ class BCTrainer(Trainer):
             increment_log_step()
 
             for iteration, data in enumerate(self.data_loader, 0):
-                self._run_iteration(observations=data[0], actions=data[1], actor_ids=data[-1])
+                observations, actions, actor_ids = data
+                self._run_iteration(observations=observations, actions=actions, actor_ids=actor_ids)
 
                 # Evaluate after each k iterations if set
                 if eval_every_k_iterations is not None and \
