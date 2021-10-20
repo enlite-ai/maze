@@ -43,7 +43,7 @@ class BCLoss:
         """Calculate and return the training loss for one step (= multiple sub-steps in structured scenarios).
 
         :param policy: Structured policy to evaluate.
-        :param observations: List with observations action_idx.
+        :param observations: List with observations w.r.t. actor_ids.
         :param actions: List with actions w.r.t. actor_ids.
         :param actor_ids: List of actor ids.
         :param events: Events of current episode.
@@ -96,14 +96,16 @@ class BCLoss:
                 events.discrete_accuracy(
                     step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                     value=torch.eq(logits.argmax(dim=-1), target).float().mean().item())
-                events.discrete_top_5_accuracy(
-                    step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                    value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
-                               range(1, min(5 + 1, logits.shape[-1]))]).float().mean().item())
-                events.discrete_top_10_accuracy(
-                    step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                    value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
-                               range(1, min(10 + 1, logits.shape[-1]))]).float().mean().item())
+                if logits.shape[-1] > 10:
+                    events.discrete_top_5_accuracy(
+                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
+                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
+                                   range(1, min(5 + 1, logits.shape[-1]))]).float().mean().item())
+                if logits.shape[-1] > 20:
+                    events.discrete_top_10_accuracy(
+                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
+                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
+                                   range(1, min(10 + 1, logits.shape[-1]))]).float().mean().item())
 
             # Multi-binary (multi-binary spaces)
             elif isinstance(action_space, gym.spaces.MultiBinary):
