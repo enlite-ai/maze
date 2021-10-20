@@ -3,11 +3,10 @@ import itertools
 import logging
 import pickle
 from abc import ABC
-from collections import namedtuple
 from itertools import chain
 from multiprocessing import Queue, Process
 from pathlib import Path
-from typing import Callable, List, Union, Optional, NamedTuple, Tuple
+from typing import Callable, List, Union, Optional, Tuple
 from typing import Dict, Sequence, Generator
 
 import torch
@@ -26,6 +25,7 @@ from maze.core.utils.factory import ConfigType, Factory
 from maze.utils.exception_report import ExceptionReport
 
 logger = logging.getLogger(__name__)
+
 
 class InMemoryDataset(Dataset, ABC):
     """Base class of trajectory data set for imitation learning that keeps all loaded data in memory.
@@ -198,7 +198,7 @@ class InMemoryDataset(Dataset, ABC):
         """
 
         return self.step_records[index].observations, self.step_records[index].actions, \
-            self.step_records[index].actor_ids
+               self.step_records[index].actor_ids
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
