@@ -55,7 +55,7 @@ class InMemoryDataset(Dataset, ABC):
 
         self._conversion_env_factory = conversion_env_factory
         self._conversion_env = self._conversion_env_factory() if self._conversion_env_factory else None
-        self._n_workers = n_workers
+        self.n_workers = n_workers
         self._trajectory_processor = Factory(TrajectoryProcessor).instantiate(trajectory_processor)
         self._deserialize_in_main_thread = deserialize_in_main_thread
 
@@ -77,7 +77,7 @@ class InMemoryDataset(Dataset, ABC):
         :param input_data: Input data to load the trajectories from. This can be either a single file, a single
                 directory, a list of files or a list of directories.
         """
-        if self._n_workers == 1:
+        if self.n_workers == 1:
             self._load_data_sequential(input_data)
         else:
             self._load_data_parallel(input_data)
@@ -130,9 +130,9 @@ class InMemoryDataset(Dataset, ABC):
             trajectories_or_paths = trajectory_save_paths
 
         # Split trajectories across workers
-        chunks = [[] for _ in range(self._n_workers)]
+        chunks = [[] for _ in range(self.n_workers)]
         for i, trajectory_or_path in enumerate(trajectories_or_paths):
-            chunks[i % self._n_workers].append(trajectory_or_path)
+            chunks[i % self.n_workers].append(trajectory_or_path)
 
         # Configure and launch the processes
         self.reporting_queue = Queue()
@@ -193,8 +193,8 @@ class InMemoryDataset(Dataset, ABC):
         """Get a record.
 
         :param index: Index of the record to get.
-        :return: A tuple of (observations, actions and actor_ids each as lists corresponding
-            to the sub-step of the env (actor_id and step_id)).
+        :return: A tuple of (observations, actions and actor_ids) each as lists corresponding
+            to the sub-step of the env (actor_id and step_id).
         """
 
         return self.step_records[index].observations, self.step_records[index].actions, \
