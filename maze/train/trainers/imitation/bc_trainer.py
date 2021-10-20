@@ -123,10 +123,18 @@ class BCTrainer(Trainer):
 
     def _run_iteration(self, observations: List[Union[ObservationType, TorchObservationType]],
                        actions: List[Union[ActionType, TorchActionType]], actor_ids: List[ActorID]) -> None:
+        """Run a single training iterations of the behavioural cloning.
+
+        :param observations: A list (w.r.t. the substeps/agents) of batched observations.
+        :param actions: A list (w.r.t. the substeps/agents) of batched actions.
+        :param actor_ids: A list (w.r.t. the substeps/agents) of the corresponding batched actor_ids.
+        """
         self.policy.train()
         self.optimizer.zero_grad()
 
+        # The actor ids of a given batch should be all the same. Thus we can debatch them.
         actor_ids = debatch_actor_ids(actor_ids)
+
         # Convert only actions to torch, since observations are converted in policy.compute_substep_policy_output method
         actions = convert_to_torch(actions, device=self.policy.device, cast=None, in_place=True)
         total_loss = self.loss.calculate_loss(policy=self.policy, observations=observations,
