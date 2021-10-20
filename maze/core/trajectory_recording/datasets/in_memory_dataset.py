@@ -3,10 +3,11 @@ import itertools
 import logging
 import pickle
 from abc import ABC
+from collections import namedtuple
 from itertools import chain
 from multiprocessing import Queue, Process
 from pathlib import Path
-from typing import Callable, List, Union, Optional, NamedTuple
+from typing import Callable, List, Union, Optional, NamedTuple, Tuple
 from typing import Dict, Sequence, Generator
 
 import torch
@@ -25,11 +26,6 @@ from maze.core.utils.factory import ConfigType, Factory
 from maze.utils.exception_report import ExceptionReport
 
 logger = logging.getLogger(__name__)
-
-InMemoryDataType = NamedTuple('data', [('observations', List[Union[ObservationType, TorchObservationType]]),
-                                       ('actions', List[Union[ActionType, TorchActionType]]),
-                                       ('actor_ids', List[ActorID])])
-
 
 class InMemoryDataset(Dataset, ABC):
     """Base class of trajectory data set for imitation learning that keeps all loaded data in memory.
@@ -192,16 +188,17 @@ class InMemoryDataset(Dataset, ABC):
         """
         return len(self.step_records)
 
-    def __getitem__(self, index: int) -> InMemoryDataType:
+    def __getitem__(self, index: int) -> Tuple[List[Union[ObservationType, TorchObservationType]],
+                                               List[Union[ActionType, TorchActionType]], List[ActorID]]:
         """Get a record.
 
         :param index: Index of the record to get.
-        :return: A named tuple of (observations, actions and actor_ids each as lists corresponding
-            to the substep of the env (actor_id or step_id)).
+        :return: A tuple of (observations, actions and actor_ids each as lists corresponding
+            to the sub-step of the env (actor_id and step_id)).
         """
 
-        return InMemoryDataType(self.step_records[index].observations, self.step_records[index].actions,
-                                self.step_records[index].actor_ids)
+        return self.step_records[index].observations, self.step_records[index].actions, \
+            self.step_records[index].actor_ids
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
