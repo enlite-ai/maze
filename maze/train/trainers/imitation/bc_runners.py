@@ -77,7 +77,7 @@ class BCRunner(TrainingRunner):
         # Create data loaders
         torch_generator = torch.Generator().manual_seed(self.maze_seeding.generate_env_instance_seed())
         train_data_loader = DataLoader(train, shuffle=True, batch_size=cfg.algorithm.batch_size,
-                                       generator=torch_generator)
+                                       generator=torch_generator, num_workers=self.dataset.n_workers)
 
         policy = TorchPolicy(
             networks=self._model_composer.policy.networks,
@@ -106,7 +106,7 @@ class BCRunner(TrainingRunner):
         self.evaluators = []
         if len(validation) > 0:
             validation_data_loader = DataLoader(validation, shuffle=True, batch_size=cfg.algorithm.batch_size,
-                                                generator=torch_generator)
+                                                generator=torch_generator, num_workers=self.dataset.n_workers)
             self.evaluators += [BCValidationEvaluator(
                 data_loader=validation_data_loader, loss=loss, logging_prefix="eval-validation",
                 model_selection=self._model_selection  # use the validation set evaluation to select the best model
