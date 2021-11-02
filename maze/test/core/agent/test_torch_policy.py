@@ -22,10 +22,7 @@ def test_torch_policy_with_discrete_only_action_space():
     action = policy.compute_action(obs)  # No actor ID provided
     assert all([key in env.action_space.spaces for key in action.keys()])
 
-    with pytest.raises(NotImplementedError):
-        top_actions = policy.compute_top_action_candidates(obs, num_candidates=5, deterministic=False)
-
-    top_actions, probs = policy.compute_top_action_candidates(obs, num_candidates=5, deterministic=True)
+    top_actions, probs = policy.compute_top_action_candidates(obs, num_candidates=5, maze_state=None, env=None)
 
     # Check number returned
     assert len(top_actions) == 5 == len(probs)
