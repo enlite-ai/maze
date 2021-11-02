@@ -29,13 +29,9 @@ class DummyGreedyPolicy(Policy):
         pass
 
     @override(Policy)
-    def compute_top_action_candidates(self,
-                                      observation: ObservationType,
-                                      num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType] = None,
-                                      env: Optional[BaseEnv] = None,
-                                      actor_id: Optional[ActorID] = None,
-                                      deterministic: bool = False) \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
+                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
+                                      actor_id: Optional[ActorID] = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """
         Not implemented.
