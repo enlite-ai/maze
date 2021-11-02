@@ -79,13 +79,9 @@ class HeuristicLunarLanderPolicy(Policy):
         return {"action": a}
 
     @override(Policy)
-    def compute_top_action_candidates(self,
-                                      observation: ObservationType,
-                                      num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType] = None,
-                                      env: Optional[BaseEnv] = None,
-                                      actor_id: Union[str, int] = None,
-                                      deterministic: bool = False) \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
+                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
+                                      actor_id: Union[str, int] = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface
         """
