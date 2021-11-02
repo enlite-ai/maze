@@ -64,9 +64,9 @@ class Policy(ABC):
         """
 
     @abstractmethod
-    def compute_top_action_candidates(self, observation: ObservationType,
-                                      num_candidates: Optional[int], maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: Optional[ActorID] = None, deterministic: bool = False) \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
+                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
+                                      actor_id: Optional[ActorID] = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """
         Get the top :num_candidates actions as well as the probabilities, q-values, .. leading to the decision.
@@ -78,7 +78,6 @@ class Policy(ABC):
         :param env: The environment instance (only provided if `needs_env()` returns True)
         :param actor_id: ID of actor to query policy for
                          (does not have to be provided if policies dict contains only 1 policy)
-        :param deterministic: Specify if the action should be computed deterministically
         :return: a tuple of sequences, where the first sequence corresponds to the possible actions, the other sequence
                  to the associated scores (e.g, probabilities or Q-values).
         """

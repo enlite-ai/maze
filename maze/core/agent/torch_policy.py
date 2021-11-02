@@ -124,16 +124,11 @@ class TorchPolicy(TorchModel, Policy):
         return convert_to_numpy(action, cast=None, in_place=False)
 
     @override(Policy)
-    def compute_top_action_candidates(self,
-                                      observation: ObservationType,
-                                      num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType] = None,
-                                      env: Optional[BaseEnv] = None,
-                                      actor_id: ActorID = None,
-                                      deterministic: bool = False) \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
+                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
+                                      actor_id: ActorID = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy`"""
-        assert deterministic, 'Compute top actions only supported if deterministic == True for torch policy'
         with torch.no_grad():
             policy_out = self.compute_substep_policy_output(observation, actor_id)
             actions = list()
