@@ -47,13 +47,11 @@ class AgentExecution:
 
                 # Get either a single action or multiple candidates wrapped in action candidates object
                 if self.num_candidates > 1:
-                    action = ActionCandidates(self.policy.compute_top_action_candidates(
-                        observation=observation,
-                        maze_state=maze_state,
-                        env=env,
-                        num_candidates=self.num_candidates,
-                        actor_id=actor_id)
-                    )
+                    action = ActionCandidates(self.policy.compute_top_action_candidates(observation=observation,
+                                                                                        num_candidates=self.num_candidates,
+                                                                                        maze_state=maze_state, env=env,
+                                                                                        actor_id=actor_id)
+                                              )
                 else:
                     action = self.policy.compute_action(
                         observation=observation,
