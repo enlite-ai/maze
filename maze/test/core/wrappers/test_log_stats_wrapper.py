@@ -12,10 +12,6 @@ from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
 class _StepInResetWrapper(Wrapper[MazeEnv]):
     """Mock wrapper that steps the env in the reset function"""
 
-    def __init__(self, env: MazeEnv):
-        # Set keep inner hooks flag, as we will be stepping the env inside of this wrapper
-        super().__init__(env, keep_inner_hooks=True)
-
     def reset(self):
         """Step the env twice during the reset function"""
         obs = self.env.reset()
