@@ -2,7 +2,9 @@
 import copy
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Callable, List
+from typing import Callable, List, Union
+
+from omegaconf import DictConfig
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -10,19 +12,24 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
+from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger
+from maze.core.rollout.rollout_generator import RolloutGenerator
+from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
+from maze.core.trajectory_recording.datasets.trajectory_processor import IdentityTrajectoryProcessor, \
+    IdentityWithNextObservationTrajectoryProcessor
 from maze.core.utils.factory import Factory
-from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
-from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
-from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.parallelization.distributed_actors.base_distributed_workers_with_buffer import \
     BaseDistributedWorkersWithBuffer
 from maze.train.parallelization.distributed_actors.dummy_distributed_workers_with_buffer import \
     DummyDistributedWorkersWithBuffer
+from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
+from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
+from maze.train.trainers.common.replay_buffer.replay_buffer import BaseReplayBuffer
+from maze.train.trainers.common.replay_buffer.uniform_replay_buffer import UniformReplayBuffer
+from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.sac.sac_trainer import SAC
-from omegaconf import DictConfig
-
 from maze.utils.process import query_cpu
 
 
@@ -64,14 +71,6 @@ class SACRunner(TrainingRunner):
         worker_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
                                      range(cfg.algorithm.num_actors)]
         replay_buffer_seed = self.maze_seeding.generate_env_instance_seed()
-        distributed_actors = self.create_distributed_rollout_workers(
-            env_factory=self.env_factory, worker_policy=worker_policy, n_rollout_steps=cfg.algorithm.n_rollout_steps,
-            n_workers=cfg.algorithm.num_actors, batch_size=cfg.algorithm.batch_size,
-            replay_buffer_size=cfg.algorithm.replay_buffer_size, initial_buffer_size=cfg.algorithm.initial_buffer_size,
-            initial_sampling_policy=cfg.algorithm.initial_sampling_policy,
-            rollouts_per_iteration=cfg.algorithm.rollouts_per_iteration,
-            split_rollouts_into_transitions=cfg.algorithm.split_rollouts_into_transitions,
-            env_instance_seeds=worker_env_instance_seeds, replay_buffer_seed=replay_buffer_seed)
 
         # initialize best model selection
         self._model_selection = BestModelSelection(dump_file=self.state_dict_dump_file, model=model,
@@ -91,6 +90,27 @@ class SACRunner(TrainingRunner):
                                                                         eval_env=eval_env,
                                                                         model_selection=self._model_selection)
 
+        replay_buffer = UniformReplayBuffer(cfg.algorithm.replay_buffer_size, seed=replay_buffer_seed)
+        if cfg.algorithm.initial_demonstration_trajectories:
+            self.load_replay_buffer(
+                replay_buffer=replay_buffer,
+                initial_demonstration_trajectories=cfg.algorithm.initial_demonstration_trajectories,
+                initial_buffer_size=cfg.algorithm.initial_buffer_size,
+                split_rollouts_into_transitions=cfg.algorithm.split_rollouts_into_transitions)
+        else:
+            self.init_replay_buffer(
+                replay_buffer=replay_buffer, initial_sampling_policy=cfg.algorithm.initial_sampling_policy,
+                initial_buffer_size=cfg.algorithm.initial_buffer_size, replay_buffer_seed=replay_buffer_seed,
+                split_rollouts_into_transitions=cfg.algorithm.split_rollouts_into_transitions,
+                n_rollout_steps=cfg.algorithm.n_rollout_steps)
+
+        distributed_actors = self.create_distributed_rollout_workers(
+            env_factory=self.env_factory, worker_policy=worker_policy, n_rollout_steps=cfg.algorithm.n_rollout_steps,
+            n_workers=cfg.algorithm.num_actors, batch_size=cfg.algorithm.batch_size,
+            rollouts_per_iteration=cfg.algorithm.rollouts_per_iteration,
+            split_rollouts_into_transitions=cfg.algorithm.split_rollouts_into_transitions,
+            env_instance_seeds=worker_env_instance_seeds, replay_buffer=replay_buffer)
+
         # initialize trainer
         self._trainer = SAC(
             algorithm_config=cfg.algorithm,
@@ -104,6 +124,75 @@ class SACRunner(TrainingRunner):
         self._init_trainer_from_input_dir(
             trainer=self._trainer, state_dict_dump_file=self.state_dict_dump_file, input_dir=cfg.input_dir
         )
+
+    def load_replay_buffer(self, replay_buffer: BaseReplayBuffer,
+                           initial_demonstration_trajectories: Union[str, List[str]],
+                           initial_buffer_size: int, split_rollouts_into_transitions: bool):
+        """TODO:"""
+
+        print(f'******* Starting to fill the replay buffer with trajectories from path: '
+              f'{initial_demonstration_trajectories} *******')
+        dataset = InMemoryDataset(input_data=initial_demonstration_trajectories,
+                                  conversion_env_factory=self.env_factory,
+                                  n_workers=1, trajectory_processor=IdentityWithNextObservationTrajectoryProcessor(),
+                                  deserialize_in_main_thread=False)
+
+        if split_rollouts_into_transitions:
+            for step_record in dataset.step_records:
+                assert step_record.next_observations is not None, "Next observations are required for sac"
+                assert all(map(lambda x: x is not None, step_record.next_observations)), "Next observations are required for sac"
+                replay_buffer._add_transition(step_record)
+        else:
+            raise NotImplementedError
+
+    def init_replay_buffer(self, replay_buffer: BaseReplayBuffer, initial_sampling_policy: Union[DictConfig, Policy],
+                           initial_buffer_size: int, replay_buffer_seed: int,
+                           split_rollouts_into_transitions: bool, n_rollout_steps: int) -> None:
+        """Fill the buffer with initial_buffer_size rollouts by rolling out the
+            initial_sampling_policy.
+        TODO: Make this sequential/parallel
+
+        :param replay_buffer: The replay buffer to use.
+        :param initial_sampling_policy: The initial sampling policy used to fill the buffer to the initial fill state.
+        :param initial_buffer_size: The initial size of the replay buffer filled by sampling from the initial sampling
+            policy.
+        :param replay_buffer_seed: A seed for initializing and sampling from the replay buffer.
+        :param split_rollouts_into_transitions: Specify whether to split rollouts into individual transitions.
+        :param n_rollout_steps: Number of rollouts steps to record in one rollout
+
+        """
+        # Create the log stats aggregator for collecting kpis of initializing the replay buffer
+        epoch_stats = LogStatsAggregator(LogStatsLevel.EPOCH)
+        replay_stats_logger = get_stats_logger('init_replay_buffer')
+        epoch_stats.register_consumer(replay_stats_logger)
+
+        dummy_env = self.env_factory()
+        dummy_env.seed(replay_buffer_seed)
+        sampling_policy: Policy = \
+            Factory(Policy).instantiate(initial_sampling_policy, action_spaces_dict=dummy_env.action_spaces_dict)
+        sampling_policy.seed(replay_buffer_seed)
+        rollout_generator = RolloutGenerator(env=dummy_env,
+                                             record_next_observations=True,
+                                             record_episode_stats=True)
+
+        print(f'******* Starting to fill the replay buffer with {initial_buffer_size} transitions *******')
+        while len(replay_buffer) < initial_buffer_size:
+            trajectory = rollout_generator.rollout(policy=sampling_policy, n_steps=n_rollout_steps)
+
+            if split_rollouts_into_transitions:
+                replay_buffer.add_rollout(trajectory.step_records)
+            else:
+                replay_buffer.add_rollout(trajectory)
+
+            # collect episode statistics
+            for step_record in trajectory.step_records:
+                if step_record.episode_stats is not None:
+                    epoch_stats.receive(step_record.episode_stats)
+
+        # Print the kpis from initializing the replay buffer
+        epoch_stats.reduce()
+        # Remove the consumer again from the aggregator
+        epoch_stats.remove_consumer(replay_stats_logger)
 
     @abstractmethod
     def create_distributed_eval_env(self,
@@ -124,11 +213,10 @@ class SACRunner(TrainingRunner):
     def create_distributed_rollout_workers(
             self, env_factory: Callable[[], MazeEnv],
             worker_policy: TorchPolicy, n_rollout_steps: int, n_workers: int, batch_size: int,
-            replay_buffer_size: int, initial_buffer_size: int,
-            initial_sampling_policy: Policy, rollouts_per_iteration: int,
+            rollouts_per_iteration: int,
             split_rollouts_into_transitions: bool,
             env_instance_seeds: List[int],
-            replay_buffer_seed: int) -> BaseDistributedWorkersWithBuffer:
+            replay_buffer: BaseReplayBuffer) -> BaseDistributedWorkersWithBuffer:
         """The individual runners implement the setup of the distributed training rollout actors.
 
         :param env_factory: Factory function for envs to run rollouts on.
@@ -136,15 +224,11 @@ class SACRunner(TrainingRunner):
         :param n_rollout_steps: Number of rollouts steps to record in one rollout.
         :param n_workers: Number of distributed workers to run simultaneously.
         :param batch_size: Size of the batch the rollouts are collected in.
-        :param replay_buffer_size: The total size of the replay buffer.
-        :param initial_buffer_size: The initial size of the replay buffer filled by sampling from the.
-        :param initial_sampling_policy: Initial sampling policy to fill the buffer with :param initial_buffer_size
-                                        initial samples.
         :param rollouts_per_iteration: The number of rollouts to collect each time the collect_rollouts method is
                                        called.
         :param split_rollouts_into_transitions: Specify whether to split rollouts into individual transitions.
         :param env_instance_seeds: The seed for each of the workers env.
-        :param replay_buffer_seed: The seed for the replay buffer.
+        :param replay_buffer: The replay buffer to use.
 
         :return: A BaseDistributedWorkersWithBuffer object.
         """
@@ -160,18 +244,13 @@ class SACDevRunner(SACRunner):
     def create_distributed_rollout_workers(
             self, env_factory: Callable[[], MazeEnv],
             worker_policy: TorchPolicy, n_rollout_steps: int, n_workers: int, batch_size: int,
-            replay_buffer_size: int, initial_buffer_size: int,
-            initial_sampling_policy: Policy, rollouts_per_iteration: int,
-            split_rollouts_into_transitions: bool,
-            env_instance_seeds: List[int],
-            replay_buffer_seed: int
+            rollouts_per_iteration: int, split_rollouts_into_transitions: bool, env_instance_seeds: List[int],
+            replay_buffer: BaseReplayBuffer
     ) -> DummyDistributedWorkersWithBuffer:
         """Create dummy (sequentially-executed) actors."""
         return DummyDistributedWorkersWithBuffer(env_factory, worker_policy, n_rollout_steps, n_workers, batch_size,
-                                                 rollouts_per_iteration, initial_sampling_policy,
-                                                 replay_buffer_size, initial_buffer_size,
-                                                 split_rollouts_into_transitions, env_instance_seeds,
-                                                 replay_buffer_seed)
+                                                 rollouts_per_iteration, split_rollouts_into_transitions,
+                                                 env_instance_seeds, replay_buffer)
 
     @override(SACRunner)
     def create_distributed_eval_env(self,
