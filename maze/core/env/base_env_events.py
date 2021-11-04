@@ -48,3 +48,9 @@ class BaseEnvEvents(ABC):
         :param name: Name of the KPI metric
         :param value: Value of the KPI metric
         """
+
+    @define_epoch_stats(sum)
+    @define_episode_stats(sum)
+    @define_step_stats(sum)
+    def test_event(self, value):
+        """Test event, can be used for testing purposes"""
