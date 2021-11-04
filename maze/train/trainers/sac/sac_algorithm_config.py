@@ -1,7 +1,7 @@
 """Argument parser for SAC algorithm and training"""
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, List, Optional
 
 from maze.core.agent.policy import Policy
 from maze.core.utils.factory import ConfigType
@@ -69,7 +69,11 @@ class SACAlgorithmConfig(AlgorithmConfig):
     initial_buffer_size: int
     """The initial buffer size, where transaction are sampled with the initial sampling policy"""
 
-    initial_sampling_policy: Union[Policy, ConfigType]
+    initial_demonstration_trajectories: Optional[Union[str, List[str]]]
+    """Optionally a trajectory, list of trajectories, a dir or list of directories can be given to fill the replay 
+    buffer with"""
+
+    initial_sampling_policy: Optional[Union[Policy, ConfigType]]
     """The policy used to initially fill the replay buffer"""
 
     rollouts_per_iteration: int
