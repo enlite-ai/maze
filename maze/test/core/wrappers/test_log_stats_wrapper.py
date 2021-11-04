@@ -3,7 +3,7 @@
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_env import MazeEnv
 from maze.core.log_events.monitoring_events import RewardEvents
-from maze.core.log_stats.log_stats import LogStatsLevel
+from maze.core.log_stats.log_stats import LogStatsLevel, increment_log_step
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.wrapper import Wrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
@@ -50,3 +50,22 @@ def test_allows_stepping_in_reset():
         LogStatsLevel.EPOCH,
         name="total_step_count"
     ) == 1
+
+
+def test_records_policy_stats():
+    env = build_dummy_maze_env()
+    env = LogStatsWrapper.wrap(env)
+
+    base_events = env.core_env.context.event_service.create_event_topic(BaseEnvEvents)
+    env.reset()
+    for i in range(5):
+        base_events.test_event(1)  # Simulate firing event from policy (= outside of env.step)
+        _ = env.step(env.action_space.sample())
+
+    env.reset()
+    increment_log_step()
+
+    assert env.get_stats_value(
+        BaseEnvEvents.test_event,
+        LogStatsLevel.EPOCH
+    ) == 5  # value of 1 x 5 steps
