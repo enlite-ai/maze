@@ -51,6 +51,9 @@ replay_buffer_size: 1000000
 # The initial buffer size, where transaction are sampled with the initial sampling policy
 initial_buffer_size: 10000
 
+# Initial trajectories to fill replay buffer with
+initial_demonstration_trajectories: ~
+
 # The policy used to initially fill the replay buffer
 initial_sampling_policy:
   _target_: maze.core.agent.random_policy.RandomPolicy
