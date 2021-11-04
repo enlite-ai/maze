@@ -127,3 +127,56 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
                 trajectory.step_records = list()
 
         return trajectory
+
+
+class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
+    """Identity processing method"""
+
+    @staticmethod
+    @override(TrajectoryProcessor)
+    def convert_trajectory_with_env(trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
+            -> List[StructuredSpacesRecord]:
+        """Convert an episode trajectory record into an array of observations and actions using the given env.
+
+        :param trajectory: Episode record to load
+        :param conversion_env: Env to use for conversion of MazeStates and MazeActions into observations and actions.
+                               Required only if state records are being loaded (i.e. conversion to raw actions and
+                               observations is needed).
+        :return: Loaded observations and actions. I.e., a tuple (observation_list, action_list). Each of the
+                 lists contains observation/action dictionaries, with keys corresponding to IDs of structured
+                 sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
+        """
+        step_records = []
+
+        for step_id, step_record in enumerate(trajectory.step_records[::-1]):
+
+            # Process and convert in case we are dealing with state records (otherwise no conversion needed)
+            if isinstance(step_record, StateRecord):
+                assert conversion_env is not None, "when conversion from Maze states is needed, conversion env " \
+                                                   "needs to be present."
+
+                # Drop incomplete records (e.g. at the end of episode)
+                if step_record.maze_state is None or step_record.maze_action is None:
+                    if step_id == 0:
+                        step_record.maze_action = trajectory.step_records[1].maze_action
+                    else:
+                        continue
+
+                # Convert to spaces
+                step_record: StructuredSpacesRecord = StructuredSpacesRecord.converted_from(step_record, conversion_env=conversion_env,
+                                                                    first_step_in_episode=step_id == len(trajectory.step_records))
+            if step_id > 0:
+                for substep, next_substep in zip(step_record.substep_records, step_records[-1].substep_records):
+                    substep.next_observation = next_substep.observation
+
+            step_records.append(step_record)
+
+        step_records = step_records[1:][::-1]
+
+        return step_records
+
+    @override(TrajectoryProcessor)
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
+        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
+        """
+        return trajectory
