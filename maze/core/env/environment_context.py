@@ -37,10 +37,9 @@ class EnvironmentContext:
         self.step_id = 0
         self._episode_id = None
 
-        self._should_clear_events = True
-
+        self.callbacks_processed = False
         self._pre_step_callbacks = []
-        self._increment_env_step_warning_printed = False
+        self._post_step_callbacks = []
 
     @property
     def episode_id(self) -> str:
@@ -64,15 +63,8 @@ class EnvironmentContext:
          - Clear event logs (used for statistics for the current step)
          - Increment step_id, which is used as env_time by default
         """
-        if self._should_clear_events and not self._increment_env_step_warning_printed:
-            BColors.print_colored("Events have not been cleared at the start of the current step!"
-                                  "If you called the step function inside a wrapper, look into the "
-                                  "`Wrapper.keep_inner_hooks` flag.", BColors.WARNING)
-            # log only once
-            self._increment_env_step_warning_printed = True
-
         self.step_id += 1
-        self._should_clear_events = True
+        self.callbacks_processed = False
 
     def reset_env_episode(self) -> None:
         """
@@ -85,23 +77,33 @@ class EnvironmentContext:
 
     def register_pre_step(self, callback: Callable) -> None:
         """
-        Register a function to be called before every single step, just before the events of the
-        previous step are cleared.
+        Register a function to be called before every single step.
         """
         self._pre_step_callbacks.append(callback)
 
-    def pre_step(self) -> None:
-        """Prepare the event system for a new step.
-
-        Checks internally if this has already been done for the current env step, in this case nothing happens.
+    def register_post_step(self, callback: Callable) -> None:
         """
-        if not self._should_clear_events:
-            return
+        Register a function to be called after every single step, just before the events of the
+        previous step are cleared.
+        """
+        self._post_step_callbacks.append(callback)
 
+    def run_pre_step_callbacks(self) -> None:
+        """
+        Run callbacks registered for pre-step execution. To be called from the outer-most wrapper in the wrapper
+        stack, right before the env.step function.
+        """
         for callback in self._pre_step_callbacks:
             callback()
 
-        self._should_clear_events = False
+    def run_post_step_callbacks(self) -> None:
+        """
+        Run callbacks registered for post-step execution and then clear out the events from this step.
+        To be called from the outer-most wrapper in the wrapper stack, right after the env.step function.
+        """
+        for callback in self._post_step_callbacks:
+            callback()
+
         self.event_service.clear_events()
 
     def clone_from(self, context: 'EnvironmentContext') -> None:
@@ -116,7 +118,4 @@ class EnvironmentContext:
 
         self.step_id = context.step_id
         self._episode_id = context._episode_id
-
-        self._should_clear_events = context._should_clear_events
-
-        self._increment_env_step_warning_printed = context._increment_env_step_warning_printed
+        self.callbacks_processed = context.callbacks_processed
