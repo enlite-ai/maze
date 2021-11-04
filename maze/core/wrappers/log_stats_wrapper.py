@@ -59,7 +59,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         # get notified at the beginning of a step call (relevant if the step originated
         # within the wrapper hierarchy, e.g. frame skipping)
         if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
-            env.context.register_pre_step(self._pre_step)
+            env.context.register_pre_step(self._record_stats_if_ready)
 
     T = TypeVar("T")
 
@@ -94,13 +94,6 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         self._record_stats_if_ready()
 
         return obs, rew, done, info
-
-    def _pre_step(self) -> None:
-        """
-        Get notified of a new step method call, just before the events of the previous step are cleared by the
-        event system (see :py:meth:`~maze.core.env.environment_context.EnvironmentContext.pre_step`).
-        """
-        self._record_stats_if_ready()
 
     def _record_stats_if_ready(self) -> None:
         """Record the event log and statistics from the preceding step, if these are available and ready to record.
