@@ -1,6 +1,6 @@
 """Extension of gym Wrapper to support environment interfaces"""
 from abc import abstractmethod, ABC
-from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, Callable
+from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -72,23 +72,30 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
     def step_with_callbacks(self, *args, **kwargs) -> Any:
         """A wrapper for the env.step function. Checks whether callbacks for this step have already been process
-        (i.e., detects whether this is the outermost wrapper). Triggers the pre- and post-step callbacks if required."""
+        (i.e., detects whether this is the outermost wrapper). Triggers the post-step callbacks if required."""
 
-        # if post-step callbacks from the last step have not been executed yet, execute them
-        # (this happens when env is stepped from inside of a wrapper, e.g. with multi-step or step-skip wrappers)
-        # if not self.env.context.post_step_callbacks_processed:
-        #     self.env.context.run_post_step_callbacks()
+        # check if new step has been initiated before fully completing the previous one (= step-skipping etc.)
+        if self.context.step_in_progress and not self.context.step_is_initiating:
+            # we are starting a second step from the middle of the wrapper hierarchy
+            # without having fully completed the previous step (as is done e.g. during step-skipping)
+            # => call the post-step callbacks here to allow clearing events etc. between skipped steps
+            self.context.run_post_step_callbacks()
+            self.context.step_is_initiating = True
 
-        should_run_callbacks = not self.env.context.callbacks_processed
+        # if the step has not been marked as in progress yet, we know that this is the outer-most wrapper in the stack
+        is_outermost_wrapper = not self.context.step_in_progress
+        if is_outermost_wrapper:
+            self.context.step_in_progress = True
+            self.context.step_is_initiating = True
+            # once pre-step callbacks are supported, they can be called here
 
-        if should_run_callbacks:
-            self.env.context.callbacks_processed = True
-            self.env.context.run_pre_step_callbacks()
-
+        # now do the step (env step + any functionality this wrapper implements on top of that)
         return_value = self.__step(*args, **kwargs)
 
-        if should_run_callbacks:
-            self.env.context.run_post_step_callbacks()
+        # if this is the outer-most wrapper, mark the step as done and trigger post-step callbacks
+        if is_outermost_wrapper:
+            self.context.step_in_progress = False
+            self.context.run_post_step_callbacks()
 
         return return_value
 
