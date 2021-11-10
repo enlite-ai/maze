@@ -17,6 +17,7 @@ def test_reward_scaling_wrapper():
         action_conversion=[DictActionConversion()],
         observation_conversion=[observation_conversion])
 
+    env.reset()
     action = env.action_space.sample()
     np.random.seed(1234)
     original_reward = env.step(action)[1]
