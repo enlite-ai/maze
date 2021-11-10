@@ -31,7 +31,7 @@ from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversi
     as DummyObservationConversion
 
 
-def _run_rollout_maze(env: Union[BaseEnv, gym.Env], n_steps_per_episode: int, n_episodes: int, writer: LogEventsWriter):
+def _run_rollout_loop(env: Union[BaseEnv, gym.Env], n_steps_per_episode: int, n_episodes: int, writer: LogEventsWriter):
     LogEventsWriterRegistry.writers = []  # Ensure there is no other writer
     LogEventsWriterRegistry.register_writer(writer)
 
@@ -113,7 +113,7 @@ def test_logs_events():
 
     observation_conversion = ObservationConversion()
     writer = TestWriter()
-    _run_rollout_maze(
+    _run_rollout_loop(
         env=DummyEnvironment(
             core_env=CustomDummyCoreEnv(observation_conversion.space()),
             action_conversion=[DictActionConversion()],
@@ -123,8 +123,8 @@ def test_logs_events():
         n_steps_per_episode=10,
         writer=writer)
 
-    assert writer.step_count == 5 * 10
     assert writer.episode_count == 5
+    assert writer.step_count == 5 * 10
 
 
 def test_logs_events_for_generic_gym_envs():
@@ -144,7 +144,7 @@ def test_logs_events_for_generic_gym_envs():
                 assert step_id == step_event_log.env_time
 
     writer = TestWriter()
-    _run_rollout_maze(
+    _run_rollout_loop(
         env=GymMazeEnv(gym.make('CartPole-v0')),
         n_episodes=5,
         n_steps_per_episode=10,
@@ -155,19 +155,19 @@ def test_logs_events_for_generic_gym_envs():
 
 
 def test_logs_custom_env_time():
-    class CustomTimedDummyEnv(DummyEnvironment, TimeEnvMixin):
-        """A subclass of the dummy env that has custom env time."""
+    class CustomTimedDummyEnv(DummyCoreEnvironment, TimeEnvMixin):
+        """A subclass of the dummy core env that has custom env time."""
 
         def reset(self):
             """Start counting env time from 1337."""
             obs = super().reset()
-            self.core_env.context.step_id = 1337
+            self.context.step_id = 1337
             return obs
 
     dummy_observation_conversion = DummyObservationConversion()
-    core_env = DummyCoreEnvironment(observation_space=dummy_observation_conversion.space())
+    core_env = CustomTimedDummyEnv(observation_space=dummy_observation_conversion.space())
 
-    env = CustomTimedDummyEnv(
+    env = DummyEnvironment(
         core_env=core_env,
         action_conversion=[DummyActionConversion()],
         observation_conversion=[dummy_observation_conversion]
@@ -189,7 +189,7 @@ def test_logs_custom_env_time():
                 assert step_event_log.env_time == 1337 + step_id
 
     writer = TestWriter()
-    _run_rollout_maze(
+    _run_rollout_loop(
         env=env,
         n_episodes=5,
         n_steps_per_episode=10,
@@ -264,7 +264,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
 
     # Run the rollout
     writer = TestWriter()
-    _run_rollout_maze(
+    _run_rollout_loop(
         env=env,
         n_episodes=1,
         n_steps_per_episode=10,
