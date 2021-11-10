@@ -243,3 +243,18 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
     def clone_from(self, env: 'LogStatsWrapper') -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         raise RuntimeError("Cloning the 'LogStatsWrapper' is not supported.")
+
+    def get_last_step_events(self, query: Union[Callable, Iterable[Callable]] = None):
+        """Convenience accessor to all events recorded during the last step.
+
+        :param query: Specify which events to return (one or more interface methods)
+        :return: Recorded events from the last step (all if no query is present)
+        """
+        if not self.episode_event_log or len(self.episode_event_log.step_event_logs) == 0:
+            return []
+
+        last_step_log = self.episode_event_log.step_event_logs[-1]
+        if query:
+            return list(last_step_log.events.query_events(query))
+        else:
+            return list(last_step_log.events.events)
