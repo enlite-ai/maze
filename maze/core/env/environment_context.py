@@ -38,7 +38,7 @@ class EnvironmentContext:
         self.event_service = EventService()
         self.step_id = 0
         self._episode_id = None
-        self._last_cleared_events_at = None
+        self._last_cleared_events_at = self.step_id
 
         # Step lifecycle flags - partially managed by wrappers to help them orient in the step lifecycle
         self.step_in_progress = False  # True during the whole env.step
@@ -78,6 +78,7 @@ class EnvironmentContext:
         self.step_id = 0
         self.step_in_progress = False
         self.step_is_initiating = False
+        self._last_cleared_events_at = self.step_id
 
         self._episode_id = None  # Reset episode ID
         self.event_service.clear_events()
