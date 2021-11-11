@@ -98,7 +98,6 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :param action: the action the agent wants to take.
         :return: observation, reward, done, info
         """
-        assert self.initial_env_time is not None, "Environment must be reset before stepping."
 
         # first, take step without observation
         reward, done, info = self._step_core_env(action)
