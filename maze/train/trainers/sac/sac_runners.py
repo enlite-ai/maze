@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Callable, List, Union
 
 from omegaconf import DictConfig
+from torch.utils.data import Dataset
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -17,6 +18,8 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
 from maze.core.trajectory_recording.datasets.trajectory_processor import IdentityTrajectoryProcessor, \
     IdentityWithNextObservationTrajectoryProcessor
+from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord, SpacesTrajectoryRecord
+from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
 from maze.train.parallelization.distributed_actors.base_distributed_workers_with_buffer import \
     BaseDistributedWorkersWithBuffer
@@ -41,6 +44,11 @@ class SACRunner(TrainingRunner):
 
     eval_concurrency: int
     """ Number of concurrent evaluation envs """
+
+    initial_demonstration_trajectories: DictConfig
+    """Optionally a trajectory, list of trajectories, a dir or list of directories can be given to fill the replay 
+    buffer with. If this is not given (is None) the initial replay buffer is filled with the (algorithm) specified
+    initial_sampling_policy"""
 
     def __post_init__(self):
         """
@@ -91,12 +99,8 @@ class SACRunner(TrainingRunner):
                                                                         model_selection=self._model_selection)
 
         replay_buffer = UniformReplayBuffer(cfg.algorithm.replay_buffer_size, seed=replay_buffer_seed)
-        if cfg.algorithm.initial_demonstration_trajectories:
-            self.load_replay_buffer(
-                replay_buffer=replay_buffer,
-                initial_demonstration_trajectories=cfg.algorithm.initial_demonstration_trajectories,
-                initial_buffer_size=cfg.algorithm.initial_buffer_size,
-                split_rollouts_into_transitions=cfg.algorithm.split_rollouts_into_transitions)
+        if cfg.runner.initial_demonstration_trajectories:
+            self.load_replay_buffer(replay_buffer=replay_buffer, cfg=cfg)
         else:
             self.init_replay_buffer(
                 replay_buffer=replay_buffer, initial_sampling_policy=cfg.algorithm.initial_sampling_policy,
@@ -126,24 +130,31 @@ class SACRunner(TrainingRunner):
         )
 
     def load_replay_buffer(self, replay_buffer: BaseReplayBuffer,
-                           initial_demonstration_trajectories: Union[str, List[str]],
-                           initial_buffer_size: int, split_rollouts_into_transitions: bool):
-        """TODO:"""
+                           cfg: DictConfig) -> None:
+        """Load the given trajectories as a dataset and fill the buffer with the trajectories.
+
+        :param replay_buffer: The replay buffer to fill.
+        :param cfg: The dict config of the experiment.
+        """
 
         print(f'******* Starting to fill the replay buffer with trajectories from path: '
-              f'{initial_demonstration_trajectories} *******')
-        dataset = InMemoryDataset(input_data=initial_demonstration_trajectories,
-                                  conversion_env_factory=self.env_factory,
-                                  n_workers=1, trajectory_processor=IdentityWithNextObservationTrajectoryProcessor(),
-                                  deserialize_in_main_thread=False)
+              f'{self.initial_demonstration_trajectories.input_data} *******')
+        with SwitchWorkingDirectoryToInput(cfg.input_dir):
+            dataset = Factory(base_type=Dataset).instantiate(self.initial_demonstration_trajectories,
+                                                             conversion_env_factory=self.env_factory)
+        assert isinstance(dataset, InMemoryDataset), 'Only in memory dataset supported at this point'
 
-        if split_rollouts_into_transitions:
+        if cfg.algorithm.split_rollouts_into_transitions:
             for step_record in dataset.step_records:
                 assert step_record.next_observations is not None, "Next observations are required for sac"
-                assert all(map(lambda x: x is not None, step_record.next_observations)), "Next observations are required for sac"
-                replay_buffer._add_transition(step_record)
+                assert all(map(lambda x: x is not None, step_record.next_observations)), \
+                    "Next observations are required for sac"
+                replay_buffer.add_transition(step_record)
         else:
-            raise NotImplementedError
+            for idx, trajectory_reference in enumerate(dataset.trajectory_references):
+                traj = SpacesTrajectoryRecord(id=idx)
+                traj.step_records = dataset.step_records[trajectory_reference]
+                replay_buffer.add_transition(traj)
 
     def init_replay_buffer(self, replay_buffer: BaseReplayBuffer, initial_sampling_policy: Union[DictConfig, Policy],
                            initial_buffer_size: int, replay_buffer_seed: int,
@@ -180,7 +191,8 @@ class SACRunner(TrainingRunner):
             trajectory = rollout_generator.rollout(policy=sampling_policy, n_steps=n_rollout_steps)
 
             if split_rollouts_into_transitions:
-                replay_buffer.add_rollout(trajectory.step_records)
+                for record in trajectory.step_records:
+                    replay_buffer.add_transition(record)
             else:
                 replay_buffer.add_rollout(trajectory)
 
