@@ -69,10 +69,6 @@ class SACAlgorithmConfig(AlgorithmConfig):
     initial_buffer_size: int
     """The initial buffer size, where transaction are sampled with the initial sampling policy"""
 
-    initial_demonstration_trajectories: Optional[Union[str, List[str]]]
-    """Optionally a trajectory, list of trajectories, a dir or list of directories can be given to fill the replay 
-    buffer with"""
-
     initial_sampling_policy: Optional[Union[Policy, ConfigType]]
     """The policy used to initially fill the replay buffer"""
 
