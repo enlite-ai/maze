@@ -1,0 +1,28 @@
+# @package algorithm
+
+# Number of actors to combine to one batch
+batch_size: 1
+
+# Number of actors to be run
+num_actors: 1
+
+# Either "cpu" or "cuda"
+device: cpu
+
+# The size of the replay buffer
+replay_buffer_size: 10
+
+# The initial buffer size, where transaction are sampled with the initial sampling policy
+initial_buffer_size: 10
+
+# Number of epochs to train
+n_epochs: 2
+
+# Number of updates per epoch
+epoch_length: 1
+
+# Rollout evaluator (used for best model selection)
+rollout_evaluator:
+
+  # Number of evaluation trials
+  n_episodes: 1
