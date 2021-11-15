@@ -25,28 +25,29 @@ class UniformReplayBuffer(BaseReplayBuffer):
         self._total_number_of_transitions = 0
         self.buffer_rng = np.random.RandomState(seed)
 
-    def _add_transition(self, actor_transition: Union[SpacesTrajectoryRecord, StructuredSpacesRecord]) -> None:
-        """Add a single transition (rollout length == 1) to the buffer.
-
-        :param actor_transition: The actor transition to be added to the buffer.
+    @override(BaseReplayBuffer)
+    def add_transition(self, transition: Union[StructuredSpacesRecord, SpacesTrajectoryRecord]) -> None:
+        """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
-        self._buffer[self._buffer_idx] = actor_transition
+        assert isinstance(transition, StructuredSpacesRecord)
+        self._buffer[self._buffer_idx] = transition
         self._fill_state = max(self._buffer_idx + 1, self._fill_state)
         self._buffer_idx = (self._buffer_idx + 1) % self._buffer_size
         self._total_number_of_transitions += 1
 
     @override(BaseReplayBuffer)
-    def add_rollout(self, actor_rollout: Union[SpacesTrajectoryRecord, StructuredSpacesRecord, np.ndarray, List]) \
-            -> None:
+    def add_rollout(self, rollout: Union[SpacesTrajectoryRecord, List[StructuredSpacesRecord]]) -> None:
         """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
-        if isinstance(actor_rollout, np.ndarray) or isinstance(actor_rollout, list):
-            for elem in actor_rollout:
-                self._add_transition(elem)
-        elif isinstance(actor_rollout, SpacesTrajectoryRecord) or isinstance(actor_rollout, StructuredSpacesRecord):
-            self._add_transition(actor_rollout)
+        if isinstance(rollout, SpacesTrajectoryRecord):
+            step_records = rollout.step_records
+        elif isinstance(rollout, list):
+            step_records = rollout
         else:
-            raise Exception(f'Unknown rollout format.. {type(actor_rollout)}')
+            raise ValueError(f'Not supported input type: {type(rollout)}')
+
+        for ii in step_records:
+            self.add_transition(ii)
 
     @override(BaseReplayBuffer)
     def sample_batch(self, n_samples: int, learner_device: str) -> \
