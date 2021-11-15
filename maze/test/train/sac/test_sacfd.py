@@ -16,16 +16,17 @@ def run_sacfd(env: str, teacher_policy: str, sac_runner: str, sac_wrappers: str,
                           env=env,
                           policy=teacher_policy,
                           runner="sequential")
+    rollout_config['runner.n_episodes'] = 10
+    rollout_config['runner.max_episode_steps'] = 10
     run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
     # Behavioral cloning on top of the heuristic rollout trajectories
     train_config = dict(configuration="test", env=env, wrappers=sac_wrappers,
-                        model=sac_model, algorithm="sac", runner=sac_runner, critic=sac_critic)
-    train_config['algorithm.initial_demonstration_trajectories'] = 'trajectory_data'
+                        model=sac_model, algorithm="sacfD", runner=sac_runner, critic=sac_critic)
     run_maze_job(train_config, config_module="maze.conf", config_name="conf_train")
 
 
-@pytest.mark.parametrize("runner", ["dev"])
+@pytest.mark.parametrize("runner", ["dev", "local"])
 def test_sacfd(runner: str):
     """Rolls out a heuristic policy on Cutting 2D env and collects trajectories, then runs
     behavioral cloning on the collected trajectory data."""
