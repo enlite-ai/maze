@@ -67,7 +67,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('critic_key')
-    def critic_value_loss(self, critic_key: [int, str], value: float) -> None:
+    def critic_value_loss(self, critic_key: Union[int, str], value: float) -> None:
         """Record the critic value loss.
 
         :param critic_key: The key of the critic.
