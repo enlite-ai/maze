@@ -156,12 +156,12 @@ class SACRunner(TrainingRunner):
                 traj.step_records = dataset.step_records[trajectory_reference]
                 replay_buffer.add_transition(traj)
 
-    def init_replay_buffer(self, replay_buffer: BaseReplayBuffer, initial_sampling_policy: Union[DictConfig, Policy],
+    @staticmethod
+    def init_replay_buffer(replay_buffer: BaseReplayBuffer, initial_sampling_policy: Union[DictConfig, Policy],
                            initial_buffer_size: int, replay_buffer_seed: int,
-                           split_rollouts_into_transitions: bool, n_rollout_steps: int) -> None:
-        """Fill the buffer with initial_buffer_size rollouts by rolling out the
-            initial_sampling_policy.
-        TODO: Make this sequential/parallel
+                           split_rollouts_into_transitions: bool, n_rollout_steps: int,
+                           env_factory: Callable[[], MazeEnv]) -> None:
+        """Fill the buffer with initial_buffer_size rollouts by rolling out the initial_sampling_policy.
 
         :param replay_buffer: The replay buffer to use.
         :param initial_sampling_policy: The initial sampling policy used to fill the buffer to the initial fill state.
@@ -169,7 +169,8 @@ class SACRunner(TrainingRunner):
             policy.
         :param replay_buffer_seed: A seed for initializing and sampling from the replay buffer.
         :param split_rollouts_into_transitions: Specify whether to split rollouts into individual transitions.
-        :param n_rollout_steps: Number of rollouts steps to record in one rollout
+        :param n_rollout_steps: Number of rollouts steps to record in one rollout.
+        :param env_factory: Factory function for envs to run rollouts on.
         """
 
         # Create the log stats aggregator for collecting kpis of initializing the replay buffer
@@ -177,7 +178,7 @@ class SACRunner(TrainingRunner):
         replay_stats_logger = get_stats_logger('init_replay_buffer')
         epoch_stats.register_consumer(replay_stats_logger)
 
-        dummy_env = self.env_factory()
+        dummy_env = env_factory()
         dummy_env.seed(replay_buffer_seed)
         sampling_policy: Policy = \
             Factory(Policy).instantiate(initial_sampling_policy, action_spaces_dict=dummy_env.action_spaces_dict)
@@ -191,10 +192,9 @@ class SACRunner(TrainingRunner):
             trajectory = rollout_generator.rollout(policy=sampling_policy, n_steps=n_rollout_steps)
 
             if split_rollouts_into_transitions:
-                for record in trajectory.step_records:
-                    replay_buffer.add_transition(record)
-            else:
                 replay_buffer.add_rollout(trajectory)
+            else:
+                replay_buffer.add_transition(trajectory)
 
             # collect episode statistics
             for step_record in trajectory.step_records:
