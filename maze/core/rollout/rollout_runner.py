@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
+import numpy as np
 from omegaconf import DictConfig
 
 from maze.core.agent.policy import Policy
@@ -41,6 +42,11 @@ class RolloutRunner(Runner, ABC):
 
         # keep track of the input directory
         self.input_dir = None
+
+        # Generate a random state used for sampling random seeds for the envs and agents
+        self.maze_seeding = MazeSeeding(np.random.randint(np.iinfo(np.int32).max),
+                                        np.random.randint(np.iinfo(np.int32).max),
+                                        False)
 
     @override(Runner)
     def setup(self, cfg: DictConfig) -> None:

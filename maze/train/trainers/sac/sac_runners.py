@@ -170,8 +170,8 @@ class SACRunner(TrainingRunner):
         :param replay_buffer_seed: A seed for initializing and sampling from the replay buffer.
         :param split_rollouts_into_transitions: Specify whether to split rollouts into individual transitions.
         :param n_rollout_steps: Number of rollouts steps to record in one rollout
-
         """
+
         # Create the log stats aggregator for collecting kpis of initializing the replay buffer
         epoch_stats = LogStatsAggregator(LogStatsLevel.EPOCH)
         replay_stats_logger = get_stats_logger('init_replay_buffer')
