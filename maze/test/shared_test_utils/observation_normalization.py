@@ -143,6 +143,9 @@ def observation_shape_match_test(env_factory: Callable[[], StructuredEnv],
     env: CoreEnvType = env_factory()
     env_norm: ObservationNormalizationWrapper = wrapper_factory()
 
+    env.reset()
+    env_norm.reset()
+
     assert match_observation_space_structure(
         env.step(env.action_conversion.space().sample())[0],
         env_norm.step(env.action_conversion.space().sample())[0]
