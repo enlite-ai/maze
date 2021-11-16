@@ -216,10 +216,10 @@ arXiv preprint arXiv:1802.01561.
 
 :raw-html:`</details>`
 
-.. _maze_trainers-bc:
+.. _maze_trainers-sac:
 
-Soft Actor-Critic (SAC)
------------------------
+Soft Actor-Critic (from Demonstrations) (SAC, SACfD)
+----------------------------------------------------
 
 An off-policy actor-critic algorithm based on the maximum entropy reinforcement learning framework
 with the goal of maximizing expected reward while at the same time maximizing entropy.
@@ -227,11 +227,19 @@ SAC exhibits high sample efficiency, is stable across different random seeds,
 and achieves competitive performance especially for continuous control tasks.
 In contrast to A2C, PPO and IMPALA it utilizes a stochastic state-action critic.
 
-Haarnoja, T., Zhou, A., Abbeel, P., Levine, S. (2018).
-`Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor. <https://arxiv.org/abs/1801.01290>`_
-https://arxiv.org/abs/1801.01290
+Additionally our implementation allows to initialize the replay buffer from existing demonstrations (e.g., rollouts)
+instead of sampling the initial transitions with the given sampling policy (per default random). This variant is called
+Soft Actor-Critic from Demonstrations.
 
-**Example**
+Haarnoja, T., Zhou, A., Abbeel, P., Levine, S. (2018).
+`Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor.
+<https://arxiv.org/abs/1801.01290>`_ arXiv preprint arXiv:1801.01290.,
+Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., ... & Levine, S. (2018). `Soft Actor-Critic
+Algorithms and Applications. <https://arxiv.org/abs/1812.05905>`_ arXiv preprint arXiv:1812.05905.,
+Christodoulou, P. (2019). `Soft actor-critic for discrete action settings <https://arxiv.org/abs/1910.07207v2>`_ arXiv
+preprint arXiv:1910.07207.
+
+**Example SAC**
 
 .. tabs::
 
@@ -249,6 +257,47 @@ https://arxiv.org/abs/1801.01290
         )
         rc.train()
 
+**Example SACfD**
+
+.. tabs::
+
+    .. code-tab:: console
+
+        $ maze-run env.name=LunarLander-v2 policy=lunar_lander_heuristics runner.n_episodes=1000
+        $ maze-run -cn conf_train env.name=LunarLander-v2 algorithm=sacfD model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
+
+    .. code-tab:: python
+
+        from maze.core.agent.heuristic_lunar_lander_policy import HeuristicLunarLanderPolicy
+        from maze.core.rollout.parallel_rollout_runner import ParallelRolloutRunner
+        from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
+        from maze.api.run_context import RunContext
+
+        # Instantiate an example environment and agent
+        env = GymMazeEnv("LunarLander-v2")
+        agent = HeuristicLunarLanderPolicy()
+
+        # Run a parallel rollout and collect the trajectories
+        runner = ParallelRolloutRunner(
+            n_episodes=1000,
+            max_episode_steps=0,
+            n_processes=5,
+            record_trajectory=True,
+            record_event_logs=True)
+        runner.run_with(
+            env=env,
+            wrappers={},
+            agent=agent)
+
+        rc = RunContext(
+            algorithm="sacfD",
+            overrides={"env.name": "LunarLander-v2",
+                       "runner.initial_demonstration_trajectories.input_data": "<absolute_experiment_path>/trajectory_data"},
+            model="flatten_concat",
+            critic="flatten_concat_state_action"
+        )
+        rc.train()
+
 **Algorithm Parameters** | :class:`~maze.train.trainers.sac.sac_algorithm_config.SACAlgorithmConfig`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm/sac.yaml)</summary>`
@@ -258,7 +307,7 @@ https://arxiv.org/abs/1801.01290
 
 :raw-html:`</details>`
 
-**Runner Parameters** | :class:`~maze.train.trainers.sac.sac_runners.SACRunner`
+**Runner Parameters SAC** | :class:`~maze.train.trainers.sac.sac_runners.SACRunner`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sac-dev.yaml)</summary>`
 
@@ -273,6 +322,25 @@ https://arxiv.org/abs/1801.01290
   :language: YAML
 
 :raw-html:`</details>`
+
+**Runner Parameters SACfD** | :class:`~maze.train.trainers.sac.sac_runners.SACRunner`
+
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfD-dev.yaml)</summary>`
+
+.. literalinclude:: ../../../maze/conf/algorithm_runner/sacfD-dev.yaml
+  :language: YAML
+
+:raw-html:`</details>`
+
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfD-local.yaml)</summary>`
+
+.. literalinclude:: ../../../maze/conf/algorithm_runner/sacfD-local.yaml
+  :language: YAML
+
+:raw-html:`</details>`
+
+
+.. _maze_trainers-bc:
 
 Behavioural Cloning (BC)
 ------------------------
@@ -311,6 +379,8 @@ ACM Computing Surveys (CSUR), 50(2), 1-35.
   :language: YAML
 
 :raw-html:`</details>`
+
+.. _maze_trainers-es:
 
 Evolutionary Strategies (ES)
 ----------------------------
