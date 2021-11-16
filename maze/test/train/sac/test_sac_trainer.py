@@ -20,7 +20,9 @@ from maze.train.parallelization.vector_env.sequential_vector_env import Sequenti
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.parallelization.distributed_actors.dummy_distributed_workers_with_buffer import \
     DummyDistributedWorkersWithBuffer
+from maze.train.trainers.common.replay_buffer.uniform_replay_buffer import UniformReplayBuffer
 from maze.train.trainers.sac.sac_algorithm_config import SACAlgorithmConfig
+from maze.train.trainers.sac.sac_runners import SACRunner
 from maze.train.trainers.sac.sac_trainer import SAC
 
 
@@ -165,15 +167,17 @@ def train_function(n_epochs: int, epoch_length: int, deterministic_eval: bool,
 
     actor_policy = TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device='cpu')
 
+    replay_buffer = UniformReplayBuffer(buffer_size=algorithm_config.replay_buffer_size, seed=1234)
+    SACRunner.init_replay_buffer(replay_buffer=replay_buffer, initial_sampling_policy=algorithm_config.initial_sampling_policy,
+                                 initial_buffer_size=algorithm_config.initial_buffer_size, replay_buffer_seed=1234,
+                                 split_rollouts_into_transitions=split_rollouts_into_transitions,
+                                 n_rollout_steps=algorithm_config.n_rollout_steps, env_factory=env_factory)
     distributed_actors = DummyDistributedWorkersWithBuffer(
         env_factory=env_factory, worker_policy=actor_policy, n_rollout_steps=algorithm_config.n_rollout_steps,
         n_workers=algorithm_config.num_actors, batch_size=algorithm_config.batch_size,
-        replay_buffer_size=algorithm_config.replay_buffer_size,
-        initial_buffer_size=algorithm_config.initial_buffer_size,
-        initial_sampling_policy=algorithm_config.initial_sampling_policy,
         rollouts_per_iteration=algorithm_config.rollouts_per_iteration,
         split_rollouts_into_transitions=split_rollouts_into_transitions,
-        env_instance_seeds=list(range(algorithm_config.num_actors)), replay_buffer_seed=1234)
+        env_instance_seeds=list(range(algorithm_config.num_actors)), replay_buffer=replay_buffer)
 
     critics_policy = TorchStepStateActionCritic(networks=critics, num_policies=1, device='cpu',
                                                 only_discrete_spaces={0: False},
