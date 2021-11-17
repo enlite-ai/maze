@@ -4,9 +4,9 @@ from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 
 
 def run_sacfd(env: str, teacher_policy: str, sac_runner: str, sac_wrappers: str, sac_model: str, sac_critic: str):
-    """Run behavioral cloning for given config parameters.
+    """Run soft actor critic from demonstrations for given config parameters.
 
-    Runs a rollout with the given teacher_policy, then runs behavioral cloning on the collected trajectory data.
+    Runs a rollout with the given teacher_policy, then runs sacfD on the collected trajectory data.
     """
     # Heuristics rollout
     """Test the functionality of sacfd by first running a rollout and then starting sac with the computed output"""
@@ -28,8 +28,7 @@ def run_sacfd(env: str, teacher_policy: str, sac_runner: str, sac_wrappers: str,
 
 @pytest.mark.parametrize("runner", ["dev", "local"])
 def test_sacfd(runner: str):
-    """Rolls out a heuristic policy on Cutting 2D env and collects trajectories, then runs
-    behavioral cloning on the collected trajectory data."""
+    """Tests the soft actor critic from demonstrations."""
     run_sacfd(env="gym_env", teacher_policy="random_policy",
                sac_runner=runner, sac_wrappers="vector_obs", sac_model="flatten_concat",
                sac_critic='flatten_concat_state_action')
