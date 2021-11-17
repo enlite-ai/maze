@@ -130,7 +130,11 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
 
 
 class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
-    """Identity processing method"""
+    """A preprocessor used for the soft actor critic from demonstrations.
+
+    This preprocessor reads trajectories and adds the next observation to the current transition, as they are needed
+    for the state-action critic of the sac.
+    """
 
     @staticmethod
     @override(TrajectoryProcessor)
