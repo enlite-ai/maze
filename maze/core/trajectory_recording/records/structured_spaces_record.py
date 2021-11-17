@@ -105,9 +105,11 @@ class StructuredSpacesRecord:
             actor_id=ActorID(substep_key, 0),
             observation=obs[substep_key],
             action=action[substep_key],
-            reward=state_record.reward,
-            done=state_record.done
+            reward=None,
+            done=None
         ) for substep_key in obs.keys()]
+
+        substep_records[-1].done = state_record.done
 
         return StructuredSpacesRecord(substep_records=substep_records)
 

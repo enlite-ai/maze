@@ -22,7 +22,7 @@ def run_sacfd(env: str, teacher_policy: str, sac_runner: str, sac_wrappers: str,
 
     # Behavioral cloning on top of the heuristic rollout trajectories
     train_config = dict(configuration="test", env=env, wrappers=sac_wrappers,
-                        model=sac_model, algorithm="sacfD", runner=sac_runner, critic=sac_critic)
+                        model=sac_model, algorithm="sacfd", runner=sac_runner, critic=sac_critic)
     run_maze_job(train_config, config_module="maze.conf", config_name="conf_train")
 
 
