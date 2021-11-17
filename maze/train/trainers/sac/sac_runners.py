@@ -16,9 +16,7 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
-from maze.core.trajectory_recording.datasets.trajectory_processor import IdentityTrajectoryProcessor, \
-    IdentityWithNextObservationTrajectoryProcessor
-from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord, SpacesTrajectoryRecord
+from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
 from maze.train.parallelization.distributed_actors.base_distributed_workers_with_buffer import \
@@ -261,9 +259,11 @@ class SACDevRunner(SACRunner):
             replay_buffer: BaseReplayBuffer
     ) -> DummyDistributedWorkersWithBuffer:
         """Create dummy (sequentially-executed) actors."""
-        return DummyDistributedWorkersWithBuffer(env_factory, worker_policy, n_rollout_steps, n_workers, batch_size,
-                                                 rollouts_per_iteration, split_rollouts_into_transitions,
-                                                 env_instance_seeds, replay_buffer)
+        return DummyDistributedWorkersWithBuffer(env_factory=env_factory, worker_policy=worker_policy,
+                                                 n_rollout_steps=n_rollout_steps, n_workers=n_workers,
+                                                 batch_size=batch_size, rollouts_per_iteration=rollouts_per_iteration,
+                                                 split_rollouts_into_transitions=split_rollouts_into_transitions,
+                                                 env_instance_seeds=env_instance_seeds, replay_buffer=replay_buffer)
 
     @override(SACRunner)
     def create_distributed_eval_env(self,
