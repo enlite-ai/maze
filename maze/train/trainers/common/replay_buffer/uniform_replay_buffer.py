@@ -13,6 +13,7 @@ class UniformReplayBuffer(BaseReplayBuffer):
     """ Replay buffer for off policy learning.
 
     :param buffer_size: The maximum buffer size.
+    :param seed: The random seed used for initializing the uniform random sampling in the buffer.
     """
 
     def __init__(self, buffer_size: int, seed: int):
@@ -29,7 +30,6 @@ class UniformReplayBuffer(BaseReplayBuffer):
     def add_transition(self, transition: Union[StructuredSpacesRecord, SpacesTrajectoryRecord]) -> None:
         """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
-        assert isinstance(transition, (StructuredSpacesRecord, SpacesTrajectoryRecord))
         self._buffer[self._buffer_idx] = transition
         self._fill_state = max(self._buffer_idx + 1, self._fill_state)
         self._buffer_idx = (self._buffer_idx + 1) % self._buffer_size
