@@ -105,7 +105,6 @@ class StructuredSpacesRecord:
             actor_id=ActorID(substep_key, 0),
             observation=obs[substep_key],
             action=action[substep_key],
-            # TODO: Ask Kristian why this was None
             reward=state_record.reward,
             done=state_record.done
         ) for substep_key in obs.keys()]
