@@ -98,6 +98,7 @@ class SACRunner(TrainingRunner):
                                                                         eval_env=eval_env,
                                                                         model_selection=self._model_selection)
 
+        # Init replay buffer
         replay_buffer = UniformReplayBuffer(cfg.algorithm.replay_buffer_size, seed=replay_buffer_seed)
         if cfg.runner.initial_demonstration_trajectories:
             self.load_replay_buffer(replay_buffer=replay_buffer, cfg=cfg)
@@ -106,7 +107,7 @@ class SACRunner(TrainingRunner):
                 replay_buffer=replay_buffer, initial_sampling_policy=cfg.algorithm.initial_sampling_policy,
                 initial_buffer_size=cfg.algorithm.initial_buffer_size, replay_buffer_seed=replay_buffer_seed,
                 split_rollouts_into_transitions=cfg.algorithm.split_rollouts_into_transitions,
-                n_rollout_steps=cfg.algorithm.n_rollout_steps)
+                n_rollout_steps=cfg.algorithm.n_rollout_steps, env_factory=self.env_factory)
 
         distributed_actors = self.create_distributed_rollout_workers(
             env_factory=self.env_factory, worker_policy=worker_policy, n_rollout_steps=cfg.algorithm.n_rollout_steps,
@@ -131,7 +132,7 @@ class SACRunner(TrainingRunner):
 
     def load_replay_buffer(self, replay_buffer: BaseReplayBuffer,
                            cfg: DictConfig) -> None:
-        """Load the given trajectories as a dataset and fill the buffer with the trajectories.
+        """Load the given trajectories as a dataset and fill the buffer with these trajectories.
 
         :param replay_buffer: The replay buffer to fill.
         :param cfg: The dict config of the experiment.
