@@ -150,7 +150,7 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
                  lists contains observation/action dictionaries, with keys corresponding to IDs of structured
                  sub-steps. (I.e., the dictionary will have just one entry for non-structured scenarios.)
         """
-        step_records = []
+        spaces_records = []
 
         for step_id, step_record in enumerate(trajectory.step_records[::-1]):
 
@@ -167,17 +167,25 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
                         continue
 
                 # Convert to spaces
-                step_record: StructuredSpacesRecord = StructuredSpacesRecord.converted_from(step_record, conversion_env=conversion_env,
-                                                                    first_step_in_episode=step_id == len(trajectory.step_records))
+                spaces_record: StructuredSpacesRecord = StructuredSpacesRecord.converted_from(step_record,
+                                                                                            conversion_env=conversion_env,
+                                                                                            first_step_in_episode=step_id == len(
+                                                                                                trajectory.step_records))
+                assert len(spaces_record.substep_records) == 1, f'Only spaces with one substep are supported at this ' \
+                                                                f'point'
+                spaces_record.substep_records[-1].reward = step_record.reward
+            else:
+                spaces_record = step_record
+
             if step_id > 0:
-                for substep, next_substep in zip(step_record.substep_records, step_records[-1].substep_records):
+                for substep, next_substep in zip(spaces_record.substep_records, spaces_records[-1].substep_records):
                     substep.next_observation = next_substep.observation
 
-            step_records.append(step_record)
+            spaces_records.append(spaces_record)
 
-        step_records = step_records[1:][::-1]
+        spaces_records = spaces_records[1:][::-1]
 
-        return step_records
+        return spaces_records
 
     @override(TrajectoryProcessor)
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
