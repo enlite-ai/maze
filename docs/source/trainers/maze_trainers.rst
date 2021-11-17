@@ -227,7 +227,7 @@ SAC exhibits high sample efficiency, is stable across different random seeds,
 and achieves competitive performance especially for continuous control tasks.
 In contrast to A2C, PPO and IMPALA it utilizes a stochastic state-action critic.
 
-Additionally our implementation allows to initialize the replay buffer from existing demonstrations (e.g., rollouts)
+Additionally, our implementation allows to initialize the replay buffer from existing demonstrations (e.g., rollouts)
 instead of sampling the initial transitions with the given sampling policy (per default random). This variant is called
 Soft Actor-Critic from Demonstrations.
 
@@ -264,7 +264,7 @@ preprint arXiv:1910.07207.
     .. code-tab:: console
 
         $ maze-run env.name=LunarLander-v2 policy=lunar_lander_heuristics runner.n_episodes=1000
-        $ maze-run -cn conf_train env.name=LunarLander-v2 algorithm=sacfD model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
+        $ maze-run -cn conf_train env.name=LunarLander-v2 algorithm=sacfd model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
 
     .. code-tab:: python
 
@@ -290,7 +290,7 @@ preprint arXiv:1910.07207.
             agent=agent)
 
         rc = RunContext(
-            algorithm="sacfD",
+            algorithm="sacfd",
             overrides={"env.name": "LunarLander-v2",
                        "runner.initial_demonstration_trajectories.input_data": "<absolute_experiment_path>/trajectory_data"},
             model="flatten_concat",
@@ -325,16 +325,16 @@ preprint arXiv:1910.07207.
 
 **Runner Parameters SACfD** | :class:`~maze.train.trainers.sac.sac_runners.SACRunner`
 
-:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfD-dev.yaml)</summary>`
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfd-dev.yaml)</summary>`
 
-.. literalinclude:: ../../../maze/conf/algorithm_runner/sacfD-dev.yaml
+.. literalinclude:: ../../../maze/conf/algorithm_runner/sacfd-dev.yaml
   :language: YAML
 
 :raw-html:`</details>`
 
-:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfD-local.yaml)</summary>`
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfd-local.yaml)</summary>`
 
-.. literalinclude:: ../../../maze/conf/algorithm_runner/sacfD-local.yaml
+.. literalinclude:: ../../../maze/conf/algorithm_runner/sacfd-local.yaml
   :language: YAML
 
 :raw-html:`</details>`
