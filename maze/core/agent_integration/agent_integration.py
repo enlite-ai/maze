@@ -14,21 +14,21 @@ states from the agent integration and passes MazeActions back.
 """
 from queue import Queue
 from threading import Event, Thread
-from typing import Any, Dict, Union, List, Type, Optional
+from typing import Any, Dict, Union, List, Optional
 
 import numpy as np
 
 from maze.core.agent.policy import Policy
-from maze.core.agent_integration.agent_execution import AgentExecution, ExceptionReport
-from maze.core.agent_integration.maze_action_candidates import ActionConversionCandidatesInterface
 from maze.core.agent_integration.external_core_env import ExternalCoreEnv
-from maze.core.env.action_conversion import ActionConversionInterface
+from maze.core.agent_integration.maze_action_candidates import ActionConversionCandidatesInterface
+from maze.core.agent_integration.policy_executor import PolicyExecutor, ExceptionReport
+from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
-from maze.core.env.observation_conversion import ObservationConversionInterface
 from maze.core.env.structured_env import ActorID
 from maze.core.events.event_record import EventRecord
-from maze.core.rendering.renderer import Renderer
+from maze.core.utils.config_utils import EnvFactory
+from maze.core.utils.factory import ConfigType, CollectionOfConfigType, Factory
 from maze.core.wrappers.wrapper import Wrapper
 
 
@@ -60,13 +60,10 @@ class AgentIntegration:
     """
 
     def __init__(self,
-                 policy: Policy,
-                 action_conversions: Dict[Union[str, int], ActionConversionInterface],
-                 observation_conversions: Dict[Union[str, int], ObservationConversionInterface],
-                 num_candidates: int = 1,
-                 wrapper_types: Optional[List[Type[Wrapper]]] = None,
-                 wrapper_kwargs: Optional[List[Dict[str, Any]]] = None,
-                 renderer: Optional[Renderer] = None):
+                 policy: ConfigType,
+                 env: ConfigType,
+                 wrappers: CollectionOfConfigType = None,
+                 num_candidates: int = 1):
         self.rollout_done = False
 
         # Thread synchronisation
@@ -74,35 +71,41 @@ class AgentIntegration:
         self.maze_action_queue = Queue(maxsize=1)
         self.rollout_done_event = Event()
 
-        # If we are working with multiple candidate actions, wrap the action_conversion interface
-        if num_candidates > 1:
-            for policy_id, action_conversion in action_conversions.items():
-                action_conversions[policy_id] = ActionConversionCandidatesInterface(action_conversion)
-
-        # Env & wrappers
+        # Build simulation env from config (like we would do during training), then swap core env for external one
+        self.env = EnvFactory(env, wrappers if wrappers else {})()
         self.external_env = ExternalCoreEnv(self.state_queue, self.maze_action_queue, self.rollout_done_event,
-                                            renderer=renderer)
-        self.wrapped_env = MazeEnv(self.external_env, action_conversions, observation_conversions)
-        if wrapper_types is None:
-            wrapper_types = []
-        assert wrapper_kwargs is None or len(wrapper_kwargs) == len(wrapper_types), \
-            "Count of provided wrapper key-word argument dicts must correspond to the count of provided wrappers."
-        for i, wrapper_type in enumerate(wrapper_types):
-            kwargs = wrapper_kwargs[i] if wrapper_kwargs is not None else {}
-            self.wrapped_env = wrapper_type.wrap(self.wrapped_env, **kwargs)
+                                            renderer=self.env.core_env.get_renderer())
 
-        # Agent/policy wrapper
-        self.agent = AgentExecution(self.wrapped_env, policy, self.rollout_done_event, num_candidates)
-        self.agent_thread = Thread(target=self.agent.run_rollout_maze, daemon=True)
-        self.agent_thread.start()
+        # Temporary hack: Due to fake classes generated in each Wrapper, we need to make sure
+        # we swap the core env directly on the MazeEnv, not on any wrapper above it
+        maze_env = self.env
+        while hasattr(maze_env.env, "env"):
+            maze_env = maze_env.env
+        maze_env.core_env = self.external_env
 
-    def get_maze_action(self,
-                        maze_state: MazeStateType,
-                        reward: Union[None, float, np.ndarray, Any],
-                        done: bool,
-                        info: Union[None, Dict[Any, Any]],
-                        events: Optional[List[EventRecord]] = None,
-                        actor_id: ActorID = ActorID(0, 0)):
+        # If we are working with multiple candidate actions, wrap the action_conversion interfaces
+        if num_candidates > 1:
+            for policy_id, action_conversion in self.env.action_conversion_dict.items():
+                self.env.action_conversion_dict[policy_id] = ActionConversionCandidatesInterface(action_conversion)
+
+        # Policy executor, running the rollout loop on a separate thread
+        self.policy = Factory(base_type=Policy).instantiate(policy)
+        self.policy_executor = PolicyExecutor(
+            env=self.env,
+            policy=self.policy,
+            rollout_done_event=self.rollout_done_event,
+            exception_queue=self.maze_action_queue,
+            num_candidates=num_candidates)
+        self.policy_thread = Thread(target=self.policy_executor.run_rollout_loop, daemon=True)
+        self.policy_thread.start()
+
+    def act(self,
+            maze_state: MazeStateType,
+            reward: Union[None, float, np.ndarray, Any],
+            done: bool,
+            info: Union[None, Dict[Any, Any]],
+            events: Optional[List[EventRecord]] = None,
+            actor_id: ActorID = ActorID(0, 0)) -> MazeActionType:
         """Query the agent for MazeAction derived from the given state.
 
         Passes the state etc. to the agent's thread, where it is integrated into an ordinary env rollout loop.
@@ -133,12 +136,12 @@ class AgentIntegration:
 
         return maze_action
 
-    def finish_rollout(self,
-                       maze_state: MazeStateType,
-                       reward: Union[float, np.ndarray, Any],
-                       done: bool,
-                       info: Dict[Any, Any],
-                       events: Optional[List[EventRecord]] = None):
+    def close(self,
+              maze_state: MazeStateType,
+              reward: Union[float, np.ndarray, Any],
+              done: bool,
+              info: Dict[Any, Any],
+              events: Optional[List[EventRecord]] = None):
         """
         Should be called when the rollout is finished. While this has no effect on the provided MazeActions,
         it passes an env reset call through the wrapper stack, enabling the wrappers to do any work they
@@ -153,4 +156,4 @@ class AgentIntegration:
         self.rollout_done = True
         self.rollout_done_event.set()
         self.state_queue.put((maze_state, reward, done, info, events))
-        self.agent_thread.join()
+        self.policy_thread.join()
