@@ -27,41 +27,39 @@ from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.dummy_env.dummy_renderer import DummyRenderer
-from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
+from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
+    build_dummy_maze_env_with_structured_core_env, build_dummy_structured_env
 
 
 @pytest.mark.rllib
 def test_steps_env_with_single_policy():
-    env = build_dummy_maze_env()
-    core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
-
-    policy = DummyGreedyPolicy()
     agent_integration = AgentIntegration(
-        policy=policy,
-        action_conversions={0: act_conv},
-        observation_conversions={0: obs_conv}
+        policy=DummyGreedyPolicy(),
+        env=build_dummy_maze_env()
     )
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
-    maze_state = env.reset()
+    test_policy = DummyGreedyPolicy()
+    test_env = build_dummy_maze_env()
+    maze_state = test_env.reset()
     reward, done, info = None, None, None
 
     for i in range(10):
-        maze_action = agent_integration.get_maze_action(maze_state, reward, done, info)
+        maze_action = agent_integration.act(maze_state, reward, done, info)
 
         # Compare with the expected maze_action on top of the env that we are stepping
-        expected_maze_action = act_conv.space_to_maze(
-            policy.compute_action(observation=obs_conv.maze_to_space(maze_state),
-                                  maze_state=maze_state, deterministic=True), maze_state
-        )
-        assert expected_maze_action.keys() == maze_action.keys()
-        assert np.all(expected_maze_action[key] == maze_action[key] for key in maze_action.keys())
+        raw_expected_action = test_policy.compute_action(observation=test_env.observation_conversion.maze_to_space(maze_state),
+                                                         maze_state=maze_state, deterministic=True)
+        expected_action = test_env.action_conversion.space_to_maze(raw_expected_action, maze_state
+                                                                   )
+        assert expected_action.keys() == maze_action.keys()
+        assert np.all(expected_action[key] == maze_action[key] for key in maze_action.keys())
 
-        maze_state, reward, done, info = core_env.step(maze_action)
+        maze_state, reward, done, info = test_env.step(expected_action)
 
 
 @pytest.mark.rllib
-def test_handles_multiple_policies():
+def test_handles_multi_step_scenarios():
     """
     Tests whether AgentIntegration handles multiple policies.
     """
@@ -96,21 +94,19 @@ def test_handles_multiple_policies():
             """Not used"""
             raise NotImplementedError
 
-    env = build_dummy_maze_env()
-    core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
-    static_actions = (act_conv.space().sample(), act_conv.space().sample())
+    # Get two random static actions
+    env = build_dummy_structured_env()
+    static_actions = (env.action_spaces_dict[0].sample(), env.action_spaces_dict[1].sample())
 
     agent_integration = AgentIntegration(
         policy=StaticPolicy(static_actions),
-        action_conversions={0: act_conv, 1: act_conv},
-        observation_conversions={0: obs_conv, 1: obs_conv}
+        env=build_dummy_structured_env()  # Build a separate env
     )
 
-    s = env.reset()  # Just get a valid state, the content is not really important
+    test_core_env = build_dummy_structured_env().core_env
+    s = test_core_env.reset()
     for i in range(10):
-        pol_id = i % 2
-        maze_action = agent_integration.get_maze_action(s, 0, False, {}, actor_id=ActorID(pol_id, 0))
-        assert maze_action == static_actions[pol_id]  # We should get action from the correct policy
+        maze_action = agent_integration.act(s, 0, False, {},)
 
 
 @pytest.mark.rllib
@@ -136,29 +132,23 @@ def test_supports_trajectory_recording_wrapper():
     TrajectoryWriterRegistry.writers = []  # Ensure there is no other writer
     TrajectoryWriterRegistry.register_writer(writer)
 
-    env = build_dummy_maze_env()
-    core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
-
-    policy = DummyGreedyPolicy()
     agent_integration = AgentIntegration(
-        policy=policy,
-        action_conversions={0: act_conv},
-        observation_conversions={0: obs_conv},
-        wrapper_types=[TrajectoryRecordingWrapper],
-        renderer=DummyRenderer()
+        policy=DummyGreedyPolicy(),
+        env=TrajectoryRecordingWrapper.wrap(build_dummy_maze_env()),
     )
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
-    maze_state = env.reset()
+    test_core_env = build_dummy_maze_env().core_env
+    maze_state = test_core_env.reset()
     reward, done, info = None, None, None
-    for i in range(step_count):
-        maze_action = agent_integration.get_maze_action(maze_state, reward, done, info)
-        maze_state, reward, done, info = core_env.step(maze_action)
+    for i in range(10):
+        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_state, reward, done, info = test_core_env.step(maze_action)
 
     # Rollout needs to be finished to notify the wrappers
-    agent_integration.finish_rollout(maze_state, reward, done, info)
+    agent_integration.close(maze_state, reward, done, info)
 
-    assert writer.step_count
+    assert writer.step_count == step_count + 1  # count terminal state as well
 
 
 @pytest.mark.rllib
@@ -198,30 +188,24 @@ def test_logs_events_and_records_stats():
     stats_writer = TestStatsWriter()
     register_log_stats_writer(stats_writer)
 
-    env = build_dummy_maze_env()
-    core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
-
-    policy = DummyGreedyPolicy()
     agent_integration = AgentIntegration(
-        policy=policy,
-        action_conversions={0: act_conv},
-        observation_conversions={0: obs_conv},
-        wrapper_types=[LogStatsWrapper],
-        wrapper_kwargs=[{"logging_prefix": "test"}],
-        renderer=DummyRenderer()
+        policy=DummyGreedyPolicy(),
+        env=build_dummy_maze_env(),
+        wrappers={LogStatsWrapper: {"logging_prefix": "test"}}
     )
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
-    maze_state = core_env.reset()
+    test_core_env = build_dummy_maze_env().core_env
+    maze_state = test_core_env.reset()
     reward, done, info = None, None, None
     for i in range(step_count):
-        maze_action = agent_integration.get_maze_action(maze_state, reward, done, info,
-                                                        events=list(core_env.get_step_events()))
-        state, reward, done, info = core_env.step(maze_action)
-        core_env.context.increment_env_step()  # Done by flat env ordinarily
+        maze_action = agent_integration.act(maze_state, reward, done, info,
+                                            events=list(test_core_env.get_step_events()))
+        state, reward, done, info = test_core_env.step(maze_action)
+        test_core_env.context.increment_env_step()  # Done by maze env ordinarily
 
     # Rollout needs to be finished to notify the wrappers
-    agent_integration.finish_rollout(maze_state, reward, done, info, events=list(core_env.get_step_events()))
+    agent_integration.close(maze_state, reward, done, info, events=list(test_core_env.get_step_events()))
 
     # Event logging
     assert events_writer.step_count == step_count
@@ -252,14 +236,14 @@ def test_gets_maze_action_candidates():
 
     agent_integration = AgentIntegration(
         policy=StaticPolicy(),
-        action_conversions={0: act_conv},
-        observation_conversions={0: obs_conv},
+        env=build_dummy_maze_env(),
         num_candidates=3
     )
 
-    maze_state = core_env.reset()  # Just get a valid state, the content is not really important
+    test_core_env = build_dummy_maze_env().core_env
+    maze_state = test_core_env.reset()  # Just get a valid state, the content is not really important
     for i in range(10):
-        maze_action = agent_integration.get_maze_action(maze_state, 0, False, {})
+        maze_action = agent_integration.act(maze_state, 0, False, {})
         assert isinstance(maze_action, MazeActionCandidates)
         assert maze_action.candidates[0]["action_0_0"] == 0
         assert maze_action.candidates[1]["action_0_0"] == 1
@@ -287,15 +271,12 @@ def test_propagates_exceptions_to_main_thread():
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Not used"""
 
-    env = build_dummy_maze_env()
-    core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
-
     agent_integration = AgentIntegration(
         policy=FailingPolicy(),
-        action_conversions={0: act_conv},
-        observation_conversions={0: obs_conv}
+        env=build_dummy_maze_env()
     )
 
-    s = core_env.reset()  # Just get a valid state, the content is not really important
+    test_core_env = build_dummy_maze_env().core_env
+    s = test_core_env.reset()  # Just get a valid state, the content is not really important
     with pytest.raises(RuntimeError) as e_info:
-        agent_integration.get_maze_action(s, 0, False, {})
+        agent_integration.act(s, 0, False, {})

@@ -1,6 +1,7 @@
 """Executes the provided policies in an Agent Integration setting."""
 import traceback
 from collections import namedtuple
+from queue import Queue
 from threading import Event
 
 from maze.core.agent.policy import Policy
@@ -12,7 +13,7 @@ ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
 """Tuple for passing error back to the main thread."""
 
 
-class AgentExecution:
+class PolicyExecutor:
     """Executes the provided policies in an Agent Integration setting.
 
     Policies are executed until the rollout_done event is set, indicating that the rollout has been finished.
@@ -28,13 +29,15 @@ class AgentExecution:
                  env: ExternalCoreEnv,
                  policy: Policy,
                  rollout_done_event: Event,
+                 exception_queue: Queue,
                  num_candidates: int):
         self.env = env
         self.policy = policy
         self.rollout_done_event = rollout_done_event
+        self.exception_queue = exception_queue
         self.num_candidates = num_candidates
 
-    def run_rollout_maze(self):
+    def run_rollout_loop(self):
         """Step the environment until the rollout is done."""
         try:
             # We need to reset first, otherwise no observation is available
@@ -71,5 +74,5 @@ class AgentExecution:
         except Exception as exception:
             # Send exception along with a traceback to the main thread
             exception_report = ExceptionReport(exception, traceback.format_exc())
-            self.env.maze_action_queue.put(exception_report)
+            self.exception_queue.put(exception_report)
             raise
