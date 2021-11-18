@@ -58,7 +58,7 @@ class BCValidationEvaluator(Evaluator):
                 observations, actions, actor_ids = data[0], data[1], data[-1]
                 actor_ids = debatch_actor_ids(actor_ids)
                 # Convert only actions to torch, since observations are converted in
-                #   policy.compute_substep_policy_output method
+                # policy.compute_substep_policy_output method
                 convert_to_torch(actions, device=policy.device, cast=None, in_place=True)
 
                 total_loss.append(
