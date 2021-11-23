@@ -1,14 +1,12 @@
 """Agent integration tests."""
 
-from typing import Any, Tuple, Sequence, Optional
+from typing import Tuple, Sequence, Optional
 
 import numpy as np
 import pytest
 
-from maze.core.agent.policy import Policy
 from maze.core.agent_integration.agent_integration import AgentIntegration
 from maze.core.agent_integration.maze_action_candidates import MazeActionCandidates
-from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
@@ -18,17 +16,18 @@ from maze.core.env.structured_env import ActorID
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
-from maze.core.log_stats.log_stats import LogStatsWriter, LogStats
+from maze.core.log_events.monitoring_events import RewardEvents
+from maze.core.log_stats.log_stats import LogStatsWriter, LogStats, LogStatsLevel
 from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
+from maze.test.core.wrappers.test_log_stats_wrapper import _StepInStepWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
-from maze.test.shared_test_utils.dummy_env.dummy_renderer import DummyRenderer
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
-    build_dummy_maze_env_with_structured_core_env, build_dummy_structured_env
+    build_dummy_structured_env
 
 
 @pytest.mark.rllib
@@ -48,65 +47,15 @@ def test_steps_env_with_single_policy():
         maze_action = agent_integration.act(maze_state, reward, done, info)
 
         # Compare with the expected maze_action on top of the env that we are stepping
-        raw_expected_action = test_policy.compute_action(observation=test_env.observation_conversion.maze_to_space(maze_state),
-                                                         maze_state=maze_state, deterministic=True)
+        raw_expected_action = test_policy.compute_action(
+            observation=test_env.observation_conversion.maze_to_space(maze_state),
+            maze_state=maze_state, deterministic=True)
         expected_action = test_env.action_conversion.space_to_maze(raw_expected_action, maze_state
                                                                    )
         assert expected_action.keys() == maze_action.keys()
         assert np.all(expected_action[key] == maze_action[key] for key in maze_action.keys())
 
         maze_state, reward, done, info = test_env.step(expected_action)
-
-
-@pytest.mark.rllib
-def test_handles_multi_step_scenarios():
-    """
-    Tests whether AgentIntegration handles multiple policies.
-    """
-
-    class StaticPolicy(Policy):
-        """Mock policy, returns static action provided on initialization."""
-
-        def __init__(self, static_action):
-            self.static_action = static_action
-
-        def needs_state(self) -> bool:
-            """This policy does not require the state() object to compute the action."""
-            return False
-
-        @override(Policy)
-        def seed(self, seed: int) -> None:
-            """Not applicable since heuristic is deterministic"""
-            pass
-
-        def compute_action(self,
-                           observation: ObservationType,
-                           maze_state: Optional[MazeStateType] = None,
-                           env: Optional[BaseEnv] = None,
-                           actor_id: ActorID = None,
-                           deterministic: bool = False) -> ActionType:
-            """Return the set static action"""
-            return self.static_action[actor_id.step_key]
-
-        def compute_top_action_candidates(self, observation: Any, num_candidates: Optional[int],
-                                          maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                          actor_id: ActorID = None) -> Tuple[Sequence[Any], Sequence[float]]:
-            """Not used"""
-            raise NotImplementedError
-
-    # Get two random static actions
-    env = build_dummy_structured_env()
-    static_actions = (env.action_spaces_dict[0].sample(), env.action_spaces_dict[1].sample())
-
-    agent_integration = AgentIntegration(
-        policy=StaticPolicy(static_actions),
-        env=build_dummy_structured_env()  # Build a separate env
-    )
-
-    test_core_env = build_dummy_structured_env().core_env
-    s = test_core_env.reset()
-    for i in range(10):
-        maze_action = agent_integration.act(s, 0, False, {},)
 
 
 @pytest.mark.rllib
@@ -151,8 +100,101 @@ def test_supports_trajectory_recording_wrapper():
     assert writer.step_count == step_count + 1  # count terminal state as well
 
 
+def test_supports_multi_step_wrappers():
+    env = build_dummy_structured_env()
+    env = LogStatsWrapper.wrap(env)
+    agent_integration = AgentIntegration(
+        policy=DummyGreedyPolicy(),
+        env=env
+    )
+
+    # Step the environment manually here and query the agent integration wrapper for maze_actions
+    test_core_env = build_dummy_structured_env().core_env
+    maze_state = test_core_env.reset()
+    reward, done, info = 0, False, {}
+
+    for i in range(4):
+        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_state, reward, done, info = test_core_env.step(maze_action)
+
+    agent_integration.close(maze_state, reward, done, info)
+    assert env.get_stats_value(
+        BaseEnvEvents.reward,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 4  # Step count is still 4 event with multiple sub-steps, as it is detected based on env time
+
+    assert env.get_stats_value(
+        RewardEvents.reward_original,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 4
+
+
+def test_supports_step_skipping_wrappers():
+    env = build_dummy_maze_env()
+    env = _StepInStepWrapper.wrap(env)
+    env = LogStatsWrapper.wrap(env)
+    agent_integration = AgentIntegration(
+        policy=DummyGreedyPolicy(),
+        env=env
+    )
+
+    # Step the environment manually here and query the agent integration wrapper for maze_actions
+    test_core_env = build_dummy_maze_env().core_env
+    maze_state = test_core_env.reset()
+    reward, done, info = 0, False, {}
+
+    for i in range(4):
+        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_state, reward, done, info = test_core_env.step(maze_action)
+
+    agent_integration.close(maze_state, reward, done, info)
+    assert env.get_stats_value(
+        BaseEnvEvents.reward,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 2
+
+    assert env.get_stats_value(
+        RewardEvents.reward_original,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 4
+
+
+def test_records_stats():
+    env = LogStatsWrapper.wrap(build_dummy_maze_env())
+    agent_integration = AgentIntegration(
+        policy=DummyGreedyPolicy(),
+        env=env
+    )
+
+    # Step the environment manually here and query the agent integration wrapper for maze_actions
+    test_core_env = build_dummy_maze_env().core_env
+    maze_state = test_core_env.reset()
+    reward, done, info = 0, False, {}
+
+    for i in range(5):
+        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_state, reward, done, info = test_core_env.step(maze_action)
+
+    agent_integration.close(maze_state, reward, done, info)
+    assert env.get_stats_value(
+        RewardEvents.reward_original,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 5
+
+    assert env.get_stats_value(
+        BaseEnvEvents.reward,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 5
+
+
 @pytest.mark.rllib
-def test_logs_events_and_records_stats():
+def test_writes_event_and_stats_logs():
     class TestEventsWriter(LogEventsWriter):
         """Test event writer for checking logged events."""
 
