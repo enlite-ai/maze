@@ -1,9 +1,10 @@
 """helper functions for ES"""
 import torch
-from maze.core.agent.torch_policy import TorchPolicy
+
+from maze.core.agent.torch_model import TorchModel
 
 
-def get_flat_parameters(policy: TorchPolicy) -> torch.Tensor:
+def get_flat_parameters(policy: TorchModel) -> torch.Tensor:
     """Get the parameters of all sub-policies as a single flat vector.
 
     :param policy: source policy
@@ -15,7 +16,7 @@ def get_flat_parameters(policy: TorchPolicy) -> torch.Tensor:
     return flat
 
 
-def set_flat_parameters(policy: TorchPolicy, flat_params: torch.Tensor) -> None:
+def set_flat_parameters(policy: TorchModel, flat_params: torch.Tensor) -> None:
     """Overwrite the parameters of all sub-policies by a single flat vector.
 
     :param policy: target policy
@@ -26,4 +27,3 @@ def set_flat_parameters(policy: TorchPolicy, flat_params: torch.Tensor) -> None:
         end = start + p.numel()
         p[...] = flat_params[start:end].view(*p.shape)
         start = end
-
