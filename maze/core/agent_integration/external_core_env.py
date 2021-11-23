@@ -6,6 +6,8 @@ from typing import Tuple, Any, Dict, Union, Iterable, Optional, List
 import numpy as np
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
+from maze.core.env.environment_context import EnvironmentContext
+from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import StepKeyType, ActorID
@@ -38,19 +40,21 @@ class ExternalCoreEnv(CoreEnv):
     """
 
     def __init__(self,
+                 context: EnvironmentContext,
                  state_queue: Queue,
                  maze_action_queue: Queue,
                  rollout_done_event: Event,
-                 renderer: Optional[Renderer]):
+                 renderer: Optional[Renderer] = None,
+                 kpi_calculator: Optional[KpiCalculator] = None):
         super().__init__()
+        self.context = context
         self.state_queue = state_queue
         self.maze_action_queue = maze_action_queue
         self.rollout_done_event = rollout_done_event
         self.renderer = renderer
+        self.kpi_calculator = kpi_calculator
 
         self.last_maze_state = None
-        self.step_events: Optional[List[EventRecord]] = None
-
         self._actor_id = (0, 0)
         self._is_actor_done = False
 
@@ -69,7 +73,8 @@ class ExternalCoreEnv(CoreEnv):
         # If the external env has been declared done, just return the last state again (as no more states are available)
         if not self.rollout_done_event.is_set():
             self.last_maze_state, _, _, _, events = self.state_queue.get()
-            self.step_events = events
+            self._replay_events(events)
+
         return self.last_maze_state
 
     @override(CoreEnv)
@@ -84,7 +89,7 @@ class ExternalCoreEnv(CoreEnv):
 
         state, reward, done, info, events = self.state_queue.get()
         self.last_maze_state = state
-        self.step_events = events
+        self._replay_events(events)
 
         # Increment step and clear events - structured core environments are not supported
         self.context.increment_env_step()
@@ -129,19 +134,19 @@ class ExternalCoreEnv(CoreEnv):
         """Renderer provided by the agent integration. Might be None if not available. """
         return self.renderer
 
-    @override(CoreEnv)
+    @override(EventEnvMixin)
     def get_step_events(self) -> Iterable[EventRecord]:
-        """Return events provided by the agent integration."""
-        return self.step_events if self.step_events is not None else []
+        """Get all events recorded in the current step from the EventService."""
+        return self.context.event_service.iterate_event_records()
 
     @override(CoreEnv)
     def get_kpi_calculator(self) -> Optional[KpiCalculator]:
-        """No KPI calculator available."""
-        return None
+        """KPI calculator provided by the agent integration. Might be None if not available. """
+        return self.kpi_calculator
 
     @override(CoreEnv)
     def get_serializable_components(self) -> Dict[str, Any]:
-        """No components required."""
+        """No components available."""
         return {}
 
     @override(CoreEnv)
@@ -153,3 +158,12 @@ class ExternalCoreEnv(CoreEnv):
     def close(self) -> None:
         """No cleanup required."""
         pass
+
+    # -- External core env helpers --
+
+    def _replay_events(self, events: Optional[Iterable[EventRecord]]) -> None:
+        """Notify the event service about each of the events passed in from outside."""
+        if events:
+            for event in events:
+                self.context.event_service.notify_event(event)
+
