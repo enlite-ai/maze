@@ -1,7 +1,8 @@
 """Simplest possible implementation of the distributed rollout interface."""
-from typing import Generator, Optional
+from typing import Generator, Optional, Union
 
-from maze.core.agent.torch_policy import TorchPolicy
+from maze.core.agent.policy import Policy
+from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
@@ -26,7 +27,7 @@ class ESDummyDistributedRollouts(ESDistributedRollouts):
 
     @override(ESDistributedRollouts)
     def generate_rollouts(self,
-                          policy: TorchPolicy,
+                          policy: Union[Policy, TorchModel],
                           max_steps: Optional[int],
                           noise_stddev: float,
                           normalization_stats: StructuredStatisticsType

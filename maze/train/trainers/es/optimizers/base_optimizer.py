@@ -3,7 +3,8 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
-from maze.core.agent.torch_policy import TorchPolicy
+
+from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.es.es_utils import get_flat_parameters, set_flat_parameters
 
 
@@ -11,11 +12,11 @@ class Optimizer(ABC):
     """Abstract baseclass of an optimizer to be used with ES."""
 
     def __init__(self):
-        self.policy: Optional[TorchPolicy] = None
+        self.policy: Optional[TorchModel] = None
         self.dim: Optional[int] = None
         self.t: Optional[int] = None
 
-    def setup(self, policy: TorchPolicy) -> None:
+    def setup(self, policy: TorchModel) -> None:
         """Two-stage construction to enable construction from config-files.
 
         :param policy: ES policy network to optimize
