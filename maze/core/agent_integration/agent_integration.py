@@ -73,8 +73,12 @@ class AgentIntegration:
 
         # Build simulation env from config (like we would do during training), then swap core env for external one
         self.env = EnvFactory(env, wrappers if wrappers else {})()
-        self.external_env = ExternalCoreEnv(self.state_queue, self.maze_action_queue, self.rollout_done_event,
-                                            renderer=self.env.core_env.get_renderer())
+        self.external_env = ExternalCoreEnv(
+            context=self.env.core_env.context,
+            state_queue=self.state_queue,
+            maze_action_queue=self.maze_action_queue,
+            rollout_done_event=self.rollout_done_event,
+            renderer=self.env.core_env.get_renderer())
 
         # Temporary hack: Due to fake classes generated in each Wrapper, we need to make sure
         # we swap the core env directly on the MazeEnv, not on any wrapper above it
