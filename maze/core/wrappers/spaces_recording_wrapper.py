@@ -1,3 +1,6 @@
+"""Wrapper for recording raw actions and observation, as seen in a particular
+point in the wrapper stack (where this wrapper is placed)."""
+
 import pickle
 from typing import Union, Any, Tuple, Dict, Optional
 
@@ -53,6 +56,7 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
         # If the env time changed, start a new structured step record
         if self.env.get_env_time() != self.last_env_time:
             self.episode_record.step_records.append(StructuredSpacesRecord())
+            self.last_env_time = self.env.get_env_time()
 
         actor_id = self.env.actor_id()  # Get actor Id before the step, so it corresponds to the action taken
         observation, reward, done, info = self.env.step(action)
