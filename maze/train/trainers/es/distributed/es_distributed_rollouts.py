@@ -1,9 +1,11 @@
 """General interface definitions for distribution of Evolution Strategies."""
 from abc import ABC, abstractmethod
-from typing import List, Generator, Optional, Tuple, Dict
+from typing import List, Generator, Optional, Tuple, Dict, Union
 
 import numpy as np
-from maze.core.agent.torch_policy import TorchPolicy
+
+from maze.core.agent.policy import Policy
+from maze.core.agent.torch_model import TorchModel
 from maze.core.log_stats.log_stats import LogStats
 
 
@@ -24,7 +26,7 @@ class ESDistributedRollouts(ABC):
 
     @abstractmethod
     def generate_rollouts(self,
-                          policy: TorchPolicy,
+                          policy: Union[Policy, TorchModel],
                           max_steps: Optional[int],
                           noise_stddev: float,
                           normalization_stats: Dict[str, Tuple[np.ndarray, np.ndarray]]
