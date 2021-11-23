@@ -1,7 +1,7 @@
 """Wrapper for recording raw actions and observation, as seen in a particular
 point in the wrapper stack (where this wrapper is placed)."""
-
 import pickle
+from pathlib import Path
 from typing import Union, Any, Tuple, Dict, Optional
 
 import gym
@@ -24,18 +24,19 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
 
     Dumps one trajectory record file per episode.
 
-    :param dump_file_prefix: Prefix for the dump file (might also include path). When serializing
-                             the episode record, episode ID and ".pkl" suffix will be appended to it.
+    :param output_dir: Where to dump the serialized trajectory data. Files for individual episodes
+                       will be named after the episode ID, with ".pkl" suffix.
     """
 
-    def __init__(self, env: Union[gym.Env, MazeEnv], dump_file_prefix: str = "spaces_record_"):
+    def __init__(self, env: Union[gym.Env, MazeEnv], output_dir: str = "space_records"):
         super().__init__(env)
 
         self.episode_record: Optional[SpacesTrajectoryRecord] = None
         self.last_observation = Optional[ObservationType]
         self.last_env_time: Optional[int] = None
 
-        self.dump_file_prefix = dump_file_prefix
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
     @override(BaseEnv)
     def reset(self) -> Any:
@@ -77,7 +78,8 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
     def write_episode_record(self) -> None:
         """Serializes the episode record, if available."""
         if self.episode_record and len(self.episode_record.step_records) > 0:
-            with open(f"{self.dump_file_prefix}{self.episode_record.id}.pkl", "wb") as out_f:
+            output_path = self.output_dir / f"{self.episode_record.id}.pkl"
+            with open(output_path, "wb") as out_f:
                 pickle.dump(self.episode_record, out_f)
 
     @override(Wrapper)
