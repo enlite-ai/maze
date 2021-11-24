@@ -31,7 +31,8 @@ class SerializedActorCritic(TorchActorCritic):
         model_composer = Factory(base_type=BaseModelComposer).instantiate(
             model,
             action_spaces_dict=spaces_config.action_spaces_dict,
-            observation_spaces_dict=spaces_config.observation_spaces_dict
+            observation_spaces_dict=spaces_config.observation_spaces_dict,
+            agent_counts_dict=spaces_config.agent_counts_dict
         )
 
         super().__init__(policy=model_composer.policy,
