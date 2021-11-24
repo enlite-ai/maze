@@ -22,14 +22,13 @@ from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
-from maze.core.utils.config_utils import EnvFactory
+from maze.core.utils.config_utils import EnvFactory, read_hydra_config
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.test.core.wrappers.test_log_stats_wrapper import _StepInStepWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
     build_dummy_structured_env
-from maze.test.shared_test_utils.run_maze_utils import build_hydra_config
 
 
 def test_steps_env_with_single_policy():
@@ -322,10 +321,8 @@ def test_propagates_exceptions_to_main_thread():
 
 
 def test_configures_from_hydra():
-    cfg = build_hydra_config(
-        hydra_overrides=dict(env="gym_env"),
-        config_module="maze.conf",
-        config_name="conf_rollout")
+    # Note: Needs to be `conf_rollout`, so the policy config is present as well
+    cfg = read_hydra_config(config_module="maze.conf", config_name="conf_rollout", env="gym_env")
 
     agent_integration = AgentIntegration(
         policy=cfg.policy,
