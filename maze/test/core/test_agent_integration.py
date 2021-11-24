@@ -5,8 +5,8 @@ from typing import Tuple, Sequence, Optional
 import numpy as np
 import pytest
 
-from maze.core.agent_integration.agent_integration import AgentIntegration
-from maze.core.agent_integration.maze_action_candidates import MazeActionCandidates
+from maze.core.agent_deployment.agent_deployment import AgentDeployment
+from maze.core.agent_deployment.maze_action_candidates import MazeActionCandidates
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
@@ -32,7 +32,7 @@ from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
 
 
 def test_steps_env_with_single_policy():
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
         env=build_dummy_maze_env()
     )
@@ -44,7 +44,7 @@ def test_steps_env_with_single_policy():
     reward, done, info = None, None, None
 
     for i in range(10):
-        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_action = agent_deployment.act(maze_state, reward, done, info)
 
         # Compare with the expected maze_action on top of the env that we are stepping
         raw_expected_action = test_policy.compute_action(
@@ -80,7 +80,7 @@ def test_supports_trajectory_recording_wrapper():
     TrajectoryWriterRegistry.writers = []  # Ensure there is no other writer
     TrajectoryWriterRegistry.register_writer(writer)
 
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
         env=TrajectoryRecordingWrapper.wrap(build_dummy_maze_env()),
     )
@@ -90,11 +90,11 @@ def test_supports_trajectory_recording_wrapper():
     maze_state = test_core_env.reset()
     reward, done, info = None, None, None
     for i in range(10):
-        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_action = agent_deployment.act(maze_state, reward, done, info)
         maze_state, reward, done, info = test_core_env.step(maze_action)
 
     # Rollout needs to be finished to notify the wrappers
-    agent_integration.close(maze_state, reward, done, info)
+    agent_deployment.close(maze_state, reward, done, info)
 
     assert writer.step_count == step_count + 1  # count terminal state as well
 
@@ -102,7 +102,7 @@ def test_supports_trajectory_recording_wrapper():
 def test_supports_multi_step_wrappers():
     env = build_dummy_structured_env()
     env = LogStatsWrapper.wrap(env)
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
         env=env
     )
@@ -113,10 +113,10 @@ def test_supports_multi_step_wrappers():
     reward, done, info = 0, False, {}
 
     for i in range(4):
-        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_action = agent_deployment.act(maze_state, reward, done, info)
         maze_state, reward, done, info = test_core_env.step(maze_action)
 
-    agent_integration.close(maze_state, reward, done, info)
+    agent_deployment.close(maze_state, reward, done, info)
     assert env.get_stats_value(
         BaseEnvEvents.reward,
         LogStatsLevel.EPOCH,
@@ -134,7 +134,7 @@ def test_supports_step_skipping_wrappers():
     env = build_dummy_maze_env()
     env = _StepInStepWrapper.wrap(env)
     env = LogStatsWrapper.wrap(env)
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
         env=env
     )
@@ -145,10 +145,10 @@ def test_supports_step_skipping_wrappers():
     reward, done, info = 0, False, {}
 
     for i in range(4):
-        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_action = agent_deployment.act(maze_state, reward, done, info)
         maze_state, reward, done, info = test_core_env.step(maze_action)
 
-    agent_integration.close(maze_state, reward, done, info)
+    agent_deployment.close(maze_state, reward, done, info)
     assert env.get_stats_value(
         BaseEnvEvents.reward,
         LogStatsLevel.EPOCH,
@@ -164,7 +164,7 @@ def test_supports_step_skipping_wrappers():
 
 def test_records_stats():
     env = LogStatsWrapper.wrap(build_dummy_maze_env())
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
         env=env
     )
@@ -175,10 +175,10 @@ def test_records_stats():
     reward, done, info = 0, False, {}
 
     for i in range(5):
-        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_action = agent_deployment.act(maze_state, reward, done, info)
         maze_state, reward, done, info = test_core_env.step(maze_action)
 
-    agent_integration.close(maze_state, reward, done, info)
+    agent_deployment.close(maze_state, reward, done, info)
     assert env.get_stats_value(
         RewardEvents.reward_original,
         LogStatsLevel.EPOCH,
@@ -228,7 +228,7 @@ def test_writes_event_and_stats_logs():
     stats_writer = TestStatsWriter()
     register_log_stats_writer(stats_writer)
 
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
         env=build_dummy_maze_env(),
         wrappers={LogStatsWrapper: {"logging_prefix": "test"}}
@@ -239,13 +239,13 @@ def test_writes_event_and_stats_logs():
     maze_state = test_core_env.reset()
     reward, done, info = None, None, None
     for i in range(step_count):
-        maze_action = agent_integration.act(maze_state, reward, done, info,
+        maze_action = agent_deployment.act(maze_state, reward, done, info,
                                             events=list(test_core_env.get_step_events()))
         state, reward, done, info = test_core_env.step(maze_action)
         test_core_env.context.increment_env_step()  # Done by maze env ordinarily
 
     # Rollout needs to be finished to notify the wrappers
-    agent_integration.close(maze_state, reward, done, info, events=list(test_core_env.get_step_events()))
+    agent_deployment.close(maze_state, reward, done, info, events=list(test_core_env.get_step_events()))
 
     # Event logging
     assert events_writer.step_count == step_count
@@ -273,7 +273,7 @@ def test_gets_maze_action_candidates():
     env = build_dummy_maze_env()
     core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
 
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=StaticPolicy(),
         env=build_dummy_maze_env(),
         num_candidates=3
@@ -282,7 +282,7 @@ def test_gets_maze_action_candidates():
     test_core_env = build_dummy_maze_env().core_env
     maze_state = test_core_env.reset()  # Just get a valid state, the content is not really important
     for i in range(10):
-        maze_action = agent_integration.act(maze_state, 0, False, {})
+        maze_action = agent_deployment.act(maze_state, 0, False, {})
         assert isinstance(maze_action, MazeActionCandidates)
         assert maze_action.candidates[0]["action_0_0"] == 0
         assert maze_action.candidates[1]["action_0_0"] == 1
@@ -309,7 +309,7 @@ def test_propagates_exceptions_to_main_thread():
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Not used"""
 
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=FailingPolicy(),
         env=build_dummy_maze_env()
     )
@@ -317,14 +317,14 @@ def test_propagates_exceptions_to_main_thread():
     test_core_env = build_dummy_maze_env().core_env
     s = test_core_env.reset()  # Just get a valid state, the content is not really important
     with pytest.raises(RuntimeError) as e_info:
-        agent_integration.act(s, 0, False, {})
+        agent_deployment.act(s, 0, False, {})
 
 
 def test_configures_from_hydra():
     # Note: Needs to be `conf_rollout`, so the policy config is present as well
     cfg = read_hydra_config(config_module="maze.conf", config_name="conf_rollout", env="gym_env")
 
-    agent_integration = AgentIntegration(
+    agent_deployment = AgentDeployment(
         policy=cfg.policy,
         env=cfg.env,
         wrappers=cfg.wrappers
@@ -336,11 +336,11 @@ def test_configures_from_hydra():
     reward, done, info = 0, False, {}
 
     for i in range(10):
-        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_action = agent_deployment.act(maze_state, reward, done, info)
         maze_state, reward, done, info = external_env.step(maze_action)
 
-    agent_integration.close(maze_state, reward, done, info)
-    assert agent_integration.env.get_stats_value(
+    agent_deployment.close(maze_state, reward, done, info)
+    assert agent_deployment.env.get_stats_value(
         BaseEnvEvents.reward,
         LogStatsLevel.EPOCH,
         name="total_step_count"
