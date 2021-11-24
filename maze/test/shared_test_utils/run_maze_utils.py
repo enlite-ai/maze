@@ -2,8 +2,8 @@
 import subprocess
 from typing import Dict
 
-from hydra.core.hydra_config import HydraConfig
 from hydra import initialize_config_module, compose
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import open_dict, DictConfig
 
 from maze.maze_cli import maze_run
@@ -11,6 +11,18 @@ from maze.maze_cli import maze_run
 
 def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_name: str) -> DictConfig:
     """Runs rollout with the given config overrides using maze_run.
+
+    :param hydra_overrides: Config overrides for hydra.
+    :param config_module: The config module.
+    :param config_name: The name of the default config.
+    """
+    cfg = build_hydra_config(hydra_overrides, config_module, config_name)
+    maze_run(cfg)
+    return cfg
+
+
+def build_hydra_config(hydra_overrides: Dict[str, str], config_module: str, config_name: str) -> DictConfig:
+    """Builds hydra config from the given name, module, and overrides.
 
     :param hydra_overrides: Config overrides for hydra.
     :param config_module: The config module.
@@ -27,12 +39,9 @@ def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_nam
         # (otherwise we only have the config object, but not the full run environment)
         HydraConfig.instance().set_config(cfg)
 
-        # For the rollout itself, the Hydra config should not be there anymore
+        # For the run itself, the Hydra config should not be there anymore
         with open_dict(cfg):
             del cfg["hydra"]
-
-        # Run the rollout
-        maze_run(cfg)
 
     return cfg
 
