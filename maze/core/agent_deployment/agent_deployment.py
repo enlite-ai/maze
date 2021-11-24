@@ -54,7 +54,7 @@ class AgentDeployment:
     :param observation_conversions: Observation interfaces for the respective policies.
     :param num_candidates: Number of MazeAction candidates to get from the policy. If greater than 1, will return
                            multiple MazeActions wrapped in
-                           :class:`~maze.core.agent_integration.maze_action_candidates.MazeActionCandidates`
+                           :class:`~maze.core.agent_deployment.maze_action_candidates.MazeActionCandidates`
     :param wrapper_types: Which wrappers should be run as part of the agent's stack.
     :param wrapper_kwargs: Optional arguments to pass to the given wrappers on instantiation.
     """
