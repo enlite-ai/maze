@@ -19,9 +19,9 @@ from typing import Any, Dict, Union, List, Optional
 import numpy as np
 
 from maze.core.agent.policy import Policy
-from maze.core.agent_integration.external_core_env import ExternalCoreEnv
-from maze.core.agent_integration.maze_action_candidates import ActionConversionCandidatesInterface
-from maze.core.agent_integration.policy_executor import PolicyExecutor, ExceptionReport
+from maze.core.agent_deployment.external_core_env import ExternalCoreEnv
+from maze.core.agent_deployment.maze_action_candidates import ActionConversionCandidatesInterface
+from maze.core.agent_deployment.policy_executor import PolicyExecutor, ExceptionReport
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
@@ -32,7 +32,7 @@ from maze.core.utils.factory import ConfigType, CollectionOfConfigType, Factory
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 
 
-class AgentIntegration:
+class AgentDeployment:
     """Encapsulates an agent, space interfaces and a stack of wrappers, to make the agent's MazeActions accessible to
     an external env.
 
