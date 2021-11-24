@@ -29,7 +29,7 @@ from maze.core.env.structured_env import ActorID
 from maze.core.events.event_record import EventRecord
 from maze.core.utils.config_utils import EnvFactory
 from maze.core.utils.factory import ConfigType, CollectionOfConfigType, Factory
-from maze.core.wrappers.wrapper import Wrapper
+from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 
 
 class AgentIntegration:
@@ -73,19 +73,21 @@ class AgentIntegration:
 
         # Build simulation env from config (like we would do during training), then swap core env for external one
         self.env = EnvFactory(env, wrappers if wrappers else {})()
-        self.external_env = ExternalCoreEnv(
+        if not isinstance(self.env, LogStatsWrapper):
+            self.env = LogStatsWrapper.wrap(self.env)
+        self.external_core_env = ExternalCoreEnv(
             context=self.env.core_env.context,
             state_queue=self.state_queue,
             maze_action_queue=self.maze_action_queue,
             rollout_done_event=self.rollout_done_event,
             renderer=self.env.core_env.get_renderer())
 
-        # Temporary hack: Due to fake classes generated in each Wrapper, we need to make sure
+        # Due to the fake subclass hierarchy generated in each Wrapper, we need to make sure
         # we swap the core env directly on the MazeEnv, not on any wrapper above it
         maze_env = self.env
-        while hasattr(maze_env.env, "env"):
+        while isinstance(maze_env.env, MazeEnv):
             maze_env = maze_env.env
-        maze_env.core_env = self.external_env
+        maze_env.core_env = self.external_core_env
 
         # If we are working with multiple candidate actions, wrap the action_conversion interfaces
         if num_candidates > 1:
@@ -127,7 +129,7 @@ class AgentIntegration:
             raise RuntimeError("External env has been declared done already. Please create a new connector object for"
                                "a new episode.")
 
-        self.external_env.set_actor_id(actor_id)
+        self.external_core_env.set_actor_id(actor_id)
         self.state_queue.put((maze_state, reward, done, info, events))
         # Here, the MazeAction is suspended until the agent on the second thread runs another step and the MazeAction
         # is passed back through the MazeAction queue.
