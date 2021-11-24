@@ -22,15 +22,16 @@ from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
+from maze.core.utils.config_utils import EnvFactory
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.test.core.wrappers.test_log_stats_wrapper import _StepInStepWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
     build_dummy_structured_env
+from maze.test.shared_test_utils.run_maze_utils import build_hydra_config
 
 
-@pytest.mark.rllib
 def test_steps_env_with_single_policy():
     agent_integration = AgentIntegration(
         policy=DummyGreedyPolicy(),
@@ -58,7 +59,6 @@ def test_steps_env_with_single_policy():
         maze_state, reward, done, info = test_env.step(expected_action)
 
 
-@pytest.mark.rllib
 def test_supports_trajectory_recording_wrapper():
     """
     Tests whether agent integration supports trajectory recording wrappers.
@@ -193,7 +193,6 @@ def test_records_stats():
     ) == 5
 
 
-@pytest.mark.rllib
 def test_writes_event_and_stats_logs():
     class TestEventsWriter(LogEventsWriter):
         """Test event writer for checking logged events."""
@@ -257,7 +256,6 @@ def test_writes_event_and_stats_logs():
     assert stats_writer.collected_stats_count > 0
 
 
-@pytest.mark.rllib
 def test_gets_maze_action_candidates():
     class StaticPolicy(DummyGreedyPolicy):
         """Mock policy, returns static action candidates (careful, always three of them)."""
@@ -293,7 +291,6 @@ def test_gets_maze_action_candidates():
         assert maze_action.probabilities == [0.95, 0.04, 0.01]
 
 
-@pytest.mark.rllib
 def test_propagates_exceptions_to_main_thread():
     class FailingPolicy(DummyGreedyPolicy):
         """Mock policy, throws an error every time."""
@@ -322,3 +319,32 @@ def test_propagates_exceptions_to_main_thread():
     s = test_core_env.reset()  # Just get a valid state, the content is not really important
     with pytest.raises(RuntimeError) as e_info:
         agent_integration.act(s, 0, False, {})
+
+
+def test_configures_from_hydra():
+    cfg = build_hydra_config(
+        hydra_overrides=dict(env="gym_env"),
+        config_module="maze.conf",
+        config_name="conf_rollout")
+
+    agent_integration = AgentIntegration(
+        policy=cfg.policy,
+        env=cfg.env,
+        wrappers=cfg.wrappers
+    )
+
+    external_env = EnvFactory(cfg.env, wrappers={})().core_env
+
+    maze_state = external_env.reset()
+    reward, done, info = 0, False, {}
+
+    for i in range(10):
+        maze_action = agent_integration.act(maze_state, reward, done, info)
+        maze_state, reward, done, info = external_env.step(maze_action)
+
+    agent_integration.close(maze_state, reward, done, info)
+    assert agent_integration.env.get_stats_value(
+        BaseEnvEvents.reward,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 10
