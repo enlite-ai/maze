@@ -5,8 +5,8 @@ from queue import Queue
 from threading import Event
 
 from maze.core.agent.policy import Policy
-from maze.core.agent_integration.external_core_env import ExternalCoreEnv
-from maze.core.agent_integration.maze_action_candidates import ActionCandidates
+from maze.core.agent_deployment.external_core_env import ExternalCoreEnv
+from maze.core.agent_deployment.maze_action_candidates import ActionCandidates
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 
 ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
