@@ -2,9 +2,11 @@
 
 from typing import Tuple, Sequence, Optional
 
+import gym
 import numpy as np
 import pytest
 
+from maze.core.agent.random_policy import RandomPolicy
 from maze.core.agent_deployment.agent_deployment import AgentDeployment
 from maze.core.agent_deployment.maze_action_candidates import MazeActionCandidates
 from maze.core.env.action_conversion import ActionType
@@ -24,6 +26,7 @@ from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryW
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.utils.config_utils import EnvFactory, read_hydra_config
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
+from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.test.core.wrappers.test_log_stats_wrapper import _StepInStepWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
@@ -345,3 +348,24 @@ def test_configures_from_hydra():
         LogStatsLevel.EPOCH,
         name="total_step_count"
     ) == 10
+
+
+def test_works_with_gym_maze_envs():
+    env = GymMazeEnv("CartPole-v0")
+    policy = RandomPolicy(action_spaces_dict=env.action_spaces_dict)
+
+    agent_deployment = AgentDeployment(
+        policy=policy,
+        env=env
+    )
+
+    external_env = gym.make("CartPole-v0")
+
+    maze_state = external_env.reset()
+    reward, done, info = 0, False, {}
+
+    for i in range(10):
+        maze_action = agent_deployment.act(maze_state, reward, done, info)
+        maze_state, reward, done, info = external_env.step(maze_action)
+
+    agent_deployment.close(maze_state, reward, done, info)
