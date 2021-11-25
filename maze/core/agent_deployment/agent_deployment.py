@@ -1,16 +1,17 @@
 """
-The aim of the agent integration is to allow for a seamless integration (execution) of policies
-and the required pre-processing and post-processing stack in production systems. A second use case is
+The aim of the agent deployment is to allow for a seamless integration of policies
+and the required pre-processing and post-processing (= wrapper) stack in production systems. A second use case is
 the training on environments that cannot be stepped by the interaction loop and require inversion
 of control (e.g. Unity Engine).
 
-When using the agent integration, the control flow is inverted. Normally, the environment is stepped by the agent.
-With agent integration, the agent is queried for MazeActions instead, i.e. it is the (external) environment that controls
+When using the agent deployment, the agent encapsulates not only policies, but also action and observation
+pre/post-processing and wrappers, and the control flow is inverted. Normally, the environment is stepped by the agent.
+With agent deployment, the agent is queried for MazeActions instead, i.e. it is the (external) environment that controls
 the flow, not the agent.
 
 This is done while reusing most of the standard architecture used in the normal control flow, like wrappers.
 Agent, the wrapper stack and flat env run on a separate thread together with a special core env that obtains
-states from the agent integration and passes MazeActions back.
+states from the agent deployment and passes MazeActions back.
 """
 from queue import Queue
 from threading import Event, Thread
@@ -36,7 +37,13 @@ class AgentDeployment:
     """Encapsulates an agent, space interfaces and a stack of wrappers, to make the agent's MazeActions accessible to
     an external env.
 
-    External env should supply states to agent integration object, and can query it for agent MazeActions. The
+    Note: The policy, env, and wrappers parameters are compatible with hydra configuration used for rollouts
+    (alternatively, an already instantiated policy/env can be passed in as well).
+
+    How it works
+    ------------
+
+    External env should supply states to agent deployment object, and can query it for agent MazeActions. The
     agent with the supplied policy (or multiple policies) is run on a separate thread.
 
     Note that the two threads (main thread running this wrapper and the second thread running the agent, wrappers etc.)
@@ -47,16 +54,14 @@ class AgentDeployment:
 
     Queues have max size of one, enforcing that one step can be taken at a time.
 
-    :param policy: Structured policy working with structured environments.
-                   When querying for MazeAction, it can be specified what policy should be run
-                   (using the actor_id parameter, first part of which corresponds to the policy_id).
-    :param action_conversions: Action conversion interfaces for the respective policies.
-    :param observation_conversions: Observation interfaces for the respective policies.
+    :param policy: Structured policy to query for actions, or a config which will be used to built the policy.
+    :param env: Either an instantiated simulation environment which will be used for action and observation processing
+                (i.e., the Maze env, wrapper stack and env context will be used), or a config for instantiating
+                such env.
+    :param wrappers: Configuration for (additional) wrappers, if required.
     :param num_candidates: Number of MazeAction candidates to get from the policy. If greater than 1, will return
                            multiple MazeActions wrapped in
                            :class:`~maze.core.agent_deployment.maze_action_candidates.MazeActionCandidates`
-    :param wrapper_types: Which wrappers should be run as part of the agent's stack.
-    :param wrapper_kwargs: Optional arguments to pass to the given wrappers on instantiation.
     """
 
     def __init__(self,
