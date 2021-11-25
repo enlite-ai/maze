@@ -1,4 +1,4 @@
-"""Executes the provided policies in an Agent Integration setting."""
+"""Executes the provided policies in an Agent Deployment setting."""
 import traceback
 from collections import namedtuple
 from queue import Queue
@@ -14,11 +14,11 @@ ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
 
 
 class PolicyExecutor:
-    """Executes the provided policies in an Agent Integration setting.
+    """Executes the provided policies in an Agent Deployment setting.
 
     Policies are executed until the rollout_done event is set, indicating that the rollout has been finished.
     Then, a final reset is sent and execution stops. Expected to be run on a separate thread alongside the
-    agent integration running on the main thread.
+    agent deployment running on the main thread.
 
     :param env: Environment to step.
     :param policy: Structured policy working with structured environments.
