@@ -40,8 +40,7 @@ class AgentDeployment:
     Note: The policy, env, and wrappers parameters are compatible with hydra configuration used for rollouts
     (alternatively, an already instantiated policy/env can be passed in as well).
 
-    How it works
-    ------------
+    How it works:
 
     External env should supply states to agent deployment object, and can query it for agent MazeActions. The
     agent with the supplied policy (or multiple policies) is run on a separate thread.
