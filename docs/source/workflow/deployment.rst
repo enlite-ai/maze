@@ -3,7 +3,7 @@
 Deployment
 ==========
 
-In experimental setting, deploying an agent means running a rollout on
+In an experimental setting, deploying an agent means running a rollout on
 a given test environment and evaluating the results. However, in
 a real-world scenario, when we are dealing with a production environment,
 running a rollout is usually not so easily feasible.
