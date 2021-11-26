@@ -66,37 +66,15 @@ class ESMasterRunner(TrainingRunner, ABC):
             self,
             env: Union[StructuredEnv, StructuredEnvSpacesMixin],
             shared_noise: SharedNoiseTable,
-            agent_instance_seed: int,
-            n_eval_rollouts: int
+            agent_instance_seed: int
     ) -> ESDistributedRollouts:
         """Abstract method, derived runners like ESDevRunner return an appropriate rollout generator.
 
         :param env: The one and only environment.
         :param shared_noise: Noise table to be shared by all workers.
         :param agent_instance_seed: The agent seed to be used.
-        :param n_eval_rollouts: Number of evaluation rollouts.
         :return: A newly instantiated rollout generator.
         """
-
-
-@dataclasses.dataclass
-class ESDevRunner(ESMasterRunner):
-    """
-    Runner config for single-threaded training, based on ESDummyDistributedRollouts.
-    """
-
-    n_eval_rollouts: int
-    """Fixed number of evaluation runs per epoch."""
-
-    @classmethod
-    @override(ESMasterRunner)
-    def create_distributed_rollouts(
-            cls, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
-            agent_instance_seed: int, n_eval_rollouts: int
-    ) -> ESDistributedRollouts:
-        """use single-threaded rollout generation"""
-        return ESDummyDistributedRollouts(env=env, shared_noise=shared_noise, n_eval_rollouts=n_eval_rollouts,
-                                          agent_instance_seed=agent_instance_seed)
 
     @override(TrainingRunner)
     def run(
@@ -121,8 +99,28 @@ class ESDevRunner(ESMasterRunner):
         self._trainer.train(
             n_epochs=self._cfg.algorithm.n_epochs if n_epochs is None else n_epochs,
             distributed_rollouts=self.create_distributed_rollouts(
-                env=env, shared_noise=self.shared_noise, n_eval_rollouts=self.n_eval_rollouts,
+                env=env, shared_noise=self.shared_noise,
                 agent_instance_seed=self.maze_seeding.generate_agent_instance_seed()
             ) if distributed_rollouts is None else distributed_rollouts,
             model_selection=self._model_selection if model_selection is None else model_selection
         )
+
+
+@dataclasses.dataclass
+class ESDevRunner(ESMasterRunner):
+    """
+    Runner config for single-threaded training, based on ESDummyDistributedRollouts.
+    """
+
+    n_eval_rollouts: int
+    """Fixed number of evaluation runs per epoch."""
+
+    @classmethod
+    @override(ESMasterRunner)
+    def create_distributed_rollouts(
+            cls, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
+            agent_instance_seed: int, n_eval_rollouts: int
+    ) -> ESDistributedRollouts:
+        """use single-threaded rollout generation"""
+        return ESDummyDistributedRollouts(env=env, shared_noise=shared_noise, n_eval_rollouts=n_eval_rollouts,
+                                          agent_instance_seed=agent_instance_seed)
