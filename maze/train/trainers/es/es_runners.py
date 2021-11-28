@@ -115,12 +115,11 @@ class ESDevRunner(ESMasterRunner):
     n_eval_rollouts: int
     """Fixed number of evaluation runs per epoch."""
 
-    @classmethod
     @override(ESMasterRunner)
     def create_distributed_rollouts(
-            cls, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
-            agent_instance_seed: int, n_eval_rollouts: int
+            self, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
+            agent_instance_seed: int,
     ) -> ESDistributedRollouts:
         """use single-threaded rollout generation"""
-        return ESDummyDistributedRollouts(env=env, shared_noise=shared_noise, n_eval_rollouts=n_eval_rollouts,
+        return ESDummyDistributedRollouts(env=env, shared_noise=shared_noise, n_eval_rollouts=self.n_eval_rollouts,
                                           agent_instance_seed=agent_instance_seed)
