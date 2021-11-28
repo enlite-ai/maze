@@ -1,11 +1,11 @@
 """Contains a gif rendering export wrapper."""
-import os
 from datetime import datetime
 from typing import Optional, Tuple, Dict, Union, Any
 
 import gym
 import imageio
 import matplotlib.pyplot as plt
+
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
@@ -39,6 +39,7 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         self._duration = duration
         self._events = None
         self._writer = None
+        self._time_stamp = None
 
         self._is_gym_env = isinstance(self.env, gym.Env)
 
@@ -66,8 +67,8 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
                 self._writer.close()
 
             # init new writer
-            time_stamp = datetime.now().strftime("%d-%b-%Y_%H-%M-%S-%f")
-            gif_name = f"rollout_{time_stamp}.gif"
+            self._time_stamp = datetime.now().strftime("%d-%b-%Y_%H-%M-%S-%f")
+            gif_name = f"rollout_{self._time_stamp}.gif"
             self._writer = imageio.get_writer(gif_name, mode='I', duration=self._duration)
 
             # render initial state
@@ -90,9 +91,13 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
             renderer.render(maze_state=self.env.get_maze_state(), maze_action=None, events=self._events)
             fig = plt.gcf()
             # img = np.array(fig.canvas.renderer.buffer_rgba())
-            plt.savefig("tmp.png")
-            img = imageio.imread("tmp.png")
-            os.remove("tmp.png")
+
+            # Note that the individual images are kept, because jumping to a specific step is inconvenient in
+            # GIF playback.
+            image_file_name = f"rollout_{self._time_stamp}_step_{self.env.get_env_time()}.png"
+            plt.savefig(image_file_name)
+            img = imageio.imread(image_file_name)
+
             plt.close(fig)
 
         # append image stack
