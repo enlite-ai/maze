@@ -342,7 +342,7 @@ For example, these are the ``setup`` and ``run`` methods taken directly from the
    :language: python
 
 .. literalinclude:: ../../../maze/train/trainers/es/es_runners.py
-   :pyobject: ESDevRunner.run
+   :pyobject: ESMasterRunner.run
    :language: python
 
 .. _training-wtgn:
