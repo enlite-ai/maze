@@ -46,10 +46,11 @@ def main(n_epochs) -> None:
         optimizer=Adam(step_size=0.01),
         l2_penalty=0.005,
         noise_stddev=0.02,
-        n_epochs=n_epochs)
+        n_epochs=n_epochs,
+        policy_wrapper=None)
 
     trainer = ESTrainer(algorithm_config=algorithm_config,
-                        policy=policy,
+                        torch_policy=policy,
                         shared_noise=shared_noise,
                         normalization_stats=None)
 
