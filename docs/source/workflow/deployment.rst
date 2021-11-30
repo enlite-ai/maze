@@ -84,8 +84,8 @@ looks like:
 .. literalinclude:: code_snippets/agent_deployment_full_example.py
   :language: PYTHON
 
-Notice that above, we are dealing with :code:`maze_state`s and
-:code:`maze_actions`, i.e., in the format they come directly from
+Notice that above, we are dealing with Maze states and
+Maze actions, i.e., in the format they come directly from
 the environment. The translation to policy-friendly format
 of actions and observations is handled as part of the wrapper
 stack (where they are passed through action/observation conversion
