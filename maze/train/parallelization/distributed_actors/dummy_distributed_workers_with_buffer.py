@@ -5,7 +5,7 @@ from typing import Tuple, Dict
 from maze.core.annotations import override
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.distributed_actors.broadcasting_container import BroadcastingContainer
+from maze.train.parallelization.broadcasting_container import BroadcastingContainer
 from maze.train.parallelization.distributed_actors.base_distributed_workers_with_buffer import \
     BaseDistributedWorkersWithBuffer
 
