@@ -1,17 +1,17 @@
 """Broadcasting container for synchronizing policy updates across workers on local machine."""
-
+from multiprocessing.managers import BaseManager
 from typing import Dict, NoReturn
 
 import cloudpickle
 
 
 class BroadcastingContainer:
-    """Synchronizes policy updates and other information across actors on local machine.
+    """Synchronizes policy updates and other information across workers on local machine.
 
     Used for dummy and sub-process distribution scenarios.
 
-    The BroadcastingContainer object can be read by all actor workers in order to update their policy, and it can be
-    accessed by the main Thread to write the updated policy from the learner into it.
+    The BroadcastingContainer object can be read by all workers in order to update their policy, and it can be
+    accessed by the main thread to write the updated policy from the learner into it.
     """
 
     def __init__(self):
@@ -42,3 +42,8 @@ class BroadcastingContainer:
         """
         self._pickled_policy_state_dict = cloudpickle.dumps(state_dict)
         self._policy_version_counter += 1
+
+
+class BroadcastingManager(BaseManager):
+    """A wrapper around BaseManager, used for managing the broadcasting container in multiprocessing scenarios."""
+    pass
