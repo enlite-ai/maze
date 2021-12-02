@@ -2,9 +2,10 @@ import logging
 import multiprocessing
 import os
 import signal
-from collections import Callable
 from multiprocessing.context import BaseContext
-from typing import Union, Optional, Generator
+from typing import Union, Optional, Generator, Callable
+
+import cloudpickle
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_model import TorchModel
@@ -19,7 +20,7 @@ from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 
 class ESSubprocDistributedRollouts(ESDistributedRollouts):
     def __init__(self,
-                 env_factory: Callable[[], Union[MazeEnv]],
+                 env_factory: Callable[[], MazeEnv],
                  n_training_workers: int,
                  n_eval_workers: int,
                  shared_noise: SharedNoiseTable,
@@ -27,23 +28,16 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
                  agent_seed: int,
                  start_method: str = None
                  ):
-        ctx = self._get_multiprocessing_context(start_method)
-        self.worker_output_queue = ctx.Queue()
+        self.env_factory = env_factory
+        self.n_training_workers = n_training_workers
+        self.n_eval_workers = n_eval_workers
+        self.shared_noise = shared_noise
+        self.env_seed = env_seed
+        self.agent_seed = agent_seed
+
+        self.ctx = self._get_multiprocessing_context(start_method)
+        self.worker_output_queue = self.ctx.Queue()
         self.broadcasting_container = self._create_broadcasting_container()
-
-        self.workers = []
-        for worker_id in range(n_eval_workers + n_training_workers):
-            process = ctx.Process(target=self._launch_worker, kwargs=dict(
-                env_factory=env_factory,
-                shared_noise=shared_noise,
-                output_queue=self.worker_output_queue,
-                broadcasting_container=self.broadcasting_container,
-                env_seed=env_seed,
-                agent_seed=agent_seed,
-                is_eval_worker=worker_id < n_eval_workers
-            ))
-            self.workers.append(process)
-
         self._workers_started = False
 
     @override(ESDistributedRollouts)
@@ -55,7 +49,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
                           ) -> Generator[ESRolloutResult, None, None]:
         """First execute a fixed number of eval rollouts and then continue with producing training samples."""
         self.broadcasting_container.set_aux_data(dict(
-            normalizatin_stats=normalization_stats,
+            normalization_stats=normalization_stats,
             max_steps=max_steps,
             noise_stddev=noise_stddev
         ))
@@ -65,8 +59,8 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
 
         if not self._workers_started:
             # Start workers if not yet started
-            for worker in self.workers:
-                worker.start()
+            self._start_worker_processes(policy)
+            self._workers_started = True
         else:
             # Notify workers to abort current rollout and start a new one
             for worker in self.workers:
@@ -77,6 +71,24 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
 
             if current_policy_version == policy_version:
                 yield result
+
+    def _start_worker_processes(self, policy) -> None:
+        self.workers = []
+        for worker_id in range(self.n_eval_workers + self.n_training_workers):
+            pickled_env_factory = cloudpickle.dumps(self.env_factory)
+            pickled_policy = cloudpickle.dumps(policy)
+            process = self.ctx.Process(target=self._launch_worker, kwargs=dict(
+                pickled_env_factory=pickled_env_factory,
+                pickled_policy=pickled_policy,
+                shared_noise=self.shared_noise,
+                output_queue=self.worker_output_queue,
+                broadcasting_container=self.broadcasting_container,
+                env_seed=self.env_seed,
+                agent_seed=self.agent_seed,
+                is_eval_worker=worker_id < self.n_eval_workers
+            ))
+            self.workers.append(process)
+            process.start()
 
     @staticmethod
     def _launch_worker(**kwargs) -> None:
@@ -98,3 +110,11 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
         manager = BroadcastingManager()
         manager.start()
         return manager.BroadcastingContainer()
+
+    def __del__(self):
+        # Set the stop flag
+        self.broadcasting_container.set_stop_flag()
+        # Interrupt current rollouts and join
+        for worker in self.workers:
+            os.kill(worker.pid, signal.SIGUSR1)
+            worker.join()
