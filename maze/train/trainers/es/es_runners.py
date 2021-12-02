@@ -17,6 +17,7 @@ from maze.train.trainers.common.model_selection.model_selection_base import Mode
 from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.es.distributed.es_distributed_rollouts import ESDistributedRollouts
 from maze.train.trainers.es.distributed.es_dummy_distributed_rollouts import ESDummyDistributedRollouts
+from maze.train.trainers.es.distributed.es_subproc_distributed_rollouts import ESSubprocDistributedRollouts
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_trainer import ESTrainer
 
@@ -133,3 +134,24 @@ class ESDevRunner(ESMasterRunner):
         """use single-threaded rollout generation"""
         return ESDummyDistributedRollouts(env=env, shared_noise=shared_noise, n_eval_rollouts=self.n_eval_rollouts,
                                           agent_instance_seed=agent_instance_seed)
+
+
+@dataclasses.dataclass
+class ESLocalRunner(ESMasterRunner):
+    """
+    Runner config for multi-process training, based on ESSubprocDistributedRollouts.
+    """
+
+    n_training_workers: int
+    """Number of worker processes to spawn for training"""
+
+    n_eval_workers: int
+    """Number of worker processes to spawn for evaluation"""
+
+    @override(ESMasterRunner)
+    def create_distributed_rollouts(
+            self, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
+            agent_instance_seed: int,
+    ) -> ESDistributedRollouts:
+        """use multi-process rollout generation"""
+        return ESSubprocDistributedRollouts()
