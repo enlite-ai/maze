@@ -1,8 +1,14 @@
 # @package runner
 _target_: "maze.train.trainers.es.ESLocalRunner"
 
-# Fixed number of evaluation runs per epoch.
-n_eval_rollouts: 10
+# Number of worker processes to spawn for training
+n_train_workers: 4
+
+# Number of worker processes to spawn for evaluation
+n_eval_workers: 1
 
 # Number of float values in the deterministically generated pseudo-random table
 shared_noise_table_size: 100000000
+
+# Type of start method used for multiprocessing: 'forkserver', 'spawn', or 'fork'
+start_method: forkserver
