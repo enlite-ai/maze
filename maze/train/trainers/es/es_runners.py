@@ -142,11 +142,14 @@ class ESLocalRunner(ESMasterRunner):
     Runner config for multi-process training, based on ESSubprocDistributedRollouts.
     """
 
-    n_training_workers: int
+    n_train_workers: int
     """Number of worker processes to spawn for training"""
 
     n_eval_workers: int
     """Number of worker processes to spawn for evaluation"""
+
+    start_method: str
+    """Type of start method used for multiprocessing ('forkserver', 'spawn', 'fork')."""
 
     @override(ESMasterRunner)
     def create_distributed_rollouts(
@@ -154,4 +157,12 @@ class ESLocalRunner(ESMasterRunner):
             agent_instance_seed: int,
     ) -> ESDistributedRollouts:
         """use multi-process rollout generation"""
-        return ESSubprocDistributedRollouts()
+        return ESSubprocDistributedRollouts(
+            env_factory=self.env_factory,
+            n_training_workers=self.n_train_workers,
+            n_eval_workers=self.n_eval_workers,
+            shared_noise=self.shared_noise,
+            env_seed=self.maze_seeding.generate_env_instance_seed(),
+            agent_seed=agent_instance_seed,
+            start_method=self.start_method
+        )
