@@ -1,12 +1,9 @@
 import multiprocessing
 import signal
-from collections import Callable
-from typing import Union
 
+import cloudpickle
 import torch
 
-from maze.core.env.base_env_events import BaseEnvEvents
-from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.train.parallelization.broadcasting_container import BroadcastingContainer
@@ -16,7 +13,8 @@ from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 
 class ESSubprocWorker:
     def __init__(self,
-                 env_factory: Callable[[], Union[MazeEnv]],
+                 pickled_env_factory: bytes,
+                 pickled_policy: bytes,
                  shared_noise: SharedNoiseTable,
                  output_queue: multiprocessing.Queue,
                  broadcasting_container: BroadcastingContainer,
@@ -24,7 +22,7 @@ class ESSubprocWorker:
                  agent_seed: int,
                  is_eval_worker: bool
                  ):
-        self.policy = None
+        self.policy = cloudpickle.loads(pickled_policy)
         self.policy_version_counter = -1
         self.aux_data = None
 
@@ -32,9 +30,9 @@ class ESSubprocWorker:
         self.broadcasting_container = broadcasting_container
         self.is_eval_worker = is_eval_worker
 
+        env_factory = cloudpickle.loads(pickled_env_factory)
         self.env = env_factory()
-        if not isinstance(self.env, TimeLimitWrapper):
-            self.env = TimeLimitWrapper.wrap(self.env)
+        self.env = TimeLimitWrapper.wrap(self.env)
         if not isinstance(self.env, LogStatsWrapper):
             self.env = LogStatsWrapper.wrap(self.env)
 
@@ -48,29 +46,20 @@ class ESSubprocWorker:
             # limit the step count according to the task specification
             self.env.set_max_episode_steps(self.aux_data["max_steps"])
             if self.aux_data["normalization_stats"] is not None:
-               self.env.set_normalization_statistics(self.aux_data["normalization_stats"] )
+                self.env.set_normalization_statistics(self.aux_data["normalization_stats"])
 
             try:
                 signal.signal(signal.SIGUSR1, self._abort_handler)
                 with torch.no_grad():
                     if self.is_eval_worker:
-                        # Evaluation: noiseless weights and noiseless actions
-                        r = self.env.generate_evaluation(self.policy)
-
-                        episode_return = r.episode_stats[0][(BaseEnvEvents.reward, "sum", None)]
-                        episode_length = r.episode_stats[0][(BaseEnvEvents.reward, "count", None)]
-                        print('Eval result: policy_version={} return={:.3f} length={}'.format(
-                            self.policy_version_counter, episode_return, episode_length))
-
+                        result = self.env.generate_evaluation(self.policy)
                     else:
-                        result = self.env.generate_training(self.policy, self.aux_data["noise_stddev"])
-                        print("Training result")
+                        result = self.env.generate_training(self.policy, noise_stddev=self.aux_data["noise_stddev"])
 
                 # Ignore abort during communication
                 signal.signal(signal.SIGUSR1, signal.SIG_IGN)
-                self.output_queue.put(self.policy_version_counter, result)
+                self.output_queue.put((self.policy_version_counter, result))
             except ESAbortException:
-                print(f"Aborted run with policy version {self.policy_version_counter}")
                 if self.env.abort:
                     self.env.clear_abort()
                 else:
