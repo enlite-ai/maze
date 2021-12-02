@@ -18,6 +18,7 @@ class BroadcastingContainer:
         self._policy_version_counter = 0
         self._pickled_policy_state_dict = None
         self._stop_flag = False
+        self._aux_data = None
 
     def stop_flag(self) -> bool:
         """True if workers should exit."""
@@ -43,6 +44,11 @@ class BroadcastingContainer:
         self._pickled_policy_state_dict = cloudpickle.dumps(state_dict)
         self._policy_version_counter += 1
 
+    def set_aux_data(self, data: Dict):
+        self._aux_data = data
+
+    def aux_data(self) -> Dict:
+        return self._aux_data
 
 class BroadcastingManager(BaseManager):
     """A wrapper around BaseManager, used for managing the broadcasting container in multiprocessing scenarios."""
