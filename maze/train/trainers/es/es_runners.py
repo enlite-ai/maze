@@ -3,6 +3,9 @@ import dataclasses
 from abc import abstractmethod, ABC
 from typing import Union, Optional
 
+from maze.core.agent.policy import Policy
+from maze.core.agent.torch_model import TorchModel
+from maze.core.utils.factory import Factory
 from omegaconf import DictConfig
 
 from maze.core.agent.torch_policy import TorchPolicy
@@ -45,6 +48,13 @@ class ESMasterRunner(TrainingRunner, ABC):
         torch_policy = TorchPolicy(networks=self._model_composer.policy.networks,
                                    distribution_mapper=self._model_composer.distribution_mapper, device="cpu")
         torch_policy.seed(self.maze_seeding.agent_global_seed)
+
+        # support policy wrapping
+        if self._cfg.algorithm.policy_wrapper:
+            policy = Factory(Policy).instantiate(
+                self._cfg.algorithm.policy_wrapper, torch_policy=torch_policy)
+            assert isinstance(policy, Policy) and isinstance(policy, TorchModel)
+            torch_policy = policy
 
         print("********** Trainer Setup **********")
         self._trainer = ESTrainer(
