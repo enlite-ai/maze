@@ -160,7 +160,7 @@ def test_subproc_distributed_rollouts():
         n_training_workers=2,
         n_eval_workers=1,
         shared_noise=trainer.shared_noise,
-        env_seed=1337,
+        env_seeds=[1337] * 3,
         agent_seed=1337
     )
 
