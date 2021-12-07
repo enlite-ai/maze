@@ -2,7 +2,6 @@ from typing import Tuple, Optional, Sequence, Dict, List
 
 import torch
 import torch.nn as nn
-
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_model import TorchModel
 from maze.core.agent.torch_policy import TorchPolicy
@@ -154,6 +153,21 @@ def test_policy_wrapper():
 
 def test_subproc_distributed_rollouts():
     policy, env, trainer = train_setup(n_epochs=2)
+
+    rollouts = ESSubprocDistributedRollouts(
+        env_factory=lambda: GymMazeEnv(env="CartPole-v0"),
+        n_training_workers=2,
+        n_eval_workers=1,
+        shared_noise=trainer.shared_noise,
+        env_seeds=[1337] * 3,
+        agent_seed=1337
+    )
+
+    trainer.train(rollouts, model_selection=None)
+
+
+def test_subproc_distributed_rollouts_with_policy_wrapper():
+    policy, env, trainer = train_setup(n_epochs=2, policy_wrapper={"_target_": DummyPolicyWrapper})
 
     rollouts = ESSubprocDistributedRollouts(
         env_factory=lambda: GymMazeEnv(env="CartPole-v0"),
