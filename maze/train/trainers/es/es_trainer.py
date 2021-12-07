@@ -46,12 +46,6 @@ class ESTrainer(Trainer):
         # --- training setup ---
         self.model_selection: Optional[ModelSelectionBase] = None
         self.policy: Union[Policy, TorchModel] = torch_policy
-        # support policy wrapping
-        if algorithm_config.policy_wrapper:
-            policy = Factory(Policy).instantiate(
-                algorithm_config.policy_wrapper, torch_policy=torch_policy)
-            assert isinstance(policy, Policy) and isinstance(policy, TorchModel)
-            self.policy = policy
 
         self.shared_noise = shared_noise
         self.normalization_stats = normalization_stats
