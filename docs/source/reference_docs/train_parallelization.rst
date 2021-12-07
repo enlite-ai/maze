@@ -39,7 +39,21 @@ These are interfaces, classes and utility functions for distributed actors:
     ~distributed_actors.DistributedActors
     ~sequential_distributed_actors.SequentialDistributedActors
     ~subproc_distributed_actors.SubprocDistributedActors
-    ~subproc_distributed_actors.MyManager
-    ~broadcasting_container.BroadcastingContainer
     ~base_distributed_workers_with_buffer.BaseDistributedWorkersWithBuffer
     ~dummy_distributed_workers_with_buffer.DummyDistributedWorkersWithBuffer
+
+
+Utilities
+---------
+
+Reusable components used in multiple distribution scenarios:
+
+.. currentmodule:: maze.train.parallelization
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:
+    :template: classtemplate.rst
+
+    ~broadcasting_container.BroadcastingContainer
+    ~broadcasting_container.BroadcastingManager
