@@ -68,8 +68,8 @@ class ESSubprocWorker:
     def _update_policy_if_available(self) -> None:
         shared_policy_version_counter = self.broadcasting_container.policy_version()
         if self.policy_version_counter < shared_policy_version_counter:
-            self.policy.load_state_dict(self.broadcasting_container.policy_state_dict())
             self.policy_version_counter = shared_policy_version_counter
+            self.policy.load_state_dict(self.broadcasting_container.policy_state_dict())
             self.aux_data = self.broadcasting_container.aux_data()
 
     def _abort_handler(self, _signum, _frame):

@@ -48,13 +48,14 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
                           normalization_stats: StructuredStatisticsType
                           ) -> Generator[ESRolloutResult, None, None]:
         """First execute a fixed number of eval rollouts and then continue with producing training samples."""
-        self.broadcasting_container.set_aux_data(dict(
-            normalization_stats=normalization_stats,
-            max_steps=max_steps,
-            noise_stddev=noise_stddev
-        ))
-
-        self.broadcasting_container.set_policy_state_dict(policy.state_dict())
+        self.broadcasting_container.set_policy_state_dict(
+            state_dict=policy.state_dict(),
+            aux_data=dict(
+                normalization_stats=normalization_stats,
+                max_steps=max_steps,
+                noise_stddev=noise_stddev
+            )
+        )
         current_policy_version = self.broadcasting_container.policy_version()
 
         if not self._workers_started:
@@ -64,7 +65,8 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
         else:
             # Notify workers to abort current rollout and start a new one
             for worker in self.workers:
-                os.kill(worker.pid, signal.SIGUSR1)
+                if worker.is_alive():
+                    os.kill(worker.pid, signal.SIGUSR1)
 
         while True:
             policy_version, result = self.worker_output_queue.get()
@@ -112,9 +114,10 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
         return manager.BroadcastingContainer()
 
     def __del__(self):
-        # Set the stop flag
+        """Set the stop flag and join workers."""
         self.broadcasting_container.set_stop_flag()
-        # Interrupt current rollouts and join
         for worker in self.workers:
-            os.kill(worker.pid, signal.SIGUSR1)
-            worker.join()
+            if worker.is_alive():
+                worker.terminate()
+                worker.join()
+        self.worker_output_queue.close()

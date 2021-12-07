@@ -1,6 +1,6 @@
 """Broadcasting container for synchronizing policy updates across workers on local machine."""
 from multiprocessing.managers import BaseManager
-from typing import Dict, NoReturn
+from typing import Dict, NoReturn, Optional
 
 import cloudpickle
 
@@ -36,19 +36,20 @@ class BroadcastingContainer:
         """Return the current policy state dict."""
         return cloudpickle.loads(self._pickled_policy_state_dict)
 
-    def set_policy_state_dict(self, state_dict: Dict) -> NoReturn:
+    def set_policy_state_dict(self, state_dict: Dict, aux_data: Dict = None) -> NoReturn:
         """Store new policy version.
 
         :param state_dict: New state dict to store
+        :param aux_data: Dictionary with any auxiliary data to share
         """
         self._pickled_policy_state_dict = cloudpickle.dumps(state_dict)
         self._policy_version_counter += 1
+        self._aux_data = aux_data
 
-    def set_aux_data(self, data: Dict):
-        self._aux_data = data
-
-    def aux_data(self) -> Dict:
+    def aux_data(self) -> Optional[Dict]:
+        """Return auxiliary data stored together with the policy."""
         return self._aux_data
+
 
 class BroadcastingManager(BaseManager):
     """A wrapper around BaseManager, used for managing the broadcasting container in multiprocessing scenarios."""
