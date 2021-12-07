@@ -34,7 +34,6 @@ class ESDummyDistributedRollouts(ESDistributedRollouts):
                           ) -> Generator[ESRolloutResult, None, None]:
         """First execute a fixed number of eval rollouts and then continue with producing training samples."""
         self.env.set_max_episode_steps(max_steps)
-        print("max steps", max_steps)
         if normalization_stats:
             self.env.set_normalization_statistics(normalization_stats)
 
