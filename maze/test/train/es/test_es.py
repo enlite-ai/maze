@@ -17,6 +17,7 @@ from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet
 from maze.train.trainers.es.distributed.es_dummy_distributed_rollouts import ESDummyDistributedRollouts
+from maze.train.trainers.es.distributed.es_subproc_distributed_rollouts import ESSubprocDistributedRollouts
 from maze.train.trainers.es.es_algorithm_config import ESAlgorithmConfig
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_trainer import ESTrainer
@@ -149,3 +150,18 @@ def test_policy_wrapper():
     trainer.train(
         ESDummyDistributedRollouts(env=env, n_eval_rollouts=2, shared_noise=trainer.shared_noise,
                                    agent_instance_seed=1234), model_selection=None)
+
+
+def test_subproc_distributed_rollouts():
+    policy, env, trainer = train_setup(n_epochs=2)
+
+    rollouts = ESSubprocDistributedRollouts(
+        env_factory=lambda: GymMazeEnv(env="CartPole-v0"),
+        n_training_workers=2,
+        n_eval_workers=1,
+        shared_noise=trainer.shared_noise,
+        env_seed=1337,
+        agent_seed=1337
+    )
+
+    trainer.train(rollouts, model_selection=None)
