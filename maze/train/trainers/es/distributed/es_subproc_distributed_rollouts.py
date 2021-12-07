@@ -110,9 +110,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
     def _create_broadcasting_container() -> BroadcastingContainer:
         BroadcastingManager.register('BroadcastingContainer', BroadcastingContainer)
         manager = BroadcastingManager()
-        print("starting a manager")
         manager.start()
-        print("started a manager")
 
         return manager.BroadcastingContainer()
 
