@@ -20,6 +20,7 @@ from maze.train.trainers.es.distributed.es_dummy_distributed_rollouts import ESD
 from maze.train.trainers.es.distributed.es_subproc_distributed_rollouts import ESSubprocDistributedRollouts
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_trainer import ESTrainer
+from maze.utils.bcolors import BColors
 
 
 @dataclasses.dataclass
@@ -157,12 +158,15 @@ class ESLocalRunner(ESMasterRunner):
             agent_instance_seed: int,
     ) -> ESDistributedRollouts:
         """use multi-process rollout generation"""
+        BColors.print_colored('Determinism by seeding of the ES algorithm with the Local runner can not be '
+                              'guarantied due to the asynchronicity of the implementation.', BColors.WARNING)
+        n_workers = self.n_train_workers + self.n_eval_workers
         return ESSubprocDistributedRollouts(
             env_factory=self.env_factory,
             n_training_workers=self.n_train_workers,
             n_eval_workers=self.n_eval_workers,
             shared_noise=self.shared_noise,
-            env_seed=self.maze_seeding.generate_env_instance_seed(),
+            env_seeds=[self.maze_seeding.generate_env_instance_seed() for _ in range(n_workers)],
             agent_seed=agent_instance_seed,
             start_method=self.start_method
         )
