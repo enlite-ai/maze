@@ -3,7 +3,7 @@ import multiprocessing
 import os
 import signal
 from multiprocessing.context import BaseContext
-from typing import Union, Optional, Generator, Callable
+from typing import Union, Optional, Generator, Callable, List
 
 import cloudpickle
 
@@ -24,7 +24,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
                  n_training_workers: int,
                  n_eval_workers: int,
                  shared_noise: SharedNoiseTable,
-                 env_seed: int,
+                 env_seeds: List[int],
                  agent_seed: int,
                  start_method: str = None
                  ):
@@ -32,7 +32,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
         self.n_training_workers = n_training_workers
         self.n_eval_workers = n_eval_workers
         self.shared_noise = shared_noise
-        self.env_seed = env_seed
+        self.env_seeds = env_seeds
         self.agent_seed = agent_seed
 
         self.ctx = self._get_multiprocessing_context(start_method)
@@ -85,7 +85,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
                 shared_noise=self.shared_noise,
                 output_queue=self.worker_output_queue,
                 broadcasting_container=self.broadcasting_container,
-                env_seed=self.env_seed,
+                env_seed=self.env_seeds[worker_id],
                 agent_seed=self.agent_seed,
                 is_eval_worker=worker_id < self.n_eval_workers
             ))
@@ -110,7 +110,10 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
     def _create_broadcasting_container() -> BroadcastingContainer:
         BroadcastingManager.register('BroadcastingContainer', BroadcastingContainer)
         manager = BroadcastingManager()
+        print("starting a manager")
         manager.start()
+        print("started a manager")
+
         return manager.BroadcastingContainer()
 
     def __del__(self):
