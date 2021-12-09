@@ -47,7 +47,7 @@ Installation
 
 .. code:: bash
 
-    pip install ray[rllib] tensorflow
+    pip install ray[rllib]==1.4.1 tensorflow
 
 (Installing RLlib is only required if you would like to use the :ref:`Maze RLlib Runner <maze_rllib_runner>`)
 

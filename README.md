@@ -47,8 +47,8 @@ Below we list a few selected Maze features.
 
       pip install -U maze-rl
       
-      # optionally install RLLib if you want to use it in combination with Maze
-      pip install ray[rllib] tensorflow  
+      # optionally install RLLib if you want to use it in combination with Maze (currently pinned to the version 1.4.1)
+      pip install ray[rllib]==1.4.1 tensorflow  
     
   [Read more about other options](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html) like the installation of the latest 
   development version.  
