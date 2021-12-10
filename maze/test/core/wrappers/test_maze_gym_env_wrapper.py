@@ -67,7 +67,7 @@ def test_heuristic_sampling():
 
 
 # Environments to be tested
-env_ids = ["CartPole-v0", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v0"]
+env_ids = ["CartPole-v0", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v1"]
 if ATARI_AVAILABLE:
     env_ids.append("PongNoFrameskip-v4")
 

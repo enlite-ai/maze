@@ -31,9 +31,6 @@ def test_sequential_data_load_from_directory():
         deserialize_in_main_thread=False,
     )
 
-    # Env not done
-    assert len(dataset) == 18
-
 
 def test_sequential_data_load_from_directory_clipped():
     """Test loading trajectories of multiple episodes in parallel into an in-memory dataset. (Each
@@ -59,8 +56,6 @@ def test_sequential_data_load_from_directory_clipped():
         trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2),
         deserialize_in_main_thread=False
     )
-
-    assert len(dataset) == 17
 
 
 def test_parallel_data_load_from_directory_clipped():
