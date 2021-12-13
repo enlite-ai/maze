@@ -48,40 +48,48 @@ def make_hashable(obj: Any) -> Tuple:
     return obj
 
 
-def conduct_env_reproducibility_test(env: MazeEnv, pick_action: Callable, n_steps: int = 100) -> str:
+def conduct_env_reproducibility_test(env: MazeEnv, pick_action: Callable, n_steps: int = 100) -> bool:
     """
-    Runs specified environment with specified callback to pick action. Returns hash of all steps' states.
+    Runs specified environment twice with specified callback to pick action.
+    The final observation of these two runs is then compare for identity.
+
     :param env: Initialized MazeEnv instance.
     :param pick_action: Reference to function choosing which action to take.
     :param n_steps: Number of steps to run.
-    :return: State hash.
+    :return: True if reproducible; else False.
     """
-    env.seed(1234)
 
-    # seed the ActionConversion spaces
-    act_conv_spaces = dict()
-    for policy_id, policy_act_conv in env.action_conversion_dict.items():
-        # Get transformation spaces.
-        policy_space = policy_act_conv.space()
-        # Set randomization seed.
-        policy_space.seed(1234)
+    observation_hashes = []
+    for _ in range(2):
+        env.seed(1234)
 
-        act_conv_spaces[policy_id] = policy_space
+        # seed the ActionConversion spaces
+        act_conv_spaces = dict()
+        for policy_id, policy_act_conv in env.action_conversion_dict.items():
+            # Get transformation spaces.
+            policy_space = policy_act_conv.space()
+            # Set randomization seed.
+            policy_space.seed(1234)
 
-    # Store hashed step states.
-    observations: List[ObservationType] = list()
+            act_conv_spaces[policy_id] = policy_space
 
-    env.reset()
-    for step in range(n_steps):
-        policy_id, actor_id = env.actor_id()
+        # Store hashed step states.
+        observations: List[ObservationType] = list()
 
-        # Select next action.
-        action = pick_action(
-            observation=env.observation_conversion.maze_to_space(env.core_env.get_maze_state()),
-            action_space=act_conv_spaces[policy_id]
-        )
+        env.reset()
+        for step in range(n_steps):
+            policy_id, actor_id = env.actor_id()
 
-        # Execute action, collect state information.
-        observations.append(env.step(action)[0])
+            # Select next action.
+            action = pick_action(
+                observation=env.observation_conversion.maze_to_space(env.core_env.get_maze_state()),
+                action_space=act_conv_spaces[policy_id]
+            )
 
-    return str(hash_deterministically(observations))
+            # Execute action, collect state information.
+            observations.append(env.step(action)[0])
+
+        observation_hashes.append(str(hash_deterministically(observations)))
+
+    assert len(observation_hashes) == 2
+    return observation_hashes[0] == observation_hashes[1]
