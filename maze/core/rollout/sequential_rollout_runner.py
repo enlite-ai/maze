@@ -44,9 +44,11 @@ class SequentialRolloutRunner(RolloutRunner):
     @override(RolloutRunner)
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType):
         """Run the rollout sequentially in the main process."""
-        env, agent = self.init_env_and_agent(env, wrappers, self.max_episode_steps, agent, self.input_dir,
-                                             self.maze_seeding.generate_env_instance_seed(),
-                                             self.maze_seeding.generate_agent_instance_seed())
+        env_seeds = self.maze_seeding.get_explicit_env_seeds(self.n_episodes)
+        agent_seeds = self.maze_seeding.get_explicit_agent_seeds(self.n_episodes)
+        env, agent = self.init_env_and_agent(env_config=env, wrappers_config=wrappers, input_dir=self.input_dir,
+                                             max_episode_steps=self.max_episode_steps, agent_config=agent,
+                                             env_instance_seed=env_seeds[0], agent_instance_seed=agent_seeds[0])
 
         # Set up the wrappers
         # Hydra handles working directory
@@ -62,7 +64,8 @@ class SequentialRolloutRunner(RolloutRunner):
 
         self.progress_bar = tqdm(desc="Episodes done", unit=" episodes", total=self.n_episodes)
         RolloutRunner.run_interaction_loop(env, agent, self.n_episodes, render=self.render,
-                                           episode_end_callback=lambda: self.update_progress())
+                                           episode_end_callback=lambda: self.update_progress(),
+                                           env_seeds=env_seeds[1:], agent_seeds=agent_seeds[1:])
         self.progress_bar.close()
         env.write_epoch_stats()
 

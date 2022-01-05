@@ -3,7 +3,7 @@
 import traceback
 from collections import namedtuple
 from multiprocessing import Queue, Process
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, List, Any
 
 from omegaconf import DictConfig
 from tqdm import tqdm
@@ -69,8 +69,8 @@ class ParallelRolloutWorker:
             record_trajectory: bool,
             input_directory: str,
             reporting_queue: Queue,
-            env_instance_seed: int,
-            agent_instance_seed: int) -> None:
+            env_seeds: List[Any],
+            agent_seeds: List[Any]) -> None:
         """Build the environment and run the rollout for the specified number of episodes.
 
         :param env_config: Hydra configuration of the environment to instantiate.
@@ -82,18 +82,19 @@ class ParallelRolloutWorker:
         :param record_trajectory: Whether to record trajectory data.
         :param input_directory: Directory to load the model from.
         :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode.
-        :param env_instance_seed: The seed for this particular env.
-        :param agent_instance_seed: The seed for this particular agent.
+        :param env_seeds: A list of seeds for seeding the environment.
+        :param agent_seeds: A list of seeds for seeding the agent.
         """
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
-                                                          agent_config, input_directory, env_instance_seed,
-                                                          agent_instance_seed)
+                                                          agent_config, input_directory, env_seeds[0],
+                                                          agent_seeds[0])
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
             RolloutRunner.run_interaction_loop(
                 env, agent, n_episodes,
-                episode_end_callback=lambda: reporting_queue.put(episode_recorder.get_last_episode_data())
+                episode_end_callback=lambda: reporting_queue.put(episode_recorder.get_last_episode_data()),
+                env_seeds=env_seeds[1:], agent_seeds=agent_seeds[1:]
             )
         except Exception as exception:
             # Ship exception along with a traceback to the main process
@@ -142,12 +143,12 @@ class ParallelRolloutRunner(RolloutRunner):
     point will be preserved (= written out). Graceful shutdown will be attempted, including calculation of statistics
     across the episodes completed before the rollout was terminated.
 
-    :param n_episodes: Count of episodes to run
+    :param n_episodes: Count of episodes to run.
     :param max_episode_steps: Count of steps to run in each episode (if environment returns done, the episode
-                                will be finished earlier though)
+                                will be finished earlier though).
     :param n_processes: Count of processes to spread the rollout across.
-    :param record_trajectory: Whether to record trajectory data
-    :param record_event_logs: Whether to record event logs
+    :param record_trajectory: Whether to record trajectory data.
+    :param record_event_logs: Whether to record event logs.
     """
 
     def __init__(self,
@@ -173,15 +174,27 @@ class ParallelRolloutRunner(RolloutRunner):
     def _launch_workers(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType) \
             -> Iterable[Process]:
         """Configure the workers according to the rollout config and launch them."""
+        # Setup seeding
+        env_seeds_per_processes = [[] for _ in range(self.n_processes)]
+        agent_seeds_per_processes = [[] for _ in range(self.n_processes)]
+        env_seeds = self.maze_seeding.get_explicit_env_seeds(self.n_episodes)
+        agent_seeds = self.maze_seeding.get_explicit_agent_seeds(self.n_episodes)
+        assert len(env_seeds) == len(agent_seeds)
+
         # Split total episode count across workers
         episodes_per_process = [0] * self.n_processes
         for i in range(self.n_episodes):
             episodes_per_process[i % self.n_processes] += 1
 
+        # Seeds have to be split separately, since all seeds should be split to the workers in case some seeds fail.
+        for i in range(len(env_seeds)):
+            env_seeds_per_processes[i % self.n_processes].append(env_seeds[i])
+            agent_seeds_per_processes[i % self.n_processes].append(agent_seeds[i])
+
         # Configure and launch the processes
         self.reporting_queue = Queue()
         workers = []
-        for n_process_episodes in episodes_per_process:
+        for process_idx, n_process_episodes in enumerate(episodes_per_process):
             if n_process_episodes == 0:
                 break
 
@@ -190,8 +203,7 @@ class ParallelRolloutRunner(RolloutRunner):
                 args=(env, wrappers, agent,
                       n_process_episodes, self.max_episode_steps,
                       self.record_trajectory, self.input_dir, self.reporting_queue,
-                      self.maze_seeding.generate_env_instance_seed(),
-                      self.maze_seeding.generate_agent_instance_seed()),
+                      env_seeds_per_processes[process_idx], agent_seeds_per_processes[process_idx]),
                 daemon=True
             )
             p.start()

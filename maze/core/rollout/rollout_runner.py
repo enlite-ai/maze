@@ -1,6 +1,7 @@
 """Abstract class for rollout runners."""
+import time
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Callable, Optional, List, Any
 
 import numpy as np
 from omegaconf import DictConfig
@@ -44,9 +45,10 @@ class RolloutRunner(Runner, ABC):
         self.input_dir = None
 
         # Generate a random state used for sampling random seeds for the envs and agents
-        self.maze_seeding = MazeSeeding(np.random.randint(np.iinfo(np.int32).max),
-                                        np.random.randint(np.iinfo(np.int32).max),
-                                        False)
+        self.maze_seeding = MazeSeeding(env_seed=np.random.randint(np.iinfo(np.int32).max),
+                                        agent_seed=np.random.randint(np.iinfo(np.int32).max),
+                                        cudnn_determinism_flag=False, explicit_env_seeds=None,
+                                        explicit_agent_seeds=None, shuffle_seeds=False)
 
     @override(Runner)
     def setup(self, cfg: DictConfig) -> None:
@@ -59,8 +61,11 @@ class RolloutRunner(Runner, ABC):
         self.input_dir = cfg.input_dir
 
         # Generate a random state used for sampling random seeds for the envs and agents
-        self.maze_seeding = MazeSeeding(cfg.seeding.env_base_seed, cfg.seeding.agent_base_seed,
-                                        cfg.seeding.cudnn_determinism_flag)
+        self.maze_seeding = MazeSeeding(env_seed=cfg.seeding.env_base_seed, agent_seed=cfg.seeding.agent_base_seed,
+                                        cudnn_determinism_flag=cfg.seeding.cudnn_determinism_flag,
+                                        explicit_env_seeds=cfg.seeding.explicit_env_seeds,
+                                        explicit_agent_seeds=cfg.seeding.explicit_agent_seeds,
+                                        shuffle_seeds=cfg.seeding.shuffle_seeds)
 
     @override(Runner)
     def run(self) -> None:
@@ -70,8 +75,9 @@ class RolloutRunner(Runner, ABC):
         # However, to ensure model states, normalization stats and else are loaded from expected
         # locations, we will change the dir back to the original working dir for the initialization
         # (and then change it back so that all later script output lands in the hydra output dir as expected)
-
+        start_time = time.time()
         self.run_with(self._cfg.env, self._cfg.wrappers if "wrappers" in self._cfg else {}, self._cfg.policy)
+        print(f'Rollout took {time.time() - start_time:.3f} seconds')
 
     @abstractmethod
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType) -> None:
@@ -95,8 +101,8 @@ class RolloutRunner(Runner, ABC):
                            max_episode_steps: int,
                            agent_config: DictConfig,
                            input_dir: str,
-                           env_instance_seed: int,
-                           agent_instance_seed: int) -> (BaseEnv, Policy):
+                           env_instance_seed: Any,
+                           agent_instance_seed: Any) -> (BaseEnv, Policy):
         """Build the environment (including wrappers) and agent according to given configuration.
 
         :param env_config: Environment config.
@@ -124,6 +130,7 @@ class RolloutRunner(Runner, ABC):
 
     @staticmethod
     def run_interaction_loop(env: StructuredEnv, agent: Policy, n_episodes: int,
+                             env_seeds: List[Any], agent_seeds: List[Any],
                              render: bool = False, episode_end_callback: Callable = None) -> None:
         """Helper function for running the agent-environment interaction loop for specified number of steps
         and episodes.
@@ -131,27 +138,42 @@ class RolloutRunner(Runner, ABC):
         :param env: Environment to run.
         :param agent: Agent to use.
         :param n_episodes: Count of episodes to perform.
+        :param env_seeds: The env seeds to be used for each episode.
+        :param agent_seeds: The agent seeds to be used for each episode.
         :param render: Whether to render the environment after every step.
         :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer.
         """
         obs = env.reset()
 
-        for _ in range(n_episodes):
+        for idx in range(n_episodes):
             done = False
             while not done:
-                # inject the MazeEnv state if desired by the policy
-                action = agent.compute_action(observation=obs,
-                                              actor_id=env.actor_id(),
-                                              maze_state=env.get_maze_state() if agent.needs_state() else None,
-                                              env=env if agent.needs_env() else None)
 
-                obs, rew, done, info = env.step(action)
+                try:
+                    # inject the MazeEnv state if desired by the policy
+                    action = agent.compute_action(observation=obs,
+                                                  actor_id=env.actor_id(),
+                                                  maze_state=env.get_maze_state() if agent.needs_state() else None,
+                                                  env=env if agent.needs_env() else None)
 
-                if render:
-                    assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \
-                                                                        "trajectory recording is enabled."
-                    env.render()
+                    obs, rew, done, info = env.step(action)
+
+                    if render:
+                        assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \
+                                                                            "trajectory recording is enabled."
+                        env.render()
+                except Exception as e:
+                    print(f'Exception {e} encountered in parallel rollout worker.')
+                    raise e
+
+            if idx < n_episodes - 1:
+                env.seed(env_seeds[idx])
+                agent.seed(agent_seeds[idx])
+
+            # TODO: Add reset to policy interface
+            # agent.reset()
 
             obs = env.reset()
+
             if episode_end_callback is not None:
                 episode_end_callback()

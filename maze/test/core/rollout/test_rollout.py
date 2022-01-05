@@ -38,7 +38,8 @@ def test_rollouts_from_python():
         record_trajectory=False,
         record_event_logs=False,
         render=False)
-    sequential.maze_seeding = MazeSeeding(1234, 4321, False)
+    sequential.maze_seeding = MazeSeeding(env_seed=1234, agent_seed=4321, cudnn_determinism_flag=False,
+                                          explicit_env_seeds=None, explicit_agent_seeds=None, shuffle_seeds=False)
     sequential.run_with(env=env, wrappers={}, agent=agent)
 
     parallel = ParallelRolloutRunner(
@@ -47,7 +48,8 @@ def test_rollouts_from_python():
         record_trajectory=False,
         record_event_logs=False,
         n_processes=2)
-    parallel.maze_seeding = MazeSeeding(1234, 4321, False)
+    parallel.maze_seeding = MazeSeeding(env_seed=1234, agent_seed=4321, cudnn_determinism_flag=False,
+                                        explicit_env_seeds=None, explicit_agent_seeds=None, shuffle_seeds=False)
     # Test with a wrapper config as well
     parallel.run_with(
         env=env,
@@ -65,5 +67,6 @@ def test_sequential_rollout_with_rendering():
         record_trajectory=True,
         record_event_logs=False,
         render=True)
-    sequential.maze_seeding = MazeSeeding(1234, 4321, False)
+    sequential.maze_seeding = MazeSeeding(env_seed=1234, agent_seed=4321, cudnn_determinism_flag=False,
+                                          explicit_env_seeds=None, explicit_agent_seeds=None, shuffle_seeds=False)
     sequential.run_with(env=env, wrappers={}, agent=agent)
