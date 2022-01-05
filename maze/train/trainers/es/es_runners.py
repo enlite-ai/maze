@@ -49,7 +49,7 @@ class ESMasterRunner(TrainingRunner, ABC):
 
         torch_policy = TorchPolicy(networks=self._model_composer.policy.networks,
                                    distribution_mapper=self._model_composer.distribution_mapper, device="cpu")
-        torch_policy.seed(self.maze_seeding.agent_global_seed)
+        torch_policy.seed(self.maze_seeding.global_seed)
 
         # support policy wrapping
         if self._cfg.algorithm.policy_wrapper:

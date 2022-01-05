@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 from gym import spaces
+
 from maze.core.annotations import override
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
@@ -181,3 +182,17 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self._observation_stack = copy.deepcopy(env._observation_stack)
         self.env.clone_from(env)
+
+    def set_observation_stack(self, observation_stack: Dict[str, List[np.ndarray]]) -> None:
+        """Set the observation stack of the wrapper.
+
+        :param observation_stack: The observation stack to be set.
+        """
+        self._observation_stack = observation_stack
+
+    def get_observation_stack(self) -> Dict[str, List[np.ndarray]]:
+        """Retrieve the observation stack of the wrapper.
+
+        :return: The current observation stack of th wrapper.
+        """
+        return self._observation_stack

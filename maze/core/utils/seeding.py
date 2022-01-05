@@ -1,10 +1,12 @@
 """This file holds the maze random number generator as well as a Method for setting random seeds globally."""
 import random
+from typing import Optional, Sequence, Any, Union, List
 
 import numpy as np
 import torch
 import torch.backends.cudnn
 
+from maze.core.utils.factory import ConfigType, Factory
 from maze.utils.bcolors import BColors
 
 
@@ -44,11 +46,73 @@ class MazeSeeding:
         https://pytorch.org/docs/1.7.1/notes/randomness.html?highlight=reproducability
 
     """
-    def __init__(self, env_seed: int, agent_seed: int, cudnn_determinism_flag: bool):
+    def __init__(self, env_seed: int, agent_seed: int, cudnn_determinism_flag: bool,
+                 explicit_env_seeds: Optional[Union[Sequence[Any], ConfigType]],
+                 explicit_agent_seeds: Optional[Union[Sequence[Any], ConfigType]],
+                 shuffle_seeds: bool):
+        self._env_base_seed = env_seed
+        self._agent_base_seed = agent_seed
         self.env_rng = np.random.RandomState(env_seed)
         self.agent_rng = np.random.RandomState(agent_seed)
-        self.agent_global_seed = self.generate_agent_instance_seed()
         self.cudnn_determinism_flag = cudnn_determinism_flag
+
+        self._shuffle_seeds = shuffle_seeds
+
+        self._explicit_env_seeds = explicit_env_seeds
+        if self._explicit_env_seeds is not None:
+            self._explicit_env_seeds = list(Factory(Sequence).instantiate(explicit_env_seeds))
+            if self._shuffle_seeds:
+                self._explicit_env_seeds = list(map(int,self.env_rng.permutation(self._explicit_env_seeds)))
+
+        self._explicit_agent_seeds = explicit_agent_seeds
+        if self._explicit_agent_seeds is not None:
+            self._explicit_agent_seeds = list(Factory(Sequence).instantiate(explicit_agent_seeds))
+            if self._shuffle_seeds:
+                self._explicit_agent_seeds = list(map(int, self.agent_rng.permutation(self._explicit_agent_seeds)))
+
+        self.global_seed = self.generate_agent_instance_seed()
+
+    def get_explicit_env_seeds(self, n_seeds: int) -> List[Any]:
+        """Return a list of explicit env seeds to be used for each episode.
+
+        :param n_seeds: The number of seeds to be returned.
+        :return: A list of seeds.
+        """
+        if self._explicit_env_seeds is not None:
+            return self._explicit_env_seeds
+        else:
+            seeds = [self.generate_env_instance_seed() for _ in range(n_seeds)]
+            if self._shuffle_seeds:
+                seeds = list(map(int, self.env_rng.permutation(seeds)))
+            return seeds
+
+    def get_explicit_agent_seeds(self, n_seeds: int) -> List[Any]:
+        """Return a list of explicit agent seeds to be used for each episode.
+
+        :param n_seeds: The number of seeds to be returned.
+        :return: A list of seeds.
+        """
+        if self._explicit_agent_seeds is not None:
+            return self._explicit_agent_seeds
+        else:
+            seeds = [self.generate_agent_instance_seed() for _ in range(n_seeds)]
+            if self._shuffle_seeds:
+                seeds = list(map(int, self.agent_rng.permutation(seeds)))
+            return seeds
+
+    def get_env_base_seed(self) -> int:
+        """Return the env base seed.
+
+        :return: The env base seed.
+        """
+        return self._env_base_seed
+
+    def get_agent_base_seed(self) -> int:
+        """Return the agent base seed.
+
+        :return: The agent base seed.
+        """
+        return self._agent_base_seed
 
     @staticmethod
     def generate_seed_from_random_state(rng: np.random.RandomState) -> int:

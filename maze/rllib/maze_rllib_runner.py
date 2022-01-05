@@ -74,8 +74,9 @@ class MazeRLlibRunner(Runner):
         :param cfg: Full Hydra run job config
         """
         # Generate a random state used for sampling random seeds for the envs and agents
-        self.maze_seeding = MazeSeeding(cfg.seeding.env_base_seed, cfg.seeding.agent_base_seed,
-                                        cfg.seeding.cudnn_determinism_flag)
+        self.maze_seeding = MazeSeeding(env_seed=cfg.seeding.env_base_seed, agent_seed=cfg.seeding.agent_base_seed,
+                                        cudnn_determinism_flag=cfg.seeding.cudnn_determinism_flag,
+                                        explicit_agent_seeds=None, explicit_env_seeds=None, shuffle_seeds=False)
 
         self._cfg = cfg
 

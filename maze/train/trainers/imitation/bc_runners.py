@@ -83,7 +83,7 @@ class BCRunner(TrainingRunner):
             networks=self._model_composer.policy.networks,
             distribution_mapper=self._model_composer.distribution_mapper, device=cfg.algorithm.device,
             substeps_with_separate_agent_nets=self._model_composer.policy.substeps_with_separate_agent_nets)
-        policy.seed(self.maze_seeding.agent_global_seed)
+        policy.seed(self.maze_seeding.global_seed)
 
         self._model_selection = BestModelSelection(self.state_dict_dump_file, policy,
                                                    dump_interval=self.dump_interval)
