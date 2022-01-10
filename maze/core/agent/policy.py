@@ -81,3 +81,6 @@ class Policy(ABC):
         :return: a tuple of sequences, where the first sequence corresponds to the possible actions, the other sequence
                  to the associated scores (e.g, probabilities or Q-values).
         """
+
+    def reset(self) -> None:
+        """Reset the agent components after each episode if necessary."""

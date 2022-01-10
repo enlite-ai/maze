@@ -46,6 +46,7 @@ class MazeSeeding:
         https://pytorch.org/docs/1.7.1/notes/randomness.html?highlight=reproducability
 
     """
+
     def __init__(self, env_seed: int, agent_seed: int, cudnn_determinism_flag: bool,
                  explicit_env_seeds: Optional[Union[Sequence[Any], ConfigType]],
                  explicit_agent_seeds: Optional[Union[Sequence[Any], ConfigType]],
@@ -62,13 +63,19 @@ class MazeSeeding:
         if self._explicit_env_seeds is not None:
             self._explicit_env_seeds = list(Factory(Sequence).instantiate(explicit_env_seeds))
             if self._shuffle_seeds:
-                self._explicit_env_seeds = list(map(int,self.env_rng.permutation(self._explicit_env_seeds)))
+                seed_is_int = isinstance(self._explicit_env_seeds[0], int)
+                self._explicit_env_seeds = list(self.env_rng.permutation(self._explicit_env_seeds))
+                if seed_is_int:
+                    self._explicit_env_seeds = list(map(int, self._explicit_env_seeds))
 
         self._explicit_agent_seeds = explicit_agent_seeds
         if self._explicit_agent_seeds is not None:
             self._explicit_agent_seeds = list(Factory(Sequence).instantiate(explicit_agent_seeds))
             if self._shuffle_seeds:
-                self._explicit_agent_seeds = list(map(int, self.agent_rng.permutation(self._explicit_agent_seeds)))
+                seed_is_int = isinstance(self._explicit_agent_seeds[0], int)
+                self._explicit_agent_seeds = list(self.agent_rng.permutation(self._explicit_agent_seeds))
+                if seed_is_int:
+                    self._explicit_agent_seeds = list(map(int, self._explicit_agent_seeds))
 
         self.global_seed = self.generate_agent_instance_seed()
 
@@ -79,7 +86,7 @@ class MazeSeeding:
         :return: A list of seeds.
         """
         if self._explicit_env_seeds is not None:
-            return self._explicit_env_seeds
+            return self._explicit_env_seeds[:n_seeds]
         else:
             seeds = [self.generate_env_instance_seed() for _ in range(n_seeds)]
             if self._shuffle_seeds:
@@ -93,7 +100,7 @@ class MazeSeeding:
         :return: A list of seeds.
         """
         if self._explicit_agent_seeds is not None:
-            return self._explicit_agent_seeds
+            return self._explicit_agent_seeds[:n_seeds]
         else:
             seeds = [self.generate_agent_instance_seed() for _ in range(n_seeds)]
             if self._shuffle_seeds:
@@ -135,4 +142,3 @@ class MazeSeeding:
         :return: A random seed for creating the agent.
         """
         return self.generate_seed_from_random_state(self.agent_rng)
-
