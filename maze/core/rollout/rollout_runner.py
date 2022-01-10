@@ -16,6 +16,7 @@ from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.runner import Runner
+from maze.utils.bcolors import BColors
 
 
 class RolloutRunner(Runner, ABC):
@@ -100,9 +101,7 @@ class RolloutRunner(Runner, ABC):
                            wrappers_config: CollectionOfConfigType,
                            max_episode_steps: int,
                            agent_config: DictConfig,
-                           input_dir: str,
-                           env_instance_seed: Any,
-                           agent_instance_seed: Any) -> (BaseEnv, Policy):
+                           input_dir: str) -> (BaseEnv, Policy):
         """Build the environment (including wrappers) and agent according to given configuration.
 
         :param env_config: Environment config.
@@ -110,8 +109,6 @@ class RolloutRunner(Runner, ABC):
         :param max_episode_steps: Max number of steps per episode to limit the env for.
         :param agent_config: Policies config.
         :param input_dir: Directory to load the model from.
-        :param env_instance_seed: The seed for this particular env.
-        :param agent_instance_seed: The seed for this particular agent.
 
         :return: Tuple of (instantiated environment, instantiated agent).
         """
@@ -121,10 +118,8 @@ class RolloutRunner(Runner, ABC):
             if not isinstance(env, TimeLimitWrapper):
                 env = TimeLimitWrapper.wrap(env)
             env.set_max_episode_steps(max_episode_steps)
-            env.seed(env_instance_seed)
 
             agent = Factory(base_type=Policy).instantiate(agent_config)
-            agent.seed(agent_instance_seed)
 
         return env, agent
 
@@ -143,36 +138,33 @@ class RolloutRunner(Runner, ABC):
         :param render: Whether to render the environment after every step.
         :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer.
         """
+        env.seed(env_seeds[0])
         obs = env.reset()
+
+        agent.seed(agent_seeds[0])
+        agent.reset()
 
         for idx in range(n_episodes):
             done = False
             while not done:
+                # inject the MazeEnv state if desired by the policy
+                action = agent.compute_action(observation=obs,
+                                              actor_id=env.actor_id(),
+                                              maze_state=env.get_maze_state() if agent.needs_state() else None,
+                                              env=env if agent.needs_env() else None)
 
-                try:
-                    # inject the MazeEnv state if desired by the policy
-                    action = agent.compute_action(observation=obs,
-                                                  actor_id=env.actor_id(),
-                                                  maze_state=env.get_maze_state() if agent.needs_state() else None,
-                                                  env=env if agent.needs_env() else None)
+                obs, rew, done, info = env.step(action)
 
-                    obs, rew, done, info = env.step(action)
-
-                    if render:
-                        assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \
-                                                                            "trajectory recording is enabled."
-                        env.render()
-                except Exception as e:
-                    print(f'Exception {e} encountered in parallel rollout worker.')
-                    raise e
+                if render:
+                    assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \
+                                                                        "trajectory recording is enabled."
+                    env.render()
 
             if idx < n_episodes - 1:
-                env.seed(env_seeds[idx])
-                agent.seed(agent_seeds[idx])
+                env.seed(env_seeds[idx + 1])
+                agent.seed(agent_seeds[idx + 1])
 
-            # TODO: Add reset to policy interface
-            # agent.reset()
-
+            agent.reset()
             obs = env.reset()
 
             if episode_end_callback is not None:

@@ -87,14 +87,13 @@ class ParallelRolloutWorker:
         """
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
-                                                          agent_config, input_directory, env_seeds[0],
-                                                          agent_seeds[0])
+                                                          agent_config, input_directory)
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
             RolloutRunner.run_interaction_loop(
                 env, agent, n_episodes,
                 episode_end_callback=lambda: reporting_queue.put(episode_recorder.get_last_episode_data()),
-                env_seeds=env_seeds[1:], agent_seeds=agent_seeds[1:]
+                env_seeds=env_seeds, agent_seeds=agent_seeds
             )
         except Exception as exception:
             # Ship exception along with a traceback to the main process
