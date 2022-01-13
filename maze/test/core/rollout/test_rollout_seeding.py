@@ -35,14 +35,14 @@ def perform_rollout_seeding_test(hydra_overrides_sequential: Dict[str, str],
     """
     sequential_writer = LogStatsWriterExtract()
     register_log_stats_writer(sequential_writer)
-    hydra_overrides_sequential.update({'runner': 'sequential'})
+    hydra_overrides_sequential.update({'runner': 'sequential', 'runner.n_episodes': 8})
     run_maze_job(hydra_overrides_sequential,
                  config_module='maze.conf', config_name='conf_rollout')
     sequential_data = copy.deepcopy(sequential_writer.data)
 
     parallel_writer = LogStatsWriterExtract()
     register_log_stats_writer(parallel_writer)
-    hydra_overrides_parallel.update({'runner': 'parallel'})
+    hydra_overrides_parallel.update({'runner': 'parallel', 'runner.n_episodes': 8, 'runner.n_processes': 2})
     run_maze_job(hydra_overrides_parallel,
                  config_module='maze.conf', config_name='conf_rollout')
     parallel_data = copy.deepcopy(parallel_writer.data)

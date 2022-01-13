@@ -1,9 +1,9 @@
 """Parallel rollout runner for running envs and agents in multiple processes."""
-
+import os
 import traceback
 from collections import namedtuple
 from multiprocessing import Queue, Process
-from typing import Iterable, Tuple, List, Any
+from typing import Iterable, Tuple
 
 from omegaconf import DictConfig
 from tqdm import tqdm
@@ -24,6 +24,7 @@ from maze.core.trajectory_recording.writers.trajectory_writer_registry import Tr
 from maze.core.utils.factory import ConfigType, CollectionOfConfigType
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
+from maze.utils.bcolors import BColors
 
 EpisodeStatsReport = namedtuple("EpisodeStatsReport", "stats event_log")
 """Tuple for passing episode stats from workers to the main process."""
@@ -64,37 +65,44 @@ class ParallelRolloutWorker:
     def run(env_config: DictConfig,
             wrapper_config: DictConfig,
             agent_config: DictConfig,
-            n_episodes: int,
             max_episode_steps: int,
             record_trajectory: bool,
             input_directory: str,
             reporting_queue: Queue,
-            env_seeds: List[Any],
-            agent_seeds: List[Any]) -> None:
+            seeding_queue: Queue) -> None:
         """Build the environment and run the rollout for the specified number of episodes.
 
         :param env_config: Hydra configuration of the environment to instantiate.
         :param wrapper_config: Hydra configuration of environment wrappers.
         :param agent_config: Hydra configuration of agent's policies.
-        :param n_episodes: Number of episodes to run (in total, will be split across processes).
         :param max_episode_steps: Max number of steps per episode to perform
                                     (episode might end earlier if env returns done).
         :param record_trajectory: Whether to record trajectory data.
         :param input_directory: Directory to load the model from.
         :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode.
-        :param env_seeds: A list of seeds for seeding the environment.
-        :param agent_seeds: A list of seeds for seeding the agent.
+        :param seeding_queue: Queue for retrieving seeds.
         """
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
                                                           agent_config, input_directory)
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
-            RolloutRunner.run_interaction_loop(
-                env, agent, n_episodes,
-                episode_end_callback=lambda: reporting_queue.put(episode_recorder.get_last_episode_data()),
-                env_seeds=env_seeds, agent_seeds=agent_seeds
-            )
+            first_episode = True
+            while not seeding_queue.empty():
+                env_seed, agent_seed = seeding_queue.get()
+                RolloutRunner.run_episode(
+                    env=env, agent=agent, agent_seed=agent_seed, env_seed=env_seed,
+                    episode_end_callback=None if first_episode else lambda: reporting_queue.put(
+                        episode_recorder.get_last_episode_data()),
+                    render=False
+                )
+                first_episode = False
+
+            # Reset env and agent at the very end in order to collect the statistics
+            env.reset()
+            agent.reset()
+            reporting_queue.put(episode_recorder.get_last_episode_data())
+
         except Exception as exception:
             # Ship exception along with a traceback to the main process
             exception_report = ExceptionReport(exception, traceback.format_exc())
@@ -160,6 +168,7 @@ class ParallelRolloutRunner(RolloutRunner):
         self.n_processes = n_processes
         self.epoch_stats_aggregator = None
         self.reporting_queue = None
+        self.seeding_queue = None
 
     @override(RolloutRunner)
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType):
@@ -174,35 +183,28 @@ class ParallelRolloutRunner(RolloutRunner):
             -> Iterable[Process]:
         """Configure the workers according to the rollout config and launch them."""
         # Setup seeding
-        env_seeds_per_processes = [[] for _ in range(self.n_processes)]
-        agent_seeds_per_processes = [[] for _ in range(self.n_processes)]
         env_seeds = self.maze_seeding.get_explicit_env_seeds(self.n_episodes)
         agent_seeds = self.maze_seeding.get_explicit_agent_seeds(self.n_episodes)
         assert len(env_seeds) == len(agent_seeds)
+        self.seeding_queue = Queue()
+        for env_seed, agent_seed in zip(env_seeds, agent_seeds):
+            self.seeding_queue.put((env_seed, agent_seed))
 
-        # Split total episode count across workers
-        episodes_per_process = [0] * self.n_processes
-        for i in range(self.n_episodes):
-            episodes_per_process[i % self.n_processes] += 1
-
-        # Seeds have to be split separately, since all seeds should be split to the workers in case some seeds fail.
-        for i in range(len(env_seeds)):
-            env_seeds_per_processes[i % self.n_processes].append(env_seeds[i])
-            agent_seeds_per_processes[i % self.n_processes].append(agent_seeds[i])
+        actual_number_of_episodes = min(len(env_seeds), self.n_episodes)
+        if actual_number_of_episodes < self.n_episodes:
+            BColors.print_colored(f'Only {len(env_seeds)} explicit seed(s) given, thus the number of episodes changed '
+                                  f'from: {self.n_episodes} to {actual_number_of_episodes}.', BColors.WARNING)
 
         # Configure and launch the processes
         self.reporting_queue = Queue()
         workers = []
-        for process_idx, n_process_episodes in enumerate(episodes_per_process):
-            if n_process_episodes == 0:
-                break
-
+        for _ in range(min(self.n_processes, actual_number_of_episodes)):
             p = Process(
                 target=ParallelRolloutWorker.run,
                 args=(env, wrappers, agent,
-                      n_process_episodes, self.max_episode_steps,
+                      self.max_episode_steps,
                       self.record_trajectory, self.input_dir, self.reporting_queue,
-                      env_seeds_per_processes[process_idx], agent_seeds_per_processes[process_idx]),
+                      self.seeding_queue),
                 daemon=True
             )
             p.start()
