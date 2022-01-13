@@ -17,6 +17,7 @@ from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.runner import Runner
+from maze.utils.bcolors import BColors
 
 
 class RolloutRunner(Runner, ABC):
@@ -178,8 +179,15 @@ class RolloutRunner(Runner, ABC):
         """
 
         for idx in range(n_episodes):
-            cls.run_episode(env=env, agent=agent, env_seed=env_seeds[idx], agent_seed=agent_seeds[idx], render=render,
-                            episode_end_callback=None if idx == 0 else episode_end_callback)
+            env_seed = env_seeds[idx]
+            agent_seed = agent_seeds[idx]
+            try:
+                cls.run_episode(env=env, agent=agent, env_seed=env_seed, agent_seed=agent_seed, render=render,
+                                episode_end_callback=None if idx == 0 else episode_end_callback)
+            except Exception as exception:
+                BColors.print_colored(f'A error was encountered during rollout on the env_seed: {env_seed} with '
+                                      f'agent_seed: {agent_seed}', BColors.FAIL)
+                raise exception
 
         # Reset env and agent at the very end in order to collect the statistics
         env.reset()

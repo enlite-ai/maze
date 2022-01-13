@@ -1,5 +1,4 @@
 """Parallel rollout runner for running envs and agents in multiple processes."""
-import os
 import traceback
 from collections import namedtuple
 from multiprocessing import Queue, Process
@@ -29,7 +28,7 @@ from maze.utils.bcolors import BColors
 EpisodeStatsReport = namedtuple("EpisodeStatsReport", "stats event_log")
 """Tuple for passing episode stats from workers to the main process."""
 
-ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
+ExceptionReport = namedtuple("ExceptionReport", "exception traceback env_seed agent_seed")
 """Tuple for passing error reports from the workers to the main process."""
 
 
@@ -82,6 +81,7 @@ class ParallelRolloutWorker:
         :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode.
         :param seeding_queue: Queue for retrieving seeds.
         """
+        env_seed, agent_seed = None, None
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
                                                           agent_config, input_directory)
@@ -105,7 +105,7 @@ class ParallelRolloutWorker:
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process
-            exception_report = ExceptionReport(exception, traceback.format_exc())
+            exception_report = ExceptionReport(exception, traceback.format_exc(), env_seed, agent_seed)
             reporting_queue.put(exception_report)
             raise
 
@@ -227,8 +227,8 @@ class ParallelRolloutRunner(RolloutRunner):
             if isinstance(report, ExceptionReport):
                 for p in workers:
                     p.terminate()
-                raise RuntimeError("A worker encountered the following error:\n"
-                                   + report.traceback) from report.exception
+                raise RuntimeError(f"A worker encountered the following error on env_seed: {report.env_seed} with "
+                                   f"agent_seed: {report.agent_seed}:\n" + report.traceback) from report.exception
 
             episode_stats, episode_event_log = report
             if episode_stats is not None:
