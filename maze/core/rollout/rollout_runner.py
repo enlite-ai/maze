@@ -127,7 +127,7 @@ class RolloutRunner(Runner, ABC):
 
     @staticmethod
     def run_episode(env: StructuredEnv, agent: Policy, env_seed: Any, agent_seed: Any, render: bool,
-                    episode_end_callback: Optional[Callable]) -> None:
+                    after_reset_callback: Optional[Callable]) -> None:
         """Helper function for running a single episode.
 
         :param env: Environment to run.
@@ -135,7 +135,7 @@ class RolloutRunner(Runner, ABC):
         :param env_seed: The env seed to be used for this episode.
         :param agent_seed: The agent seed to be used for this episode.
         :param render: Whether to render the environment after every step.
-        :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer.
+        :param after_reset_callback: If supplied, this will be executed after each episode to notify the observer.
         """
 
         env.seed(env_seed)
@@ -144,8 +144,8 @@ class RolloutRunner(Runner, ABC):
         agent.seed(agent_seed)
         agent.reset()
 
-        if episode_end_callback is not None:
-            episode_end_callback()
+        if after_reset_callback is not None:
+            after_reset_callback()
 
         done = False
         while not done:
@@ -165,7 +165,7 @@ class RolloutRunner(Runner, ABC):
     @classmethod
     def run_interaction_loop(cls, env: StructuredEnv, agent: Policy, n_episodes: int,
                              env_seeds: List[Any], agent_seeds: List[Any],
-                             render: bool = False, episode_end_callback: Callable = None) -> None:
+                             render: bool = False, after_reset_callback: Callable = None) -> None:
         """Helper function for running the agent-environment interaction loop for specified number of steps
         and episodes.
 
@@ -175,7 +175,7 @@ class RolloutRunner(Runner, ABC):
         :param env_seeds: The env seeds to be used for each episode.
         :param agent_seeds: The agent seeds to be used for each episode.
         :param render: Whether to render the environment after every step.
-        :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer.
+        :param after_reset_callback: If supplied, this will be executed after each episode to notify the observer.
         """
 
         for idx in range(n_episodes):
@@ -183,7 +183,7 @@ class RolloutRunner(Runner, ABC):
             agent_seed = agent_seeds[idx]
             try:
                 cls.run_episode(env=env, agent=agent, env_seed=env_seed, agent_seed=agent_seed, render=render,
-                                episode_end_callback=None if idx == 0 else episode_end_callback)
+                                after_reset_callback=None if idx == 0 else after_reset_callback)
             except Exception as exception:
                 BColors.print_colored(f'A error was encountered during rollout on the env_seed: {env_seed} with '
                                       f'agent_seed: {agent_seed}', BColors.FAIL)
@@ -192,5 +192,5 @@ class RolloutRunner(Runner, ABC):
         # Reset env and agent at the very end in order to collect the statistics
         env.reset()
         agent.reset()
-        if episode_end_callback is not None:
-            episode_end_callback()
+        if after_reset_callback is not None:
+            after_reset_callback()

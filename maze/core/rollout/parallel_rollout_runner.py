@@ -92,7 +92,7 @@ class ParallelRolloutWorker:
                 env_seed, agent_seed = seeding_queue.get()
                 RolloutRunner.run_episode(
                     env=env, agent=agent, agent_seed=agent_seed, env_seed=env_seed,
-                    episode_end_callback=None if first_episode else lambda: reporting_queue.put(
+                    after_reset_callback=None if first_episode else lambda: reporting_queue.put(
                         episode_recorder.get_last_episode_data()),
                     render=False
                 )

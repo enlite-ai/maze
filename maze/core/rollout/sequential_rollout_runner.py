@@ -68,7 +68,7 @@ class SequentialRolloutRunner(RolloutRunner):
                                   f'from: {self.n_episodes} to {actual_number_of_episodes}.', BColors.WARNING)
         self.progress_bar = tqdm(desc="Episodes done", unit=" episodes", total=actual_number_of_episodes)
         RolloutRunner.run_interaction_loop(env, agent, actual_number_of_episodes, render=self.render,
-                                           episode_end_callback=lambda: self.update_progress(),
+                                           after_reset_callback=lambda: self.update_progress(),
                                            env_seeds=env_seeds, agent_seeds=agent_seeds)
         self.progress_bar.close()
         env.write_epoch_stats()
