@@ -1,7 +1,8 @@
 # @package runner
 _target_: maze.core.rollout.sequential_rollout_runner.SequentialRolloutRunner
 
-# Total number of episodes to run
+# Total number of episodes to run. If explicit seeds are given the actual number of episodes is given by
+#  min(n_episodes, n_seeds).
 n_episodes: 50
 
 # Max steps per episode to perform

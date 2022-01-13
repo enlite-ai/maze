@@ -1,4 +1,5 @@
 """Abstract class for rollout runners."""
+import os.path
 import time
 from abc import ABC, abstractmethod
 from typing import Callable, Optional, List, Any
@@ -16,7 +17,6 @@ from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.runner import Runner
-from maze.utils.bcolors import BColors
 
 
 class RolloutRunner(Runner, ABC):
@@ -24,9 +24,10 @@ class RolloutRunner(Runner, ABC):
 
     Offers general structure, plus a couple of helper methods for env instantiation and performing the rollout.
 
-    :param n_episodes: Count of episodes to run.
+    :param n_episodes: Count of episodes to run. If explicit seeds are given the actual number of episodes is given by
+                       min(n_episodes, n_seeds).
     :param max_episode_steps: Count of steps to run in each episode (if environment returns done, the episode
-                                will be finished earlier though).
+                              will be finished earlier though).
     :param record_trajectory: Whether to record trajectory data.
     :param record_event_logs: Whether to record event logs.
     """
@@ -124,7 +125,44 @@ class RolloutRunner(Runner, ABC):
         return env, agent
 
     @staticmethod
-    def run_interaction_loop(env: StructuredEnv, agent: Policy, n_episodes: int,
+    def run_episode(env: StructuredEnv, agent: Policy, env_seed: Any, agent_seed: Any, render: bool,
+                    episode_end_callback: Optional[Callable]) -> None:
+        """Helper function for running a single episode.
+
+        :param env: Environment to run.
+        :param agent: Agent to use.
+        :param env_seed: The env seed to be used for this episode.
+        :param agent_seed: The agent seed to be used for this episode.
+        :param render: Whether to render the environment after every step.
+        :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer.
+        """
+
+        env.seed(env_seed)
+        obs = env.reset()
+
+        agent.seed(agent_seed)
+        agent.reset()
+
+        if episode_end_callback is not None:
+            episode_end_callback()
+
+        done = False
+        while not done:
+            # inject the MazeEnv state if desired by the policy
+            action = agent.compute_action(observation=obs,
+                                          actor_id=env.actor_id(),
+                                          maze_state=env.get_maze_state() if agent.needs_state() else None,
+                                          env=env if agent.needs_env() else None)
+
+            obs, rew, done, info = env.step(action)
+
+            if render:
+                assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \
+                                                                    "trajectory recording is enabled."
+                env.render()
+
+    @classmethod
+    def run_interaction_loop(cls, env: StructuredEnv, agent: Policy, n_episodes: int,
                              env_seeds: List[Any], agent_seeds: List[Any],
                              render: bool = False, episode_end_callback: Callable = None) -> None:
         """Helper function for running the agent-environment interaction loop for specified number of steps
@@ -138,34 +176,13 @@ class RolloutRunner(Runner, ABC):
         :param render: Whether to render the environment after every step.
         :param episode_end_callback: If supplied, this will be executed after each episode to notify the observer.
         """
-        env.seed(env_seeds[0])
-        obs = env.reset()
-
-        agent.seed(agent_seeds[0])
-        agent.reset()
 
         for idx in range(n_episodes):
-            done = False
-            while not done:
-                # inject the MazeEnv state if desired by the policy
-                action = agent.compute_action(observation=obs,
-                                              actor_id=env.actor_id(),
-                                              maze_state=env.get_maze_state() if agent.needs_state() else None,
-                                              env=env if agent.needs_env() else None)
+            cls.run_episode(env=env, agent=agent, env_seed=env_seeds[idx], agent_seed=agent_seeds[idx], render=render,
+                            episode_end_callback=None if idx == 0 else episode_end_callback)
 
-                obs, rew, done, info = env.step(action)
-
-                if render:
-                    assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \
-                                                                        "trajectory recording is enabled."
-                    env.render()
-
-            if idx < n_episodes - 1:
-                env.seed(env_seeds[idx + 1])
-                agent.seed(agent_seeds[idx + 1])
-
-            agent.reset()
-            obs = env.reset()
-
-            if episode_end_callback is not None:
-                episode_end_callback()
+        # Reset env and agent at the very end in order to collect the statistics
+        env.reset()
+        agent.reset()
+        if episode_end_callback is not None:
+            episode_end_callback()
