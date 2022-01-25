@@ -64,7 +64,8 @@ class RandomPolicy(Policy):
                                       maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
                                       actor_id: ActorID = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
-        """Random policy does not provide top action candidates."""
+        """Sample multiple random actions from the provided action space (and assign uniform probabilities
+        to the sampled actions)."""
         candidates = []
         for _ in range(num_candidates):
             candidates.append(
