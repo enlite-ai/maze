@@ -103,6 +103,7 @@ Evolutionary Strategies (ES)
     ~es.es_algorithm_config.ESAlgorithmConfig
     ~es.es_events.ESEvents
     ~es.es_runners.ESMasterRunner
+    ~es.es_runners.ESLocalRunner
     ~es.es_runners.ESDevRunner
     ~es.es_shared_noise_table.SharedNoiseTable
     ~es.optimizers.base_optimizer.Optimizer
