@@ -6,12 +6,10 @@ import torch
 from maze.core.agent.state_critic_input_output import StateCriticOutput, StateCriticInput
 from maze.core.agent.torch_model import TorchModel
 from maze.core.agent.torch_policy import TorchPolicy
-from maze.core.agent.torch_policy_output import PolicyOutput, PolicySubStepOutput
+from maze.core.agent.torch_policy_output import PolicyOutput
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override
-from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorID
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
 
@@ -89,18 +87,6 @@ class TorchActorCritic(TorchModel):
         """
         self.policy.load_state_dict(state_dict)
         self.critic.load_state_dict(state_dict)
-
-    def compute_substep_policy_output(self, observation: ObservationType, actor_id: ActorID = None,
-                                      temperature: float = 1.0) -> PolicySubStepOutput:
-        """Compute the full output of a specified policy.
-
-        :param observation: The observation to use as input.
-        :param actor_id: Optional, the actor id specifying the network to use.
-        :param temperature: Optional, the temperature to use for initializing the probability distribution.
-        :return: The computed PolicySubStepOutput.
-        """
-        return self.policy.compute_substep_policy_output(observation=observation, actor_id=actor_id,
-                                                         temperature=temperature)
 
     def compute_actor_critic_output(self, record: StructuredSpacesRecord, temperature: float = 1.0) -> \
             Tuple[PolicyOutput, StateCriticOutput]:
