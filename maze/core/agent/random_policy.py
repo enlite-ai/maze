@@ -65,6 +65,13 @@ class RandomPolicy(Policy):
                                       actor_id: ActorID = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """Random policy does not provide top action candidates."""
+        candidates = []
+        for _ in range(num_candidates):
+            candidates.append(
+                self.compute_action(observation=observation, maze_state=maze_state, env=env, actor_id=actor_id)
+            )
+
+        return candidates, [1.0 / num_candidates] * num_candidates
 
 
 class DistributedRandomPolicy(RandomPolicy):

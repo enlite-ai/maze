@@ -3,6 +3,7 @@ from abc import abstractmethod, ABC
 from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional
 
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.maze_action import MazeActionType
@@ -216,6 +217,16 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         Note: implementing this method is required for stateful environment wrappers.
         """
         raise NotImplementedError
+
+    def noop_action(self) -> ActionType:
+        """Gets the noop_action for this environment.
+
+        By default, this call is just forwarded down the wrapper stack until it reaches MazeEnv,
+        which attempts to get a noop_action from its action conversion interface. However,
+        if your wrapper somehow manipulates the action format (e.g., by turning the env
+        into a multi-step one), you should override this method and provide a compatible implementation.
+        """
+        return self.env.noop_action()
 
 
 class ObservationWrapper(Wrapper[EnvType], ABC):

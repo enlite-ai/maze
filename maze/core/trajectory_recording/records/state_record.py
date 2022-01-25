@@ -27,11 +27,11 @@ class StateRecord:
     def __init__(self,
                  maze_state: MazeStateType,
                  maze_action: Optional[MazeActionType],
-                 step_event_log: StepEventLog,
-                 reward: Union[float, np.ndarray, Any],
-                 done: Optional[bool],
-                 info: Optional[Dict],
-                 serializable_components: Dict[str, Any]):
+                 step_event_log: Optional[StepEventLog] = None,
+                 reward: Optional[Union[float, np.ndarray, Any]] = None,
+                 done: Optional[bool] = None,
+                 info: Optional[Dict] = None,
+                 serializable_components: Optional[Dict[str, Any]] = None):
         self.maze_state = maze_state
         self.maze_action = maze_action
         self.step_event_log = step_event_log

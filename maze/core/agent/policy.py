@@ -1,7 +1,7 @@
 """Encapsulates policies and queries them for actions according to the provided policy ID."""
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Sequence, Optional
+from typing import Tuple, Optional, List
 
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
@@ -67,7 +67,7 @@ class Policy(ABC):
     def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
                                       maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
                                       actor_id: Optional[ActorID] = None) \
-            -> Tuple[Sequence[ActionType], Sequence[float]]:
+            -> Tuple[List[ActionType], List[float]]:
         """
         Get the top :num_candidates actions as well as the probabilities, q-values, .. leading to the decision.
 

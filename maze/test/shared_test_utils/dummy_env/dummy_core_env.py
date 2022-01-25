@@ -108,3 +108,7 @@ class DummyCoreEnvironment(CoreEnv):
     def agent_counts_dict(self) -> Dict[StepKeyType, int]:
         """Single-step, single agent env."""
         return {0: 1}
+
+    def clone_from(self, env: 'CoreEnv') -> None:
+        """Nothing needs to be done here, as we are anyway just sampling the observation space for "states"""
+        pass
