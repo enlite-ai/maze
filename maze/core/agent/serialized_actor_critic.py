@@ -43,3 +43,10 @@ class SerializedActorCritic(TorchActorCritic):
 
         self.load_state_dict(state_dict)
         self.eval()
+
+    def seed(self, seed: int):
+        """Set torch manual seed
+
+        :param seed: The seed to set.
+        """
+        torch.manual_seed(seed)
