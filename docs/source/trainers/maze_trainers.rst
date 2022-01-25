@@ -430,6 +430,13 @@ arXiv preprint arXiv:1703.03864.
 
 :raw-html:`</details>`
 
+:raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/es-local.yaml)</summary>`
+
+.. literalinclude:: ../../../maze/conf/algorithm_runner/es-local.yaml
+  :language: YAML
+
+:raw-html:`</details>`
+
 
 Maze RLlib Trainer
 ------------------
