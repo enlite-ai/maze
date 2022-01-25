@@ -9,6 +9,7 @@ from hydra import initialize_config_module, compose
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig
 
+from maze.core.agent.serialized_torch_policy import SerializedTorchPolicy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
 from maze.core.wrappers.wrapper_factory import WrapperFactory
@@ -107,6 +108,14 @@ def make_env_from_hydra(config_module: str,
 
 class SwitchWorkingDirectoryToInput:
     """
+    Context manager for temporarily switching directories (e.g., for loading policies or envs from output
+    directories).
+
+    Can be used also in the middle of a Hydra run, when Hydra already changed the current working directory,
+    but the input_path is expected to be relative to the original one.
+
+    More info:
+
     Hydra is configured to create a fresh output directory for each run.
     However, to ensure model states, normalization stats and else are loaded from expected
     locations, we will change the dir back to the original working dir for the initialization
@@ -117,18 +126,57 @@ class SwitchWorkingDirectoryToInput:
         self.input_dir = input_dir
 
     def __enter__(self):
-        # do nothing if hydra is not initialized
-        if not HydraConfig.initialized() or not self.input_dir:
+        if not self.input_dir:
             return
 
-        self.hydra_out_dir = os.getcwd()
-        original_dir = os.path.join(hydra.utils.get_original_cwd(), self.input_dir)
-        print(f"Switching load directory to {original_dir}")
-        os.chdir(original_dir)
+        # we will return to current directory once the loading has been completed
+        self.return_to_dir = os.getcwd()
+
+        # if hydra is initialized, use the original working directory (before hydra changed it)
+        if HydraConfig.initialized():
+            original_work_dir = hydra.utils.get_original_cwd()
+        else:
+            original_work_dir = os.getcwd()
+        input_dir_full_path = os.path.join(original_work_dir, self.input_dir)
+
+        print(f"Switching load directory to {input_dir_full_path}")
+        os.chdir(input_dir_full_path)
 
     def __exit__(self, *args):
-        # do nothing if hydra is not initialized
-        if not HydraConfig.initialized() or not self.input_dir:
+        if not self.input_dir:
             return
 
-        os.chdir(self.hydra_out_dir)
+        os.chdir(self.return_to_dir)
+
+
+def make_env_from_output_dir(path: Union[Path, str]) -> MazeEnv:
+    """Create an environment instance from an output directory of a previous run. The
+    directory is expected to contain the hydra config of the run and all associated
+    information needed for the env (like observation normalization statistics).
+
+    :param path: Path of the output directory to use
+    :return: The newly instantiated environment
+    """
+    with SwitchWorkingDirectoryToInput(path):
+        cfg = read_config("hydra_config.yaml")
+        env = EnvFactory(cfg["env"], cfg["wrappers"] if "wrappers" in cfg else {})()
+    return env
+
+
+def make_policy_from_output_dir(path: Union[Path, str]) -> SerializedTorchPolicy:
+    """Create a serialized Torch policy instance from an output directory of a previous run. The
+    directory is expected to contain the hydra config of the run and all associated
+    information needed for the policy (like state_dict).
+
+    :param path: Path of the output directory to use
+    :return: The newly instantiated policy
+    """
+    with SwitchWorkingDirectoryToInput(path):
+        cfg = read_config("hydra_config.yaml")
+        policy = SerializedTorchPolicy(
+            model=cfg["model"],
+            state_dict_file="state_dict.pt",
+            spaces_dict_file="spaces_config.pkl",
+            device="cpu")
+
+    return policy

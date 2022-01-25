@@ -242,6 +242,11 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return self.observation_conversion_dict[policy_id]
 
     @override(Wrapper)
+    def noop_action(self) -> ActionType:
+        """Helper function for accessing the noop action for current step, compatible with the Wrapper interface."""
+        return self.action_conversion.noop_action()
+
+    @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
                                          maze_action: Optional[MazeActionType], first_step_in_episode: bool) \
             -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
@@ -319,3 +324,16 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
             self.core_env.context.event_service.clear_pubsub()
 
         return reward, done, info
+
+    def set_core_env(self, core_env: CoreEnv) -> None:
+        """Helper method for setting the core env to a new, different core env
+        instance while maintaining the same core env context object (to not break
+        event reporting, callbacks etc.).
+
+        Helpful e.g. during deployment, when simulation in core env is not needed,
+        and we are just mirroring the production environment instead.
+
+        The old core env instanced is not referenced anymore and should be discarded.
+        """
+        core_env.context = self.core_env.context
+        self.core_env = core_env
