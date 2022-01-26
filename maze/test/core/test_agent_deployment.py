@@ -8,7 +8,6 @@ import pytest
 
 from maze.core.agent.random_policy import RandomPolicy
 from maze.core.agent_deployment.agent_deployment import AgentDeployment
-from maze.core.agent_deployment.maze_action_candidates import MazeActionCandidates
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
@@ -243,7 +242,7 @@ def test_writes_event_and_stats_logs():
     reward, done, info = None, None, None
     for i in range(step_count):
         maze_action = agent_deployment.act(maze_state, reward, done, info,
-                                            events=list(test_core_env.get_step_events()))
+                                           events=list(test_core_env.get_step_events()))
         state, reward, done, info = test_core_env.step(maze_action)
         test_core_env.context.increment_env_step()  # Done by maze env ordinarily
 
@@ -256,41 +255,6 @@ def test_writes_event_and_stats_logs():
 
     # Stats logging
     assert stats_writer.collected_stats_count > 0
-
-
-def test_gets_maze_action_candidates():
-    class StaticPolicy(DummyGreedyPolicy):
-        """Mock policy, returns static action candidates (careful, always three of them)."""
-
-        def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                          maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                          actor_id: ActorID = None) \
-                -> Tuple[Sequence[ActionType], Sequence[float]]:
-            """Return static action candidates"""
-
-            return (
-                [{"action_0_0": j, "action_1_0": j, "action_1_1": [j % 2] * 5} for j in range(3)],
-                [0.95, 0.04, 0.01]
-            )
-
-    env = build_dummy_maze_env()
-    core_env, act_conv, obs_conv = env.core_env, env.action_conversion, env.observation_conversion
-
-    agent_deployment = AgentDeployment(
-        policy=StaticPolicy(),
-        env=build_dummy_maze_env(),
-        num_candidates=3
-    )
-
-    test_core_env = build_dummy_maze_env().core_env
-    maze_state = test_core_env.reset()  # Just get a valid state, the content is not really important
-    for i in range(10):
-        maze_action = agent_deployment.act(maze_state, 0, False, {})
-        assert isinstance(maze_action, MazeActionCandidates)
-        assert maze_action.candidates[0]["action_0_0"] == 0
-        assert maze_action.candidates[1]["action_0_0"] == 1
-        assert maze_action.candidates[2]["action_0_0"] == 2
-        assert maze_action.probabilities == [0.95, 0.04, 0.01]
 
 
 def test_propagates_exceptions_to_main_thread():

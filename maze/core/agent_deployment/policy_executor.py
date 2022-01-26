@@ -6,7 +6,6 @@ from threading import Event
 
 from maze.core.agent.policy import Policy
 from maze.core.agent_deployment.external_core_env import ExternalCoreEnv
-from maze.core.agent_deployment.maze_action_candidates import ActionCandidates
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 
 ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
@@ -29,13 +28,11 @@ class PolicyExecutor:
                  env: ExternalCoreEnv,
                  policy: Policy,
                  rollout_done_event: Event,
-                 exception_queue: Queue,
-                 num_candidates: int):
+                 exception_queue: Queue):
         self.env = env
         self.policy = policy
         self.rollout_done_event = rollout_done_event
         self.exception_queue = exception_queue
-        self.num_candidates = num_candidates
 
     def run_rollout_loop(self):
         """Step the environment until the rollout is done."""
@@ -48,20 +45,13 @@ class PolicyExecutor:
                 maze_state = self.env.get_maze_state() if self.policy.needs_state() else None
                 env = self.env if self.policy.needs_env() else None
 
-                # Get either a single action or multiple candidates wrapped in action candidates object
-                if self.num_candidates > 1:
-                    action = ActionCandidates(self.policy.compute_top_action_candidates(observation=observation,
-                                                                                        num_candidates=self.num_candidates,
-                                                                                        maze_state=maze_state, env=env,
-                                                                                        actor_id=actor_id)
-                                              )
-                else:
-                    action = self.policy.compute_action(
-                        observation=observation,
-                        maze_state=maze_state,
-                        env=env,
-                        actor_id=actor_id,
-                        deterministic=True)
+                # Get action from the policy
+                action = self.policy.compute_action(
+                    observation=observation,
+                    maze_state=maze_state,
+                    env=env,
+                    actor_id=actor_id,
+                    deterministic=True)
 
                 observation, _, done, _ = self.env.step(action)
             # Final reset required to notify all wrappers.
