@@ -4,8 +4,6 @@ import uuid
 from copy import deepcopy
 from typing import Union, Any, Tuple, Dict, Optional
 
-import gym
-
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
@@ -34,7 +32,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
     :param env: the environment to wrap.
     """
 
-    def __init__(self, env: Union[gym.Env, MazeEnv]):
+    def __init__(self, env: MazeEnv):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
         # BaseEnv is a subset of gym.Env
         super().__init__(env)
@@ -45,23 +43,31 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         self.last_maze_state: Optional[MazeStateType] = None
         self.last_serializable_components: Optional[Dict[str, Any]] = None
 
+        self._record_next_action = True
+        self._last_maze_action_before_skipping = None
+
+        self.env.context.register_post_step(self._store_last_action)
+
+    def _store_last_action(self) -> None:
+        """Store the last action before step skipping."""
+        if self._record_next_action:
+            self._last_maze_action_before_skipping = deepcopy(self.env.get_maze_action())
+            self._record_next_action = False
+
     @override(BaseEnv)
     def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
         """Record available step-level data."""
         assert self.episode_record is not None, "Environment must be reset before stepping."
 
+        self._record_next_action = True
         observation, reward, done, info = self.env.step(action)
 
         # Recording of event logs and stats happens:
         #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
         #  - for other envs: Every step
         if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
-            self.last_env_time = self.env.get_env_time() if isinstance(self.env,
-                                                                       TimeEnvMixin) else self.last_env_time + 1
-
             # Collect the MazeAction
-            maze_action = deepcopy(self.env.get_maze_action()) if isinstance(self.env, RecordableEnvMixin) \
-                else RawMazeAction(action)
+            maze_action = self._last_maze_action_before_skipping
 
             # Collect step events
             event_collection = EventCollection(
@@ -76,7 +82,9 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             self.episode_record.step_records.append(step_record)
 
             # Collect state and components for the next step
-            self._collect_state_and_components(observation)
+            self._collect_state_and_components()
+            self.last_env_time = self.env.get_env_time() if isinstance(self.env,
+                                                                       TimeEnvMixin) else self.last_env_time + 1
 
         return observation, reward, done, info
 
@@ -86,7 +94,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         self._write_episode_record()
         observation = self.env.reset()
         self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
-        self._collect_state_and_components(observation)
+        self._collect_state_and_components()
         self.episode_record = self._build_episode_record()
         return observation
 
@@ -119,20 +127,15 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             renderer.render(last_step_record.maze_state, last_step_record.maze_action,
                             last_step_record.step_event_log, **kwargs)
 
-    def _collect_state_and_components(self, current_observation: Any):
+    def _collect_state_and_components(self):
         """Collect the state and serializable components, if the env provides access to them.
-
-        :param current_observation: Observation to use if env does not provide access to state
         """
         if isinstance(self.env, SerializableEnvMixin):
             self.last_serializable_components = self.env.get_serializable_components()
         else:
             self.last_serializable_components = {}
 
-        if isinstance(self.env, RecordableEnvMixin):
-            self.last_maze_state = deepcopy(self.env.get_maze_state())
-        else:
-            self.last_maze_state = RawState(current_observation)
+        self.last_maze_state = deepcopy(self.env.get_maze_state())
 
     def _write_episode_record(self):
         """Records final state of the episode and dispatches the record to trajectory data writers."""
