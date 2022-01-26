@@ -12,7 +12,4 @@ This page contains the reference documentation for the Maze agent deployment com
 
     ~agent_deployment.AgentDeployment
     ~policy_executor.PolicyExecutor
-    ~maze_action_candidates.ActionCandidates
-    ~maze_action_candidates.MazeActionCandidates
-    ~maze_action_candidates.ActionConversionCandidatesInterface
     ~external_core_env.ExternalCoreEnv
