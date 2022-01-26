@@ -1,9 +1,10 @@
 """Acts as a core env in an Agent Deployment setting."""
 from queue import Queue
 from threading import Event
-from typing import Tuple, Any, Dict, Union, Iterable, Optional, List
+from typing import Tuple, Any, Dict, Union, Iterable, Optional
 
 import numpy as np
+
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.environment_context import EnvironmentContext
@@ -166,4 +167,3 @@ class ExternalCoreEnv(CoreEnv):
         if events:
             for event in events:
                 self.context.event_service.notify_event(event)
-

@@ -21,7 +21,6 @@ import numpy as np
 
 from maze.core.agent.policy import Policy
 from maze.core.agent_deployment.external_core_env import ExternalCoreEnv
-from maze.core.agent_deployment.maze_action_candidates import ActionConversionCandidatesInterface
 from maze.core.agent_deployment.policy_executor import PolicyExecutor, ExceptionReport
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
@@ -58,16 +57,12 @@ class AgentDeployment:
                 (i.e., the Maze env, wrapper stack and env context will be used), or a config for instantiating
                 such env.
     :param wrappers: Configuration for (additional) wrappers, if required.
-    :param num_candidates: Number of MazeAction candidates to get from the policy. If greater than 1, will return
-                           multiple MazeActions wrapped in
-                           :class:`~maze.core.agent_deployment.maze_action_candidates.MazeActionCandidates`
     """
 
     def __init__(self,
                  policy: ConfigType,
                  env: ConfigType,
-                 wrappers: CollectionOfConfigType = None,
-                 num_candidates: int = 1):
+                 wrappers: CollectionOfConfigType = None):
         self.rollout_done = False
 
         # Thread synchronisation
@@ -93,19 +88,13 @@ class AgentDeployment:
             maze_env = maze_env.env
         maze_env.core_env = self.external_core_env
 
-        # If we are working with multiple candidate actions, wrap the action_conversion interfaces
-        if num_candidates > 1:
-            for policy_id, action_conversion in self.env.action_conversion_dict.items():
-                self.env.action_conversion_dict[policy_id] = ActionConversionCandidatesInterface(action_conversion)
-
         # Policy executor, running the rollout loop on a separate thread
         self.policy = Factory(base_type=Policy).instantiate(policy)
         self.policy_executor = PolicyExecutor(
             env=self.env,
             policy=self.policy,
             rollout_done_event=self.rollout_done_event,
-            exception_queue=self.maze_action_queue,
-            num_candidates=num_candidates)
+            exception_queue=self.maze_action_queue)
         self.policy_thread = Thread(target=self.policy_executor.run_rollout_loop, daemon=True)
         self.policy_thread.start()
 
