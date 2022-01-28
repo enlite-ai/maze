@@ -1,6 +1,7 @@
 """Implementation of Tensorboard output for the logging statistics system."""
 import logging
 import math
+import numbers
 from typing import Callable, Union, List, Optional
 
 import numpy as np
@@ -69,7 +70,7 @@ class LogStatsWriterTensorboard(LogStatsWriter):
 
             if isinstance(value, List):
                 self.summary_writer.add_histogram(tag, np.array(value), step)
-            elif isinstance(value, float) or isinstance(value, int):
+            elif isinstance(value, numbers.Number):
                 self.summary_writer.add_scalar(tag, value, step)
             else:
                 # Only lists and scalars are added to TensorBoard
