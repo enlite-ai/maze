@@ -3,7 +3,7 @@
 # See https://uwekorn.com/2021/03/01/deploying-conda-environments-in-docker-how-to-do-it-right.html for a description of
 # some of the measures implemented to reduce build size and duration.
 
-ARG BASE_IMAGE="condaforge/mambaforge:4.9.2-5"
+ARG BASE_IMAGE="condaforge/mambaforge:4.11.0-0"
 
 ###################################################
 # Image for conda/mamba environment building.
