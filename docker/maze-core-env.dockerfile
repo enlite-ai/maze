@@ -30,15 +30,6 @@ RUN if [ -n "$opt_pip_installs" ] ; then pip install $(echo $opt_pip_installs | 
 # Clean up conda environment.
 RUN find -name '*.a' -delete && \
     find -name '__pycache__' -type d -exec rm -rf '{}' '+' && \
-    rm -rf /env/lib/python3.7/idlelib /env/lib/python3.7/ensurepip \
-    /env/lib/libasan.so.5.0.0 \
-    /env/lib/libtsan.so.0.0.0 \
-    /env/lib/liblsan.so.0.0.0 \
-    /env/lib/libubsan.so.1.0.0 \
-    /env/bin/x86_64-conda-linux-gnu-ld \
-    /env/bin/sqlite3 \
-    /env/bin/openssl \
-    /env/share/terminfo && \
     find /env/lib/python3.7/site-packages -name '*.pyx' -delete
 
 ###################################################
