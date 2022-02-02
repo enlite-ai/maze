@@ -100,8 +100,8 @@ then
     buildctl --addr kube-pod://"$SELECTED_POD" build --frontend=dockerfile.v0 --local context=.\
      --local dockerfile=$BUILDKIT_DOCKERFILE_DIR --opt filename=$BUILDKIT_DOCKERFILE_NAME\
     --ssh default=$SSH_AUTH_SOCK --output type=image,name=$IMAGE,push=true\
-    --export-cache type=registry,mode=max,ref=$IMAGE_WITHOUT_TAG:buildcache \
-    --import-cache type=registry,mode=max,ref=$IMAGE_WITHOUT_TAG:buildcache \
+    --export-cache type=registry,ref=$IMAGE_WITHOUT_TAG:buildcache,push=true \
+    --import-cache type=registry,ref=$IMAGE_WITHOUT_TAG:buildcache \
     $BUILDKIT_BUILDARGS $BUILDKIT_TARGET
   fi
 
