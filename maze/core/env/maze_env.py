@@ -8,6 +8,7 @@ RL training algorithms require a more rigid representation. To that end :class:`
 gym-compatible environment in a reusable form, by utilizing mappings from the MazeState to the observations space and
 from the MazeAction to the action space.
 """
+from copy import deepcopy
 from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
 import gym
@@ -75,7 +76,8 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.spec = None
         """Only there to be compatible with gym.core.Env"""
 
-        # last MazeAction taken for trajectory data recording
+        # last action and maze action, e.g. for recording purposes
+        self.last_action = None
         self.last_maze_action = None
 
         # last observation, captured immediately after the observation_conversion mapping
@@ -291,6 +293,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         if self.core_env.reward_aggregator is not None:
             self.core_env.reward_aggregator.clone_from(env.core_env.reward_aggregator)
 
+        self.last_action = deepcopy(env.last_action)
+        self.last_maze_action = deepcopy(env.last_maze_action)
+
         self.initial_env_time = env.initial_env_time
 
     def _step_core_env(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
@@ -300,6 +305,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :return: reward, done, info.
         """
         last_env_time = self.get_env_time()
+
+        # record the last action
+        self.last_action = action
 
         # compile action object
         maze_state = self.core_env.get_maze_state()
@@ -312,7 +320,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
             # reward captured immediately after the reward aggregation
             self.reward_events.reward_original(value=reward)
 
-            # record the last MazeAction
+            # record the last maze action
             self.last_maze_action = maze_action
 
             # For single sub-step core envs which do not manage their env time:
