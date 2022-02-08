@@ -16,7 +16,7 @@ class DictDiscreteActionConversion(ActionConversionInterface):
     An action conversion interface implementation
     """
 
-    def space_to_maze(self, action: Dict, maze_state: MazeStateType) -> Dict[str, Any]:
+    def space_to_maze(self, action: Dict[str, int], maze_state: MazeStateType) -> Dict[str, Any]:
         """
         Does nothing
         :param action: The action to pass through
@@ -37,10 +37,10 @@ class DictDiscreteActionConversion(ActionConversionInterface):
         })
 
     def noop_action(self):
-        """Converts environment MazeAction to agent action.
+        """Return the noop action, represented by 0 in this action space."""
+        return {"action_0_0": 0}
 
-        :return: the noop action.
-        """
-        t = self.space().sample()
-        t['action_0_0'] = 0
-        return t
+    def create_action_hash(self, action: Dict[str, int]) -> int:
+        """Calculate hash of the given action (since we have an only discrete item in the action space, just return
+        its value."""
+        return action["action_0_0"]

@@ -43,3 +43,11 @@ class ActionConversionInterface(ABC):
 
         :return: the noop action.
         """
+
+    def create_action_hash(self, action: ActionType) -> Union[int, str]:
+        """Calculate a hash of the given action. Can be used for identifying and de-duplicating
+        same actions when creating/evaluating action scenarios.
+
+        :param action: Action to hash
+        :return: Hash of a given action, either as a string, or integer (should be of the same type for all actions)
+        """
