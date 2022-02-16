@@ -14,6 +14,7 @@ class StateRecord:
     change after assigning them to the step record (e.g. by copying the relevant ones, especially state and
     the serializable components).
 
+    :param env_time: Internal time of environment (if available) that this record belongs to.
     :param maze_state: Current MazeState of the env.
     :param maze_action: Last MazeAction taken by the agent.
     :param step_event_log: Log of events dispatched by the env during the last step.
@@ -25,6 +26,7 @@ class StateRecord:
     """
 
     def __init__(self,
+                 env_time: Optional[int],
                  maze_state: MazeStateType,
                  maze_action: Optional[MazeActionType],
                  step_event_log: Optional[StepEventLog] = None,
@@ -32,6 +34,7 @@ class StateRecord:
                  done: Optional[bool] = None,
                  info: Optional[Dict] = None,
                  serializable_components: Optional[Dict[str, Any]] = None):
+        self.env_time = env_time
         self.maze_state = maze_state
         self.maze_action = maze_action
         self.step_event_log = step_event_log
@@ -39,8 +42,3 @@ class StateRecord:
         self.done = done
         self.info = info
         self.serializable_components = serializable_components
-
-    @property
-    def env_time(self) -> Optional[int]:
-        """Internal time of environment (if available) that this record belongs to."""
-        return self.step_event_log.env_time

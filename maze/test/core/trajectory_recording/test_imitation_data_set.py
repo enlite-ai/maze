@@ -57,6 +57,7 @@ def _mock_state_trajectory_record(step_count: int):
 
     for i in range(step_count):
         episode_record.step_records.append(StateRecord(
+            env_time=i,
             maze_state=i,
             maze_action=i if i < step_count - 1 else None,  # maze_action is not available in the last step
             step_event_log=StepEventLog(i),
