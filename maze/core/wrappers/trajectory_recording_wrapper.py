@@ -5,6 +5,7 @@ from copy import deepcopy
 from typing import Union, Any, Tuple, Dict, Optional
 
 import gym
+
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
@@ -68,8 +69,10 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             step_event_log = StepEventLog(self.last_env_time, events=event_collection)
 
             # Record trajectory data
-            step_record = StateRecord(self.last_maze_state, maze_action, step_event_log, reward, done, info,
-                                      self.last_serializable_components)
+            step_record = StateRecord(env_time=self.last_env_time, maze_state=self.last_maze_state,
+                                      maze_action=maze_action, step_event_log=step_event_log,
+                                      reward=reward, done=done, info=info,
+                                      serializable_components=self.last_serializable_components)
             self.episode_record.step_records.append(step_record)
 
             # Collect state and components for the next step
@@ -142,6 +145,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         event_collection = EventCollection(self.env.get_step_events() if isinstance(self.env, EventEnvMixin) else [])
         step_event_log = StepEventLog(env_time, events=event_collection)
         final_step_record = StateRecord(
+            env_time=env_time,
             maze_state=self.last_maze_state,
             maze_action=None,
             step_event_log=step_event_log,
