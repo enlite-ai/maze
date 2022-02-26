@@ -90,6 +90,7 @@ class BaseModelComposer(ABC):
                 plot_inference_graphs("policy", self.policy.networks)
             if self.critic:
                 plot_inference_graphs("critic", self.critic.networks)
-        except ImportError as e:
+        # a PermissionError might be raised when loading a model from a read-only experiment directory
+        except (ImportError, PermissionError) as e:
             BColors.print_colored(f'Models graphical representation could not be saved: {e}',
                                   BColors.WARNING)
