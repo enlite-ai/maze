@@ -76,9 +76,9 @@ then
 
   # Select a buildkitd pod
   # Use a seeded sort to select always the same pod for the same context
-  SELECTED_POD=$(kubectl get pods --selector=app=buildkitd  -o json  |
-  jq -r '.items[] |   select(.status.conditions[] | select(.type == "Ready") | .status=="True")   |.metadata.name' |\
- shuf -n 1 --random-source=<(echo $BUILD_CONTEXT|shasum))
+  SELECTED_POD=$(kubectl get pods --selector=app=buildkitd -o json |
+    jq -r '.items[] | select(.status.phase=="Running") | .metadata.name' |
+    shuf -n 1 --random-source=<(echo $BUILD_CONTEXT | shasum))
 
   if [[ -z $SELECTED_POD ]]
   then
