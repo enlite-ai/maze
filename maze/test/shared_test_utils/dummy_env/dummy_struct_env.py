@@ -171,3 +171,8 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         # Only the second sub step actually steps the underlying core env
         self.last_obs, _, _, _ = self.maze_env.step(action)
         return filter_dict_starts_with(self.last_obs, 'observation_0'), 2, False, {}
+
+    def clone_from(self, env: 'DummyStructuredEnvironment') -> None:
+        self.maze_env.clone_from(env.maze_env)
+        self.last_obs = env.last_obs
+        self._sub_step_index = env._sub_step_index
