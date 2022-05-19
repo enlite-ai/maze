@@ -1,16 +1,15 @@
 """Loss function for behavioral cloning."""
 from dataclasses import dataclass
-from typing import Dict, Union, Any, List
+from typing import Dict, Union, List
 
 import gym
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional
 from maze.core.agent.torch_policy import TorchPolicy
-from maze.core.env.action_conversion import ActionType, TorchActionType
+from maze.core.env.action_conversion import TorchActionType
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.env.structured_env import ActorID, StepKeyType
+from maze.core.env.structured_env import ActorID
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 
 
@@ -93,19 +92,27 @@ class BCLoss:
                 if logits.dim() == target.dim():
                     logits = logits.unsqueeze(0)
                 losses.append(self.loss_discrete(logits, target))
+
                 events.discrete_accuracy(
                     step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                     value=torch.eq(logits.argmax(dim=-1), target).float().mean().item())
+
                 if logits.shape[-1] > 10:
                     events.discrete_top_5_accuracy(
                         step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                         value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
                                    range(1, min(5 + 1, logits.shape[-1]))]).float().mean().item())
+
                 if logits.shape[-1] > 20:
                     events.discrete_top_10_accuracy(
                         step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                         value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
                                    range(1, min(10 + 1, logits.shape[-1]))]).float().mean().item())
+
+                batch_ranks = torch.where(torch.argsort(logits, dim=-1, descending=True) == target.unsqueeze(-1))[1]
+                events.discrete_action_rank(
+                    step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
+                    value=batch_ranks.float().mean().item())
 
             # Multi-binary (multi-binary spaces)
             elif isinstance(action_space, gym.spaces.MultiBinary):

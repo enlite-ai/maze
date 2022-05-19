@@ -48,6 +48,11 @@ class ImitationEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
+    def discrete_action_rank(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
+        """Rank of target action in discrete (categorical) subspaces."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id', "subspace_name", 'agent_id')
     def multi_binary_accuracy(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
         """Accuracy for multi-binary subspaces."""
 
