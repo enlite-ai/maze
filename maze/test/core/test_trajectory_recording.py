@@ -14,6 +14,7 @@ from maze.core.trajectory_recording.records.trajectory_record import StateTrajec
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
+from maze.test.core.wrappers.test_log_stats_wrapper import _StepInResetWrapper, _StepInStepWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
@@ -22,6 +23,7 @@ from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructur
 from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
+from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
 
 
 def test_records_maze_states_and_actions():
@@ -141,53 +143,6 @@ def test_records_maze_states_and_actions():
         )
 
 
-def test_records_trajectory_for_generic_gym_envs():
-    class TestWriter(TrajectoryWriter):
-        """Mock writer checking the recorded data"""
-
-        def __init__(self):
-            self.episode_count = 0
-            self.step_count = 0
-
-        def write(self, episode_record: StateTrajectoryRecord):
-            """Count steps and episodes & check instance types"""
-            self.episode_count += 1
-            self.step_count += len(episode_record.step_records)
-
-            for step_record in episode_record.step_records[:-1]:
-                assert isinstance(step_record.maze_state, RawState)
-                assert isinstance(step_record.maze_action, RawMazeAction)
-                assert step_record.serializable_components == {}
-                assert len(step_record.step_event_log.events) == 0
-
-            final_state_record = episode_record.step_records[-1]
-            assert isinstance(final_state_record.maze_state, RawState)
-            assert final_state_record.maze_action is None
-            assert final_state_record.serializable_components == {}
-
-            assert episode_record.renderer is None
-
-    writer = TestWriter()
-    TrajectoryWriterRegistry.writers = []  # Ensure there is no other writer
-    TrajectoryWriterRegistry.register_writer(writer)
-
-    env = gym.make('CartPole-v0')
-    env = TrajectoryRecordingWrapper.wrap(env)
-    for _ in range(5):
-        env.reset()
-        for i in range(10):
-            env.step(env.action_space.sample())
-            if i == 9:
-                env.render()
-
-    # final env reset required
-    env.reset()
-    env.close()
-
-    assert writer.step_count == 5 * (10 + 1)  # Count also the recorded final state
-    assert writer.episode_count == 5
-
-
 def test_records_once_per_maze_step_in_multistep_envs():
     """In multi-step envs, trajectory should be recorded once per Maze env step (not in each sub-step)."""
 
@@ -229,3 +184,48 @@ def test_records_once_per_maze_step_in_multistep_envs():
     # I.e., 5 flat steps per 10 structured + 1 final state for each episode
     assert writer.step_count == 5 * (5 + 1)
     assert writer.episode_count == 5
+
+
+def _assert_recording_two_steps(env: TrajectoryRecordingWrapper) -> None:
+    """Perform two steps and assert that both are recorded correctly, regardless of any
+    step-skipping that might be taking place inside of the env."""
+
+    # Step the env twice
+    maze_actions = []
+    env.reset()
+    for i in range(2):
+        action = env.action_space.sample()
+        maze_actions.append(action)
+        env.step(action)
+
+    # Check that the correct action contents have been recorded
+    assert len(env.episode_record.step_records) == 2
+    for i in range(2):
+        action_taken = maze_actions[i]
+        action_recorded = env.episode_record.step_records[i].maze_action
+        assert list(action_taken.keys()) == list(action_recorded.keys())
+        for key in action_taken:
+            assert np.all(action_taken[key] == action_recorded[key])
+
+
+def test_handles_flat_case():
+    env = build_dummy_maze_env()
+    env = TrajectoryRecordingWrapper.wrap(env)
+
+    _assert_recording_two_steps(env)
+
+
+def test_handles_step_skipping_in_reset():
+    env = build_dummy_maze_env()
+    env = _StepInResetWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env)
+
+    _assert_recording_two_steps(env)
+
+
+def test_handles_step_skipping_in_step():
+    env = build_dummy_maze_env()
+    env = _StepInStepWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env)
+
+    _assert_recording_two_steps(env)
