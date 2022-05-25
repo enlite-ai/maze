@@ -43,32 +43,34 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         self.last_maze_state: Optional[MazeStateType] = None
         self.last_serializable_components: Optional[Dict[str, Any]] = None
 
-        self._maze_action_stored = False
-        self._last_maze_action_before_skipping = None
+        # Recording of maze actions with support for step-skipping
+        self._last_maze_action_before_skipping = None  # Last maze action taken before step-skipping started (if in use)
+        self._maze_action_recorded = False  # Flag used for avoiding recording of actions issued during step skipping
 
-        self.env.context.register_post_step(self._store_last_action)
+        # Post-step hook, to be able to record the maze action after it's been converted in MazeEnv,
+        # but before step skipping starts
+        self.env.context.register_post_step(self._record_last_action)
 
-    def _store_last_action(self) -> None:
-        """Store the last action before step skipping."""
-        if not self._maze_action_stored:
+    def _record_last_action(self) -> None:
+        """Record the last action unless it has been done for this step already."""
+        if not self._maze_action_recorded:
             self._last_maze_action_before_skipping = deepcopy(self.env.get_maze_action())
-            self._maze_action_stored = True
+            self._maze_action_recorded = True
 
     @override(BaseEnv)
     def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
         """Record available step-level data."""
         assert self.episode_record is not None, "Environment must be reset before stepping."
 
-        self._maze_action_stored = False
+        self._maze_action_recorded = False
         observation, reward, done, info = self.env.step(action)
 
         # Recording of event logs and stats happens:
         #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
         #  - for other envs: Every step
         if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
-            # Collect the MazeAction
-            self._store_last_action()
-            maze_action = self._last_maze_action_before_skipping
+            # Record maze action: In case no step-skipping was done and the action has not been recorded yet, do it here
+            self._record_last_action()
 
             # Collect step events
             event_collection = EventCollection(
@@ -76,8 +78,10 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             step_event_log = StepEventLog(self.last_env_time, events=event_collection)
 
             # Record trajectory data
-            step_record = StateRecord(env_time=self.last_env_time, maze_state=self.last_maze_state,
-                                      maze_action=maze_action, step_event_log=step_event_log,
+            step_record = StateRecord(env_time=self.last_env_time,
+                                      maze_state=self.last_maze_state,
+                                      maze_action=self._last_maze_action_before_skipping,
+                                      step_event_log=step_event_log,
                                       reward=reward, done=done, info=info,
                                       serializable_components=self.last_serializable_components)
             self.episode_record.step_records.append(step_record)
