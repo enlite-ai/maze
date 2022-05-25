@@ -34,9 +34,9 @@ class _StepInResetWrapper(Wrapper[MazeEnv]):
 class _StepInStepWrapper(Wrapper[MazeEnv]):
     """Mock wrapper that steps the env two times in the step function (corresponds to step-skipping)"""
 
-    def step(self, *args, **kwargs):
+    def step(self, action):
         """Step the env twice during the reset function"""
-        self.env.step(self.env.action_space.sample())
+        self.env.step(action)
         return self.env.step(self.env.action_space.sample())
 
 

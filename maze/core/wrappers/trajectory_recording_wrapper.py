@@ -43,23 +43,23 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         self.last_maze_state: Optional[MazeStateType] = None
         self.last_serializable_components: Optional[Dict[str, Any]] = None
 
-        self._record_next_action = True
+        self._maze_action_stored = False
         self._last_maze_action_before_skipping = None
 
         self.env.context.register_post_step(self._store_last_action)
 
     def _store_last_action(self) -> None:
         """Store the last action before step skipping."""
-        if self._record_next_action:
+        if not self._maze_action_stored:
             self._last_maze_action_before_skipping = deepcopy(self.env.get_maze_action())
-            self._record_next_action = False
+            self._maze_action_stored = True
 
     @override(BaseEnv)
     def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
         """Record available step-level data."""
         assert self.episode_record is not None, "Environment must be reset before stepping."
 
-        self._record_next_action = True
+        self._maze_action_stored = False
         observation, reward, done, info = self.env.step(action)
 
         # Recording of event logs and stats happens:
@@ -67,6 +67,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         #  - for other envs: Every step
         if not isinstance(self.env, TimeEnvMixin) or self.env.get_env_time() != self.last_env_time:
             # Collect the MazeAction
+            self._store_last_action()
             maze_action = self._last_maze_action_before_skipping
 
             # Collect step events
