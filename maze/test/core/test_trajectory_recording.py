@@ -3,18 +3,17 @@ from abc import ABC
 from copy import deepcopy
 from typing import Any, Dict, List, Type
 
-import gym
 import numpy as np
 
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
 from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
-from maze.test.core.wrappers.test_log_stats_wrapper import _StepInResetWrapper, _StepInStepWrapper
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_reset_wrapper import StepSkipInResetWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
@@ -217,7 +216,7 @@ def test_handles_flat_case():
 
 def test_handles_step_skipping_in_reset():
     env = build_dummy_maze_env()
-    env = _StepInResetWrapper.wrap(env)
+    env = StepSkipInResetWrapper.wrap(env)
     env = TrajectoryRecordingWrapper.wrap(env)
 
     _assert_recording_two_steps(env)
@@ -225,7 +224,7 @@ def test_handles_step_skipping_in_reset():
 
 def test_handles_step_skipping_in_step():
     env = build_dummy_maze_env()
-    env = _StepInStepWrapper.wrap(env)
+    env = StepSkipInStepWrapper.wrap(env)
     env = TrajectoryRecordingWrapper.wrap(env)
 
     _assert_recording_two_steps(env)

@@ -6,6 +6,8 @@ from maze.core.log_events.monitoring_events import RewardEvents
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.wrapper import Wrapper
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_reset_wrapper import StepSkipInResetWrapper
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, build_dummy_structured_env
 
 
@@ -18,26 +20,6 @@ class _EventsInResetWrapper(Wrapper[MazeEnv]):
         base_events = self.core_env.context.event_service.create_event_topic(BaseEnvEvents)
         base_events.test_event(1)
         return obs
-
-
-class _StepInResetWrapper(Wrapper[MazeEnv]):
-    """Mock wrapper that steps the env in the reset function (corresponds to step-skipping during env reset)"""
-
-    def reset(self):
-        """Step the env twice during the reset function"""
-        obs = self.env.reset()
-        for i in range(2):
-            obs, _, _, _ = self.step(self.env.action_space.sample())
-        return obs
-
-
-class _StepInStepWrapper(Wrapper[MazeEnv]):
-    """Mock wrapper that steps the env two times in the step function (corresponds to step-skipping)"""
-
-    def step(self, action):
-        """Step the env twice during the reset function"""
-        self.env.step(action)
-        return self.env.step(self.env.action_space.sample())
 
 
 def test_records_stats():
@@ -128,7 +110,7 @@ def test_handles_multi_step_setup():
 
 def test_handles_step_skipping_in_reset():
     env = build_dummy_maze_env()
-    env = _StepInResetWrapper.wrap(env)
+    env = StepSkipInResetWrapper.wrap(env)
     env = LogStatsWrapper.wrap(env)
 
     env.reset()
@@ -156,7 +138,7 @@ def test_handles_step_skipping_in_reset():
 
 def test_handles_step_skipping_in_step():
     env = build_dummy_maze_env()
-    env = _StepInStepWrapper.wrap(env)
+    env = StepSkipInStepWrapper.wrap(env)
     env = LogStatsWrapper.wrap(env)
 
     # Step the env twice (should correspond to four core-env steps)

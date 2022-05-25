@@ -27,7 +27,7 @@ from maze.core.utils.config_utils import EnvFactory, read_hydra_config
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
-from maze.test.core.wrappers.test_log_stats_wrapper import _StepInStepWrapper
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
     build_dummy_structured_env
@@ -134,7 +134,7 @@ def test_supports_multi_step_wrappers():
 
 def test_supports_step_skipping_wrappers():
     env = build_dummy_maze_env()
-    env = _StepInStepWrapper.wrap(env)
+    env = StepSkipInStepWrapper.wrap(env)
     env = LogStatsWrapper.wrap(env)
     agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
