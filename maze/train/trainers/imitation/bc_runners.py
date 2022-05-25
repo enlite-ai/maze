@@ -70,9 +70,11 @@ class BCRunner(TrainingRunner):
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
         size_in_byte, size_in_gbyte = getsize(dataset)
-        BColors.print_colored(f'Size of loaded dataset: {size_in_byte} -> {size_in_gbyte} GB', BColors.OKBLUE)
+        print(f'Size of loaded dataset: {size_in_byte} -> {size_in_gbyte} GB')
+
         validation, train = self._split_dataset(dataset, cfg.algorithm.validation_percentage,
                                                 self.maze_seeding.generate_env_instance_seed())
+        print(f'Sample Counts (train: {len(train)}, validation: {len(validation)})')
 
         # Create data loaders
         torch_generator = torch.Generator().manual_seed(self.maze_seeding.generate_env_instance_seed())
