@@ -24,6 +24,7 @@ These are interfaces, classes and utility functions for recording trajectory dat
     ~records.trajectory_record.TrajectoryRecord
     ~records.trajectory_record.StateTrajectoryRecord
     ~records.trajectory_record.SpacesTrajectoryRecord
+    ~records.action_record.ActionRecord
 
     ~utils.monitoring_setup.MonitoringSetup
     ~utils.trajectory_utils.SimpleTrajectoryRecordingSetup

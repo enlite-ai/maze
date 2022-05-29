@@ -196,11 +196,21 @@ class ParallelRolloutRunner(RolloutRunner):
                                   f'from: {self.n_episodes} to {actual_number_of_episodes}.', BColors.WARNING)
 
         # Configure and launch the processes
+        workers = self._configure_and_launch_processes(parallel_worker_type=ParallelRolloutWorker,
+                                                       env=env, wrappers=wrappers, agent=agent,
+                                                       actual_number_of_episodes=actual_number_of_episodes)
+        return workers
+
+    def _configure_and_launch_processes(self, parallel_worker_type: type(ParallelRolloutWorker), env: ConfigType,
+                                        wrappers: CollectionOfConfigType, agent: ConfigType,
+                                        actual_number_of_episodes: int) -> Iterable[Process]:
+        """Configure and launch the processes.
+        """
         self.reporting_queue = Queue()
         workers = []
         for _ in range(min(self.n_processes, actual_number_of_episodes)):
             p = Process(
-                target=ParallelRolloutWorker.run,
+                target=parallel_worker_type.run,
                 args=(env, wrappers, agent,
                       self.max_episode_steps,
                       self.record_trajectory, self.input_dir, self.reporting_queue,
