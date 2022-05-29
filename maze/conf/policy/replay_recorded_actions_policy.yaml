@@ -1,0 +1,8 @@
+# @package policy
+_target_: maze.core.agent.replay_recorded_actions_policy.ReplayRecordedActionsPolicy
+
+# Path to action record dump
+action_record_path: ~
+
+# If true agent actions are returned; else MazeActions.
+with_agent_actions: true

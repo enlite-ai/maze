@@ -1,0 +1,19 @@
+# @package runner
+_target_: maze.core.rollout.action_record_rollout_runner.ActionRecordRolloutRunner
+
+# Print results of individual chronics
+verbose: true
+
+# Path to action record dumps
+action_record_path: ~
+
+# Number of samples (=steps) to collect normalization statistics at the beginning of the training.
+normalization_samples: 1000
+
+# Count of processes to spread the rollout across.
+n_processes: 5
+
+# Max steps per episode to perform
+max_episode_steps: 0
+
+# (Note that the default output directory is handled by Hydra)

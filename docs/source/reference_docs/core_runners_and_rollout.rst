@@ -45,3 +45,5 @@ These are interfaces, classes and utility functions for rollout runners:
     ~parallel_rollout_runner.EpisodeRecorder
     ~parallel_rollout_runner.EpisodeStatsReport
     ~parallel_rollout_runner.ExceptionReport
+    ~action_record_rollout_runner.ActionRecordRolloutRunner
+    ~action_record_rollout_runner.ActionRecordWorker

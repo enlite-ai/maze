@@ -29,6 +29,8 @@ maze.core.agent
 
     ~serialized_torch_policy.SerializedTorchPolicy
 
+    ~replay_recorded_actions_policy.ReplayRecordedActionsPolicy
+
 **Critics:**
 
 .. currentmodule:: maze.core.agent
