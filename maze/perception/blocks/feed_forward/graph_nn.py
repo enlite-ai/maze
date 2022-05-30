@@ -21,7 +21,7 @@ class AggregationLayer(nn.Module):
         super(AggregationLayer, self).__init__()
 
         self.aggregate = self._aggregation_fun(aggregate)
-        self.pooling_mask = pooling_mask
+        self.pooling_mask = nn.Parameter(pooling_mask, requires_grad=False)
 
     @override(nn.Module)
     def forward(self, n: torch.Tensor) -> torch.Tensor:
@@ -103,7 +103,7 @@ class GNNBlock(ShapeNormalizationBlock):
         self.edge_list = np.sort(self.edge_list, axis=0)
 
         # node layers
-        self.node_layers = []
+        self.node_layers = nn.ModuleList()
         for i in range(self.n_layers):
 
             if i == 0:
@@ -114,7 +114,7 @@ class GNNBlock(ShapeNormalizationBlock):
             self.node_layers.append(self._make_sub_layer(in_dim=in_dim))
 
         # edge layers
-        self.edge_layers = []
+        self.edge_layers = nn.ModuleList()
         for i in range(self.n_layers):
 
             if i == 0:
@@ -190,12 +190,12 @@ class GNNBlock(ShapeNormalizationBlock):
             # message passing: edge -> node II
             if self.edge2node_aggr and not last_layer:
                 assert n.shape == e2n.shape
-                n = torch.concat((n, e2n), dim=-1)
+                n = torch.cat((n, e2n), dim=-1)
 
             # message passing: node -> edge II
             if self.node2edge_aggr and not last_layer:
                 assert e.shape == n2e.shape
-                e = torch.concat((e, n2e), dim=-1)
+                e = torch.cat((e, n2e), dim=-1)
 
         return n, e
 
