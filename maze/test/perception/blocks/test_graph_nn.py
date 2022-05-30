@@ -1,5 +1,8 @@
 """Contains unit tests for the GNNBlock"""
 from typing import Dict
+
+import torch.nn
+
 from maze.perception.blocks.feed_forward.graph_nn import GNNBlock
 from maze.test.perception.perception_test_utils import build_multi_input_dict
 
@@ -24,6 +27,8 @@ def test_GNN_block():
                        aggregate="sum",
                        embed_dim=16,
                        n_layers=3,
+                       non_lin=torch.nn.ReLU,
+                       with_layer_norm=True,
                        node2node_aggr=True,
                        edge2node_aggr=True,
                        node2edge_aggr=True,

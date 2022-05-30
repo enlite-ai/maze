@@ -6,6 +6,7 @@ import torch
 from torch import nn
 
 from maze.core.annotations import override
+from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
@@ -53,6 +54,8 @@ class GNNBlock(ShapeNormalizationBlock):
     :param aggregate: The aggregation function to use (max, mean, sum).
     :param embed_dim: Dimensionality of node and edge embedding space.
     :param n_layers: Number of hidden layers.
+    :param non_lin: The non-linearity to apply after each layer.
+    :param with_layer_norm: If True layer normalization is applied.
     :param node2node_aggr: If True node to node message passing is applied.
     :param edge2node_aggr: If True edge to node message passing is applied.
     :param node2edge_aggr: If True node to edge message passing is applied.
@@ -67,6 +70,8 @@ class GNNBlock(ShapeNormalizationBlock):
                  aggregate: str,
                  embed_dim: int,
                  n_layers: int,
+                 non_lin: Union[str, type(nn.Module)],
+                 with_layer_norm: bool,
                  node2node_aggr: bool,
                  edge2node_aggr: bool,
                  node2edge_aggr: bool,
@@ -91,6 +96,8 @@ class GNNBlock(ShapeNormalizationBlock):
 
         self.embed_dim = embed_dim
         self.n_layers = n_layers
+        self.non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
+        self.with_layer_norm = with_layer_norm
 
         # sort edges
         self.edge_list = np.sort(self.edge_list, axis=0)
@@ -104,8 +111,7 @@ class GNNBlock(ShapeNormalizationBlock):
             else:
                 in_dim = 2 * self.embed_dim if self.edge2node_aggr else self.embed_dim
 
-            self.node_layers.append(nn.Sequential(nn.Linear(in_dim, self.embed_dim),
-                                                  nn.ReLU(), nn.LayerNorm(self.embed_dim)))
+            self.node_layers.append(self._make_sub_layer(in_dim=in_dim))
 
         # edge layers
         self.edge_layers = []
@@ -116,8 +122,7 @@ class GNNBlock(ShapeNormalizationBlock):
             else:
                 in_dim = 2 * self.embed_dim if self.node2edge_aggr else self.embed_dim
 
-            self.edge_layers.append(nn.Sequential(nn.Linear(in_dim, self.embed_dim),
-                                                  nn.ReLU(), nn.LayerNorm(self.embed_dim)))
+            self.edge_layers.append(self._make_sub_layer(in_dim=in_dim))
 
         # prepare aggregation layers
         pooling_matrices = self._prepare_pooling_matrices()
@@ -247,6 +252,18 @@ class GNNBlock(ShapeNormalizationBlock):
         e2e_pooling_mask = torch.from_numpy(e2e_pooling_mask).unsqueeze(-1).unsqueeze(0)
 
         return n2n_pooling_mask, e2n_pooling_mask, n2e_pooling_mask, e2e_pooling_mask
+
+    def _make_sub_layer(self, in_dim: int) -> nn.Sequential:
+        """Prepare gnn sublayer stack.
+
+        :param in_dim: Input dimensionality of layer.
+        :return: Gnn sublayer stack.
+        """
+        sub_layers = [nn.Linear(in_dim, self.embed_dim)]
+        if self.with_layer_norm:
+            sub_layers.append(nn.LayerNorm(self.embed_dim))
+        sub_layers.append(self.non_lin())
+        return nn.Sequential(*sub_layers)
 
     def __repr__(self):
 
