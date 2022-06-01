@@ -4,6 +4,7 @@ from typing import Any, List, Tuple, Union, Sequence, Dict
 import numpy as np
 import torch
 from torch import nn
+from torch_scatter import scatter
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
@@ -21,12 +22,39 @@ class AggregationLayer(nn.Module):
         super(AggregationLayer, self).__init__()
 
         self.aggregate = self._aggregation_fun(aggregate)
-        self.pooling_mask = nn.Parameter(pooling_mask, requires_grad=False)
+        self.pooling_mask = pooling_mask
+
+        self.edges = self._edges_from_pooling_mask(torch.transpose(self.pooling_mask, 1, 2))
 
     @override(nn.Module)
-    def forward(self, n: torch.Tensor) -> torch.Tensor:
-        n = n.unsqueeze(1)
-        return self.aggregate(n * self.pooling_mask, dim=-2)
+    def forward(self, t: torch.Tensor) -> torch.Tensor:
+        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
+        """
+        row, col = self.edges.to(t.device)
+        aggr = scatter(src=t[:, row], index=col, dim=-2, dim_size=self.pooling_mask.shape[1], reduce="sum")
+
+        # kept for debugging purposes
+        # self._assert_scatter_output(t, aggr)
+
+        return aggr
+
+    @classmethod
+    def _edges_from_pooling_mask(cls, pooling_mask: torch.Tensor) -> torch.Tensor:
+        """Prepare edge list from pooling mask (e.g. for use in scatter reduction).
+
+        :param pooling_mask: The pooling mask to convert into edges.
+        :return: Edge matrix corresponding to the pooling mask.
+        """
+        pm = pooling_mask.squeeze().cpu().numpy()
+
+        edges = []
+
+        for i in range(pm.shape[0]):
+            for j in np.nonzero(~np.isnan(pm[i]))[0]:
+                edges.append([i, j])
+
+        edges = np.vstack(edges).T
+        return torch.from_numpy(edges)
 
     @classmethod
     def _aggregation_fun(cls, aggregate: str) -> Any:
@@ -35,13 +63,24 @@ class AggregationLayer(nn.Module):
         :return: The actual torch aggregation function.
         """
         if aggregate == "max":
-            return torch.max
+            def maximum(a, dim):
+                return torch.max(a, dim=dim)[0]
+            return maximum
         elif aggregate == "mean":
             return torch.nanmean
         elif aggregate == "sum":
             return torch.nansum
         else:
             raise ValueError
+
+    def _assert_scatter_output(self, t: torch.Tensor, aggr_scatter: torch.Tensor) -> None:
+        """Validation function for efficient scatter implementation.
+
+        :param t: Aggregation source tensor.
+        :param aggr_scatter: Aggregation result of scatter.
+        """
+        aggr_2 = self.aggregate(t.unsqueeze(1) * self.pooling_mask.to(t.device), dim=-2)
+        assert torch.allclose(aggr_scatter, aggr_2)
 
 
 class GNNBlock(ShapeNormalizationBlock):

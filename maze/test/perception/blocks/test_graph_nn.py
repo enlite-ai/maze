@@ -1,6 +1,7 @@
 """Contains unit tests for the GNNBlock"""
 from typing import Dict
 
+import numpy as np
 import torch.nn
 
 from maze.perception.blocks.feed_forward.graph_nn import GNNBlock
@@ -38,6 +39,9 @@ def test_GNN_block():
         out_dict = net(in_dict)
 
         assert isinstance(out_dict, Dict)
+        assert np.all(~np.isnan(out_dict["node_embedding"].detach().cpu().numpy()))
+        assert np.all(~np.isnan(out_dict["edge_embedding"].detach().cpu().numpy()))
+
         assert set(net.out_keys).issubset(set(out_dict.keys()))
         assert out_dict[net.out_keys[0]].shape[-1] == net.embed_dim
         assert out_dict[net.out_keys[1]].shape[-1] == net.embed_dim
