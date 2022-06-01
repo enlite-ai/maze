@@ -164,6 +164,7 @@ class GNNBlock(ShapeNormalizationBlock):
             self.edge_layers.append(self._make_sub_layer(in_dim=in_dim))
 
         # prepare aggregation layers
+        self.aggregate = aggregate
         pooling_matrices = self._prepare_pooling_matrices()
         self.n2n_aggregation = AggregationLayer(aggregate=aggregate, pooling_mask=pooling_matrices[0])
         self.e2n_aggregation = AggregationLayer(aggregate=aggregate, pooling_mask=pooling_matrices[1])
@@ -318,7 +319,7 @@ class GNNBlock(ShapeNormalizationBlock):
 
         txt = f"{GNNBlock.__name__}"
         txt += f"\n\tIn Shapes: {self.in_shapes}"
-        txt += f"\n\tn_layers: {self.n_layers}, embed_dim: {self.embed_dim}"
+        txt += f"\n\tn_layers: {self.n_layers}, embed_dim: {self.embed_dim}, aggr: {self.aggregate}"
         txt += f"\n\tmessage passing:{mp}"
         txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt
