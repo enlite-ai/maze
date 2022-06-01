@@ -7,6 +7,7 @@ dependencies:
   - python=3.7
   - cudatoolkit=10.2
   - pytorch=1.9.0
+  - torch-scatter=2.0.9
   - pygraphviz=1.7
   - jupyterlab=2.1.4
   - pip=21.1.2
