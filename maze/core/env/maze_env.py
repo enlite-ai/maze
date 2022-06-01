@@ -345,3 +345,4 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         """
         core_env.context = self.core_env.context
         self.core_env = core_env
+        self.env = self.core_env
