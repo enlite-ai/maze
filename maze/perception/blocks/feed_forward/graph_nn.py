@@ -98,6 +98,8 @@ class GNNBlock(ShapeNormalizationBlock):
     :param edge2node_aggr: If True edge to node message passing is applied.
     :param node2edge_aggr: If True node to edge message passing is applied.
     :param edge2edge_aggr: If True edge to edge message passing is applied.
+    :param with_node_embedding: If True the node embedding is computed.
+    :param with_edge_embedding: If True the edge embedding is computed.
     """
 
     def __init__(self,
@@ -112,7 +114,9 @@ class GNNBlock(ShapeNormalizationBlock):
                  node2node_aggr: bool,
                  edge2node_aggr: bool,
                  node2edge_aggr: bool,
-                 edge2edge_aggr: bool
+                 edge2edge_aggr: bool,
+                 with_node_embedding: bool,
+                 with_edge_embedding: bool
                  ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes,
                          in_num_dims=[3, 3], out_num_dims=[3, 3])
@@ -131,6 +135,9 @@ class GNNBlock(ShapeNormalizationBlock):
         self.node2edge_aggr = node2edge_aggr
         self.edge2edge_aggr = edge2edge_aggr
 
+        self.with_node_embedding = with_node_embedding
+        self.with_edge_embedding = with_edge_embedding
+
         self.hidden_units = hidden_units
         self.n_layers = len(self.hidden_units)
         self.non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
@@ -140,26 +147,30 @@ class GNNBlock(ShapeNormalizationBlock):
         self.edge_list = np.sort(self.edge_list, axis=0)
 
         # node layers
-        self.node_layers = nn.ModuleList()
-        for i in range(self.n_layers):
+        if with_node_embedding or node2edge_aggr or edge2node_aggr:
+            self.node_layers = nn.ModuleList()
+            for i in range(self.n_layers):
 
-            if i == 0:
-                in_dim = self.num_node_features
-            else:
-                in_dim = 2 * self.hidden_units[i - 1] if self.edge2node_aggr else self.hidden_units[i - 1]
+                if i == 0:
+                    in_dim = self.num_node_features
+                else:
+                    in_dim = 2 * self.hidden_units[i - 1] if self.edge2node_aggr else self.hidden_units[i - 1]
 
-            self.node_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
+                if with_node_embedding or (i + 1) < self.n_layers:
+                    self.node_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
 
         # edge layers
-        self.edge_layers = nn.ModuleList()
-        for i in range(self.n_layers):
+        if with_edge_embedding or edge2node_aggr or node2edge_aggr:
+            self.edge_layers = nn.ModuleList()
+            for i in range(self.n_layers):
 
-            if i == 0:
-                in_dim = self.num_edge_features
-            else:
-                in_dim = 2 * self.hidden_units[i - 1] if self.node2edge_aggr else self.hidden_units[i - 1]
+                if i == 0:
+                    in_dim = self.num_edge_features
+                else:
+                    in_dim = 2 * self.hidden_units[i - 1] if self.node2edge_aggr else self.hidden_units[i - 1]
 
-            self.edge_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
+                if with_edge_embedding or (i + 1) < self.n_layers:
+                    self.edge_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
 
         # prepare aggregation layers
         self.aggregate = aggregate
@@ -187,7 +198,17 @@ class GNNBlock(ShapeNormalizationBlock):
         assert node_embedding.ndim == self.out_num_dims[0]
         assert edge_embedding.ndim == self.out_num_dims[1]
 
-        return {self.out_keys[0]: node_embedding, self.out_keys[1]: edge_embedding}
+        # prepare layer output
+        out_dict = dict()
+
+        if self.with_node_embedding:
+            out_dict[self.out_keys[0]] = node_embedding
+
+        if self.with_edge_embedding:
+            idx = 1 if self.with_node_embedding else 0
+            out_dict[self.out_keys[idx]] = edge_embedding
+
+        return out_dict
 
     def _compute_embeddings(self, n: torch.Tensor, e: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Computes the embeddings of node and edge feature matrices.
@@ -201,19 +222,25 @@ class GNNBlock(ShapeNormalizationBlock):
         for i in range(self.n_layers):
             last_layer = i == self.n_layers - 1
 
-            # embed nodes
-            n = self.node_layers[i](n)
+            if (self.with_node_embedding or self.node2edge_aggr or self.edge2node_aggr) and \
+                    i < len(self.node_layers):
 
-            # embed edges
-            e = self.edge_layers[i](e)
+                # embed nodes
+                n = self.node_layers[i](n)
 
-            # message passing: node -> node
-            if self.node2node_aggr:
-                n = self.n2n_aggregation(n)
+                # message passing: node -> node
+                if self.node2node_aggr:
+                    n = self.n2n_aggregation(n)
 
-            # message passing: edge -> edge
-            if self.edge2edge_aggr:
-                e = self.e2e_aggregation(e)
+            if (self.with_edge_embedding or self.edge2node_aggr or self.node2edge_aggr) and \
+                    i < len(self.edge_layers):
+
+                # embed edges
+                e = self.edge_layers[i](e)
+
+                # message passing: edge -> edge
+                if self.edge2edge_aggr:
+                    e = self.e2e_aggregation(e)
 
             # message passing: edge -> node I
             e2n = None
