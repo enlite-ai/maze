@@ -91,8 +91,7 @@ class GNNBlock(ShapeNormalizationBlock):
     :param in_shapes: List of input shapes.
     :param edges: List of graph edges required for message passing (aggregation).
     :param aggregate: The aggregation function to use (max, mean, sum).
-    :param embed_dim: Dimensionality of node and edge embedding space.
-    :param n_layers: Number of hidden layers.
+    :param hidden_units: List containing the number of hidden units for hidden layers.
     :param non_lin: The non-linearity to apply after each layer.
     :param with_layer_norm: If True layer normalization is applied.
     :param node2node_aggr: If True node to node message passing is applied.
@@ -107,8 +106,7 @@ class GNNBlock(ShapeNormalizationBlock):
                  in_shapes: Union[Sequence[int], List[Sequence[int]]],
                  edges: List[Tuple[int, int]],
                  aggregate: str,
-                 embed_dim: int,
-                 n_layers: int,
+                 hidden_units: List[int],
                  non_lin: Union[str, type(nn.Module)],
                  with_layer_norm: bool,
                  node2node_aggr: bool,
@@ -133,8 +131,8 @@ class GNNBlock(ShapeNormalizationBlock):
         self.node2edge_aggr = node2edge_aggr
         self.edge2edge_aggr = edge2edge_aggr
 
-        self.embed_dim = embed_dim
-        self.n_layers = n_layers
+        self.hidden_units = hidden_units
+        self.n_layers = len(self.hidden_units)
         self.non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
         self.with_layer_norm = with_layer_norm
 
@@ -148,9 +146,9 @@ class GNNBlock(ShapeNormalizationBlock):
             if i == 0:
                 in_dim = self.num_node_features
             else:
-                in_dim = 2 * self.embed_dim if self.edge2node_aggr else self.embed_dim
+                in_dim = 2 * self.hidden_units[i - 1] if self.edge2node_aggr else self.hidden_units[i - 1]
 
-            self.node_layers.append(self._make_sub_layer(in_dim=in_dim))
+            self.node_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
 
         # edge layers
         self.edge_layers = nn.ModuleList()
@@ -159,9 +157,9 @@ class GNNBlock(ShapeNormalizationBlock):
             if i == 0:
                 in_dim = self.num_edge_features
             else:
-                in_dim = 2 * self.embed_dim if self.node2edge_aggr else self.embed_dim
+                in_dim = 2 * self.hidden_units[i - 1] if self.node2edge_aggr else self.hidden_units[i - 1]
 
-            self.edge_layers.append(self._make_sub_layer(in_dim=in_dim))
+            self.edge_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
 
         # prepare aggregation layers
         self.aggregate = aggregate
@@ -293,15 +291,16 @@ class GNNBlock(ShapeNormalizationBlock):
 
         return n2n_pooling_mask, e2n_pooling_mask, n2e_pooling_mask, e2e_pooling_mask
 
-    def _make_sub_layer(self, in_dim: int) -> nn.Sequential:
+    def _make_sub_layer(self, in_dim: int, out_dim: int) -> nn.Sequential:
         """Prepare gnn sublayer stack.
 
         :param in_dim: Input dimensionality of layer.
+        :param out_dim: Output dimensionality of layer.
         :return: Gnn sublayer stack.
         """
-        sub_layers = [nn.Linear(in_dim, self.embed_dim)]
+        sub_layers = [nn.Linear(in_dim, out_dim)]
         if self.with_layer_norm:
-            sub_layers.append(nn.LayerNorm(self.embed_dim))
+            sub_layers.append(nn.LayerNorm(out_dim))
         sub_layers.append(self.non_lin())
         return nn.Sequential(*sub_layers)
 
@@ -319,7 +318,7 @@ class GNNBlock(ShapeNormalizationBlock):
 
         txt = f"{GNNBlock.__name__}"
         txt += f"\n\tIn Shapes: {self.in_shapes}"
-        txt += f"\n\tn_layers: {self.n_layers}, embed_dim: {self.embed_dim}, aggr: {self.aggregate}"
+        txt += f"\n\thidden_units: {self.hidden_units}, aggr: {self.aggregate}"
         txt += f"\n\tmessage passing:{mp}"
         txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt
