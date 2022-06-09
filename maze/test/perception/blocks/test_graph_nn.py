@@ -26,8 +26,7 @@ def test_GNN_block():
                        in_shapes=[(n_nodes, n_node_features), [n_edges, n_edge_features]],
                        edges=edges,
                        aggregate="sum",
-                       embed_dim=16,
-                       n_layers=3,
+                       hidden_units=[16, 8],
                        non_lin=torch.nn.ReLU,
                        with_layer_norm=True,
                        node2node_aggr=True,
@@ -43,5 +42,5 @@ def test_GNN_block():
         assert np.all(~np.isnan(out_dict["edge_embedding"].detach().cpu().numpy()))
 
         assert set(net.out_keys).issubset(set(out_dict.keys()))
-        assert out_dict[net.out_keys[0]].shape[-1] == net.embed_dim
-        assert out_dict[net.out_keys[1]].shape[-1] == net.embed_dim
+        assert out_dict[net.out_keys[0]].shape[-1] == net.hidden_units[-1]
+        assert out_dict[net.out_keys[1]].shape[-1] == net.hidden_units[-1]
