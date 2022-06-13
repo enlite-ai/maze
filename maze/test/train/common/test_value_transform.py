@@ -1,6 +1,10 @@
 """Contains unit tests for training utility functions."""
+import io
+from contextlib import redirect_stdout
+
 import numpy as np
 import torch
+
 from maze.train.trainers.common.value_transform import support_to_scalar, scalar_to_support, ReduceScaleValueTransform
 
 
@@ -58,3 +62,21 @@ def test_scalar_to_support():
     assert support.shape == (10, 21)
     assert np.allclose(support[:, 13], 0.3)
     assert np.allclose(support[:, 14], 0.7)
+
+
+def test_scalar_to_support_out_of_range():
+    f = io.StringIO()
+    with redirect_stdout(f):
+        scalar = torch.scalar_tensor(11.0)
+        scalar_to_support(scalar=scalar, support_range=(-10, 10))
+
+    std_output = f.getvalue()
+    assert "WARNING: scalar 11.0 is our of support range (-10, 10)!" in std_output
+
+    f = io.StringIO()
+    with redirect_stdout(f):
+        scalar = torch.from_numpy(np.asarray([11.0, 8.0], dtype=np.float32))
+        scalar_to_support(scalar=scalar, support_range=(-10, 10))
+
+    std_output = f.getvalue()
+    assert "WARNING: scalar tensor([11.,  8.]) is our of support range (-10, 10)!" in std_output
