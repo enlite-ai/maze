@@ -67,7 +67,22 @@ class CriticImitationEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
+    def actual_value(self, step_id: Union[str, int], value: float):
+        """Actual (transformed) value of the step critics."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
+    def actual_value_original(self, step_id: Union[str, int], value: float):
+        """Actual value of the step critics."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
     def value(self, step_id: Union[str, int], value: float):
+        """Predicted (transformed) value of the step critics."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('step_id')
+    def value_original(self, step_id: Union[str, int], value: float):
         """Predicted value of the step critics."""
 
     @define_epoch_stats(np.nanmean)
