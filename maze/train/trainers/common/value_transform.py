@@ -5,6 +5,7 @@ from typing import Union, Tuple
 import numpy as np
 import torch
 from maze.core.annotations import override
+from maze.utils.bcolors import BColors
 
 
 class ValueTransform(ABC):
@@ -88,6 +89,10 @@ def scalar_to_support(scalar: torch.Tensor, support_range: Tuple[int, int]) -> t
     :param support_range: Tuple holding the lower and upper bound of the supported value range.
     :return: Tensor of support vectors.
     """
+
+    if not torch.all(torch.gt(scalar, support_range[0])) or not torch.all(torch.lt(scalar, support_range[1])):
+        print(BColors.print_colored(f"WARNING: scalar {scalar} is our of support range {support_range}!",
+                                    color=BColors.WARNING))
 
     # make sure scalar lives within supported range
     scalar = torch.clamp(scalar, support_range[0], support_range[1])
