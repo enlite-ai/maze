@@ -6,14 +6,14 @@ channels:
 dependencies:
   - python=3.7
   - cudatoolkit=10.2
-  - pytorch=1.9.0
+  - pytorch=1.11.0
   - pygraphviz=1.7
   - jupyterlab=2.1.4
   - pip=21.1.2
   - pandas=1.2.5
   - numpy=1.19.5
   - pip:
-      - --find-links https://data.pyg.org/whl/torch-1.11.0+cu102.html
+      - --find-links https://data.pyg.org/whl/torch-1.11.0+cpu.html
       - torch-scatter
       - tensorboard==2.4.1
       - pyyaml==5.3.1
