@@ -21,7 +21,8 @@ class AggregationLayer(nn.Module):
     def __init__(self, aggregate: str, pooling_mask: torch.Tensor):
         super(AggregationLayer, self).__init__()
 
-        self.aggregate = self._aggregation_fun(aggregate)
+        self.aggregate_str = aggregate
+        self.aggregate = self._aggregation_fun(self.aggregate_str)
         self.pooling_mask = pooling_mask
 
         self.edges = self._edges_from_pooling_mask(torch.transpose(self.pooling_mask, 1, 2))
@@ -31,7 +32,8 @@ class AggregationLayer(nn.Module):
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
         """
         row, col = self.edges.to(t.device)
-        aggr = scatter(src=t[:, row], index=col, dim=-2, dim_size=self.pooling_mask.shape[1], reduce="sum")
+        aggr = scatter(src=t[:, row], index=col, dim=-2, dim_size=self.pooling_mask.shape[1],
+                       reduce=self.aggregate_str)
 
         # kept for debugging purposes
         # self._assert_scatter_output(t, aggr)
@@ -154,7 +156,11 @@ class GNNBlock(ShapeNormalizationBlock):
                 if i == 0:
                     in_dim = self.num_node_features
                 else:
-                    in_dim = 2 * self.hidden_units[i - 1] if self.edge2node_aggr else self.hidden_units[i - 1]
+                    in_dim = self.hidden_units[i - 1]
+                    if self.node2node_aggr:
+                        in_dim += self.hidden_units[i - 1]
+                    if self.edge2node_aggr:
+                        in_dim += self.hidden_units[i - 1]
 
                 if with_node_embedding or (i + 1) < self.n_layers:
                     self.node_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
@@ -167,7 +173,11 @@ class GNNBlock(ShapeNormalizationBlock):
                 if i == 0:
                     in_dim = self.num_edge_features
                 else:
-                    in_dim = 2 * self.hidden_units[i - 1] if self.node2edge_aggr else self.hidden_units[i - 1]
+                    in_dim = self.hidden_units[i - 1]
+                    if self.edge2edge_aggr:
+                        in_dim += self.hidden_units[i - 1]
+                    if self.node2edge_aggr:
+                        in_dim += self.hidden_units[i - 1]
 
                 if with_edge_embedding or (i + 1) < self.n_layers:
                     self.edge_layers.append(self._make_sub_layer(in_dim=in_dim, out_dim=self.hidden_units[i]))
@@ -219,48 +229,46 @@ class GNNBlock(ShapeNormalizationBlock):
         """
 
         # iterate layers
+        prev_n, prev_e = None, None
         for i in range(self.n_layers):
+            first_layer = i == 0
             last_layer = i == self.n_layers - 1
 
-            if (self.with_node_embedding or self.node2edge_aggr or self.edge2node_aggr) and \
-                    i < len(self.node_layers):
-
-                # embed nodes
-                n = self.node_layers[i](n)
+            if self.with_node_embedding or self.node2edge_aggr or self.edge2node_aggr:
 
                 # message passing: node -> node
-                if self.node2node_aggr:
-                    n = self.n2n_aggregation(n)
+                if not first_layer:
 
-            if (self.with_edge_embedding or self.edge2node_aggr or self.node2edge_aggr) and \
-                    i < len(self.edge_layers):
+                    if self.node2node_aggr:
+                        n2n = self.n2n_aggregation(prev_n)
+                        n = torch.cat((n, n2n), dim=-1)
+
+                    if self.edge2node_aggr:
+                        e2n = self.e2n_aggregation(prev_e)
+                        n = torch.cat((n, e2n), dim=-1)
+
+                # embed nodes
+                if self.with_node_embedding or not last_layer:
+                    n = self.node_layers[i](n)
+
+            if self.with_edge_embedding or self.edge2node_aggr or self.node2edge_aggr:
+
+                if not first_layer:
+
+                    if self.edge2edge_aggr:
+                        e2e = self.e2e_aggregation(prev_e)
+                        e = torch.cat((e, e2e), dim=-1)
+
+                    if self.node2edge_aggr:
+                        n2e = self.n2e_aggregation(prev_n)
+                        e = torch.cat((e, n2e), dim=-1)
 
                 # embed edges
-                e = self.edge_layers[i](e)
+                if self.with_edge_embedding or not last_layer:
+                    e = self.edge_layers[i](e)
 
-                # message passing: edge -> edge
-                if self.edge2edge_aggr:
-                    e = self.e2e_aggregation(e)
-
-            # message passing: edge -> node I
-            e2n = None
-            if self.edge2node_aggr and not last_layer:
-                e2n = self.e2n_aggregation(e)
-
-            # message passing: node -> edge I
-            n2e = None
-            if self.node2edge_aggr and not last_layer:
-                n2e = self.n2e_aggregation(n)
-
-            # message passing: edge -> node II
-            if self.edge2node_aggr and not last_layer:
-                assert n.shape == e2n.shape
-                n = torch.cat((n, e2n), dim=-1)
-
-            # message passing: node -> edge II
-            if self.node2edge_aggr and not last_layer:
-                assert e.shape == n2e.shape
-                e = torch.cat((e, n2e), dim=-1)
+            prev_n = n
+            prev_e = e
 
         return n, e
 

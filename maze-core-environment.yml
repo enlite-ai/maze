@@ -13,6 +13,8 @@ dependencies:
   - pandas=1.2.5
   - numpy=1.19.5
   - pip:
+      # you can find more info on how to install torch-scatter for your specific cuda version here:
+      # https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels
       - --find-links https://data.pyg.org/whl/torch-1.11.0+cpu.html
       - torch-scatter
       - tensorboard==2.4.1
