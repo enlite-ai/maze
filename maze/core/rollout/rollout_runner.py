@@ -29,6 +29,7 @@ class RolloutRunner(Runner, ABC):
                        min(n_episodes, n_seeds).
     :param max_episode_steps: Count of steps to run in each episode (if environment returns done, the episode
                               will be finished earlier though).
+    :param deterministic: Deterministic or stochastic action sampling.
     :param record_trajectory: Whether to record trajectory data.
     :param record_event_logs: Whether to record event logs.
     """
@@ -36,10 +37,12 @@ class RolloutRunner(Runner, ABC):
     def __init__(self,
                  n_episodes: int,
                  max_episode_steps: int,
+                 deterministic: bool,
                  record_trajectory: bool,
                  record_event_logs: bool):
         self.n_episodes = n_episodes
         self.max_episode_steps = max_episode_steps
+        self.deterministic = deterministic
         self.record_trajectory = record_trajectory
         self.record_event_logs = record_event_logs
         self._cfg: Optional[DictConfig] = None
@@ -126,8 +129,9 @@ class RolloutRunner(Runner, ABC):
         return env, agent
 
     @staticmethod
-    def run_episode(env: StructuredEnv, agent: Policy, env_seed: Any, agent_seed: Any, render: bool,
-                    after_reset_callback: Optional[Callable]) -> None:
+    def run_episode(env: StructuredEnv, agent: Policy,
+                    env_seed: Any, agent_seed: Any, deterministic: bool,
+                    render: bool, after_reset_callback: Optional[Callable]) -> None:
         """Helper function for running a single episode.
 
         :param env: Environment to run.
@@ -153,7 +157,8 @@ class RolloutRunner(Runner, ABC):
             action = agent.compute_action(observation=obs,
                                           actor_id=env.actor_id(),
                                           maze_state=env.get_maze_state() if agent.needs_state() else None,
-                                          env=env if agent.needs_env() else None)
+                                          env=env if agent.needs_env() else None,
+                                          deterministic=deterministic)
 
             obs, rew, done, info = env.step(action)
 
@@ -164,7 +169,7 @@ class RolloutRunner(Runner, ABC):
 
     @classmethod
     def run_interaction_loop(cls, env: StructuredEnv, agent: Policy, n_episodes: int,
-                             env_seeds: List[Any], agent_seeds: List[Any],
+                             env_seeds: List[Any], agent_seeds: List[Any], deterministic: bool,
                              render: bool = False, after_reset_callback: Callable = None) -> None:
         """Helper function for running the agent-environment interaction loop for specified number of steps
         and episodes.
@@ -182,7 +187,8 @@ class RolloutRunner(Runner, ABC):
             env_seed = env_seeds[idx]
             agent_seed = agent_seeds[idx]
             try:
-                cls.run_episode(env=env, agent=agent, env_seed=env_seed, agent_seed=agent_seed, render=render,
+                cls.run_episode(env=env, agent=agent,
+                                env_seed=env_seed, agent_seed=agent_seed, deterministic=deterministic, render=render,
                                 after_reset_callback=None if idx == 0 else after_reset_callback)
             except Exception as exception:
                 BColors.print_colored(f'A error was encountered during rollout on the env_seed: {env_seed} with '

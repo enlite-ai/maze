@@ -8,6 +8,9 @@ n_episodes: 50
 # Max steps per episode to perform
 max_episode_steps: 0
 
+# Deterministic or stochastic action sampling
+deterministic: true
+
 # If true, trajectory data will be recorded and stored in `trajectory_data` directory
 record_trajectory: true
 

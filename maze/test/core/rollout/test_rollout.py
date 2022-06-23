@@ -39,6 +39,7 @@ def test_rollouts_from_python():
     sequential = SequentialRolloutRunner(
         n_episodes=2,
         max_episode_steps=2,
+        deterministic=False,
         record_trajectory=False,
         record_event_logs=False,
         render=False)
@@ -49,6 +50,7 @@ def test_rollouts_from_python():
     parallel = ParallelRolloutRunner(
         n_episodes=2,
         max_episode_steps=2,
+        deterministic=False,
         record_trajectory=False,
         record_event_logs=False,
         n_processes=2)
@@ -68,6 +70,7 @@ def test_sequential_rollout_with_rendering():
     sequential = SequentialRolloutRunner(
         n_episodes=2,
         max_episode_steps=2,
+        deterministic=False,
         record_trajectory=True,
         record_event_logs=False,
         render=True)
@@ -97,6 +100,7 @@ def test_action_record_rollout():
     env = GymMazeEnv("LunarLander-v2")
 
     runner = ActionRecordRolloutRunner(max_episode_steps=10000,
+                                       deterministic=False,
                                        action_record_path="action_records",
                                        normalization_samples=10,
                                        n_processes=2,

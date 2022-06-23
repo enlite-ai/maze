@@ -16,4 +16,7 @@ n_processes: 5
 # Max steps per episode to perform
 max_episode_steps: 0
 
+# Deterministic or stochastic action sampling
+deterministic: true
+
 # (Note that the default output directory is handled by Hydra)
