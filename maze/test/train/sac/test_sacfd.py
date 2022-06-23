@@ -18,6 +18,7 @@ def run_sacfd(env: str, teacher_policy: str, sac_runner: str, sac_wrappers: str,
                           runner="sequential")
     rollout_config['runner.n_episodes'] = 10
     rollout_config['runner.max_episode_steps'] = 10
+    rollout_config["runner.record_trajectory"] = True
     run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
     # Behavioral cloning on top of the heuristic rollout trajectories
