@@ -12,6 +12,7 @@ def run_behavioral_cloning(env: str, teacher_policy: str, bc_runner: str, bc_wra
                           env=env,
                           policy=teacher_policy,
                           runner="sequential")
+    rollout_config["runner.record_trajectory"] = True
     run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
     # Behavioral cloning on top of the heuristic rollout trajectories
