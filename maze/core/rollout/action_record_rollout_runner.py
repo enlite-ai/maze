@@ -26,6 +26,7 @@ class ActionRecordWorker(ParallelRolloutWorker):
     def run(env_config: DictConfig,
             wrapper_config: DictConfig,
             agent_config: DictConfig,
+            deterministic: bool,
             max_episode_steps: int,
             record_trajectory: bool,
             input_directory: str,
@@ -36,6 +37,7 @@ class ActionRecordWorker(ParallelRolloutWorker):
         :param env_config: Hydra configuration of the environment to instantiate.
         :param wrapper_config: Hydra configuration of environment wrappers.
         :param agent_config: Hydra configuration of agent's policies.
+        :param deterministic: Deterministic or stochastic action sampling.
         :param max_episode_steps: Max number of steps per episode to perform
                                     (episode might end earlier if env returns done).
         :param record_trajectory: Whether to record trajectory data.
@@ -67,7 +69,7 @@ class ActionRecordWorker(ParallelRolloutWorker):
                 env_seed = agent.action_record.seed
 
                 RolloutRunner.run_episode(
-                    env=env, agent=agent, agent_seed=None, env_seed=env_seed,
+                    env=env, agent=agent, agent_seed=None, env_seed=env_seed, deterministic=deterministic,
                     after_reset_callback=None if first_episode else lambda: reporting_queue.put(
                         episode_recorder.get_last_episode_data()),
                     render=False
@@ -90,6 +92,7 @@ class ActionRecordRolloutRunner(ParallelRolloutRunner):
     """Parallel rollout runner that allows to collect features by replaying pre-computed action records.
 
     :param max_episode_steps: The maximum number of agent actions to take (careful these are not internal env steps).
+    :param deterministic: Deterministic or stochastic action sampling.
     :param action_record_path: Path to action records.
     :param normalization_samples: Number of samples (=steps) to collect normalization statistics.
     :param n_processes: Count of processes to spread the rollout across.
@@ -98,12 +101,13 @@ class ActionRecordRolloutRunner(ParallelRolloutRunner):
 
     def __init__(self,
                  max_episode_steps: int,
+                 deterministic: bool,
                  action_record_path: str,
                  normalization_samples: int,
                  n_processes: int,
                  verbose: bool):
-        super().__init__(n_episodes=0, max_episode_steps=max_episode_steps, record_trajectory=False,
-                         record_event_logs=False, n_processes=n_processes)
+        super().__init__(n_episodes=0, max_episode_steps=max_episode_steps, deterministic=deterministic,
+                         record_trajectory=False, record_event_logs=False, n_processes=n_processes)
         self.verbose = verbose
 
         self.action_record_paths = glob.glob(os.path.join(action_record_path, "*.pkl"))

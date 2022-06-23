@@ -24,6 +24,7 @@ class SequentialRolloutRunner(RolloutRunner):
     :param n_episodes: Count of episodes to run
     :param max_episode_steps: Count of steps to run in each episode (if environment returns done, the episode
                                 will be finished earlier though)
+    :param deterministic: Deterministic or stochastic action sampling.
     :param record_trajectory: Whether to record trajectory data
     :param record_event_logs: Whether to record event logs
     """
@@ -31,11 +32,12 @@ class SequentialRolloutRunner(RolloutRunner):
     def __init__(self,
                  n_episodes: int,
                  max_episode_steps: int,
+                 deterministic: bool,
                  record_trajectory: bool,
                  record_event_logs: bool,
                  render: bool):
-        super().__init__(n_episodes, max_episode_steps, record_trajectory, record_event_logs)
-
+        super().__init__(n_episodes=n_episodes, max_episode_steps=max_episode_steps, deterministic=deterministic,
+                         record_trajectory=record_trajectory, record_event_logs=record_event_logs)
         if render:
             assert record_trajectory, "Rendering is supported only when trajectory recording is enabled."
 
@@ -69,7 +71,8 @@ class SequentialRolloutRunner(RolloutRunner):
         self.progress_bar = tqdm(desc="Episodes done", unit=" episodes", total=actual_number_of_episodes)
         RolloutRunner.run_interaction_loop(env, agent, actual_number_of_episodes, render=self.render,
                                            after_reset_callback=lambda: self.update_progress(),
-                                           env_seeds=env_seeds, agent_seeds=agent_seeds)
+                                           env_seeds=env_seeds, agent_seeds=agent_seeds,
+                                           deterministic=self.deterministic)
         self.progress_bar.close()
         env.write_epoch_stats()
 

@@ -64,6 +64,7 @@ class ParallelRolloutWorker:
     def run(env_config: DictConfig,
             wrapper_config: DictConfig,
             agent_config: DictConfig,
+            deterministic: bool,
             max_episode_steps: int,
             record_trajectory: bool,
             input_directory: str,
@@ -74,6 +75,7 @@ class ParallelRolloutWorker:
         :param env_config: Hydra configuration of the environment to instantiate.
         :param wrapper_config: Hydra configuration of environment wrappers.
         :param agent_config: Hydra configuration of agent's policies.
+        :param deterministic: Deterministic or stochastic action sampling.
         :param max_episode_steps: Max number of steps per episode to perform
                                     (episode might end earlier if env returns done).
         :param record_trajectory: Whether to record trajectory data.
@@ -91,7 +93,7 @@ class ParallelRolloutWorker:
             while not seeding_queue.empty():
                 env_seed, agent_seed = seeding_queue.get()
                 RolloutRunner.run_episode(
-                    env=env, agent=agent, agent_seed=agent_seed, env_seed=env_seed,
+                    env=env, agent=agent, agent_seed=agent_seed, env_seed=env_seed, deterministic=deterministic,
                     after_reset_callback=None if first_episode else lambda: reporting_queue.put(
                         episode_recorder.get_last_episode_data()),
                     render=False
@@ -153,6 +155,7 @@ class ParallelRolloutRunner(RolloutRunner):
     :param n_episodes: Count of episodes to run.
     :param max_episode_steps: Count of steps to run in each episode (if environment returns done, the episode
                                 will be finished earlier though).
+    :param deterministic: Deterministic or stochastic action sampling.
     :param n_processes: Count of processes to spread the rollout across.
     :param record_trajectory: Whether to record trajectory data.
     :param record_event_logs: Whether to record event logs.
@@ -161,10 +164,12 @@ class ParallelRolloutRunner(RolloutRunner):
     def __init__(self,
                  n_episodes: int,
                  max_episode_steps: int,
+                 deterministic: bool,
                  n_processes: int,
                  record_trajectory: bool,
                  record_event_logs: bool):
-        super().__init__(n_episodes, max_episode_steps, record_trajectory, record_event_logs)
+        super().__init__(n_episodes=n_episodes, max_episode_steps=max_episode_steps, deterministic=deterministic,
+                         record_trajectory=record_trajectory, record_event_logs=record_event_logs)
         self.n_processes = n_processes
         self.epoch_stats_aggregator = None
         self.reporting_queue = None
@@ -212,7 +217,7 @@ class ParallelRolloutRunner(RolloutRunner):
             p = Process(
                 target=parallel_worker_type.run,
                 args=(env, wrappers, agent,
-                      self.max_episode_steps,
+                      self.deterministic, self.max_episode_steps,
                       self.record_trajectory, self.input_dir, self.reporting_queue,
                       self.seeding_queue),
                 daemon=True
