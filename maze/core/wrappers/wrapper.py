@@ -151,8 +151,27 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         https://stackoverflow.com/questions/39205527/can-you-annotate-return-type-when-value-is-instance-of-cls/39205612#39205612
         on why/how to use this to indicate that an instance of cls is returned.
         """
+        instance = cls(env, **kwargs)
+        instance.init_done = True  # Set the flag at the end of the initialization
+        return instance
 
-        return cls(env, **kwargs)
+    def is_initialized(self):
+        return "init_done" in self.__dict__ and self.__dict__["init_done"]
+
+
+    def __setattr__(self, name, value):
+        """Store instance variables in the innermost object (core env)."""
+        if name == "env" or not self.is_initialized() or name in self.__dict__:
+            self.__dict__[name] = value
+            return
+
+        env = self.__dict__.get("env", None)
+        if not env:
+            self.__dict__[name] = value
+            return
+
+        return setattr(env, name, value)
+
 
     # implementing the interfaces below is optional for use cases where you actually need them
 

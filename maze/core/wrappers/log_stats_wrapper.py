@@ -75,7 +75,9 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
 
         :return A newly created wrapper instance.
         """
-        return cls(env, logging_prefix)
+        instance = cls(env, logging_prefix)
+        instance.init_done = True
+        return instance
 
     @override(BaseEnv)
     def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
