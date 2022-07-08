@@ -53,6 +53,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     """
 
     def __init__(self, env: EnvType):
+        """Avoid calling this constructor directly, use :method:`wrap` instead."""
         self.env = env
 
         base_classes = self._base_classes(env)
@@ -109,7 +110,33 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         return self.fake_class
 
     def __getattr__(self, name):
+        """If the attribute is not available directly on this wrapper, query the wrapped env below."""
         return getattr(self.env, name)
+
+    @property
+    def is_initialized(self) -> bool:
+        """True if the initialization has been completed (i.e., after the `__init__` and `wrap` methods
+        have finished). The `_is_initialized` flag is set at the end of the `wrap` method."""
+        return "_is_initialized" in self.__dict__ and self.__dict__["_is_initialized"]
+
+    def __setattr__(self, name, value):
+        """Complementary to the overridden `__getattr__` above. Outside of wrapper initialization, if the attribute
+        we are assigning is not available on this wrapper, check the wrapped environment below instead."""
+
+        # Set the attribute directly on this wrapper only (1) during initialization, or (2) if this wrapper already
+        # has an attribute of this name
+        if not self.is_initialized or name in self.__dict__ or name == "env":
+            self.__dict__[name] = value
+            return
+
+        # If none of the conditions above hold, attempt to set the attribute on the wrapped env,
+        # falling back to self if the env is not available.
+        env = self.__dict__.get("env", None)
+        if not env:
+            self.__dict__[name] = value
+            return
+
+        return setattr(env, name, value)
 
     @classmethod
     def _base_classes(cls, env: BaseEnv) -> Generator[BaseEnv, None, None]:
@@ -144,6 +171,9 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         """
         Creation method providing appropriate type hints. Preferred method to construct the wrapper compared to calling
         the class constructor directly.
+
+        Note: If you are overriding this method, do not forget to set the `_is_initialized` flag at the end.
+
         :param env: The environment to be wrapped
         :param kwargs: Arguments to be passed on to wrapper's constructor.
         :return A newly created wrapper instance. Since we want to allow sub-classes to use .wrap() without having to
@@ -152,26 +182,8 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         on why/how to use this to indicate that an instance of cls is returned.
         """
         instance = cls(env, **kwargs)
-        instance.init_done = True  # Set the flag at the end of the initialization
+        instance._is_initialized = True  # Set the flag at the end of the initialization
         return instance
-
-    def is_initialized(self):
-        return "init_done" in self.__dict__ and self.__dict__["init_done"]
-
-
-    def __setattr__(self, name, value):
-        """Store instance variables in the innermost object (core env)."""
-        if name == "env" or not self.is_initialized() or name in self.__dict__:
-            self.__dict__[name] = value
-            return
-
-        env = self.__dict__.get("env", None)
-        if not env:
-            self.__dict__[name] = value
-            return
-
-        return setattr(env, name, value)
-
 
     # implementing the interfaces below is optional for use cases where you actually need them
 

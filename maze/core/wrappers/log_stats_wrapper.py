@@ -76,7 +76,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         :return A newly created wrapper instance.
         """
         instance = cls(env, logging_prefix)
-        instance.init_done = True
+        instance._is_initialized = True  # Set the flag at the end of the initialization
         return instance
 
     @override(BaseEnv)
