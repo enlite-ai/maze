@@ -1,4 +1,5 @@
 """Parallel rollout runner for running envs and agents in multiple processes."""
+import logging
 import traceback
 from collections import namedtuple
 from multiprocessing import Queue, Process
@@ -8,6 +9,7 @@ from omegaconf import DictConfig
 from tqdm import tqdm
 
 from maze.core.annotations import override
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
@@ -30,6 +32,9 @@ EpisodeStatsReport = namedtuple("EpisodeStatsReport", "stats event_log")
 
 ExceptionReport = namedtuple("ExceptionReport", "exception traceback env_seed agent_seed")
 """Tuple for passing error reports from the workers to the main process."""
+
+logger = logging.getLogger('PARALLEL RUNNER')
+logger.setLevel(logging.INFO)
 
 
 class EpisodeRecorder(LogStatsConsumer, LogEventsWriter):
@@ -92,13 +97,26 @@ class ParallelRolloutWorker:
             first_episode = True
             while not seeding_queue.empty():
                 env_seed, agent_seed = seeding_queue.get()
-                RolloutRunner.run_episode(
-                    env=env, agent=agent, agent_seed=agent_seed, env_seed=env_seed, deterministic=deterministic,
-                    after_reset_callback=None if first_episode else lambda: reporting_queue.put(
-                        episode_recorder.get_last_episode_data()),
-                    render=False
-                )
-                first_episode = False
+                try:
+                    RolloutRunner.run_episode(
+                        env=env, agent=agent, agent_seed=agent_seed, env_seed=env_seed, deterministic=deterministic,
+                        after_reset_callback=None if first_episode else lambda: reporting_queue.put(
+                            episode_recorder.get_last_episode_data()),
+                        render=False
+                    )
+                    first_episode = False
+                except Exception as e:
+                    out_txt = f"agent_seed: {agent_seed}" \
+                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}" \
+                              f"\nException encountered: {e}" \
+                              f"\n{traceback.format_exc()}"
+
+                    logger.warning(out_txt)
+                    reporting_queue.put(episode_recorder.get_last_episode_data())
+
+                out_txt = f"agent_seed: {agent_seed}" \
+                          f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
+                logger.info(out_txt)
 
             # Reset env and agent at the very end in order to collect the statistics
             env.reset()
