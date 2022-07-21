@@ -105,6 +105,13 @@ class ParallelRolloutWorker:
                         render=False
                     )
                     first_episode = False
+
+                    if seeding_queue.empty():
+                        # just after we finished the last seed, we need to reset env and agent to collect the
+                        # statistics of the last rollout
+                        env.reset()
+                        agent.reset()
+                        reporting_queue.put(episode_recorder.get_last_episode_data())
                 except Exception as e:
                     out_txt = f"agent_seed: {agent_seed}" \
                               f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}" \
@@ -117,11 +124,6 @@ class ParallelRolloutWorker:
                 out_txt = f"agent_seed: {agent_seed}" \
                           f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
                 logger.info(out_txt)
-
-            # Reset env and agent at the very end in order to collect the statistics
-            env.reset()
-            agent.reset()
-            reporting_queue.put(episode_recorder.get_last_episode_data())
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process
