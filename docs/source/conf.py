@@ -168,6 +168,7 @@ autodoc_mock_imports = [
     "cloudpickle",
 
     "torch",
+    "torch_scatter",
     "tensorboard",
     "ray",
 
