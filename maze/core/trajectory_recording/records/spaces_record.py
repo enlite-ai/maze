@@ -39,6 +39,9 @@ class SpacesRecord:
     logits: Optional[Dict[str, np.ndarray]] = None
     """Action logits recorded during the step."""
 
+    predicted_return: Optional[Union[float, np.ndarray, torch.Tensor]] = None
+    """Value of root node after sampling finished."""
+
     discounted_return: Optional[Union[float, np.ndarray]] = None
     """Discounted return for this step."""
 
@@ -64,7 +67,8 @@ class SpacesRecord:
             observation=stack_numpy_dict_list([r.observation for r in records]),
             action=stack_numpy_dict_list([r.action for r in records]),
             reward=np.stack([r.reward for r in records]),
-            done=np.stack([r.done for r in records])
+            done=np.stack([r.done for r in records]),
+            predicted_return=np.stack([r.predicted_return for r in records])
         )
 
         if records[0].next_observation:
@@ -95,6 +99,7 @@ class SpacesRecord:
         self.action = convert_to_numpy(self.action, cast=None, in_place=True)
         self.reward = self.reward.cpu().numpy()
         self.done = self.done.cpu().numpy()
+        self.predicted_return = self.predicted_return.cpu().numpy()
 
         if self.next_observation is not None:
             self.next_observation = convert_to_numpy(self.next_observation, cast=None, in_place=True)
@@ -113,6 +118,7 @@ class SpacesRecord:
         self.action = convert_to_torch(self.action, device=device, cast=None, in_place=True)
         self.reward = torch.from_numpy(np.asarray(self.reward)).to(device)
         self.done = torch.from_numpy(np.asarray(self.done)).to(device)
+        self.predicted_return = torch.from_numpy(np.asarray(self.predicted_return)).to(device)
 
         if self.next_observation is not None:
             self.next_observation = convert_to_torch(self.next_observation, device=device, cast=None, in_place=True)

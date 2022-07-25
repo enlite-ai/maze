@@ -203,6 +203,11 @@ class StructuredSpacesRecord:
         return [r.discounted_return for r in self.substep_records]
 
     @property
+    def predicted_returns(self) -> List[Union[float, np.ndarray, torch.Tensor]]:
+        """List of discounted returns from the individual sub-steps."""
+        return [r.predicted_return for r in self.substep_records]
+
+    @property
     def actions_dict(self) -> Dict[StepKeyType, Union[ActionType, TorchActionType]]:
         """Dict of actions from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios).
         """
