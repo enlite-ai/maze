@@ -77,7 +77,7 @@ class InMemoryDataset(Dataset, ABC):
         :param input_data: Input data to load the trajectories from. This can be either a single file, a single
                 directory, a list of files or a list of directories.
         """
-        if self.n_workers == 1:
+        if self.n_workers <= 1:
             self._load_data_sequential(input_data)
         else:
             self._load_data_parallel(input_data)
@@ -300,8 +300,9 @@ class InMemoryDataset(Dataset, ABC):
         # Split episodes across subsets so that each subset has roughly the desired number of step samples
         next_shuffled_idx = 0
         subsets = []
-
         for desired_subs_len in lengths[:-1]:
+            if desired_subs_len == 0:
+                continue
             episodes_in_subs = []
             n_samples_in_subs = 0
 

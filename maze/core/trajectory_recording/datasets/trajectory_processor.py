@@ -192,3 +192,37 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
         return trajectory
+
+@dataclasses.dataclass
+class GammaClippingTrajectoryProcessor(TrajectoryProcessor):
+    """Implementation of the dead-end-clipping preprocessor. That is for each trajectory the last k states should be
+    clipped iff the env is done in the last state."""
+    clip_k: int
+    max_episode_steps: int
+
+    @override(TrajectoryProcessor)
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
+        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
+        """
+        last_record = trajectory.step_records[-1]
+        if isinstance(last_record, StateRecord):
+            if last_record.maze_state is None or last_record.maze_action is None:
+                trajectory.step_records = trajectory.step_records[:-1]
+            is_done = trajectory.step_records[-1].done
+            info = trajectory.step_records[-1].info
+        elif isinstance(last_record, StructuredSpacesRecord):
+            if last_record.observations is None or last_record.observations is [] or last_record.actions is [] \
+                    or last_record.actions is None:
+                trajectory.step_records = trajectory.step_records[:-1]
+            is_done = trajectory.step_records[-1].is_done()
+            info = trajectory.step_records[-1].substep_records[0].info
+        else:
+            raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
+
+        # Check whether the given trajectory died due to a self inflicted mistake
+        if is_done:
+            # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
+            if len(trajectory) == self.max_episode_steps:
+                trajectory.step_records = trajectory.step_records[:-self.clip_k]
+
+        return trajectory

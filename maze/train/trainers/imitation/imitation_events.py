@@ -65,24 +65,32 @@ class ImitationEvents(ABC):
 class CriticImitationEvents(ABC):
     """Event interface defining statistics emitted by the imitation learning trainers."""
 
-    @define_epoch_stats(np.nanmean)
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
+    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
+    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
     @define_stats_grouping('step_id')
-    def actual_value(self, step_id: Union[str, int], value: float):
+    def actual_value(self, step_id: Union[str, int], mean: float, min: float, max: float):
         """Actual (transformed) value of the step critics."""
 
-    @define_epoch_stats(np.nanmean)
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
+    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
+    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
     @define_stats_grouping('step_id')
-    def actual_value_original(self, step_id: Union[str, int], value: float):
+    def actual_value_original(self, step_id: Union[str, int], mean: float, min: float, max: float):
         """Actual value of the step critics."""
 
-    @define_epoch_stats(np.nanmean)
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
+    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
+    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
     @define_stats_grouping('step_id')
-    def value(self, step_id: Union[str, int], value: float):
+    def value(self, step_id: Union[str, int], mean: float, min: float, max: float):
         """Predicted (transformed) value of the step critics."""
 
-    @define_epoch_stats(np.nanmean)
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
+    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
+    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
     @define_stats_grouping('step_id')
-    def value_original(self, step_id: Union[str, int], value: float):
+    def value_original(self, step_id: Union[str, int], mean: float, min: float, max: float):
         """Predicted value of the step critics."""
 
     @define_epoch_stats(np.nanmean)
