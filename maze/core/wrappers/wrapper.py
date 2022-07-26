@@ -168,18 +168,18 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
     @classmethod
     def wrap(cls: Type[WrapperType], env: T, **kwargs) -> Union[T, WrapperType]:
-        """
-        Creation method providing appropriate type hints. Preferred method to construct the wrapper compared to calling
+        """Creation method providing appropriate type hints. Preferred method to construct the wrapper compared to calling
         the class constructor directly.
 
         Note: If you are overriding this method, do not forget to set the `_is_initialized` flag at the end.
 
         :param env: The environment to be wrapped
         :param kwargs: Arguments to be passed on to wrapper's constructor.
-        :return A newly created wrapper instance. Since we want to allow sub-classes to use .wrap() without having to
-        reimplement them and still facilitate proper typing hints, we use a generic to represent the type of cls. See
-        https://stackoverflow.com/questions/39205527/can-you-annotate-return-type-when-value-is-instance-of-cls/39205612#39205612
-        on why/how to use this to indicate that an instance of cls is returned.
+        :return: A newly created wrapper instance. Since we want to allow sub-classes to use .wrap() without having to
+                 reimplement them and still facilitate proper typing hints, we use a generic to represent the type
+                 of cls. See:
+                 https://stackoverflow.com/questions/39205527/can-you-annotate-return-type-when-value-is-instance-of-cls/39205612#39205612
+                 on why/how to use this to indicate that an instance of cls is returned.
         """
         instance = cls(env, **kwargs)
         instance._is_initialized = True  # Set the flag at the end of the initialization
