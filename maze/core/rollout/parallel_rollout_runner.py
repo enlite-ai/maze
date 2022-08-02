@@ -106,6 +106,10 @@ class ParallelRolloutWorker:
                     )
                     first_episode = False
 
+                    out_txt = f"agent_seed: {agent_seed}" \
+                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
+                    logger.info(out_txt)
+
                     if seeding_queue.empty():
                         # just after we finished the last seed, we need to reset env and agent to collect the
                         # statistics of the last rollout
@@ -120,10 +124,6 @@ class ParallelRolloutWorker:
 
                     logger.warning(out_txt)
                     reporting_queue.put(episode_recorder.get_last_episode_data())
-
-                out_txt = f"agent_seed: {agent_seed}" \
-                          f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
-                logger.info(out_txt)
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process
@@ -219,21 +219,20 @@ class ParallelRolloutRunner(RolloutRunner):
         if actual_number_of_episodes < self.n_episodes:
             BColors.print_colored(f'Only {len(env_seeds)} explicit seed(s) given, thus the number of episodes changed '
                                   f'from: {self.n_episodes} to {actual_number_of_episodes}.', BColors.WARNING)
+            self.n_episodes = actual_number_of_episodes
 
         # Configure and launch the processes
         workers = self._configure_and_launch_processes(parallel_worker_type=ParallelRolloutWorker,
-                                                       env=env, wrappers=wrappers, agent=agent,
-                                                       actual_number_of_episodes=actual_number_of_episodes)
+                                                       env=env, wrappers=wrappers, agent=agent)
         return workers
 
     def _configure_and_launch_processes(self, parallel_worker_type: type(ParallelRolloutWorker), env: ConfigType,
-                                        wrappers: CollectionOfConfigType, agent: ConfigType,
-                                        actual_number_of_episodes: int) -> Iterable[Process]:
+                                        wrappers: CollectionOfConfigType, agent: ConfigType) -> Iterable[Process]:
         """Configure and launch the processes.
         """
         self.reporting_queue = Queue()
         workers = []
-        for _ in range(min(self.n_processes, actual_number_of_episodes)):
+        for _ in range(min(self.n_processes, self.n_episodes)):
             p = Process(
                 target=parallel_worker_type.run,
                 args=(env, wrappers, agent,
