@@ -167,16 +167,11 @@ class RolloutGenerator:
             maze_state = self.env.get_maze_state() if policy.needs_state() else None
             env = self.env if policy.needs_env() else None
             action = policy.compute_action(self.last_observation.copy(),
-                                                  actor_id=record.actor_id,
-                                                  maze_state=maze_state,
-                                                  env=env,
-                                                  deterministic=False)
-        if isinstance(action, tuple):
-            record.action = action[0]
-            record.predicted_return = action[1]
-            action = action[0]
-        else:
-            record.action = action
+                                           actor_id=record.actor_id,
+                                           maze_state=maze_state,
+                                           env=env,
+                                           deterministic=False)
+        record.action = action
 
         # Take the step
         self.last_observation, record.reward, record.done, record.info = self.env.step(action)
