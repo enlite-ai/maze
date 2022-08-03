@@ -149,6 +149,5 @@ class ActionRecordRolloutRunner(ParallelRolloutRunner):
 
         # Configure and launch the processes
         workers = self._configure_and_launch_processes(parallel_worker_type=ActionRecordWorker,
-                                                       env=env, wrappers=wrappers, agent=agent,
-                                                       actual_number_of_episodes=actual_number_of_episodes)
+                                                       env=env, wrappers=wrappers, agent=agent)
         return workers
