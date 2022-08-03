@@ -2,7 +2,7 @@
     InMemoryDataset"""
 import dataclasses
 from abc import abstractmethod
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Tuple
 
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
@@ -82,6 +82,29 @@ class TrajectoryProcessor:
                                       for pre_processed_trajectory in pre_processed_trajectories]
         return env_processed_trajectories
 
+    @staticmethod
+    def _retrieve_done_and_last_info(trajectory: TrajectoryRecord) -> Tuple[bool, Dict]:
+        """Helper method to retrieve the information on how the given trajectory ended.
+
+        :param trajectory: Episode record to load.
+        :return: A bool indicating whether the trajectory ended with a done and the last info dict.
+        """
+        last_record = trajectory.step_records[-1]
+        if isinstance(last_record, StateRecord):
+            if last_record.maze_state is None or last_record.maze_action is None:
+                trajectory.step_records = trajectory.step_records[:-1]
+            is_done = trajectory.step_records[-1].done
+            info = trajectory.step_records[-1].info
+        elif isinstance(last_record, StructuredSpacesRecord):
+            if last_record.observations is None or last_record.observations is [] or last_record.actions is [] \
+                    or last_record.actions is None:
+                trajectory.step_records = trajectory.step_records[:-1]
+            is_done = trajectory.step_records[-1].is_done()
+            info = trajectory.step_records[-1].substep_records[0].info
+        else:
+            raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
+        return is_done, info
+
 
 class IdentityTrajectoryProcessor(TrajectoryProcessor):
     """Identity processing method"""
@@ -103,20 +126,7 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
-        last_record = trajectory.step_records[-1]
-        if isinstance(last_record, StateRecord):
-            if last_record.maze_state is None or last_record.maze_action is None:
-                trajectory.step_records = trajectory.step_records[:-1]
-            is_done = trajectory.step_records[-1].done
-            info = trajectory.step_records[-1].info
-        elif isinstance(last_record, StructuredSpacesRecord):
-            if last_record.observations is None or last_record.observations is [] or last_record.actions is [] \
-                    or last_record.actions is None:
-                trajectory.step_records = trajectory.step_records[:-1]
-            is_done = trajectory.step_records[-1].is_done()
-            info = trajectory.step_records[-1].substep_records[0].info
-        else:
-            raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
+        is_done, info = self._retrieve_done_and_last_info(trajectory)
 
         # Check whether the given trajectory died due to a self inflicted mistake
         if is_done and (info is None or 'TimeLimit.truncated' not in info):
@@ -191,4 +201,27 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
+        return trajectory
+
+
+@dataclasses.dataclass
+class SolvedClippingTrajectoryProcessor(TrajectoryProcessor):
+    """Implementation of the dead-end-clipping preprocessor. That is for each trajectory the last k states should be
+    clipped iff the env is NOT done in the last state. Relevant for critic learning in infinite time horizon tasks."""
+    clip_k: int
+
+    @override(TrajectoryProcessor)
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
+        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
+        """
+        is_done, info = self._retrieve_done_and_last_info(trajectory)
+
+        # Check whether the given trajectory died due to a self inflicted mistake
+        if is_done and not (info is None or 'TimeLimit.truncated' not in info):
+            # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
+            if len(trajectory) > self.clip_k:
+                trajectory.step_records = trajectory.step_records[:-self.clip_k]
+            else:
+                trajectory.step_records = list()
+
         return trajectory

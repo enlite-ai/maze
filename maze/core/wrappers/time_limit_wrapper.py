@@ -64,7 +64,7 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
         else:
             self._elapsed_steps += 1
 
-        if self._max_episode_steps and self._elapsed_steps >= self._max_episode_steps:
+        if not done and self._max_episode_steps and self._elapsed_steps >= self._max_episode_steps:
             info['TimeLimit.truncated'] = not done
             done = True
         return observation, reward, done, info
