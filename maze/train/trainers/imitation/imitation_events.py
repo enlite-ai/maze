@@ -68,47 +68,47 @@ class CriticImitationEvents(ABC):
     @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
     @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
     @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
-    @define_stats_grouping('step_id')
-    def actual_value(self, step_id: Union[str, int], mean: float, min: float, max: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def actual_value(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Actual (transformed) value of the step critics."""
 
     @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
     @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
     @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
-    @define_stats_grouping('step_id')
-    def actual_value_original(self, step_id: Union[str, int], mean: float, min: float, max: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def actual_value_original(self, substep_key: int, agent_id: int,  mean: float, min: float, max: float):
         """Actual value of the step critics."""
 
     @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
     @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
     @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
-    @define_stats_grouping('step_id')
-    def value(self, step_id: Union[str, int], mean: float, min: float, max: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def value(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Predicted (transformed) value of the step critics."""
 
     @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
     @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
     @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
-    @define_stats_grouping('step_id')
-    def value_original(self, step_id: Union[str, int], mean: float, min: float, max: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def value_original(self, substep_key: int, agent_id: int,  mean: float, min: float, max: float):
         """Predicted value of the step critics."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id')
-    def critic_loss(self, step_id: Union[str, int], value: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def critic_loss(self, substep_key: int, agent_id: int,  value: float):
         """Optimization loss of the step critics."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id')
-    def critic_l2_norm(self, step_id: Union[str, int], value: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def critic_l2_norm(self, substep_key: int, agent_id: int,  value: float):
         """L2 norm of the step critics."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id')
-    def critic_grad_norm(self, step_id: Union[str, int], value: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def critic_grad_norm(self, substep_key: int, agent_id: int,  value: float):
         """Gradient norm of the step critics."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id')
-    def mean_abs_deviation(self, step_id: Union[str, int], value: float):
+    @define_stats_grouping('substep_key', 'agent_id')
+    def mean_abs_deviation(self, substep_key: int, agent_id: int,  value: float):
         """Mean absolute deviation for actual value."""
