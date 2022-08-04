@@ -100,7 +100,7 @@ class TrajectoryProcessor:
                     or last_record.actions is None:
                 trajectory.step_records = trajectory.step_records[:-1]
             is_done = trajectory.step_records[-1].is_done()
-            info = trajectory.step_records[-1].substep_records[0].info
+            info = trajectory.step_records[-1].substep_records[-1].info
         else:
             raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
         return is_done, info
