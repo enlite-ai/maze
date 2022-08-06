@@ -95,35 +95,47 @@ class ParallelRolloutWorker:
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
             first_episode = True
-            while not seeding_queue.empty():
+            while True:
+                if seeding_queue.empty():
+                    if first_episode:
+                        break
+
+                    # after we finished the last seed, we need to reset env and agent to collect the
+                    # statistics of the last rollout
+                    try:
+                        env.reset()
+                        agent.reset()
+                    except Exception as e:
+                        logger.warning(
+                            f"\nException in event collection reset() encountered: {e}"
+                            f"\n{traceback.format_exc()}")
+
+                    reporting_queue.put(episode_recorder.get_last_episode_data())
+                    break
+
                 env_seed, agent_seed = seeding_queue.get()
+                env.seed(env_seed)
+                agent.seed(agent_seed)
                 try:
+                    obs = env.reset()
+                    agent.reset()
+
                     RolloutRunner.run_episode(
-                        env=env, agent=agent, agent_seed=agent_seed, env_seed=env_seed, deterministic=deterministic,
-                        after_reset_callback=None if first_episode else lambda: reporting_queue.put(
-                            episode_recorder.get_last_episode_data()),
-                        render=False
-                    )
-                    first_episode = False
+                        env=env, agent=agent, obs=obs, deterministic=deterministic, render=False)
 
                     out_txt = f"agent_seed: {agent_seed}" \
                               f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
                     logger.info(out_txt)
-
-                    if seeding_queue.empty():
-                        # just after we finished the last seed, we need to reset env and agent to collect the
-                        # statistics of the last rollout
-                        env.reset()
-                        agent.reset()
-                        reporting_queue.put(episode_recorder.get_last_episode_data())
                 except Exception as e:
                     out_txt = f"agent_seed: {agent_seed}" \
                               f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}" \
                               f"\nException encountered: {e}" \
                               f"\n{traceback.format_exc()}"
-
                     logger.warning(out_txt)
-                    reporting_queue.put(episode_recorder.get_last_episode_data())
+                finally:
+                    if not first_episode:
+                        reporting_queue.put(episode_recorder.get_last_episode_data())
+                    first_episode = False
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process

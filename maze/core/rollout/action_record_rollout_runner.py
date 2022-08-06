@@ -1,5 +1,6 @@
 """ Contains a parallel rollout runner that allows to collect features by replaying pre-computed action records. """
 import glob
+import logging
 import os
 import traceback
 from multiprocessing import Queue, Process
@@ -9,6 +10,7 @@ from omegaconf import DictConfig
 
 from maze.core.agent.replay_recorded_actions_policy import ReplayRecordedActionsPolicy
 from maze.core.annotations import override
+from maze.core.env.maze_env import MazeEnv
 from maze.core.rollout.parallel_rollout_runner import ParallelRolloutRunner, ParallelRolloutWorker, ExceptionReport
 from maze.core.rollout.rollout_runner import RolloutRunner
 from maze.core.utils.factory import ConfigType, CollectionOfConfigType
@@ -17,6 +19,9 @@ from maze.core.wrappers.observation_normalization.observation_normalization_wrap
     ObservationNormalizationWrapper
 from maze.core.wrappers.spaces_recording_wrapper import SpacesRecordingWrapper
 from maze.utils.bcolors import BColors
+
+logger = logging.getLogger('ActionRecordWorker')
+logger.setLevel(logging.INFO)
 
 
 class ActionRecordWorker(ParallelRolloutWorker):
@@ -60,26 +65,52 @@ class ActionRecordWorker(ParallelRolloutWorker):
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
             first_episode = True
-            while not seeding_queue.empty():
+            while True:
+                if seeding_queue.empty():
+                    if first_episode:
+                        break
+
+                    # after we finished the last seed, we need to reset env and agent to collect the
+                    # statistics of the last rollout
+                    try:
+                        env.reset()
+                        agent.reset()
+                    except Exception as e:
+                        logger.warning(
+                            f"\nException in event collection reset() encountered: {e}"
+                            f"\n{traceback.format_exc()}")
+
+                    reporting_queue.put(episode_recorder.get_last_episode_data())
+                    break
+
                 # initialize replay action policy
                 action_record_path = seeding_queue.get()
                 agent.load_action_record(action_record_path)
 
                 # request env seed
                 env_seed = agent.action_record.seed
+                env.seed(env_seed)
 
-                RolloutRunner.run_episode(
-                    env=env, agent=agent, agent_seed=None, env_seed=env_seed, deterministic=deterministic,
-                    after_reset_callback=None if first_episode else lambda: reporting_queue.put(
-                        episode_recorder.get_last_episode_data()),
-                    render=False
-                )
-                first_episode = False
+                try:
+                    obs = env.reset()
+                    agent.reset()
 
-            # Reset env and agent at the very end in order to collect the statistics
-            env.reset()
-            agent.reset()
-            reporting_queue.put(episode_recorder.get_last_episode_data())
+                    RolloutRunner.run_episode(
+                        env=env, agent=agent, obs=obs, deterministic=deterministic, render=False)
+
+                    out_txt = f"agent_seed: {agent_seed}" \
+                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
+                    logger.info(out_txt)
+                except Exception as e:
+                    out_txt = f"agent_seed: {agent_seed}" \
+                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}" \
+                              f"\nException encountered: {e}" \
+                              f"\n{traceback.format_exc()}"
+                    logger.warning(out_txt)
+                finally:
+                    if not first_episode:
+                        reporting_queue.put(episode_recorder.get_last_episode_data())
+                    first_episode = False
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process

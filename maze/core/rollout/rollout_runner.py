@@ -1,5 +1,4 @@
 """Abstract class for rollout runners."""
-import os.path
 import time
 from abc import ABC, abstractmethod
 from typing import Callable, Optional, List, Any
@@ -10,6 +9,7 @@ from omegaconf import DictConfig
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
+from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.utils.config_utils import EnvFactory, SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
@@ -129,27 +129,17 @@ class RolloutRunner(Runner, ABC):
         return env, agent
 
     @staticmethod
-    def run_episode(env: StructuredEnv, agent: Policy,
-                    env_seed: Any, agent_seed: Any, deterministic: bool,
-                    render: bool, after_reset_callback: Optional[Callable]) -> None:
+    def run_episode(env: StructuredEnv, obs: ObservationType, agent: Policy,
+                    deterministic: bool,
+                    render: bool) -> None:
         """Helper function for running a single episode.
 
         :param env: Environment to run.
+        :param obs: Initial observation, as returned by reset().
+        :param deterministic: Argmax policy.
         :param agent: Agent to use.
-        :param env_seed: The env seed to be used for this episode.
-        :param agent_seed: The agent seed to be used for this episode.
         :param render: Whether to render the environment after every step.
-        :param after_reset_callback: If supplied, this will be executed after each episode to notify the observer.
         """
-
-        env.seed(env_seed)
-        obs = env.reset()
-
-        agent.seed(agent_seed)
-        agent.reset()
-
-        if after_reset_callback is not None:
-            after_reset_callback()
 
         done = False
         while not done:
@@ -187,9 +177,19 @@ class RolloutRunner(Runner, ABC):
             env_seed = env_seeds[idx]
             agent_seed = agent_seeds[idx]
             try:
-                cls.run_episode(env=env, agent=agent,
-                                env_seed=env_seed, agent_seed=agent_seed, deterministic=deterministic, render=render,
-                                after_reset_callback=None if idx == 0 else after_reset_callback)
+                obs = env.reset()
+                agent.reset()
+            except Exception as exception:
+                BColors.print_colored(f'A error was encountered during rollout on the env_seed: {env_seed} with '
+                                      f'agent_seed: {agent_seed}', BColors.FAIL)
+                raise exception
+
+            if idx > 0:
+                after_reset_callback()
+
+            try:
+                cls.run_episode(env=env, obs=obs, agent=agent,
+                                deterministic=deterministic, render=render)
             except Exception as exception:
                 BColors.print_colored(f'A error was encountered during rollout on the env_seed: {env_seed} with '
                                       f'agent_seed: {agent_seed}', BColors.FAIL)
