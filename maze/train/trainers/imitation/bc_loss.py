@@ -1,6 +1,6 @@
 """Loss function for behavioral cloning."""
 from dataclasses import dataclass
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Optional
 
 import gym
 import torch
@@ -37,7 +37,8 @@ class BCLoss:
                        observations: List[ObservationType],
                        actions: List[TorchActionType],
                        actor_ids: List[ActorID],
-                       events: ImitationEvents
+                       events: ImitationEvents,
+                       action_logits: Optional[List[TorchActionType]],
                        ) -> torch.Tensor:
         """Calculate and return the training loss for one step (= multiple sub-steps in structured scenarios).
 
@@ -53,10 +54,12 @@ class BCLoss:
         # Iterate over all sub-steps
         assert len(actor_ids) == len(actions)
         assert len(actor_ids) == len(observations)
-        for actor_id, observation, target_action in zip(actor_ids, observations, actions):
+        action_logits = [None] * len(observations) if action_logits is None else action_logits
+        for actor_id, observation, target_action, target_action_probs in zip(actor_ids, observations, actions, action_logits):
             policy_output = policy.compute_substep_policy_output(observation, actor_id=actor_id)
             substep_losses = self._get_substep_loss(actor_id, policy_output.action_logits, target_action,
-                                                    self.action_spaces_dict[actor_id.step_key], events=events)
+                                                    self.action_spaces_dict[actor_id.step_key], events=events,
+                                                    target_prob_dict=target_action_probs)
 
             losses.append(substep_losses)
 
@@ -72,7 +75,8 @@ class BCLoss:
                           logits_dict: Dict[str, torch.Tensor],
                           target_dict: Dict[str, torch.Tensor],
                           action_spaces_dict: gym.spaces.Dict,
-                          events: ImitationEvents) -> torch.Tensor:
+                          events: ImitationEvents,
+                          target_prob_dict: Optional[Dict[str, torch.Tensor]]) -> torch.Tensor:
         """Iterate over the action space of a given policy and calculate the loss based on the types of the
         subspaces.
 
@@ -85,13 +89,17 @@ class BCLoss:
         losses = []
         for subspace_id, logits in logits_dict.items():
             target = target_dict[subspace_id]
+            if target_prob_dict is not None:
+                loss_target = target_prob_dict[subspace_id]
+            else:
+                loss_target = target
             action_space = action_spaces_dict[subspace_id]
 
             # Categorical (discrete spaces)
             if isinstance(action_space, gym.spaces.Discrete):
-                if logits.dim() == target.dim():
+                if logits.dim() == target.dim() and target_prob_dict is None:
                     logits = logits.unsqueeze(0)
-                losses.append(self.loss_discrete(logits, target))
+                losses.append(self.loss_discrete(logits, loss_target))
 
                 events.discrete_accuracy(
                     step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,

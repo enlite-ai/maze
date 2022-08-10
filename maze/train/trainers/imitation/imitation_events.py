@@ -61,6 +61,10 @@ class ImitationEvents(ABC):
     def box_mean_abs_deviation(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
         """Mean absolute deviation for box (continuous) subspaces."""
 
+    @define_epoch_stats(np.nanmean)
+    def training_iterations(self, value: int):
+        """The number of training iterations before early stopping"""
+
 
 class CriticImitationEvents(ABC):
     """Event interface defining statistics emitted by the imitation learning trainers."""
@@ -112,3 +116,7 @@ class CriticImitationEvents(ABC):
     @define_stats_grouping('substep_key', 'agent_id')
     def mean_abs_deviation(self, substep_key: int, agent_id: int,  value: float):
         """Mean absolute deviation for actual value."""
+
+    @define_epoch_stats(np.nanmean)
+    def training_iterations(self, value: int):
+        """The number of training iterations before early stopping"""

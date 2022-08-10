@@ -55,15 +55,17 @@ class BCValidationEvaluator(Evaluator):
             total_loss = []
 
             for iteration, data in enumerate(self.data_loader, 0):
-                observations, actions, actor_ids = data[0], data[1], data[-1]
+                observations, actions, action_logits, actor_ids = data[0], data[1], data[3], data[-1]
                 actor_ids = debatch_actor_ids(actor_ids)
                 # Convert only actions to torch, since observations are converted in
                 # policy.compute_substep_policy_output method
                 convert_to_torch(actions, device=policy.device, cast=None, in_place=True)
+                if action_logits is not None:
+                    convert_to_torch(action_logits, device=policy.device, cast=None, in_place=True)
 
                 total_loss.append(
                     self.loss.calculate_loss(policy=policy, observations=observations, actions=actions,
-                                             events=self.eval_events, actor_ids=actor_ids).item())
+                                             events=self.eval_events, actor_ids=actor_ids, action_logits=action_logits).item())
 
             if self.model_selection:
                 self.model_selection.update(-np.mean(total_loss).item())

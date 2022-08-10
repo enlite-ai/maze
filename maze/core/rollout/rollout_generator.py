@@ -15,6 +15,7 @@ from maze.core.trajectory_recording.records.trajectory_record import SpacesTraje
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.perception.perception_utils import convert_to_numpy
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
+from maze_dev.core.agent.mcts_policy import MctsPolicy
 
 
 class RolloutGenerator:
@@ -90,7 +91,7 @@ class RolloutGenerator:
         """
         # Check: Logits can be recorded with torch policy only
         if self.record_logits:
-            assert isinstance(policy, TorchPolicy), "to collect logits, the policy needs to be a Torch policy"
+            assert isinstance(policy, (TorchPolicy, MctsPolicy)), "to collect logits, the policy needs to be a Torch policy"
 
         # Initialize a trajectory record
         trajectory_record = SpacesTrajectoryRecord(trajectory_id if trajectory_id else self.rollout_counter)
@@ -156,7 +157,7 @@ class RolloutGenerator:
 
         # Sample action and record logits if configured
         # Note: Copy the observation (as by default, the policy converts and handles it in place)
-        if self.record_logits:
+        if self.record_logits and isinstance(policy, TorchPolicy):
             with torch.no_grad():
                 step_policy_output = policy.compute_substep_policy_output(self.last_observation.copy(),
                                                                           actor_id=record.actor_id)
@@ -171,6 +172,16 @@ class RolloutGenerator:
                                            maze_state=maze_state,
                                            env=env,
                                            deterministic=False)
+            if isinstance(policy, MctsPolicy):
+                assert policy.previous_root_value is not None
+                record.root_value = policy.previous_root_value
+
+                if self.record_logits:
+                    assert isinstance(policy, MctsPolicy)
+                    assert policy.previous_root_value is not None
+                    assert policy.previous_action_logits is not None
+                    record.logits = policy.previous_action_logits
+
         record.action = action
 
         # Take the step
