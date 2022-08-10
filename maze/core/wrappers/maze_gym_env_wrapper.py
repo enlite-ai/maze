@@ -72,6 +72,10 @@ class GymActionConversion(ActionConversionInterface):
 
         return action_space
 
+    def create_action_hash(self, action: MazeActionType) -> Union[int, str]:
+        """An integer representation of the action."""
+        return action['action']
+
 
 class GymObservationConversion(ObservationConversionInterface):
     """A dummy conversion interface asserting that the observation is packed into a dictionary space.
