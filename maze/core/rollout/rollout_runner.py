@@ -174,8 +174,9 @@ class RolloutRunner(Runner, ABC):
         """
 
         for idx in range(n_episodes):
-            env_seed = env_seeds[idx]
-            agent_seed = agent_seeds[idx]
+            env_seed, agent_seed = env_seeds[idx], agent_seeds[idx]
+            env.seed(env_seed)
+            agent.seed(agent_seed)
             try:
                 obs = env.reset()
                 agent.reset()
