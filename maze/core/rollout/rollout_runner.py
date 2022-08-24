@@ -181,7 +181,7 @@ class RolloutRunner(Runner, ABC):
                 obs = env.reset()
                 agent.reset()
             except Exception as exception:
-                BColors.print_colored(f'A error was encountered during rollout on the env_seed: {env_seed} with '
+                BColors.print_colored(f'A error was encountered during reset on the env_seed: {env_seed} with '
                                       f'agent_seed: {agent_seed}', BColors.FAIL)
                 raise exception
 
