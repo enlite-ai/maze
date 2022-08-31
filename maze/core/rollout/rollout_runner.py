@@ -8,7 +8,7 @@ from omegaconf import DictConfig
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
-from maze.core.env.base_env import BaseEnv
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.utils.config_utils import EnvFactory, SwitchWorkingDirectoryToInput
@@ -106,7 +106,7 @@ class RolloutRunner(Runner, ABC):
                            wrappers_config: CollectionOfConfigType,
                            max_episode_steps: int,
                            agent_config: DictConfig,
-                           input_dir: str) -> (BaseEnv, Policy):
+                           input_dir: str) -> (MazeEnv, Policy):
         """Build the environment (including wrappers) and agent according to given configuration.
 
         :param env_config: Environment config.
