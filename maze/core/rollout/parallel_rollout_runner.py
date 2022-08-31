@@ -54,12 +54,12 @@ class EpisodeRecorder(LogStatsConsumer, LogEventsWriter):
         """Receive the event logs from the env and store them."""
         self.last_event_log = episode_event_log
 
-    def get_last_episode_data(self) -> Tuple[LogStats, EpisodeEventLog]:
+    def get_last_episode_data(self) -> EpisodeStatsReport:
         """Get the stats and event log from the last episode.
 
         :return: Tuple of (episode stats, event log)
         """
-        return self.last_stats, self.last_event_log
+        return EpisodeStatsReport(self.last_stats, self.last_event_log)
 
 
 class ParallelRolloutWorker:
