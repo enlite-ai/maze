@@ -28,11 +28,7 @@ class MockQueue:
 
 
 def build_test_maze_env(env_type: Type) -> DummyEnvironment:
-    """
-    Instantiates the DummyEnvironment.
-
-    :return: Instance of a DummyEnvironment
-    """
+    """Builds a dummy maze env with the given env_type (should be a subclass of DummyEnvironment)"""
     observation_conversion = ObservationConversion()
 
     return env_type(
@@ -43,28 +39,32 @@ def build_test_maze_env(env_type: Type) -> DummyEnvironment:
 
 
 class ErrorInResetEnv(DummyEnvironment):
+    """Raises an error in every second reset."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.counter = 0
+        self.n_episodes = 0
 
     def reset(self) -> ObservationType:
-        if self.counter % 2:
+        if self.n_episodes % 2:
             raise RuntimeError("Test error in reset")
-        self.counter += 1
+        self.n_episodes += 1
         return super().reset()
 
 
 class ErrorInStepEnv(DummyEnvironment):
+    """Raises an error in the step function of every second episode."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.counter = 0
+        self.n_episodes = 0
 
     def reset(self) -> ObservationType:
-        self.counter += 1
+        self.n_episodes += 1
         return super().reset()
 
     def step(self, *args, **kwargs):
-        if self.counter % 2:
+        if self.n_episodes % 2:
             raise RuntimeError("Test error in step")
         return super().step(*args, **kwargs)
 
