@@ -88,6 +88,9 @@ class ParallelRolloutWorker:
         :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode.
         :param seeding_queue: Queue for retrieving seeds.
         """
+        if seeding_queue.empty():
+            return
+
         env_seed, agent_seed = None, None
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
@@ -95,24 +98,7 @@ class ParallelRolloutWorker:
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
             first_episode = True
-            while True:
-                if seeding_queue.empty():
-                    if first_episode:
-                        break
-
-                    # after we finished the last seed, we need to reset env and agent to collect the
-                    # statistics of the last rollout
-                    try:
-                        env.reset()
-                        agent.reset()
-                    except Exception as e:
-                        logger.warning(
-                            f"\nException in event collection reset() encountered: {e}"
-                            f"\n{traceback.format_exc()}")
-
-                    reporting_queue.put(episode_recorder.get_last_episode_data())
-                    break
-
+            while not seeding_queue.empty():
                 env_seed, agent_seed = seeding_queue.get()
                 env.seed(env_seed)
                 agent.seed(agent_seed)
@@ -120,28 +106,42 @@ class ParallelRolloutWorker:
                     obs = env.reset()
                     agent.reset()
 
-                    RolloutRunner.run_episode(
-                        env=env, agent=agent, obs=obs, deterministic=deterministic, render=False)
-
-                    out_txt = f"agent_seed: {agent_seed}" \
-                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
-                    logger.info(out_txt)
+                    RolloutRunner.run_episode(env=env, agent=agent, obs=obs, deterministic=deterministic, render=False)
+                    ParallelRolloutWorker._log_episode_info(agent_seed=agent_seed, env=env)
                 except Exception as e:
-                    out_txt = f"agent_seed: {agent_seed}" \
-                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}" \
-                              f"\nException encountered: {e}" \
-                              f"\n{traceback.format_exc()}"
-                    logger.warning(out_txt)
+                    ParallelRolloutWorker._log_episode_info(agent_seed=agent_seed, env=env)
+                    ParallelRolloutWorker._log_exception(e)
                 finally:
                     if not first_episode:
                         reporting_queue.put(episode_recorder.get_last_episode_data())
                     first_episode = False
+
+            # after we finished the last seed, we need to reset env and agent to collect the
+            # statistics of the last rollout
+            try:
+                env.reset()
+                agent.reset()
+            except Exception as e:
+                logger.warning("Exception encountered in collection reset()")
+                ParallelRolloutWorker._log_exception(e)
+
+            reporting_queue.put(episode_recorder.get_last_episode_data())
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process
             exception_report = ExceptionReport(exception, traceback.format_exc(), env_seed, agent_seed)
             reporting_queue.put(exception_report)
             raise
+
+    @staticmethod
+    def _log_episode_info(agent_seed: int, env: MazeEnv) -> None:
+        logger.info(f"agent_seed: {agent_seed} | {str(env.core_env)}")
+
+    @staticmethod
+    def _log_exception(exception: Exception) -> None:
+        logger.warning(
+            f"\nException encountered: {exception}"
+            f"\n{traceback.format_exc()}")
 
     @staticmethod
     def _setup_monitoring(env: StructuredEnv, record_trajectory: bool) -> Tuple[StructuredEnv, EpisodeRecorder]:
