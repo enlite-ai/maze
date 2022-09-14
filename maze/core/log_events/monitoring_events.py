@@ -64,6 +64,8 @@ class RewardEvents(ABC):
     @define_epoch_stats(sum, input_name="count", output_name="total_step_count", cumulative=True)
     @define_epoch_stats(np.mean, input_name="count", output_name="mean_step_count")
     @define_epoch_stats(np.median, input_name="count", output_name="median_step_count")
+    @define_epoch_stats(len, input_name="sum", output_name="episode_count")
+    @define_epoch_stats(len, input_name="sum", output_name="total_episode_count", cumulative=True)
     @define_episode_stats(np.sum, output_name="sum")
     @define_episode_stats(len, output_name="count")
     @define_step_stats(sum)

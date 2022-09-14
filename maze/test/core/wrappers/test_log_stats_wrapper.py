@@ -1,7 +1,10 @@
 """Tests related specifically to log_stats_wrapper mechanics (stats and event logging itself is tested separately)"""
 
+import pytest
+
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_env import MazeEnv
+from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_events.monitoring_events import RewardEvents
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
@@ -20,6 +23,16 @@ class _EventsInResetWrapper(Wrapper[MazeEnv]):
         base_events = self.core_env.context.event_service.create_event_topic(BaseEnvEvents)
         base_events.test_event(1)
         return obs
+
+
+class _StepSkippingAndErrorInResetWrapper(Wrapper[MazeEnv]):
+    """Performs step skipping and then raises an error in reset function."""
+
+    def reset(self) -> ObservationType:
+        """Skip one step, then raise an error."""
+        self.env.reset()
+        self.env.step(self.env.noop_action())
+        raise RuntimeError("Test Error")
 
 
 def test_records_stats():
@@ -163,3 +176,44 @@ def test_handles_step_skipping_in_step():
         LogStatsLevel.EPOCH,
         name="total_step_count"
     ) == 2
+
+
+def test_counts_episodes_that_skip_and_error_in_reset():
+    """Test that episodes where step-skipping during reset is performed and then
+    an error is raised (still as part of reset) are still counted as valid episodes."""
+    env = build_dummy_maze_env()
+    env = _StepSkippingAndErrorInResetWrapper.wrap(env)
+    env = LogStatsWrapper.wrap(env)
+
+    # Reset the env: This should raise an exception
+    with pytest.raises(RuntimeError):
+        env.reset()
+
+    # Events should be collected for 1 steps in total (the one step skipped in the reset)
+    assert len(env.episode_event_log.step_event_logs) == 1
+
+    env.write_epoch_stats()
+
+    # The original_reward stats should be recorded for the one skipped step
+    assert env.get_stats_value(
+        RewardEvents.reward_original,
+        LogStatsLevel.EPOCH,
+        name="total_step_count"
+    ) == 1
+
+    # Both episode_count and total_episode_count stats for the reward_original event reflect this
+    assert env.get_stats_value(
+        RewardEvents.reward_original,
+        LogStatsLevel.EPOCH,
+        name="episode_count") == 1
+    assert env.get_stats_value(
+        RewardEvents.reward_original,
+        LogStatsLevel.EPOCH,
+        name="total_episode_count") == 1
+
+    # No ordinary "reward" event is counted, as no step was done from the outside
+    with pytest.raises(KeyError):
+        env.get_stats_value(
+            BaseEnvEvents.reward,
+            LogStatsLevel.EPOCH,
+            name="total_step_count")
