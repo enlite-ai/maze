@@ -112,7 +112,7 @@ Instantiate a policy with the correct shapes of observation and action spaces.
 
 .. code-block:: python
 
-    policy_net = WrappedCartpolePolicyNet(
+    policy_net = CartpolePolicyNet(
         obs_shapes=observation_space.spaces['observation'].shape,
         action_logit_shapes=(action_space.spaces['action'].n,))
 
