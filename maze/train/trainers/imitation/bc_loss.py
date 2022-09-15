@@ -36,15 +36,16 @@ class BCLoss:
                        policy: TorchPolicy,
                        observations: List[ObservationType],
                        actions: List[TorchActionType],
+                       action_logits: Optional[List[TorchActionType]],
                        actor_ids: List[ActorID],
                        events: ImitationEvents,
-                       action_logits: Optional[List[TorchActionType]],
                        ) -> torch.Tensor:
         """Calculate and return the training loss for one step (= multiple sub-steps in structured scenarios).
 
         :param policy: Structured policy to evaluate.
         :param observations: List with observations w.r.t. actor_ids.
         :param actions: List with actions w.r.t. actor_ids.
+        :param action_logits: The optional action logits of the policy.
         :param actor_ids: List of actor ids.
         :param events: Events of current episode.
         :return: Total loss
@@ -54,12 +55,12 @@ class BCLoss:
         # Iterate over all sub-steps
         assert len(actor_ids) == len(actions)
         assert len(actor_ids) == len(observations)
-        action_logits = [None] * len(observations) if action_logits is None else action_logits
-        for actor_id, observation, target_action, target_action_probs in zip(actor_ids, observations, actions, action_logits):
+        target_dict = actions if action_logits is None else action_logits
+        for actor_id, observation, policy_target, policy_target_action in zip(actor_ids, observations, target_dict, actions):
             policy_output = policy.compute_substep_policy_output(observation, actor_id=actor_id)
-            substep_losses = self._get_substep_loss(actor_id, policy_output.action_logits, target_action,
-                                                    self.action_spaces_dict[actor_id.step_key], events=events,
-                                                    target_prob_dict=target_action_probs)
+            substep_losses = self._get_substep_loss(actor_id, policy_output.action_logits, policy_target,
+                                                    policy_target_action, self.action_spaces_dict[actor_id.step_key],
+                                                    events=events)
 
             losses.append(substep_losses)
 
@@ -74,50 +75,48 @@ class BCLoss:
     def _get_substep_loss(self, actor_id: ActorID,
                           logits_dict: Dict[str, torch.Tensor],
                           target_dict: Dict[str, torch.Tensor],
+                          target_actions_dict: Dict[str, torch.Tensor],
                           action_spaces_dict: gym.spaces.Dict,
-                          events: ImitationEvents,
-                          target_prob_dict: Optional[Dict[str, torch.Tensor]]) -> torch.Tensor:
+                          events: ImitationEvents) -> torch.Tensor:
         """Iterate over the action space of a given policy and calculate the loss based on the types of the
         subspaces.
 
-        :param actor_id: The actor id to compute the loss for
-        :param logits_dict: Logits dict output by the policy for a given substep
-        :param target_dict: Target action for the given substep
+        :param actor_id: The actor id to compute the loss for the given substep.
+        :param logits_dict: Logits dict output by the policy for a given substep.
+        :param target_dict: The policy target for the given substep.
+        :param target_actions_dict: The policy target actions for the given substep.
         :param action_spaces_dict: Dict action space for the given substep
         :return: Total loss for this substep
         """
         losses = []
         for subspace_id, logits in logits_dict.items():
             target = target_dict[subspace_id]
-            if target_prob_dict is not None:
-                loss_target = target_prob_dict[subspace_id]
-            else:
-                loss_target = target
+            target_actions = target_actions_dict[subspace_id]
             action_space = action_spaces_dict[subspace_id]
 
             # Categorical (discrete spaces)
             if isinstance(action_space, gym.spaces.Discrete):
-                if logits.dim() == target.dim() and target_prob_dict is None:
+                if logits.dim() == target.dim() and target is target_actions:
                     logits = logits.unsqueeze(0)
-                losses.append(self.loss_discrete(logits, loss_target))
+                losses.append(self.loss_discrete(logits, target))
 
                 events.discrete_accuracy(
                     step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                    value=torch.eq(logits.argmax(dim=-1), target).float().mean().item())
+                    value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
 
                 if logits.shape[-1] > 10:
                     events.discrete_top_5_accuracy(
                         step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
+                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target_actions).float() for i in
                                    range(1, min(5 + 1, logits.shape[-1]))]).float().mean().item())
 
                 if logits.shape[-1] > 20:
                     events.discrete_top_10_accuracy(
                         step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target).float() for i in
+                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target_actions).float() for i in
                                    range(1, min(10 + 1, logits.shape[-1]))]).float().mean().item())
 
-                batch_ranks = torch.where(torch.argsort(logits, dim=-1, descending=True) == target.unsqueeze(-1))[1]
+                batch_ranks = torch.where(torch.argsort(logits, dim=-1, descending=True) == target_actions.unsqueeze(-1))[1]
                 events.discrete_action_rank(
                     step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                     value=batch_ranks.float().mean().item())

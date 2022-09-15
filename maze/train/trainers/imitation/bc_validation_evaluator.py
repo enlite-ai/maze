@@ -55,7 +55,8 @@ class BCValidationEvaluator(Evaluator):
             total_loss = []
 
             for iteration, data in enumerate(self.data_loader, 0):
-                observations, actions, action_logits, actor_ids = data[0], data[1], data[3], data[-1]
+                observations, actions, actor_ids = data[0], data[1], data[-1]
+                action_logits = None if len(data) == 3 else data[2]
                 actor_ids = debatch_actor_ids(actor_ids)
                 # Convert only actions to torch, since observations are converted in
                 # policy.compute_substep_policy_output method
