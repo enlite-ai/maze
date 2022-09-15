@@ -17,9 +17,3 @@ class SimulatedEnvMixin(ABC):
         :param env: The environment to clone.
         """
 
-    def set_fast_step(self, do_fast_step: bool) -> None:
-        """Sets the step mode of the environment.
-        Can be used for example to bypass expensive action masking when replaying actions on a seeded environment.
-
-        :param do_fast_step: If True fast stepping is active; else not.
-        """

@@ -139,7 +139,8 @@ class BCTrainer(Trainer):
         # Convert only actions to torch, since observations are converted in policy.compute_substep_policy_output method
         actions = convert_to_torch(actions, device=self.policy.device, cast=None, in_place=True)
         total_loss = self.loss.calculate_loss(policy=self.policy, observations=observations,
-                                              actions=actions, actor_ids=actor_ids, events=self.imitation_events)
+                                              actions=actions, actor_ids=actor_ids, events=self.imitation_events,
+                                              action_logits=None)
         total_loss.backward()
         self.optimizer.step()
 
