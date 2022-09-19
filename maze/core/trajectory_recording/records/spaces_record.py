@@ -42,9 +42,6 @@ class SpacesRecord:
     discounted_return: Optional[Union[float, np.ndarray]] = None
     """Discounted return for this step."""
 
-    root_value: Optional[Union[float, np.ndarray]] = None
-    """Discounted return for this step."""
-
     batch_shape: Optional[List[int]] = None
     """If the record is batched, this is the shape of the batch."""
 
