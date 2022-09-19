@@ -182,7 +182,7 @@ we do not need a probability distribution.
 
 .. code-block:: python
 
-    value_net = WrappedCartpoleValueNet(obs_shapes=observation_space.spaces['observation'].shape)
+    value_net = CartpoleValueNet(obs_shapes=observation_space.spaces['observation'].shape)
 
     maze_wrapped_value_net = TorchModelBlock(
         in_keys='observation', out_keys='value',
