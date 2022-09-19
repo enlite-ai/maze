@@ -1,14 +1,13 @@
 """Episode record is the main unit of trajectory data recording."""
 
-from typing import List, Optional, Any, TypeVar, Generic, Dict, Union
+from typing import List, Optional, Any, TypeVar, Generic, Union
 
 import numpy as np
 
 from maze.core.env.action_conversion import ActionType, TorchActionType
-from maze.core.env.observation_conversion import ObservationType
 from maze.core.rendering.renderer import Renderer
 from maze.core.trajectory_recording.records.state_record import StateRecord
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord, StepKeyType
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
 StepRecordType = TypeVar('StepRecordType', StructuredSpacesRecord, StateRecord)
 
@@ -83,15 +82,6 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         stacked_trajectory.step_records = [StructuredSpacesRecord.stack_records(list(recs)) for recs in
                                            step_records_in_time]
         return stacked_trajectory
-
-    @property
-    def actions_dicts(self) -> List[Dict[StepKeyType, ActionType]]:
-        """Convenience access to all structured action dicts from this trajectory.
-
-        TODO: Does not support multi agent scenarios (where the substep (dict) key is the same for all agents)
-            This method is only used in alpha zero though.
-        """
-        return [step_record.actions_dict for step_record in self.step_records]
 
     @property
     def actions(self) -> List[List[Union[ActionType, TorchActionType]]]:
