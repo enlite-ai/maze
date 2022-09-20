@@ -13,7 +13,7 @@ from maze.core.env.structured_env import ActorID
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.log_stats.log_stats import LogStats
 from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
-from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
+from maze.core.trajectory_recording.records.spaces_record import SpacesRecord, PolicyRecordType
 from maze.core.trajectory_recording.records.state_record import StateRecord
 
 StepKeyType = Union[str, int]
@@ -203,6 +203,11 @@ class StructuredSpacesRecord:
         return [r.discounted_return for r in self.substep_records]
 
     @property
+    def policy_records(self) -> List[PolicyRecordType]:
+        """List of policy records for the individual sub-steps."""
+        return [r.policy_record for r in self.substep_records]
+
+    @property
     def actions_dict(self) -> Dict[StepKeyType, Union[ActionType, TorchActionType]]:
         """Dict of actions from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios).
         """
@@ -239,3 +244,8 @@ class StructuredSpacesRecord:
         """Dict of discounted returns from the sub-steps, keyed by the sub-step ID
         (not suitable in multi-agent scenarios)."""
         return {r.substep_key: r.discounted_return for r in self.substep_records}
+
+    @property
+    def policy_records_dict(self) -> Dict[StepKeyType, PolicyRecordType]:
+        """List of policy records for the individual sub-steps."""
+        return {r.substep_key: r.policy_record for r in self.substep_records}

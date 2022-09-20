@@ -172,6 +172,7 @@ class RolloutGenerator:
                                            env=env,
                                            deterministic=False)
         record.action = action
+        record.policy_record = policy.write_policy_record()
 
         # Take the step
         self.last_observation, record.reward, record.done, record.info = self.env.step(action)
