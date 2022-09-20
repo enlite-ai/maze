@@ -1,7 +1,7 @@
 """Record of spaces (i.e., raw action, observation, and associated data) from a single sub-step."""
 
 from dataclasses import dataclass
-from typing import Dict, Union, Optional, List
+from typing import Dict, Union, Optional, List, Any
 
 import numpy as np
 import torch
@@ -9,6 +9,9 @@ import torch
 from maze.core.env.structured_env import ActorID
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list, stack_torch_dict_list
+
+
+PolicyRecordType = object
 
 
 @dataclass
@@ -45,6 +48,9 @@ class SpacesRecord:
     batch_shape: Optional[List[int]] = None
     """If the record is batched, this is the shape of the batch."""
 
+    policy_record: Optional[PolicyRecordType] = None
+    """Policy specific data that can be recorded with the help of the write_policy_record method of the policy."""
+
     @classmethod
     def stack(cls, records: List['SpacesRecord']) -> 'SpacesRecord':
         """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
@@ -72,6 +78,9 @@ class SpacesRecord:
 
         if records[0].logits:
             stacked_record.logits = stack_torch_dict_list([r.logits for r in records])
+
+        if records[0].policy_record:
+            raise NotImplementedError('Stacking is not implemented for policy records')
 
         stacked_record.batch_shape = [len(records)]
         if records[0].batch_shape:

@@ -8,6 +8,7 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID
+from maze.core.trajectory_recording.records.spaces_record import PolicyRecordType
 
 
 class Policy(ABC):
@@ -84,3 +85,10 @@ class Policy(ABC):
 
     def reset(self) -> None:
         """Reset the agent components after each episode if necessary."""
+
+    def write_policy_record(self) -> PolicyRecordType:
+        """Return additional policy data that should be written into the spaces record along with other information such
+        as observation, reward or action.
+
+        :return: The policy record specific to the policy.
+        """
