@@ -169,7 +169,7 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
     two dimensional vector (batch_dim, feature_dim). The mask for pooling is an optional parameter.
 
     :param in_keys: One key identifying the input tensors, a second optional one identifying the masking tensor.
-    :param out_keys: One key identifying the output tensors.
+    :param out_keys: One key identifying the output tensors, a second optional one for identifying the features.
     :param in_shapes: List of input shapes.
     :param embedding_dim: The embedding dimension to use throughout the block, this is also specifies the dimension of
         the output. (Paper: 1024)
@@ -186,8 +186,11 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         # Infer number of input dimension depending if mask is provided
         in_keys = in_keys if isinstance(in_keys, List) else [in_keys]
         in_num_dims = 3 if len(in_keys) == 1 else [3, 2]
+        out_keys = out_keys if isinstance(out_keys, List) else [out_keys]
+        self._return_features = len(out_keys) > 1
+        out_num_dims = 2 if not self._return_features else [2, 3]
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
-                         out_num_dims=2)
+                         out_num_dims=out_num_dims)
 
         # Input parameter assertions: checks if the first input (X) has 2 dimensions (NN, KK).
         assert len(self.in_shapes[0]) == 2
@@ -265,16 +268,16 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         out = torch.bmm(input_transformation_matrices, input_tensor)
         # out: (BB, KK, NN)
 
-        out = self.non_lin_1(self.bn1(self.conv1(out)))
+        feature_out = self.non_lin_1(self.bn1(self.conv1(out)))
         # out: (BB, embedding_dim // 16, NN)
 
         if self._use_feature_transform:
-            feature_transformation_matrices = self.feature_transform(out, mask_tensor)
+            feature_transformation_matrices = self.feature_transform(feature_out, mask_tensor)
             # feature_transformation_matrices: (BB, embedding_dim // 16,  embedding_dim // 16)
-            out = torch.bmm(feature_transformation_matrices, out)
+            feature_out = torch.bmm(feature_transformation_matrices, feature_out)
             # out: (BB, embedding_dim // 16, NN)
 
-        out = self.non_lin_2(self.bn2(self.conv2(out)))
+        out = self.non_lin_2(self.bn2(self.conv2(feature_out)))
         # out: (BB, embedding_dim // 8, NN)
         out = self.bn3(self.conv3(out))
         # out: (BB, embedding_dim, NN)
@@ -290,7 +293,11 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         assert output_tensor.ndim == self.out_num_dims[0]
         assert output_tensor.shape[-1] == self._embedding_dim
 
-        return {self.out_keys[0]: output_tensor}
+        res = {self.out_keys[0]: output_tensor}
+        if self._return_features:
+            res[self.out_keys[1]] = torch.transpose(feature_out, dim0=-1, dim1=-2)
+
+        return res
 
     def _get_internal_shape_inference_as_string(self) -> str:
         """Return a string representation of the internal workings of the block.

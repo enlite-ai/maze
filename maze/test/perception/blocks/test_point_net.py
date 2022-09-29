@@ -59,7 +59,7 @@ def test_point_net_input_transformation():
 
 def perform_pointnet_block_test(batch_dim: int, num_points: int, num_features: int, embedding_dim: int,
                                 use_batch_norm: bool, pooling_func_str: str, use_feature_transform: bool,
-                                with_masking: bool):
+                                with_masking: bool, with_output_features: bool):
     """Perform test on point net"""
     if not with_masking:
         in_dict = build_input_dict(dims=[batch_dim, num_points, num_features])
@@ -70,40 +70,61 @@ def perform_pointnet_block_test(batch_dim: int, num_points: int, num_features: i
         in_dict['in_key_1'][:, -1] = 0
         in_shapes = [(num_points, num_features), (num_points,)]
 
-    pointnet_block = PointNetFeatureBlock(in_keys=list(in_dict.keys()), in_shapes=in_shapes, out_keys='out_key',
+    out_keys = 'out_key_latent' if not with_output_features else ['out_key_latent', 'out_key_features']
+
+    pointnet_block = PointNetFeatureBlock(in_keys=list(in_dict.keys()), in_shapes=in_shapes, out_keys=out_keys,
                                           use_batch_norm=use_batch_norm, non_lin=torch.nn.ReLU,
                                           embedding_dim=embedding_dim, pooling_func_name=pooling_func_str,
                                           use_feature_transform=use_feature_transform)
     pointnet_block.print_internal_shape_representation = True
 
     str(pointnet_block)
-    out = pointnet_block(in_dict)['out_key']
+    block_output = pointnet_block(in_dict)
+    out = block_output['out_key_latent']
     assert out.shape == torch.Size([batch_dim, embedding_dim])
+
+    if with_output_features:
+        out_f = block_output['out_key_features']
+        assert out_f.shape == torch.Size([batch_dim, num_points, embedding_dim // 16])
 
 
 def test_point_net_block():
     perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=1024, use_batch_norm=False,
-                                pooling_func_str='max', use_feature_transform=True, with_masking=False)
+                                pooling_func_str='max', use_feature_transform=True, with_masking=False,
+                                with_output_features=False)
     perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=True,
-                                pooling_func_str='max', use_feature_transform=True, with_masking=False)
+                                pooling_func_str='max', use_feature_transform=True, with_masking=False,
+                                with_output_features=False)
+    perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=True,
+                                pooling_func_str='max', use_feature_transform=True, with_masking=False,
+                                with_output_features=True)
 
     perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=True,
-                                pooling_func_str='max', use_feature_transform=True, with_masking=False)
+                                pooling_func_str='max', use_feature_transform=True, with_masking=False,
+                                with_output_features=False)
     perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=False,
-                                pooling_func_str='max', use_feature_transform=False, with_masking=False)
+                                pooling_func_str='max', use_feature_transform=False, with_masking=False,
+                                with_output_features=False)
+    perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=False,
+                                pooling_func_str='max', use_feature_transform=False, with_masking=False,
+                                with_output_features=True)
     with pytest.raises(ValueError):
         perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128,
                                     use_batch_norm=False,
-                                    pooling_func_str='something', use_feature_transform=False, with_masking=False)
+                                    pooling_func_str='something', use_feature_transform=False, with_masking=False,
+                                    with_output_features=True)
 
 
 def test_point_net_different_pooling_operations():
     perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=False,
-                                pooling_func_str='mean', use_feature_transform=True, with_masking=False)
+                                pooling_func_str='mean', use_feature_transform=True, with_masking=False,
+                                with_output_features=True)
     perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=False,
-                                pooling_func_str='sum', use_feature_transform=True, with_masking=False)
+                                pooling_func_str='sum', use_feature_transform=True, with_masking=False,
+                                with_output_features=True)
 
 
 def test_point_net_with_masking():
     perform_pointnet_block_test(batch_dim=20, num_points=100, num_features=3, embedding_dim=128, use_batch_norm=False,
-                                pooling_func_str='max', use_feature_transform=True, with_masking=True)
+                                pooling_func_str='max', use_feature_transform=True, with_masking=True,
+                                with_output_features=True)
