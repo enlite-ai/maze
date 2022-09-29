@@ -1,4 +1,5 @@
 import pytest
+
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 
 

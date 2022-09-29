@@ -90,7 +90,8 @@ class BCRunner(TrainingRunner):
         self._model_selection = BestModelSelection(self.state_dict_dump_file, policy,
                                                    dump_interval=self.dump_interval)
         optimizer = Factory(Optimizer).instantiate(cfg.algorithm.optimizer, params=policy.parameters())
-        loss = BCLoss(action_spaces_dict=env.action_spaces_dict, entropy_coef=cfg.algorithm.entropy_coef)
+        loss = Factory(BCLoss).instantiate(cfg.algorithm.loss, action_spaces_dict=env.action_spaces_dict,
+                                           entropy_coef=cfg.algorithm.entropy_coef)
 
         self._trainer = BCTrainer(
             algorithm_config=self._cfg.algorithm,

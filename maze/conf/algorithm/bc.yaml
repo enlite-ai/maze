@@ -26,3 +26,7 @@ n_eval_episodes: 8
 
 # Entropy coefficient for policy optimization.
 entropy_coef: 0.0
+
+# The loss to be used for the behavioural cloning.
+loss:
+  _target_: maze.train.trainers.imitation.bc_loss.BCLoss

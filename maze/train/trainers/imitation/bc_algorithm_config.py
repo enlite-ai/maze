@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from maze.train.trainers.common.config_classes import AlgorithmConfig
+from maze.train.trainers.imitation.bc_loss import BCLoss
 
 
 @dataclass
@@ -37,3 +38,6 @@ class BCAlgorithmConfig(AlgorithmConfig):
 
     optimizer: Any
     """The optimizer to use to update the policy."""
+
+    loss: BCLoss
+    """The loss to be used for the behavioural cloning"""
