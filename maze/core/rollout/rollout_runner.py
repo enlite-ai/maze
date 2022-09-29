@@ -119,12 +119,12 @@ class RolloutRunner(Runner, ABC):
         """
 
         with SwitchWorkingDirectoryToInput(input_dir):
+            agent = Factory(base_type=Policy).instantiate(agent_config)
+
             env = EnvFactory(env_config, wrappers_config)()
             if not isinstance(env, TimeLimitWrapper):
                 env = TimeLimitWrapper.wrap(env)
             env.set_max_episode_steps(max_episode_steps)
-
-            agent = Factory(base_type=Policy).instantiate(agent_config)
 
         return env, agent
 
