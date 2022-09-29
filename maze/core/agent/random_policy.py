@@ -118,4 +118,6 @@ def random_policy_from_config(env_config: DictConfig, wrappers_config: DictConfi
     # observation normalization needs to be deactivated when no stats are provided
     if isinstance(env, ObservationNormalizationWrapper):
         env.set_observation_collection(True)
-    return RandomPolicy(env.action_spaces_dict)
+    action_spaces_dict = env.action_spaces_dict
+    env.close()
+    return RandomPolicy(action_spaces_dict)
