@@ -6,6 +6,7 @@ import gym
 import torch
 import torch.nn as nn
 import torch.nn.functional
+
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.action_conversion import TorchActionType
 from maze.core.env.observation_conversion import ObservationType
@@ -29,7 +30,7 @@ class BCLoss:
     loss_box: nn.Module = nn.MSELoss()
     """Loss function used for box (continuous) spaces"""
 
-    loss_multi_binary: nn.Module = nn.functional.binary_cross_entropy_with_logits
+    loss_multi_binary: nn.Module = nn.BCEWithLogitsLoss()
     """Loss function used for multi-binary spaces"""
 
     def calculate_loss(self,
@@ -56,7 +57,8 @@ class BCLoss:
         assert len(actor_ids) == len(actions)
         assert len(actor_ids) == len(observations)
         target_dict = actions if action_logits is None else action_logits
-        for actor_id, observation, policy_target, policy_target_action in zip(actor_ids, observations, target_dict, actions):
+        for actor_id, observation, policy_target, policy_target_action in zip(actor_ids, observations, target_dict,
+                                                                              actions):
             policy_output = policy.compute_substep_policy_output(observation, actor_id=actor_id)
             substep_losses = self._get_substep_loss(actor_id, policy_output.action_logits, policy_target,
                                                     policy_target_action, self.action_spaces_dict[actor_id.step_key],
@@ -116,7 +118,8 @@ class BCLoss:
                         value=sum([torch.eq(logits.argsort(-1)[:, -i], target_actions).float() for i in
                                    range(1, min(10 + 1, logits.shape[-1]))]).float().mean().item())
 
-                batch_ranks = torch.where(torch.argsort(logits, dim=-1, descending=True) == target_actions.unsqueeze(-1))[1]
+                batch_ranks = \
+                    torch.where(torch.argsort(logits, dim=-1, descending=True) == target_actions.unsqueeze(-1))[1]
                 events.discrete_action_rank(
                     step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                     value=batch_ranks.float().mean().item())
@@ -126,7 +129,7 @@ class BCLoss:
                 losses.append(self.loss_multi_binary(logits, target))
                 events.multi_binary_accuracy(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
                                              subspace_name=subspace_id,
-                                             value=torch.eq(logits, target).float().mean().item())
+                                             value=torch.eq(logits > 0, target_actions).float().mean().item())
 
             # Continuous (box spaces)
             elif isinstance(action_space, gym.spaces.Box):
