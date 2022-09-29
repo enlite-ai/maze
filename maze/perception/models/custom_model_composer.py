@@ -35,7 +35,8 @@ class CustomModelComposer(BaseModelComposer):
         """Asserts the provided model config for consistency.
         :param model_config: The model config to check.
         """
-        if 'policy' in model_config and not isinstance(model_config["policy"], BasePolicyComposer):
+        if 'policy' in model_config and model_config['policy'] and not isinstance(
+                model_config["policy"], BasePolicyComposer):
             assert '_target_' in model_config['policy']
             assert 'networks' in model_config['policy'], \
                 f"Custom models expect explicit policy networks! Check the model config!"
@@ -114,19 +115,20 @@ class CustomModelComposer(BaseModelComposer):
                     #   a file not setting this may lead to problems
                     obs._np_random = None
                     step_observation[obs_key] = obs.sample()
-            tmp_out = self._policy_composer.policy.compute_substep_policy_output(
-                step_observation, actor_id=ActorID(step_key, 0))
-            if tmp_out.embedding_logits is not None:
-                new_observation_space = dict()
-                critic_input = StateCriticStepInput.build(tmp_out, step_observation)
-                for in_key, in_value in critic_input.tensor_dict.items():
-                    if in_key in critic_input_spaces_dict[step_key]:
-                        new_observation_space[in_key] = critic_input_spaces_dict[step_key][in_key]
-                    else:
-                        new_observation_space[in_key] = spaces.Box(low=np.finfo(np.float32).min,
-                                                                   high=np.finfo(np.float32).max,
-                                                                   shape=in_value.shape, dtype=np.float32)
-                critic_input_spaces_dict[step_key] = gym.spaces.Dict(dict(new_observation_space))
+            if self._policy_composer is not None:
+                tmp_out = self._policy_composer.policy.compute_substep_policy_output(
+                    step_observation, actor_id=ActorID(step_key, 0))
+                if tmp_out.embedding_logits is not None:
+                    new_observation_space = dict()
+                    critic_input = StateCriticStepInput.build(tmp_out, step_observation)
+                    for in_key, in_value in critic_input.tensor_dict.items():
+                        if in_key in critic_input_spaces_dict[step_key]:
+                            new_observation_space[in_key] = critic_input_spaces_dict[step_key][in_key]
+                        else:
+                            new_observation_space[in_key] = spaces.Box(low=np.finfo(np.float32).min,
+                                                                       high=np.finfo(np.float32).max,
+                                                                       shape=in_value.shape, dtype=np.float32)
+                    critic_input_spaces_dict[step_key] = gym.spaces.Dict(dict(new_observation_space))
         return critic_input_spaces_dict
 
     @property
