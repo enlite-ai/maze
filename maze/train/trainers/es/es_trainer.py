@@ -156,9 +156,13 @@ class ESTrainer(Trainer):
                 break
 
         # notify the model selection of the evaluation results
-        eval_stats = self.eval_stats.reduce()
-        if self.model_selection and len(eval_stats):
-            reward = eval_stats[(BaseEnvEvents.reward, "mean", None)]
+        if self.model_selection:
+            eval_stats = self.eval_stats.reduce()
+            train_stats = self.train_stats.reduce()
+            if len(eval_stats):
+                reward = eval_stats[(BaseEnvEvents.reward, "mean", None)]
+            else:
+                reward = train_stats[(BaseEnvEvents.reward, "mean", None)]
             self.model_selection.update(reward)
 
         # prepare returns, reshape the positive/negative antithetic estimation as (rollouts, 2)
