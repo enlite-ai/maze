@@ -26,7 +26,7 @@ def test_records_episode_with_correct_data():
 
     episode_id = env.get_episode_id()
     expected_file_path = str(episode_id) + ".pkl"
-    assert not expected_file_path in os.listdir("space_records")
+    assert not os.path.exists("space_records")
 
     # Now dump and load the data
     env.reset()
