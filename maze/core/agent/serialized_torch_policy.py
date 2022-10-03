@@ -1,11 +1,16 @@
 """Loads trained policies for rollout in structured environments."""
-from typing import Union, Dict
+from typing import Union, Dict, Optional
 
 import torch
 from omegaconf import DictConfig
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
+from maze.core.env.action_conversion import ActionType
+from maze.core.env.base_env import BaseEnv
+from maze.core.env.maze_state import MazeStateType
+from maze.core.env.observation_conversion import ObservationType
+from maze.core.env.structured_env import ActorID
 from maze.core.utils.factory import Factory
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.space_config import SpacesConfig
@@ -23,9 +28,15 @@ class SerializedTorchPolicy(TorchPolicy):
     :param state_dict_file: Path to dumped state dictionaries of the trained policies
     :param spaces_dict_file: Path to dumped spaces configuration (action and observation spaces of
                                   the env the policy was trained on, used for model initialization)
+    :param deterministic: If True actions are computed deterministically; else sample from the probability distribution.
     """
 
-    def __init__(self, model: Union[DictConfig, Dict], state_dict_file: str, spaces_dict_file: str, device: str):
+    def __init__(self,
+                 model: Union[DictConfig, Dict],
+                 state_dict_file: str,
+                 spaces_dict_file: str,
+                 device: str,
+                 deterministic: bool):
         spaces_config = SpacesConfig.load(spaces_dict_file)
         model_composer = Factory(base_type=BaseModelComposer).instantiate(
             model,
@@ -43,6 +54,18 @@ class SerializedTorchPolicy(TorchPolicy):
 
         self.load_state_dict(state_dict)
         self.eval()
+
+        self.deterministic = deterministic
+
+    @override(TorchPolicy)
+    def compute_action(self,
+                       observation: ObservationType,
+                       maze_state: Optional[MazeStateType] = None,
+                       env: Optional[BaseEnv] = None,
+                       actor_id: ActorID = None,
+                       deterministic: bool = False) -> ActionType:
+        return super().compute_action(observation=observation, maze_state=maze_state, env=env, actor_id=actor_id,
+                                      deterministic=self.deterministic)
 
     @override(TorchPolicy)
     def seed(self, seed: int):
