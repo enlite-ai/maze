@@ -7,6 +7,8 @@ from typing import Tuple, Dict, List
 
 import gym
 import pytest
+from hydra.errors import InstantiationException
+
 from maze.api import run_context
 from maze.api.utils import RunMode
 from maze.core.agent.torch_actor_critic import TorchActorCritic
@@ -208,7 +210,7 @@ def test_template_model_composer() -> None:
     run_context.RunContext(silent=True, model="vector_obs", overrides=default_overrides).train(1)
 
     # Plug in invalid policy.
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, InstantiationException)):
         run_context.RunContext(
             silent=True, model="vector_obs", overrides=default_overrides, policy="random_policy"
         ).train(1)
@@ -230,7 +232,7 @@ def test_template_model_composer() -> None:
     ).train(1)
 
     # Specify invalid policy target.
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, InstantiationException)):
         run_context.RunContext(
             silent=True,
             model="vector_obs",
@@ -738,7 +740,7 @@ def test_multirun():
         )
         rc.train(n_epochs=1)
 
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, InstantiationException)):
         rc = run_context.RunContext(
             env=lambda: GymMazeEnv('CartPole-v0'),
             silent=True,
