@@ -57,11 +57,11 @@ setup(name="maze-rl",
           "pillow",
 
           # Maze is base on hydra-core 1.1.0
-          "hydra-core >= 1.1",
-          "hydra-nevergrad-sweeper >= 1.1.5",
+          "hydra-core>=1.1,<1.2",
+          "hydra-nevergrad-sweeper>=1.1.5,<1.2",
 
-          "gym[box2d]; python_version < '3.8'",
-          "gym; python_version >= '3.8'",
+          "gym[box2d]<0.23; python_version < '3.8'",
+          "gym<0.23; python_version >= '3.8'",
           "pandas",
           "networkx",
           "matplotlib",
