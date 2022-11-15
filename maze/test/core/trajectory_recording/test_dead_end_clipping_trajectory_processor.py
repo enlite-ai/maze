@@ -1,6 +1,7 @@
 """Test in memory data set with the dead end clipping processing method"""
 from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
-from maze.core.trajectory_recording.datasets.trajectory_processor import DeadEndClippingTrajectoryProcessor
+from maze.core.trajectory_recording.datasets.trajectory_processor import DeadEndClippingTrajectoryProcessor, \
+    IdentityTrajectoryProcessor
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
@@ -72,7 +73,7 @@ def test_parallel_data_load_from_directory_clipped():
         "runner": "sequential",
         "runner.n_episodes": 2,
         "runner.record_trajectory": True,
-        "runner.max_episode_steps": 20,
+        "runner.max_episode_steps": 30,
         "seeding.env_base_seed": 12345,
         "seeding.agent_base_seed": 12345,
     }
@@ -82,11 +83,19 @@ def test_parallel_data_load_from_directory_clipped():
         n_workers=2,
         conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
         input_data="trajectory_data",
+        trajectory_processor=IdentityTrajectoryProcessor(),
+        deserialize_in_main_thread=False
+    )
+
+    dataset_clipped = InMemoryDataset(
+        n_workers=2,
+        conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
+        input_data="trajectory_data",
         trajectory_processor=DeadEndClippingTrajectoryProcessor(clip_k=2),
         deserialize_in_main_thread=False
     )
 
-    assert len(dataset) == 11 + 17
+    assert len(dataset) - 2 == len(dataset_clipped)
 
 
 def test_parallel_data_load_from_directory_clipped_from_hydra():
@@ -101,7 +110,7 @@ def test_parallel_data_load_from_directory_clipped_from_hydra():
         "runner": "sequential",
         "runner.n_episodes": 2,
         "runner.record_trajectory": True,
-        "runner.max_episode_steps": 20,
+        "runner.max_episode_steps": 30,
         "seeding.env_base_seed": 12345,
         "seeding.agent_base_seed": 12345,
     }
@@ -119,6 +128,14 @@ def test_parallel_data_load_from_directory_clipped_from_hydra():
         }
     }
 
-    dataset = Factory(InMemoryDataset).instantiate(hydra_config)
+    dataset_reference = InMemoryDataset(
+        n_workers=2,
+        conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
+        input_data="trajectory_data",
+        trajectory_processor=IdentityTrajectoryProcessor(),
+        deserialize_in_main_thread=False
+    )
 
-    assert len(dataset) == 11 + 17
+    dataset_clipped = Factory(InMemoryDataset).instantiate(hydra_config)
+
+    assert len(dataset_reference) - 2 == len(dataset_clipped)
