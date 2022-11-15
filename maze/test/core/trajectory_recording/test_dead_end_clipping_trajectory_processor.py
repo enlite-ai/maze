@@ -1,4 +1,6 @@
 """Test in memory data set with the dead end clipping processing method"""
+import os
+
 from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
 from maze.core.trajectory_recording.datasets.trajectory_processor import DeadEndClippingTrajectoryProcessor, \
     IdentityTrajectoryProcessor
@@ -61,9 +63,11 @@ def test_sequential_data_load_from_directory_clipped():
     )
 
 
-def test_parallel_data_load_from_directory_clipped():
+def test_parallel_data_load_from_directory_clipped(tmpdir):
     """Test loading trajectories of multiple episodes in parallel into an in-memory dataset. (Each
     data-loader process reads the files assigned to it.)"""
+    os.chdir(tmpdir)
+
     # Heuristics rollout
     rollout_config = {
         "configuration": "test",
@@ -98,9 +102,11 @@ def test_parallel_data_load_from_directory_clipped():
     assert len(dataset) - 2 == len(dataset_clipped)
 
 
-def test_parallel_data_load_from_directory_clipped_from_hydra():
+def test_parallel_data_load_from_directory_clipped_from_hydra(tmpdir):
     """Test loading trajectories of multiple episodes in parallel into an in-memory dataset. (Each
     data-loader process reads the files assigned to it.)"""
+    os.chdir(tmpdir)
+
     # Heuristics rollout
     rollout_config = {
         "configuration": "test",
