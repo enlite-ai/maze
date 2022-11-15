@@ -77,7 +77,7 @@ def test_parallel_data_load_from_directory_clipped(tmpdir):
         "runner": "sequential",
         "runner.n_episodes": 2,
         "runner.record_trajectory": True,
-        "runner.max_episode_steps": 30,
+        "runner.max_episode_steps": 50,
         "seeding.env_base_seed": 12345,
         "seeding.agent_base_seed": 12345,
     }
@@ -99,7 +99,7 @@ def test_parallel_data_load_from_directory_clipped(tmpdir):
         deserialize_in_main_thread=False
     )
 
-    assert len(dataset) - 2 == len(dataset_clipped)
+    assert len(dataset) - 4 == len(dataset_clipped)
 
 
 def test_parallel_data_load_from_directory_clipped_from_hydra(tmpdir):
@@ -116,7 +116,7 @@ def test_parallel_data_load_from_directory_clipped_from_hydra(tmpdir):
         "runner": "sequential",
         "runner.n_episodes": 2,
         "runner.record_trajectory": True,
-        "runner.max_episode_steps": 30,
+        "runner.max_episode_steps": 50,
         "seeding.env_base_seed": 12345,
         "seeding.agent_base_seed": 12345,
     }
@@ -144,4 +144,4 @@ def test_parallel_data_load_from_directory_clipped_from_hydra(tmpdir):
 
     dataset_clipped = Factory(InMemoryDataset).instantiate(hydra_config)
 
-    assert len(dataset_reference) - 2 == len(dataset_clipped)
+    assert len(dataset_reference) - 4 == len(dataset_clipped)
