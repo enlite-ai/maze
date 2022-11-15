@@ -3,6 +3,7 @@ import logging
 import traceback
 from collections import namedtuple
 from multiprocessing import Queue, Process
+from queue import Empty
 from typing import Iterable, Tuple
 
 from omegaconf import DictConfig
@@ -98,8 +99,23 @@ class ParallelRolloutWorker:
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
 
             first_episode = True
-            while not seeding_queue.empty():
-                env_seed, agent_seed = seeding_queue.get()
+            while True:
+                try:
+                    env_seed, agent_seed = seeding_queue.get(block=False)
+                except Empty:
+                    # after we finished the last seed, we need to reset env and agent to collect the
+                    # statistics of the last rollout
+                    try:
+                        env.reset()
+                        agent.reset()
+                    except Exception as e:
+                        logger.warning("Exception encountered in collection reset()")
+                        ParallelRolloutWorker._log_exception(e)
+
+                    reporting_queue.put(episode_recorder.get_last_episode_data())
+
+                    return
+
                 env.seed(env_seed)
                 agent.seed(agent_seed)
                 try:
@@ -115,17 +131,6 @@ class ParallelRolloutWorker:
                     if not first_episode:
                         reporting_queue.put(episode_recorder.get_last_episode_data())
                     first_episode = False
-
-            # after we finished the last seed, we need to reset env and agent to collect the
-            # statistics of the last rollout
-            try:
-                env.reset()
-                agent.reset()
-            except Exception as e:
-                logger.warning("Exception encountered in collection reset()")
-                ParallelRolloutWorker._log_exception(e)
-
-            reporting_queue.put(episode_recorder.get_last_episode_data())
 
         except Exception as exception:
             # Ship exception along with a traceback to the main process

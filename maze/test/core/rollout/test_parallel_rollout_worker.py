@@ -1,5 +1,6 @@
+import queue
 from collections import deque
-from typing import Any, Type
+from typing import Any, Type, Optional
 
 from maze.core.agent.random_policy import RandomPolicy
 from maze.core.env.maze_env import MazeEnv
@@ -20,7 +21,11 @@ class MockQueue:
     def put(self, item: Any) -> None:
         self.items.append(item)
 
-    def get(self) -> Any:
+    def get(self, block: Optional[bool] = None) -> Any:
+        if block is False:
+            if not len(self.items):
+                raise queue.Empty
+
         return self.items.popleft()
 
     def empty(self) -> bool:
