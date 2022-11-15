@@ -11,6 +11,9 @@ from typing import Callable, TypeVar, Union, Any, Dict, Optional, Mapping, List
 
 import hydra.plugins.launcher
 import omegaconf
+from hydra.errors import InstantiationException
+from omegaconf import DictConfig
+
 from maze.api.config_auditor import ConfigurationAuditor
 from maze.api.config_loader import ConfigurationLoader
 from maze.api.utils import RunMode, InvalidSpecificationError, working_directory
@@ -32,7 +35,6 @@ from maze.train.parallelization.vector_env.sequential_vector_env import Sequenti
 from maze.train.trainers.common.config_classes import AlgorithmConfig
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.training_runner import TrainingRunner
-from omegaconf import DictConfig
 
 logger = logging.getLogger(__name__)
 
@@ -96,28 +98,28 @@ class RunContext:
     _SilenceReturnType = TypeVar("_SilenceReturnType")
 
     def __init__(
-        self,
-        # Auxiliary arguments providing explicit access to useful configuration properties.
-        run_dir: Optional[str] = None,
-        # Components.
-        env: Optional[Union[str, Mapping[str, Any], Callable[[], MazeEnv]]] = None,
-        wrappers: Optional[Union[str, Mapping[str, Any], Wrapper]] = None,
-        algorithm: Optional[Union[str, Mapping[str, Any], AlgorithmConfig]] = None,
-        model: Optional[Union[str, Mapping[str, Any], BaseModelComposer]] = None,
-        policy: Optional[Union[str, Mapping[str, Any], BasePolicyComposer]] = None,
-        critic: Optional[Union[str, Mapping[str, Any], BaseStateCriticComposer]] = None,
-        launcher: Optional[Union[str, Mapping[str, Any], hydra.plugins.launcher.Launcher]] = None,
-        runner: Optional[Union[str, Mapping[str, Any]]] = None,
-        # Overrides.
-        overrides: Optional[Dict[str, Union[Mapping[str, Any], Any]]] = None,
-        # Configuration mode.
-        configuration: Optional[str] = None,
-        # Experiment module name.
-        experiment: Optional[str] = None,
-        # Whether to run in multirun mode.
-        multirun: bool = False,
-        # Whether to suppress output to stdout.
-        silent: bool = False
+            self,
+            # Auxiliary arguments providing explicit access to useful configuration properties.
+            run_dir: Optional[str] = None,
+            # Components.
+            env: Optional[Union[str, Mapping[str, Any], Callable[[], MazeEnv]]] = None,
+            wrappers: Optional[Union[str, Mapping[str, Any], Wrapper]] = None,
+            algorithm: Optional[Union[str, Mapping[str, Any], AlgorithmConfig]] = None,
+            model: Optional[Union[str, Mapping[str, Any], BaseModelComposer]] = None,
+            policy: Optional[Union[str, Mapping[str, Any], BasePolicyComposer]] = None,
+            critic: Optional[Union[str, Mapping[str, Any], BaseStateCriticComposer]] = None,
+            launcher: Optional[Union[str, Mapping[str, Any], hydra.plugins.launcher.Launcher]] = None,
+            runner: Optional[Union[str, Mapping[str, Any]]] = None,
+            # Overrides.
+            overrides: Optional[Dict[str, Union[Mapping[str, Any], Any]]] = None,
+            # Configuration mode.
+            configuration: Optional[str] = None,
+            # Experiment module name.
+            experiment: Optional[str] = None,
+            # Whether to run in multirun mode.
+            multirun: bool = False,
+            # Whether to suppress output to stdout.
+            silent: bool = False
     ):
         """
         The behaviour of this interface corresponds largely to the Maze CLI training API as documented in
@@ -225,7 +227,7 @@ class RunContext:
                     ).instantiate(cfg.runner)
                     runner.setup(cfg)
                     runners.append(runner)
-    
+
         return runners
 
     def train(self, n_epochs: Optional[int] = None, **train_kwargs) -> None:
@@ -359,12 +361,12 @@ class RunContext:
         return policies if len(policies) > 1 else policies[0]
 
     def compute_action(
-        self,
-        observation: ObservationType,
-        maze_state: Optional[MazeStateType] = None,
-        env: Optional[BaseEnv] = None,
-        actor_id: ActorID = None,
-        deterministic: bool = False
+            self,
+            observation: ObservationType,
+            maze_state: Optional[MazeStateType] = None,
+            env: Optional[BaseEnv] = None,
+            actor_id: ActorID = None,
+            deterministic: bool = False
     ) -> Union[ActionType, List[ActionType]]:
         """
         Computes action(s) with configured policy/policies.
@@ -420,7 +422,7 @@ class RunContext:
             try:
                 ro_eval = Factory(RolloutEvaluator).instantiate(ro_eval)
             # Merge with default values in case of incomplete RolloutEvaluator config.
-            except TypeError:
+            except (TypeError, InstantiationException):
                 default_params = {
                     "eval_env": SequentialVectorEnv(env_factories=[env_fn]),
                     "n_episodes": 8,
