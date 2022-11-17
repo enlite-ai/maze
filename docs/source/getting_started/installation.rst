@@ -12,11 +12,6 @@
     :width: 20
     :target: https://docs.conda.io/projects/conda/en/latest/index.html
 
-.. |rllib| image:: ../logos/ray_logo.png
-    :class: inline-figure
-    :width: 55
-    :target: https://docs.ray.io/en/master/installation.html
-
 .. role:: raw-html(raw)
    :format: html
 
@@ -45,15 +40,6 @@ Installation
     need to install a few additional dependencies because of `this OpenAI gym issue <https://github.com/openai/gym/issues/2138>`_
     (for Debian systems `sudo apt install libjpeg8-dev zlib1g-dev`, more info on
     `building pillow <https://pillow.readthedocs.io/en/stable/installation.html#building-on-linux>`_)
-
-
-|rllib| If you want to use RLLib it in combination with Maze, optionally install it with:
-
-.. code:: bash
-
-    pip install ray[rllib]==1.4.1 tensorflow
-
-(Installing RLlib is only required if you would like to use the :ref:`Maze RLlib Runner <maze_rllib_runner>`)
 
 :raw-html:`</br>`
 

@@ -58,7 +58,6 @@ Below you find the reference documentation for  environment wrappers.
     ~observation_visualization_wrapper.ObservationVisualizationWrapper
     ~time_limit_wrapper.TimeLimitWrapper
     ~random_reset_wrapper.RandomResetWrapper
-    ~sorted_spaces_wrapper.SortedSpacesWrapper
     ~no_dict_spaces_wrapper.NoDictSpacesWrapper
     ~export_gif_wrapper.ExportGifWrapper
     ~spaces_recording_wrapper.SpacesRecordingWrapper

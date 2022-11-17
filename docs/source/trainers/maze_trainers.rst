@@ -438,20 +438,6 @@ arXiv preprint arXiv:1703.03864.
 :raw-html:`</details>`
 
 
-Maze RLlib Trainer
-------------------
-
-Finally, the Maze framework also contains an RLlib trainer class. This special class of trainers wraps all necessary
-and convenient Maze components into RLlib compatible objects such that
-`Ray-RLlib <https://docs.ray.io/en/master/rllib.html>`_ can be reused to train Maze policies and
-critics. This enables us to train :ref:`Maze Models <perception_module>` with
-:ref:`Maze action distributions <action_spaces_and_distributions_module>`
-in :ref:`Maze environments <env-hierarchy>` with almost all RLlib algorithms.
-
-RLlib algorithms are currently not supported by :class:`~maze.api.run_context.RunContext`.
-
-**Example and Details:** :ref:`Maze RLlib Runner <maze_rllib_runner>`
-
 Where to Go Next
 ----------------
 

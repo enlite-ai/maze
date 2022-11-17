@@ -80,9 +80,6 @@ def check_env_and_model_instantiation(config_module: str, config: str, overrides
     assert env is not None
     assert isinstance(env, (StructuredEnv, StructuredEnvSpacesMixin))
 
-    if 'model' in overrides and overrides['model'] == 'rllib':
-        return
-
     if 'model' in cfg:
         model_composer = Factory(BaseModelComposer).instantiate(
             cfg.model,

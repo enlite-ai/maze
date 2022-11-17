@@ -116,7 +116,7 @@ class IMPALA(ActorCritic):
             value_losses = [(shifted_values[0] - vtrace_returns.vs[0]).pow(2.0).mean()]
         else:
             value_losses = [(vv - vt).pow(2).mean() for vv, vt in zip(shifted_values, vtrace_returns.vs)]
-        # TODO: Run proper evaluation of this added scaling (used by rllib)
+
         value_losses = list(map(lambda x: x / 2.0, value_losses))
 
         # compute entropy loss

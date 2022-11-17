@@ -161,7 +161,6 @@ but most importantly also provide code snippets and minimum working examples to 
    :caption: Training
 
    trainers/maze_trainers.rst
-   trainers/maze_rllib_runner.rst
 
 .. toctree::
    :maxdepth: -1
