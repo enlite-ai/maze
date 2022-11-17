@@ -19,7 +19,7 @@ Comparison with the CLI (maze-run)
 
 We designed :class:`~maze.api.run_context.RunContext` to be largely congruent with the CLI, i.e. :code:`maze-run`. It utilizes Hydra internally and offers the same base functionality, but differs in a couple of ways - :class:`~maze.api.run_context.RunContext` ...
 
-* ... is a recent addition and still lacks support for a number of capabilities: Rolling out a policy is not fully supported yet, as are RLlib integration and some of the more advanced Hydra features like multi-runs. These issues (particularly rollout support) are on our todo list however and will be implemented shortly.
+* ... is a recent addition and still lacks support for a number of capabilities: Rolling out a policy is not fully supported yet. These issues (particularly rollout support) are on our todo list however and will be implemented shortly.
 * ... accepts (most) components to be specified as instantiated complex Python objects, configuration dictionaries or configuration module name. In contrast, the CLI accepts the specification of components as configuration module name or as primitive values. As of now this entails however that once instantiated Python objects are passed, the customary experiment configuration cannot be logged anymore due to a lack of knowledge about the corresponding configuration dictionary. This issue is on our roadmap.
 * ... offers a few additional options for convenience' sake, such as output suppression via :code:`silent=True` or setting the working directory via :code:`run_dir='...'`.
 

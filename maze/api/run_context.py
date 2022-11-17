@@ -122,9 +122,6 @@ class RunContext:
             silent: bool = False
     ):
         """
-        The behaviour of this interface corresponds largely to the Maze CLI training API as documented in
-        https://maze-rl.readthedocs.io/en/latest/trainers/maze_rllib_runner.html, i.e. defaults and functionality should
-        be as similar as possible.
         https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/example_cmds.html lists examples using the
         CLI for training agents.
 

@@ -23,14 +23,14 @@ jobs:
         with:
           driver-opts: network=host
 
-      - name: Cache layers for image with RLLib + TF environment.
+      - name: Cache layers for image.
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache-rlltf-env
           key: buildx-rlltf-env-${{ github.sha }}
           restore-keys: buildx-rlltf-env-
 
-      - name: Cache layers for image with RLLib + TF.
+      - name: Cache layers for image.
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache-rlltf
@@ -43,24 +43,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build image with RLLib + TF environment.
+      - name: Build image.
         uses: docker/build-push-action@v2
         with:
           file: docker/maze-core-env.dockerfile
-          build-args: opt_pip_installs=ray[rllib]==1.4.1,tensorflow==2.5.0
           cache-from: type=local,src=/tmp/.buildx-cache-rlltf-env
           cache-to: type=local,dest=/tmp/.buildx-cache-rlltf-env-new
-          tags: localhost:5000/enliteai/maze:rllib-tensorflow-env
+          tags: localhost:5000/enliteai/maze:core-env
           push: true
 
-      - name: Build image with RLLib + TF environment and code.
+      - name: Build image with code.
         uses: docker/build-push-action@v2
         with:
           file: docker/maze-core.dockerfile
-          build-args: MAZE_CORE_ENV=localhost:5000/enliteai/maze:rllib-tensorflow-env
+          build-args: MAZE_CORE_ENV=localhost:5000/enliteai/maze:core-env
           cache-from: type=local,src=/tmp/.buildx-cache-rlltf
           cache-to: type=local,dest=/tmp/.buildx-cache-rlltf-new
-          tags: localhost:5000/enliteai/maze:rllib-tensorflow
+          tags: localhost:5000/enliteai/maze:core
           load: true
 
       # Workaround for growing cache issue.
@@ -74,17 +73,17 @@ jobs:
           mv /tmp/.buildx-cache-rlltf-new /tmp/.buildx-cache-rlltf
 
       - name: Execute tests.
-        run: docker run localhost:5000/enliteai/maze:rllib-tensorflow /bin/bash /usr/src/maze/.github/execute_tests.sh
+        run: docker run localhost:5000/enliteai/maze:core /bin/bash /usr/src/maze/.github/execute_tests.sh
 
       - name: Tag image.
-        run: docker image tag localhost:5000/enliteai/maze:rllib-tensorflow enliteai/maze:rllib-tensorflow
+        run: docker image tag localhost:5000/enliteai/maze:core enliteai/maze:core
 
       - name: Check images.
         run: docker images
 
-      - name: Push RLLib + TFimage.
+      - name: Push image.
         if: endsWith(github.ref, '/main')
-        run: docker push enliteai/maze:rllib-tensorflow
+        run: docker push enliteai/maze:core
 
       - name: Output image digest.
         run: echo ${{ steps.docker_build_rllibtf.outputs.digest }}

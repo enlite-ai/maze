@@ -9,7 +9,7 @@ When adding new features to Maze we put a strong emphasis on reusablity
 to allow you to make use of as much of these features as possible
 but still give you the opportunity to stick to the optimization framework you are most comfortable or familiar with.
 
-Since `RLlib <https://docs.ray.io/en/master/rllib.html>`_ already has a dedicated spot within Maze we rely on
+We rely on
 `stable-baselines3 <https://stable-baselines3.readthedocs.io/en/master/index.html>`_ for this tutorial.
 However, it is important to note that the examples below will also work with any other Python-based RL framework
 compatible with Gym environments.
