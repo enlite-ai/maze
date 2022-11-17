@@ -42,8 +42,7 @@ Below we list a few selected Maze features.
  
 ## Get Started
 
-* You can try Maze without prior installation! We provide a series of _Getting started_ notebooks to help you get familiar with Maze. These notebooks can be viewed and executed in Google Colab - just pick any of the [included notebooks](https://github.com/enlite-ai/maze/tree/main/tutorials/notebooks/getting_started) and click on the <a href="https://github.com/enlite-ai/maze/tree/main/tutorials/notebooks"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Colab"/></a> button.
-* If you want to install Maze locally, make sure [PyTorch](https://pytorch.org/get-started/locally/) is installed and then get the latest released version of Maze as follows:
+* Make sure [PyTorch](https://pytorch.org/get-started/locally/) is installed and then get the latest released version of Maze as follows:
 
       pip install -U maze-rl
       
