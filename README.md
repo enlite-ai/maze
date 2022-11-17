@@ -55,23 +55,6 @@ Below we list a few selected Maze features.
   [install additional binary dependencies manually](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html)
 * Alternatively you can work with Maze in a <img alt="Docker" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Docker_%28container_engine%29_logo.svg/1280px-Docker_%28container_engine%29_logo.svg.png" width="100" height="22" /> container with pre-installed Jupyter lab: Run `docker run -p 8888:8888 enliteai/maze:playground` and open `localhost:8888` in your browser. This loads Jupyter 
 * To see Maze in action, check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
-Training and deploying your agent is as simple as can be:
-  ```python
-  from maze.api.run_context import RunContext
-  from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
-
-  rc = RunContext(env=lambda: GymMazeEnv('CartPole-v0'), algorithm="ppo")
-  rc.train(n_epochs=50)
-
-  # Run trained policy.
-  env = GymMazeEnv('CartPole-v0')
-  obs = env.reset()
-  done = False
-
-  while not done:
-      action = rc.compute_action(obs)
-      obs, reward, done, info = env.step(action)
-  ```
 * [Try your own Gym env](https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/integrating_gym_environment.html)
   or visit our [Maze step-by-step tutorial](https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html).
 

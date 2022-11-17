@@ -3,9 +3,7 @@
 Plain Python Training Example (low-level)
 =========================================
 
-This tutorial demonstrates how to train an A2C agent with Maze in plain Python without utilizing :class:`~maze.api.run_context.RunContext`. In the process it introduces and explains some of Maze' most important components and concepts.
-
-This is complementary to the article on :ref:`high-level training in plain Python <end_to_end_python_high_level>`, which guides through the same setup (but with :class:`~maze.api.run_context.RunContext` support).
+This tutorial demonstrates how to train an A2C agent with Maze in plain Python without utilizing the maze CLI. In the process it introduces and explains some of Maze' most important components and concepts.
 
 Environment Setup
 -----------------

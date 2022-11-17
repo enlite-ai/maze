@@ -11,8 +11,6 @@ Imitation learning is especially useful for initializing a policy
 to quick-start an actual training by interaction run
 or for settings where no training environment is available at all (e.g., offline RL).
 
-Since imitation learning involves rollouts, this is as of yet not supported by :class:`~maze.api.run_context.RunContext`. A guide for managed pure-Python imitation learning will be provided together will rollout support.
-
 .. image:: imitation_workflow.png
    :width: 100%
    :align: center

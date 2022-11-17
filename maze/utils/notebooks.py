@@ -6,9 +6,7 @@ import contextlib
 import os
 import subprocess
 import sys
-from typing import Union
 
-from maze.api.run_context import RunContext
 from maze.core.agent.policy import Policy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.trajectory_recording.utils.monitoring_setup import MonitoringSetup
@@ -34,11 +32,10 @@ def fix_gym_syspath() -> None:
 
 
 def rollout(
-    env: MazeEnv, agent: Union[RunContext, Policy], n_max_steps: int, render: bool = False, log_dir: str = "."
+        env: MazeEnv, agent: Policy, n_max_steps: int, render: bool = False, log_dir: str = "."
 ) -> float:
     """
     Rolls out environment and collects total reward for one epoch.
-    Note: Should be dropped in favour of RunContext.rollout() as soon as possible.
 
     :param env: Environment to roll out.
     :param agent: Agent with .compute_action(obs).
