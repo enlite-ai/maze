@@ -60,21 +60,10 @@ In International conference on machine learning (pp. 1928-1937).
 
 **Example**
 
-.. tabs::
+.. code:: console
 
-    .. code-tab:: console
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
 
-        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
-
-    .. code-tab:: python
-
-        rc = RunContext(
-            algorithm="a2c",
-            overrides={"env.name": "CartPole-v0"},
-            model="vector_obs",
-            critic="template_state"
-        )
-        rc.train()
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.a2c.a2c_algorithm_config.A2CAlgorithmConfig`
 
@@ -117,21 +106,10 @@ arXiv preprint arXiv:1707.06347.
 
 **Example**
 
-.. tabs::
+.. code:: console
 
-    .. code-tab:: console
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
 
-        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
-
-    .. code-tab:: python
-
-        rc = RunContext(
-            algorithm="ppo",
-            overrides={"env.name": "CartPole-v0"},
-            model="vector_obs",
-            critic="template_state"
-        )
-        rc.train()
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.ppo.ppo_algorithm_config.PPOAlgorithmConfig`
 
@@ -175,21 +153,9 @@ arXiv preprint arXiv:1802.01561.
 
 **Example**
 
-.. tabs::
+.. code:: console
 
-    .. code-tab:: console
-
-        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
-
-    .. code-tab:: python
-
-        rc = RunContext(
-            algorithm="impala",
-            overrides={"env.name": "CartPole-v0"},
-            model="vector_obs",
-            critic="template_state"
-        )
-        rc.train()
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.impala.impala_algorithm_config.ImpalaAlgorithmConfig`
 
@@ -241,62 +207,16 @@ preprint arXiv:1910.07207.
 
 **Example SAC**
 
-.. tabs::
+.. code:: console
 
-    .. code-tab:: console
-
-        $ maze-run -cn conf_train env.name=Pendulum-v0 algorithm=sac model=vector_obs critic=template_state_action
-
-    .. code-tab:: python
-
-        rc = RunContext(
-            algorithm="sac",
-            overrides={"env.name": "Pendulum-v0"},
-            model="vector_obs",
-            critic="template_state_action"
-        )
-        rc.train()
+    $ maze-run -cn conf_train env.name=Pendulum-v0 algorithm=sac model=vector_obs critic=template_state_action
 
 **Example SACfD**
 
-.. tabs::
+.. code:: console
 
-    .. code-tab:: console
-
-        $ maze-run env.name=LunarLander-v2 policy=lunar_lander_heuristics runner.n_episodes=1000
-        $ maze-run -cn conf_train env.name=LunarLander-v2 algorithm=sacfd model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
-
-    .. code-tab:: python
-
-        from maze.core.agent.heuristic_lunar_lander_policy import HeuristicLunarLanderPolicy
-        from maze.core.rollout.parallel_rollout_runner import ParallelRolloutRunner
-        from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
-        from maze.api.run_context import RunContext
-
-        # Instantiate an example environment and agent
-        env = GymMazeEnv("LunarLander-v2")
-        agent = HeuristicLunarLanderPolicy()
-
-        # Run a parallel rollout and collect the trajectories
-        runner = ParallelRolloutRunner(
-            n_episodes=1000,
-            max_episode_steps=0,
-            n_processes=5,
-            record_trajectory=True,
-            record_event_logs=True)
-        runner.run_with(
-            env=env,
-            wrappers={},
-            agent=agent)
-
-        rc = RunContext(
-            algorithm="sacfd",
-            overrides={"env.name": "LunarLander-v2",
-                       "runner.initial_demonstration_trajectories.input_data": "<absolute_experiment_path>/trajectory_data"},
-            model="flatten_concat",
-            critic="flatten_concat_state_action"
-        )
-        rc.train()
+    $ maze-run env.name=LunarLander-v2 policy=lunar_lander_heuristics runner.n_episodes=1000
+    $ maze-run -cn conf_train env.name=LunarLander-v2 algorithm=sacfd model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.sac.sac_algorithm_config.SACAlgorithmConfig`
 
@@ -397,20 +317,9 @@ arXiv preprint arXiv:1703.03864.
 
 **Example**
 
-.. tabs::
+.. code:: console
 
-    .. code-tab:: console
-
-        $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=es model=vector_obs
-
-    .. code-tab:: python
-
-        rc = RunContext(
-            algorithm="es",
-            overrides={"env.name": "CartPole-v0"},
-            model="vector_obs"
-        )
-        rc.train()
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=es model=vector_obs
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.es.es_algorithm_config.ESAlgorithmConfig`
 

@@ -193,7 +193,6 @@ but most importantly also provide code snippets and minimum working examples to 
    best_practices_and_tutorials/integrating_gym_environment.rst
    best_practices_and_tutorials/struct_env_tutorial.rst
    best_practices_and_tutorials/maze_and_other_frameworks.rst
-   best_practices_and_tutorials/plain_python_training_example_high_level.rst
    best_practices_and_tutorials/plain_python_training_example_low_level.rst
 
 .. toctree::
