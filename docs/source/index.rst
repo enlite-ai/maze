@@ -107,7 +107,6 @@ Spotlights
 Below we list of some of Maze's key features.
 The list is far from exhaustive but none the less a nice starting point to dive into the framework.
 
- - Get things rolling by training your environment and rolling out your policy in just a few lines of code with :ref:`Maze' high-level API <run_context>`.
  - Configure your applications and experiments with the :ref:`Hydra config system <hydra>` |hydra|.
  - Design and visualize your policy and value networks with the :ref:`Perception Module <perception_module>`.
  - :ref:`Pre-process <observation_pre_processing>` and :ref:`normalize <observation_normalization>`
@@ -172,7 +171,6 @@ but most importantly also provide code snippets and minimum working examples to 
    concepts_and_structure/hydra.rst
    concepts_and_structure/rendering.rst
    concepts_and_structure/struct_envs/overview.rst
-   concepts_and_structure/run_context_overview.rst
 
 .. toctree::
    :maxdepth: -1
