@@ -13,6 +13,8 @@ from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.structured_env import ActorID
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.train.parallelization.distributed_actors.dummy_distributed_workers_with_buffer import \
+    DummyDistributedWorkersWithBuffer
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.trainer import Trainer
@@ -57,7 +59,10 @@ class SAC(Trainer):
                                    for critic_param in self.learner_model.critic.per_critic_parameters()]
 
         # temporarily initialize env to get access to action spaces
-        env = self.distributed_workers.env_factory()
+        if isinstance(self.distributed_workers, DummyDistributedWorkersWithBuffer):
+            env = self.distributed_workers.workers[0].env
+        else:
+            env = self.distributed_workers.env_factory()
 
         # Entropy tuning only supported for single step envs
         if self.algorithm_config.entropy_tuning:

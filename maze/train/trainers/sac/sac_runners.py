@@ -205,6 +205,9 @@ class SACRunner(TrainingRunner):
         # Remove the consumer again from the aggregator
         epoch_stats.remove_consumer(replay_stats_logger)
 
+        # close environment for filling the buffer
+        dummy_env.close()
+
     @abstractmethod
     def create_distributed_eval_env(self,
                                     env_factory: Callable[[], MazeEnv],
