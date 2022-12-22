@@ -177,6 +177,7 @@ def make_policy_from_output_dir(path: Union[Path, str]) -> SerializedTorchPolicy
             model=cfg["model"],
             state_dict_file="state_dict.pt",
             spaces_dict_file="spaces_config.pkl",
-            device="cpu")
+            device="cpu",
+            deterministic=True)
 
     return policy
