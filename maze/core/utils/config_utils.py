@@ -149,30 +149,32 @@ class SwitchWorkingDirectoryToInput:
         os.chdir(self.return_to_dir)
 
 
-def make_env_from_output_dir(path: Union[Path, str]) -> MazeEnv:
+def make_env_from_output_dir(path: Union[Path, str], config_file: str) -> MazeEnv:
     """Create an environment instance from an output directory of a previous run. The
     directory is expected to contain the hydra config of the run and all associated
     information needed for the env (like observation normalization statistics).
 
     :param path: Path of the output directory to use
+    :param config_file: The name of the config to read.
     :return: The newly instantiated environment
     """
     with SwitchWorkingDirectoryToInput(path):
-        cfg = read_config("hydra_config.yaml")
+        cfg = read_config(config_file)
         env = EnvFactory(cfg["env"], cfg["wrappers"] if "wrappers" in cfg else {})()
     return env
 
 
-def make_policy_from_output_dir(path: Union[Path, str]) -> SerializedTorchPolicy:
+def make_policy_from_output_dir(path: Union[Path, str], config_file: str) -> SerializedTorchPolicy:
     """Create a serialized Torch policy instance from an output directory of a previous run. The
     directory is expected to contain the hydra config of the run and all associated
     information needed for the policy (like state_dict).
 
     :param path: Path of the output directory to use
+    :param config_file: The name of the config to read.
     :return: The newly instantiated policy
     """
     with SwitchWorkingDirectoryToInput(path):
-        cfg = read_config("hydra_config.yaml")
+        cfg = read_config(config_file)
         policy = SerializedTorchPolicy(
             model=cfg["model"],
             state_dict_file="state_dict.pt",
