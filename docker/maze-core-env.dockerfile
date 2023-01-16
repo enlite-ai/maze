@@ -17,6 +17,9 @@ ARG BUILD_VERSION
 
 RUN echo "BUILD_VERSION: $BUILD_VERSION"
 
+# Install system dependencies (necessary for installing torch scatter in the conda env).
+RUN apt-get update && apt-get install -y build-essential g++
+
 # Install environment.
 COPY maze-core-environment.yml .
 RUN mamba env create -p /env --file maze-core-environment.yml
