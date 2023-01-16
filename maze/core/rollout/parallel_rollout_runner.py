@@ -27,8 +27,6 @@ from maze.core.utils.factory import ConfigType, CollectionOfConfigType
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.utils.bcolors import BColors
-from maze_dev.core.agent.mcts_policy import MctsPolicy
-from maze_dev.train.trainers.alphazero.alphazero_events import MctsEvents
 
 EpisodeStatsReport = namedtuple("EpisodeStatsReport", "stats event_log")
 """Tuple for passing episode stats from workers to the main process."""
@@ -99,8 +97,6 @@ class ParallelRolloutWorker:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
                                                           agent_config, input_directory)
             env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
-            if isinstance(agent, MctsPolicy):
-                agent.mcts_events = env.context.event_service.create_event_topic(MctsEvents)
 
             first_episode = True
             while True:
