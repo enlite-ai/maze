@@ -92,6 +92,9 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         """
         output_path = self.output_dir / f"{self._episode_id}.pkl"
         if self.action_record is not None:
+            # create output directory if needed
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+
             # set cumulative reward
             self.action_record.cum_action_record_reward = self._cum_reward
             # dump record
