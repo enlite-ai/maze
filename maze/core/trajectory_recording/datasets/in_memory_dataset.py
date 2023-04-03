@@ -6,7 +6,7 @@ from abc import ABC
 from itertools import chain
 from multiprocessing import Queue, Process
 from pathlib import Path
-from typing import Callable, List, Union, Optional, Tuple
+from typing import Callable, List, Union, Optional, Tuple, Type
 from typing import Dict, Sequence, Generator
 
 import torch
@@ -113,8 +113,14 @@ class InMemoryDataset(Dataset, ABC):
         trajectory_save_paths = self._read_input_data_to_list(input_data=input_data)
 
         for file_path in tqdm(trajectory_save_paths, desc='Files', position=0):
-            for trajectory in self.deserialize_trajectory(file_path):
-                self.append(trajectory)
+            try:
+                for trajectory in self.deserialize_trajectory(file_path):
+                    self.append(trajectory)
+            except Exception as e:
+                import traceback
+                logger.warning(f'failed loading trajectory: {e}')
+                logger.warning(traceback.format_exc())
+                pass
 
         logger.info(f"Loaded trajectory data from: {input_data}")
         logger.info(f"Current length is {len(self)} steps in total.")
@@ -143,7 +149,7 @@ class InMemoryDataset(Dataset, ABC):
 
             p = Process(
                 target=DataLoadWorker.run,
-                args=(self._conversion_env_factory, trajectories_chunk, self.reporting_queue,
+                args=(self.__class__, self._conversion_env_factory, trajectories_chunk, self.reporting_queue,
                       self._trajectory_processor),
                 daemon=True
             )
@@ -339,11 +345,12 @@ class DataLoadWorker:
     DONE_TOKEN = "DONE"
 
     @staticmethod
-    def run(env_factory: Callable,
+    def run(dataset_cls: Type[InMemoryDataset], env_factory: Callable,
             trajectories_or_paths: List[Union[Path, str, TrajectoryRecord]],
             reporting_queue: Queue, trajectory_processor: TrajectoryProcessor) -> None:
         """Load trajectory data from the provided trajectory file paths. Report exceptions to the main process.
 
+        :param dataset_cls: The class of the InMemoryDataset used.
         :param env_factory: Function for creating an environment for MazeState and MazeAction conversion.
         :param trajectories_or_paths: Either file paths to load, or already loaded trajectories to convert.
         :param reporting_queue: Queue for reporting loaded data and exceptions back to the main process.
@@ -355,9 +362,13 @@ class DataLoadWorker:
 
                 # If we got a file path, then deserialize, convert, and report all trajectories in it
                 if isinstance(trajectory_or_file, Path) or isinstance(trajectory_or_file, str):
-                    for trajectory in InMemoryDataset.deserialize_trajectory(trajectory_or_file):
-                        for step_record in trajectory_processor.process(trajectory, env):
-                            reporting_queue.put(step_record)
+                    try:
+                        for trajectory in dataset_cls.deserialize_trajectory(trajectory_or_file):
+                            for step_record in trajectory_processor.process(trajectory, env):
+                                reporting_queue.put(step_record)
+                    except Exception as e:
+                        print(f'failed loading trajectory: {e}')
+                        pass
                 # If we got an already-loaded trajectory, then just convert and report it
                 elif isinstance(trajectory_or_file, TrajectoryRecord):
                     for step_record in trajectory_processor.process(trajectory_or_file, env):

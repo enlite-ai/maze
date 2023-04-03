@@ -76,6 +76,15 @@ class GymActionConversion(ActionConversionInterface):
         """An integer representation of the action."""
         return action['action']
 
+    @staticmethod
+    def inv_action_hash(action_hash: int) -> MazeActionType:
+        """Revert a unique, deterministic int hash to the given maze action.
+
+        :param action_hash: The action created with the self.create_action_hash method.
+        :return: The action.
+        """
+        return {'action': action_hash}
+
 
 class GymObservationConversion(ObservationConversionInterface):
     """A dummy conversion interface asserting that the observation is packed into a dictionary space.
@@ -155,6 +164,8 @@ class GymCoreEnv(CoreEnv):
         # initialize the state
         self._maze_state: Optional[Dict] = None
 
+        self._current_seed = None
+
     def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
         """Intercept ``CoreEnv.step``"""
         maze_state, rew, done, info = self.env.step(maze_action)
@@ -188,9 +199,14 @@ class GymCoreEnv(CoreEnv):
         self._maze_state = maze_state
         return maze_state
 
+    def get_current_seed(self) -> int:
+        """Return the current seed of the environment."""
+        return self._current_seed
+
     @override(CoreEnv)
     def seed(self, seed: int) -> None:
         """Intercept ``CoreEnv.seed``"""
+        self._current_seed = seed
         self.env.seed(seed)
 
     @override(CoreEnv)

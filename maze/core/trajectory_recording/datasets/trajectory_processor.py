@@ -83,7 +83,7 @@ class TrajectoryProcessor:
         return env_processed_trajectories
 
     @staticmethod
-    def _retrieve_done_and_last_info(trajectory: TrajectoryRecord) -> Tuple[bool, Dict]:
+    def retrieve_done_and_last_info(trajectory: TrajectoryRecord) -> Tuple[bool, Dict]:
         """Helper method to retrieve the information on how the given trajectory ended.
 
         :param trajectory: Episode record to load.
@@ -126,7 +126,7 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
-        is_done, info = self._retrieve_done_and_last_info(trajectory)
+        is_done, info = self.retrieve_done_and_last_info(trajectory)
 
         # Check whether the given trajectory died due to a self inflicted mistake
         if is_done and (info is None or 'TimeLimit.truncated' not in info):
@@ -214,7 +214,7 @@ class SolvedClippingTrajectoryProcessor(TrajectoryProcessor):
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
-        is_done, info = self._retrieve_done_and_last_info(trajectory)
+        is_done, info = self.retrieve_done_and_last_info(trajectory)
 
         # Check whether the given trajectory died due to a self inflicted mistake
         if is_done and not (info is None or 'TimeLimit.truncated' not in info):

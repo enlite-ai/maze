@@ -1,4 +1,5 @@
 """ Implements an action recording wrapper. """
+import os.path
 from typing import Dict, Any, Tuple, Optional, Union
 
 from pathlib import Path
@@ -33,7 +34,6 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         self._cum_reward = None
 
         self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
 
     @override(ObservationWrapper)
     def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
@@ -70,13 +70,12 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
     def reset(self) -> Any:
         """Intercept ``ObservationWrapper.reset`` and map observation."""
 
-        # make sure that the episode is seeded properly
-        assert self._current_seed is not None
-
         # dump previous trajectory
         self.dump()
-
-        self.action_record = ActionRecord(seed=self._current_seed)
+        if self._current_seed is not None:
+            self.action_record = ActionRecord(seed=self._current_seed)
+        else:
+            self.action_record = ActionRecord(seed=None)
         obs = self.env.reset()
         self._cum_reward = 0.0
 
@@ -90,11 +89,10 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
     def dump(self) -> None:
         """Dump recorded trajectory to file.
         """
-        output_path = self.output_dir / f"{self._episode_id}.pkl"
-        if self.action_record is not None:
-            # create output directory if needed
+        if self.action_record is not None and self.action_record.seed is not None:
+            output_path = self.output_dir / f"{self._episode_id}.pkl"
+            print(f'dumping action record to: {os.path.abspath((output_path))}')
             self.output_dir.mkdir(parents=True, exist_ok=True)
-
             # set cumulative reward
             self.action_record.cum_action_record_reward = self._cum_reward
             # dump record

@@ -50,6 +50,13 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
 
         self._max_episode_steps = max_episode_steps
 
+    def get_max_env_steps(self) -> int:
+        """Return the maximum env steps.
+
+        :return: the maximum env steps
+        """
+        return self._max_episode_steps
+
     @override(BaseEnv)
     def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
         """Override BaseEnv.step and set done if the step limit is reached.
@@ -66,6 +73,7 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
 
         if self._max_episode_steps and self._elapsed_steps >= self._max_episode_steps:
             info['TimeLimit.truncated'] = not done
+            info['done_solved'] = not done
             done = True
         return observation, reward, done, info
 

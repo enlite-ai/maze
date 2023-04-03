@@ -72,6 +72,12 @@ class CriticImitationEvents(ABC):
     @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
     @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
     @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    def logits(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
+        """Actual (transformed) value of the step critics."""
+
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
+    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
+    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
     @define_stats_grouping('substep_key', 'agent_id')
     def actual_value(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Actual (transformed) value of the step critics."""

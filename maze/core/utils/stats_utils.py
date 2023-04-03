@@ -86,3 +86,14 @@ class CumulativeMovingMinMax(object):
         """
         self.max = max(self.max, new_data)
         self.min = min(self.min, new_data)
+
+    def normalize_value(self, value: float) -> float:
+        """Normalize value with global min/max statistics to range [0, 1].
+
+        :param value: Value to normalize.
+        :return: [0, 1] normalized value.
+        """
+        if self.max > self.min:
+            value = (value - self.min) / (self.max - self.min)
+
+        return value

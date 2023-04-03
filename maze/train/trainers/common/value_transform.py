@@ -31,6 +31,27 @@ class ValueTransform(ABC):
         """
 
 
+class LinearScaleValueTransform(ValueTransform):
+    """Liniarily scale the value up or down."""
+    def __init__(self, scale: float, offset: float):
+        self._scale = scale
+        self._offset = offset
+
+    @override(ValueTransform)
+    def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
+            Union[float, np.ndarray, torch.Tensor]:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
+        """
+        return x * self._scale + self._offset
+
+    @override(ValueTransform)
+    def transform_value_inv(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
+            Union[float, np.ndarray, torch.Tensor]:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
+        """
+        return (x - self._offset) / self._scale
+
+
 class ReduceScaleValueTransform(ValueTransform):
     """Scale reduction value transform according to Pohlen et al (2018).
 
@@ -80,6 +101,22 @@ def support_to_scalar(logits: torch.Tensor, support_range: Tuple[int, int]) -> t
 
     # compute probability weighted interpolation
     return torch.sum(support * probabilities, dim=-1)
+
+
+def support_to_scalar_normalized(probs: torch.Tensor, support_range: Tuple[int, int]) -> torch.Tensor:
+    """Convert support vector to scalar by probability weighted interpolation.
+
+    :param probs: Softmax normalized probabilities.
+    :param support_range: Tuple holding the lower and upper bound of the supported value range.
+    :return: Tensor of converted scalars.
+    """
+
+    # compile support vector
+    support = torch.from_numpy(np.arange(support_range[0], support_range[1] + 1).astype(np.float32))
+    support = support.to(device=probs.device)
+
+    # compute probability weighted interpolation
+    return torch.sum(support * probs, dim=-1)
 
 
 def scalar_to_support(scalar: torch.Tensor, support_range: Tuple[int, int]) -> torch.Tensor:
