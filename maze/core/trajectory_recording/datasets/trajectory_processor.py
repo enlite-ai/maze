@@ -126,6 +126,9 @@ class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
+        if self.clip_k == 0 or len(trajectory) == 0:
+            return trajectory
+
         is_done, info = self.retrieve_done_and_last_info(trajectory)
 
         # Check whether the given trajectory died due to a self inflicted mistake
@@ -214,6 +217,9 @@ class SolvedClippingTrajectoryProcessor(TrajectoryProcessor):
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
+        if self.clip_k == 0 or len(trajectory) == 0:
+            return trajectory
+
         is_done, info = self.retrieve_done_and_last_info(trajectory)
 
         # Check whether the given trajectory died due to a self inflicted mistake

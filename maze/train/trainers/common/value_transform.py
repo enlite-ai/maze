@@ -31,8 +31,28 @@ class ValueTransform(ABC):
         """
 
 
+class ClipZeroOneValueTransform(ValueTransform):
+    """Clipping the value to 0, 1 for testing purposes.
+    """
+
+    @override(ValueTransform)
+    def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
+            Union[float, np.ndarray, torch.Tensor]:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
+        """
+        return x
+
+    @override(ValueTransform)
+    def transform_value_inv(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
+            Union[float, np.ndarray, torch.Tensor]:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
+        """
+        return np.clip(x, 0, 1)
+
+
 class LinearScaleValueTransform(ValueTransform):
-    """Liniarily scale the value up or down."""
+    """Linearly scale the value up or down."""
+
     def __init__(self, scale: float, offset: float):
         self._scale = scale
         self._offset = offset
@@ -104,7 +124,7 @@ def support_to_scalar(logits: torch.Tensor, support_range: Tuple[int, int]) -> t
 
 
 def support_to_scalar_normalized(probs: torch.Tensor, support_range: Tuple[int, int]) -> torch.Tensor:
-    """Convert support vector to scalar by probability weighted interpolation.
+    """Convert support vector to scalar by probability weighted interpolation without applying softmax first.
 
     :param probs: Softmax normalized probabilities.
     :param support_range: Tuple holding the lower and upper bound of the supported value range.

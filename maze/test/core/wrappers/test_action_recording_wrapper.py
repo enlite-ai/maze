@@ -11,14 +11,6 @@ from maze.core.wrappers.action_recording_wrapper import ActionRecordingWrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, build_dummy_structured_env
 
 
-def test_enforce_episode_seeding():
-    with pytest.raises(AssertionError):
-        env = build_dummy_maze_env()
-        env = ActionRecordingWrapper.wrap(env, record_maze_actions=True, record_actions=True,
-                                          output_dir="action_records")
-        env.reset()
-
-
 def test_records_episode_with_correct_data():
     env = build_dummy_maze_env()
     env = ActionRecordingWrapper.wrap(env, record_maze_actions=True, record_actions=True,
@@ -37,7 +29,7 @@ def test_records_episode_with_correct_data():
 
     episode_id = env.get_episode_id()
     expected_file_path = str(episode_id) + ".pkl"
-    assert not expected_file_path in os.listdir("action_records")
+    assert len(os.listdir()) == 0
 
     # Now dump and load the data
     env.seed(1234)

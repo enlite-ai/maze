@@ -117,9 +117,7 @@ class InMemoryDataset(Dataset, ABC):
                 for trajectory in self.deserialize_trajectory(file_path):
                     self.append(trajectory)
             except Exception as e:
-                import traceback
-                logger.warning(f'failed loading trajectory: {e}')
-                logger.warning(traceback.format_exc())
+                logger.exception(f'failed loading trajectory: {e}')
                 pass
 
         logger.info(f"Loaded trajectory data from: {input_data}")
@@ -149,7 +147,7 @@ class InMemoryDataset(Dataset, ABC):
 
             p = Process(
                 target=DataLoadWorker.run,
-                args=(self.__class__, self._conversion_env_factory, trajectories_chunk, self.reporting_queue,
+                args=(type(self), self._conversion_env_factory, trajectories_chunk, self.reporting_queue,
                       self._trajectory_processor),
                 daemon=True
             )

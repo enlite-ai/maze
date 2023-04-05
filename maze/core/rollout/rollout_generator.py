@@ -151,6 +151,8 @@ class RolloutGenerator:
         record = SpacesRecord(actor_id=self.env.actor_id(),
                               batch_shape=[self.env.n_envs] if self.is_vectorized else None)
 
+        record.env_time = self.env.get_env_time()
+
         # Record copy of the observation (as by default, the policy converts and handles it in place)
         record.observation = self.last_observation
 

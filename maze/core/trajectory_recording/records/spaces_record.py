@@ -51,6 +51,11 @@ class SpacesRecord:
     policy_record: Optional[PolicyRecordType] = None
     """Policy specific data that can be recorded with the help of the write_policy_record method of the policy."""
 
+    env_time: Optional[int] = None
+    """The env time (t) of the env when recording the observation such that:
+       (s_t, a_t, v_t) -> env step -> (r_t, done_t, info_t) is recorded.
+    """
+
     @classmethod
     def stack(cls, records: List['SpacesRecord']) -> 'SpacesRecord':
         """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
