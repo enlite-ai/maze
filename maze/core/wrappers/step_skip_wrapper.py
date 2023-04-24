@@ -61,10 +61,13 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         observation, reward, done, info = self.env.step(action)
         # prepare reward accumulation
         acc_reward = reward
+        internal_rewards = [reward]
 
         # skipping is finished if the env is done
         if done or self._steps_done >= self.n_steps:
             self._reset_recording()
+            info['skipping.internal_rewards'] = internal_rewards
+            info['skipping.resulting_env_time'] = self.env.get_env_time()
             return observation, acc_reward, done, info
 
         # check if all sub-steps have been executed once
@@ -82,11 +85,14 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             observation, reward, done, info = self.env.step(action)
             # accumulate reward and collect events
             acc_reward += reward
+            internal_rewards.append(reward)
             if done:
                 break
 
         # skipping finished
         self._reset_recording()
+        info['skipping.internal_rewards'] = internal_rewards
+        info['skipping.resulting_env_time'] = self.env.get_env_time()
         return observation, acc_reward, done, info
 
     def _reset_recording(self) -> None:
