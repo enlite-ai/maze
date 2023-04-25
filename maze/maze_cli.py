@@ -11,6 +11,7 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
 from maze.core.log_stats.hparam_writer_tensorboard import manipulate_hparams_logging_for_exp
+from maze.core.utils.config_utils import get_colored_config_str
 from maze.core.utils.factory import Factory
 from maze.core.utils.seeding import MazeSeeding
 from maze.runner import Runner
@@ -41,11 +42,13 @@ def _run_job(cfg: DictConfig) -> None:
     if cfg.seeding.agent_base_seed is None:
         cfg.seeding.agent_base_seed = MazeSeeding.generate_seed_from_random_state(np.random.RandomState(None))
 
-    # print and log config
+    # Log the resolved config to a file.
     config_str = yaml.dump(OmegaConf.to_container(cfg, resolve=True), sort_keys=False)
     with open("hydra_config.yaml", "w") as fp:
         fp.write("\n" + config_str)
-    BColors.print_colored(config_str, color=BColors.HEADER)
+
+    # Print a color version of the config
+    print(get_colored_config_str(cfg, resolve=False))
     print("Output directory: {}\n".format(os.path.abspath(".")))
 
     # run job

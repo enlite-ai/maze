@@ -346,3 +346,22 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         core_env.context = self.core_env.context
         self.core_env = core_env
         self.env = self.core_env
+
+    @staticmethod
+    def get_done_info(done: bool, info: Dict[str, str]) -> Tuple[bool, bool]:
+        """Distinguish the end of episode between terminated and truncated by looking into the info dict.
+
+        :param done: The done information from the last env.
+        :param info: The info of the last env step.
+        :return: Return a tuple, first the terminated information and second the truncated information.
+        """
+        # If the env is not done return false for both.
+        if not done:
+            return False, False
+
+        # If the env is done and the env was truncated due to a timelimit return False, True
+        if 'TimeLimit.truncated' in info and info['TimeLimit.truncated']:
+            return False, True
+
+        # Otherwise the env was done due to termination.
+        return True, False

@@ -11,6 +11,7 @@ from maze.utils.bcolors import BColors
 class ValueTransform(ABC):
     """Value transformation (e.g. useful for training the critic in Alpha(Mu)Zero).
     """
+    # Optimize: REMOVE
 
     @abstractmethod
     def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
@@ -34,6 +35,7 @@ class ValueTransform(ABC):
 class ClipZeroOneValueTransform(ValueTransform):
     """Clipping the value to 0, 1 for testing purposes.
     """
+    # Optimize: REMOVE
 
     @override(ValueTransform)
     def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
@@ -52,6 +54,7 @@ class ClipZeroOneValueTransform(ValueTransform):
 
 class LinearScaleValueTransform(ValueTransform):
     """Linearly scale the value up or down."""
+    # Optimize: REMOVE
 
     def __init__(self, scale: float, offset: float):
         self._scale = scale
@@ -77,6 +80,7 @@ class ReduceScaleValueTransform(ValueTransform):
 
     :param epsilon: Lipschitz constant for value function scaling.
     """
+    # Optimize: REMOVE
 
     def __init__(self, epsilon: float):
         self.epsilon = epsilon

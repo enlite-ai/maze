@@ -85,6 +85,7 @@ class TrajectoryProcessor:
     @staticmethod
     def retrieve_done_and_last_info(trajectory: TrajectoryRecord) -> Tuple[bool, Dict]:
         """Helper method to retrieve the information on how the given trajectory ended.
+        # OPTIMIZE: REMOVE
 
         :param trajectory: Episode record to load.
         :return: A bool indicating whether the trajectory ended with a done and the last info dict.
@@ -105,6 +106,19 @@ class TrajectoryProcessor:
             raise ValueError(f'Unrecognized trajectory encountered -> type: {type(last_record)}, value: {last_record}')
         return is_done, info
 
+    @staticmethod
+    def retrieve_done_info(trajectory: TrajectoryRecord) -> Tuple[bool, bool, Dict]:
+        """Helper method to retrieve the information on how the given trajectory ended.
+
+        :param trajectory: Episode record to load.
+        :return: A bool indicating whether the trajectory ended with a done by termination, done by timelimit truncation
+                and the last info dict.
+        """
+        done, info = TrajectoryProcessor.retrieve_done_and_last_info(trajectory)
+        done_terminated, done_truncated = MazeEnv.get_done_info(done, info)
+        assert not (done_terminated and done_truncated)
+        return done_terminated, done_truncated, info
+
 
 class IdentityTrajectoryProcessor(TrajectoryProcessor):
     """Identity processing method"""
@@ -117,29 +131,78 @@ class IdentityTrajectoryProcessor(TrajectoryProcessor):
 
 
 @dataclasses.dataclass
-class DeadEndClippingTrajectoryProcessor(TrajectoryProcessor):
-    """Implementation of the dead-end-clipping preprocessor. That is for each trajectory the last k states should be
-    clipped iff the env is done in the last state."""
+class BaseClippingTrajectoryProcessor(TrajectoryProcessor):
+    """A base class for different clipping trajectory preprocessors."""
     clip_k: int
 
-    @override(TrajectoryProcessor)
-    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
+    def pre_process(self, trajectory: TrajectoryRecord) -> Union[TrajectoryRecord, List[TrajectoryRecord]]:
+        """Clip a trajectory for self.clip_k steps if the clipping condition returns true.
+
+        :param trajectory: The trajectory to preprocess.
+        :return: The pre-processed trajectory or a list of multiple pre-processed trajectories.
         """
         if self.clip_k == 0 or len(trajectory) == 0:
             return trajectory
 
-        is_done, info = self.retrieve_done_and_last_info(trajectory)
+        done_terminated, done_truncated, info = self.retrieve_done_info(trajectory)
 
-        # Check whether the given trajectory died due to a self inflicted mistake
-        if is_done and (info is None or 'TimeLimit.truncated' not in info):
+        # Check whether the given trajectory should be clipped.
+        if self.do_trajectory_clipping(done_terminated, done_truncated, info):
             # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
             if len(trajectory) > self.clip_k:
                 trajectory.step_records = trajectory.step_records[:-self.clip_k]
             else:
                 trajectory.step_records = list()
-
         return trajectory
+
+    @abstractmethod
+    def do_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+        """Abstract method for checking whether the current trajectory should be clipped or not.
+
+        :param done_terminated: Whether the current trajectory ended in done by termination.
+        :param done_truncated: Whether the current trajectory ended in done by truncation.
+        :param info: The info of the last environment step.
+        """
+
+
+@dataclasses.dataclass
+class ClipTerminatedEpisodeTrajectoryProcessor(BaseClippingTrajectoryProcessor):
+    """Implementation of the dead-end-clipping preprocessor. That is for each trajectory the last k states should be
+    clipped iff the env is done in the last state."""
+
+    @override(BaseClippingTrajectoryProcessor)
+    def do_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+        """Clip a trajectory if it ended in a done and was not timelimit truncated.
+
+        :param done_terminated: Whether the current trajectory ended in done by termination.
+        :param done_truncated: Whether the current trajectory was truncated by the timelimit wrapper.
+        :param info: The info of the last environment step.
+        """
+        return done_terminated
+
+
+# Deprecated dependency: OPTIMIZE: REMOVE
+DeadEndClippingTrajectoryProcessor = ClipTerminatedEpisodeTrajectoryProcessor
+
+
+@dataclasses.dataclass
+class ClipTruncatedEpisodeTrajectoryProcessor(BaseClippingTrajectoryProcessor):
+    """Implementation of the dead-end-clipping preprocessor. That is for each trajectory the last k states should be
+    clipped iff the env is NOT done in the last state. Relevant for critic learning in infinite time horizon tasks."""
+
+    @override(BaseClippingTrajectoryProcessor)
+    def do_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+        """Clip a trajectory if it ended in a done and was not timelimit truncated.
+
+        :param done_terminated: Whether the current trajectory ended in done by termination.
+        :param done_truncated: Whether the current trajectory was truncated by the timelimit wrapper.
+        :param info: The info of the last environment step.
+        """
+        return done_truncated
+
+
+# Deprecated dependency: OPTIMIZE: REMOVE
+SolvedClippingTrajectoryProcessor = ClipTruncatedEpisodeTrajectoryProcessor
 
 
 class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
@@ -180,10 +243,9 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
                         continue
 
                 # Convert to spaces
-                spaces_record: StructuredSpacesRecord = StructuredSpacesRecord.converted_from(step_record,
-                                                                                            conversion_env=conversion_env,
-                                                                                            first_step_in_episode=step_id == len(
-                                                                                                trajectory.step_records))
+                spaces_record: StructuredSpacesRecord = StructuredSpacesRecord.converted_from(
+                    state_record=step_record, conversion_env=conversion_env,
+                    first_step_in_episode=step_id == len(trajectory.step_records))
                 assert len(spaces_record.substep_records) == 1, f'Only spaces with one substep are supported at this ' \
                                                                 f'point'
                 spaces_record.substep_records[-1].reward = step_record.reward
@@ -204,30 +266,4 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
-        return trajectory
-
-
-@dataclasses.dataclass
-class SolvedClippingTrajectoryProcessor(TrajectoryProcessor):
-    """Implementation of the dead-end-clipping preprocessor. That is for each trajectory the last k states should be
-    clipped iff the env is NOT done in the last state. Relevant for critic learning in infinite time horizon tasks."""
-    clip_k: int
-
-    @override(TrajectoryProcessor)
-    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
-        """
-        if self.clip_k == 0 or len(trajectory) == 0:
-            return trajectory
-
-        is_done, info = self.retrieve_done_and_last_info(trajectory)
-
-        # Check whether the given trajectory died due to a self inflicted mistake
-        if is_done and not (info is None or 'TimeLimit.truncated' not in info):
-            # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
-            if len(trajectory) > self.clip_k:
-                trajectory.step_records = trajectory.step_records[:-self.clip_k]
-            else:
-                trajectory.step_records = list()
-
         return trajectory

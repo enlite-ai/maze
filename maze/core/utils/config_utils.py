@@ -7,12 +7,13 @@ import hydra
 import yaml
 from hydra import initialize_config_module, compose
 from hydra.core.hydra_config import HydraConfig
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from maze.core.agent.serialized_torch_policy import SerializedTorchPolicy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
 from maze.core.wrappers.wrapper_factory import WrapperFactory
+from maze.utils.bcolors import BColors
 
 
 def read_config(path: Union[Path, str]) -> dict:
@@ -183,3 +184,34 @@ def make_policy_from_output_dir(path: Union[Path, str], config_file: str) -> Ser
             deterministic=True)
 
     return policy
+
+
+def get_colored_config_str(cfg: DictConfig, resolve: bool) -> str:
+    """Create and return a colord version of the config for printing or logging.
+
+    :param cfg: The config of the experiment.
+    :param resolve: Whether to resolve the config.
+    :return: A colored string of the config.
+    """
+    # print and log config
+    full_config = OmegaConf.to_container(cfg, resolve=resolve)
+
+    runner_config = full_config.pop('runner')
+
+    full_config_str = BColors.format_colored(yaml.dump({'env': full_config.pop('env')}), BColors.OKGREEN)
+    full_config_str += BColors.format_colored(yaml.dump({'wrappers': full_config.pop('wrappers')}), BColors.OKGREEN)
+    if 'model' in full_config:
+        full_config_str += BColors.format_colored(yaml.dump({'model': full_config.pop('model')}), BColors.OKCYAN)
+
+    # Blue config for algorithm or policy
+    if 'algorithm' in full_config:
+        full_config_str += BColors.format_colored(yaml.dump({'algorithm': full_config.pop('algorithm')}),
+                                                  BColors.OKBLUE)
+    elif 'policy' in full_config:
+        full_config_str += BColors.format_colored(yaml.dump({'policy': full_config.pop('policy')}), BColors.OKBLUE)
+
+    start_config_str = BColors.format_colored(yaml.dump({'runner': runner_config}), BColors.HEADER)
+    start_config_str += BColors.format_colored(yaml.dump(full_config), BColors.HEADER)
+    full_config_str = start_config_str + full_config_str
+
+    return full_config_str

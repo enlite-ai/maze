@@ -6,7 +6,7 @@ import numpy as np
 
 class CumulativeMovingMeanStd(object):
     """Maintains cumulative moving mean and std of incoming numpy arrays along axis 0.
-
+    # OPTIMIZE: REMOVE
     Output shapes:
     scalar -> scalar
     vector -> scalar
@@ -66,6 +66,7 @@ class CumulativeMovingMeanStd(object):
 
 class CumulativeMovingMinMax(object):
     """Maintains cumulative moving min and max of incoming numpy arrays along axis 0.
+    # OPTIMIZE: REMOVE
 
     Output shapes:
     scalar -> scalar
