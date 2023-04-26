@@ -15,7 +15,12 @@ These are interfaces, classes and utility functions for recording trajectory dat
 
     ~datasets.trajectory_processor.TrajectoryProcessor
     ~datasets.trajectory_processor.IdentityTrajectoryProcessor
+    ~datasets.trajectory_processor.BaseClippingTrajectoryProcessor
+    ~datasets.trajectory_processor.ClipTerminatedEpisodeTrajectoryProcessor
+    ~datasets.trajectory_processor.ClipTruncatedEpisodeTrajectoryProcessor
+
     ~datasets.trajectory_processor.DeadEndClippingTrajectoryProcessor
+    ~datasets.trajectory_processor.SolvedClippingTrajectoryProcessor
 
     ~records.spaces_record.SpacesRecord
     ~records.structured_spaces_record.StepKeyType

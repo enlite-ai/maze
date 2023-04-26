@@ -51,7 +51,7 @@ def test_terminated_trajectory():
         copy.deepcopy(trajectory_record))
     assert len(processed_trajectory) == len(trajectory_record) - 1
 
-    processed_trajectory = ClipTerminatedEpisodeTrajectoryProcessor(clip_k=20).pre_process(
+    processed_trajectory = ClipTerminatedEpisodeTrajectoryProcessor(clip_k=100).pre_process(
         copy.deepcopy(trajectory_record))
     assert len(processed_trajectory) == 0
 
