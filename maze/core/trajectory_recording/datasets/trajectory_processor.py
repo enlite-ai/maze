@@ -147,7 +147,7 @@ class BaseClippingTrajectoryProcessor(TrajectoryProcessor):
         done_terminated, done_truncated, info = self.retrieve_done_info(trajectory)
 
         # Check whether the given trajectory should be clipped.
-        if self.do_trajectory_clipping(done_terminated, done_truncated, info):
+        if self.test_for_trajectory_clipping(done_terminated, done_truncated, info):
             # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
             if len(trajectory) > self.clip_k:
                 trajectory.step_records = trajectory.step_records[:-self.clip_k]
@@ -156,12 +156,13 @@ class BaseClippingTrajectoryProcessor(TrajectoryProcessor):
         return trajectory
 
     @abstractmethod
-    def do_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+    def test_for_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
         """Abstract method for checking whether the current trajectory should be clipped or not.
 
         :param done_terminated: Whether the current trajectory ended in done by termination.
         :param done_truncated: Whether the current trajectory ended in done by truncation.
         :param info: The info of the last environment step.
+        :return: Return True if teh trajectory should be clipped, false otherwise.
         """
 
 
@@ -171,12 +172,13 @@ class ClipTerminatedEpisodeTrajectoryProcessor(BaseClippingTrajectoryProcessor):
     clipped iff the env is done in the last state."""
 
     @override(BaseClippingTrajectoryProcessor)
-    def do_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+    def test_for_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
         """Clip a trajectory if it ended in a done and was not timelimit truncated.
 
         :param done_terminated: Whether the current trajectory ended in done by termination.
         :param done_truncated: Whether the current trajectory was truncated by the timelimit wrapper.
         :param info: The info of the last environment step.
+        :return: Return True if teh trajectory should be clipped, false otherwise.
         """
         return done_terminated
 
@@ -191,12 +193,13 @@ class ClipTruncatedEpisodeTrajectoryProcessor(BaseClippingTrajectoryProcessor):
     clipped iff the env is NOT done in the last state. Relevant for critic learning in infinite time horizon tasks."""
 
     @override(BaseClippingTrajectoryProcessor)
-    def do_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+    def test_for_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
         """Clip a trajectory if it ended in a done and was not timelimit truncated.
 
         :param done_terminated: Whether the current trajectory ended in done by termination.
         :param done_truncated: Whether the current trajectory was truncated by the timelimit wrapper.
         :param info: The info of the last environment step.
+        :return: Return True if teh trajectory should be clipped, false otherwise.
         """
         return done_truncated
 

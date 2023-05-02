@@ -152,7 +152,7 @@ def scalar_to_support(scalar: torch.Tensor, support_range: Tuple[int, int]) -> t
     """
 
     if not torch.all(torch.gt(scalar, support_range[0])) or not torch.all(torch.lt(scalar, support_range[1])):
-        print(BColors.print_colored(f"WARNING: scalar {scalar} is our of support range {support_range}!",
+        print(BColors.print_colored(f"WARNING: scalar {scalar} is out of support range {support_range}!",
                                     color=BColors.WARNING))
 
     # make sure scalar lives within supported range

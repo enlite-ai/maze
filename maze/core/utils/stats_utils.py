@@ -4,9 +4,9 @@ from typing import Optional, Union
 import numpy as np
 
 
+# OPTIMIZE: REMOVE
 class CumulativeMovingMeanStd(object):
     """Maintains cumulative moving mean and std of incoming numpy arrays along axis 0.
-    # OPTIMIZE: REMOVE
     Output shapes:
     scalar -> scalar
     vector -> scalar
@@ -64,9 +64,9 @@ class CumulativeMovingMeanStd(object):
         self._count = new_count
 
 
+# OPTIMIZE: REMOVE
 class CumulativeMovingMinMax(object):
     """Maintains cumulative moving min and max of incoming numpy arrays along axis 0.
-    # OPTIMIZE: REMOVE
 
     Output shapes:
     scalar -> scalar

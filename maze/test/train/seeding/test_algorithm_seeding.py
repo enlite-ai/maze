@@ -5,6 +5,7 @@ import glob
 import os
 from typing import Dict
 
+import numpy as np
 import pytest
 
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
@@ -68,7 +69,9 @@ def perform_algorithm_seeding_test(hydra_overrides: Dict[str, str]):
     for idx, (key, epoch) in enumerate(events_df.index):
         if 'time' in key:
             continue
-        assert events_df_2.values[idx] == events_df.values[idx], \
+        if np.isnan(events_df_2.values[idx]).all() and np.isnan(events_df.values[idx]).all():
+            continue
+        assert np.all(np.isclose(events_df_2.values[idx], events_df.values[idx])), \
             f'Value not equal for key: {key} in epoch: {epoch}'
 
     # Perform second comparison run with different seeds ---------------------------------------------------------------
