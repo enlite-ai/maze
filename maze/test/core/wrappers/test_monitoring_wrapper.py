@@ -48,11 +48,12 @@ def test_observation_monitoring():
 
         observation_events = env.get_last_step_events(query=[ObservationEvents.observation_original,
                                                              ObservationEvents.observation_processed])
-        assert len(observation_events) == 4
+        assert len(observation_events) == 10
         for event in observation_events:
             assert issubclass(event.interface_class, ObservationEvents)
             obs_name = event.attributes['name']
-            assert obs_name in ['observation_0', 'observation_1']
+            assert obs_name in ['observation_0', 'observation_1', 'action_0_0_mask', 'action_1_0_mask',
+                                'action_1_1_mask']
             if ii > 0:
                 assert np.allclose(np.asarray(obs[obs_name]), np.asarray(event.attributes['value']))
 

@@ -1,0 +1,4 @@
+# @package policy
+_target_: maze.core.agent.random_policy.masked_random_policy_from_config
+env_config: ${env}
+wrappers_config: ${wrappers}
