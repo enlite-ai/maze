@@ -56,9 +56,7 @@ setup(name="maze-rl",
           "requests",
           "pillow",
 
-          # Maze is base on hydra-core 1.1.0
-          "hydra-core>=1.1,<1.2",
-          # need to use the latest dev version to get around a numpy version conflict
+          "hydra-core",
           "hydra-nevergrad-sweeper>=1.3.0.dev0",
 
           "gym[box2d]<0.23; python_version < '3.8'",
