@@ -1,7 +1,6 @@
 """Event log reducer functions."""
 import itertools
-from collections import ValuesView
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, ValuesView
 
 import numpy as np
 
