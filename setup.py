@@ -57,7 +57,6 @@ setup(name="maze-rl",
           "pillow",
 
           "hydra-core",
-          "hydra-nevergrad-sweeper>=1.3.0.dev0",
 
           "gym[box2d]<0.23; python_version < '3.8'",
           "pyglet<2.0; python_version < '3.8'",
