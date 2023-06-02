@@ -1,6 +1,6 @@
 """ Contains utility functions for the perception module. """
-import collections
 from collections import defaultdict
+from collections.abc import MutableSequence
 from typing import Union, Dict, Any, Callable, Sequence, Iterable
 
 import gym
@@ -206,7 +206,7 @@ def map_nested_structure(nested_instance: Any,
                 return new_nested_instance
 
         elif isinstance(nested_instance, Sequence):
-            if isinstance(nested_instance, collections.MutableSequence):
+            if isinstance(nested_instance, MutableSequence):
                 if in_place:
                     for idx, value in enumerate(nested_instance):
                         nested_instance[idx] = map_nested_structure(value, mapping, in_place, _depth + 1)
