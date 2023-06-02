@@ -44,9 +44,14 @@ def list_to_dict(list_or_dict: Union[list, Mapping]) -> Mapping:
     return {i: s for i, s in enumerate(list_or_dict)}
 
 
-def int_range(stop: int) -> Sequence:
+def int_range_1000() -> Sequence:
     """Simple wrapper around builtin.range which can be used in Hydra yaml configs"""
-    return range(stop)
+    return range(1000)
+
+
+def int_range_10000() -> Sequence:
+    """Simple wrapper around builtin.range which can be used in Hydra yaml configs"""
+    return range(10000)
 
 
 class EnvFactory:

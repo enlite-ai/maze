@@ -270,3 +270,23 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
         """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
         """
         return trajectory
+
+
+@dataclasses.dataclass
+class FilterTrajectoryWithSmallerKSubStepsProcessor(TrajectoryProcessor):
+    """Filter out trajectories that have any step record with less than clip_k substep_records."""
+    clip_k: int
+
+    def pre_process(self, trajectory: TrajectoryRecord) -> Union[TrajectoryRecord, List[TrajectoryRecord]]:
+        """Filter out trajectories that have any step record with less than clip_k substep_records.
+
+        :param trajectory: The trajectory to preprocess.
+        :return: The pre-processed trajectory or a list of multiple pre-processed trajectories.
+        """
+        if self.clip_k == 0 or len(trajectory) == 0:
+            return trajectory
+
+        if any([len(sr.substep_records) < self.clip_k for sr in trajectory.step_records]):
+            trajectory.step_records = list()
+
+        return trajectory
