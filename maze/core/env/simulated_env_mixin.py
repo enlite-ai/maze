@@ -1,5 +1,6 @@
 """Environment interface for simulated environments (used e.g. by Monte Carlo Tree Search)."""
 from abc import ABC, abstractmethod
+from typing import Any
 
 from maze.core.env.structured_env import StructuredEnv
 
@@ -16,4 +17,14 @@ class SimulatedEnvMixin(ABC):
 
         :param env: The environment to clone.
         """
+
+    def serialize_state(self) -> Any:
+        """Serialize the current env state and return an object that can be used to deserialize the env again.
+        NOTE: The method is optional.
+        """
+        raise NotImplementedError
+
+    def deserialize_state(self, serialized_state: Any) -> None:
+        """Deserialize the current env from the given env state."""
+        raise NotImplementedError
 
