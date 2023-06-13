@@ -18,6 +18,7 @@ from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper
 from maze.train.utils.train_utils import stack_numpy_dict_list
+from maze.utils.bcolors import BColors
 from maze.utils.process import query_cpu
 
 
@@ -135,11 +136,15 @@ class BaseRandomPolicy(Policy):
             options.append(list(options_ss))
 
         num_options = np.product(list(map(len, options)))
-        if num_options > 10000:
+        if num_options > 100000:
+            if num_candidates is None:
+                BColors.print_colored(f'Too many options ({num_options}) to fully enumerate the space, please specify '
+                                      f'a num_candidates.', BColors.WARNING)
             # Too many options for complete enumerations
             return False, None
 
         num_candidates = num_options if num_candidates is None else num_candidates
+        num_candidates = min(num_options, num_candidates)
         complete_options = list(itertools.product(*options))
         candidates_idx = self.rng.permutation(self.rng.choice(num_options, size=num_candidates, replace=False))
         candidates = [complete_options[idx] for idx in candidates_idx][:num_candidates]

@@ -249,6 +249,18 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         """
         raise NotImplementedError
 
+    @override(SimulatedEnvMixin)
+    def serialize_state(self) -> Any:
+        """Serialize the current env state and return an object that can be used to deserialize the env again.
+        NOTE: The method is optional.
+        """
+        return self.env.serialize_state()
+
+    @override(SimulatedEnvMixin)
+    def deserialize_state(self, serialized_state: Any) -> None:
+        """Deserialize the current env from the given env state."""
+        self.env.deserialize_state(serialized_state)
+
     def noop_action(self) -> ActionType:
         """Gets the noop_action for this environment.
 
