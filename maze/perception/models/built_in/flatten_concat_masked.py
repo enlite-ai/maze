@@ -1,4 +1,5 @@
 """Contains a flatten and concatenation masking model applicable in most application scenarios."""
+import copy
 from typing import Sequence, Dict, List
 
 from torch import nn
@@ -16,6 +17,7 @@ class FlattenConcatMaskedPolicyNet(FlattenConcatBaseNet):
     :param obs_shapes: Dictionary mapping of observation names to shapes.
     :param action_logits_shapes: Dictionary mapping of observation names to shapes.
     :param hidden_units: Dictionary mapping of action names to shapes.
+    :param remove_mask_from_obs: Specify to remove the observation from the observation (and only use it for masking).
     :param non_lin: The non-linearity to apply.
     """
 
@@ -23,8 +25,14 @@ class FlattenConcatMaskedPolicyNet(FlattenConcatBaseNet):
                  obs_shapes: Dict[str, Sequence[int]],
                  action_logits_shapes: Dict[str, Sequence[int]],
                  hidden_units: List[int],
+                 remove_mask_from_obs: bool,
                  non_lin=nn.Module):
-        super().__init__(obs_shapes, hidden_units, non_lin)
+        if remove_mask_from_obs:
+            new_obs_shapes = copy.deepcopy(obs_shapes)
+            for action in action_logits_shapes.keys():
+                if action + '_mask' in obs_shapes:
+                    del new_obs_shapes[action + '_mask']
+        super().__init__(new_obs_shapes, hidden_units, non_lin)
 
         module_init = make_module_init_normc(std=0.01)
         # build action head
