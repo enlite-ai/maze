@@ -73,13 +73,14 @@ setup(name="maze-rl",
           "cloudpickle",
 
           # testing
-          "pytest >= 6.0.0",
+          "pytest == 6.2.5",
+          "zipp == 3.8.0",
           "pytest-timeout",
           "pytest-redis"
       ],
       extras_require={
           "testing": [
-              "pytest >= 6.0.0",
+              "pytest == 6.2.5",
               "pytest-redis"
           ]
       },
