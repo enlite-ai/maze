@@ -36,7 +36,7 @@ dependencies:
       - redis==3.4.1
       - cloudpickle==1.2.2
       # testing
-      - pytest==6.2.5
+      - pytest==7.3.0
       - pytest-cov==2.12.1
       - pytest-xdist==2.5.0
       - pytest-random-order==1.0.4
