@@ -27,7 +27,7 @@ dependencies:
       - gym[box2d]<0.23; python_version < '3.8'
       - pyglet<2.0; python_version < '3.8'
       - gym<0.23; python_version >= '3.8'
-      - networkx==2.4
+      - networkx
       - matplotlib
       - seaborn
       - tqdm
