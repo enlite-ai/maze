@@ -33,7 +33,7 @@ RUN if [ -n "$opt_pip_installs" ] ; then pip install $(echo $opt_pip_installs | 
 # Clean up conda environment.
 RUN find -name '*.a' -delete && \
     find -name '__pycache__' -type d -exec rm -rf '{}' '+' && \
-    find /env/lib/python3.7/site-packages -name '*.pyx' -delete
+    find /env/lib/python3.10/site-packages -name '*.pyx' -delete
 
 ###################################################
 # Image for built, clean environment.

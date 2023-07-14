@@ -4,41 +4,41 @@ channels:
   - pytorch
   - conda-forge
 dependencies:
-  - python=3.7
-  - cudatoolkit=10.2
-  - pytorch=1.11.0
-  - pygraphviz=1.7
-  - jupyterlab=2.1.4
-  - pip=21.1.2
-  - pandas=1.2.5
-  - numpy=1.19.5
+  - python=3.10
+  - cudatoolkit
+  - pytorch
+  - pygraphviz
+  - pip
+  - pandas<2.0
+  - numpy
   - pip:
       # you can find more info on how to install torch-scatter for your specific cuda version here:
       # https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels
-      - --find-links https://data.pyg.org/whl/torch-1.11.0+cpu.html
+      - --find-links https://data.pyg.org/whl/torch-2.0.1+cpu.html
       - torch-scatter
-      - pyyaml==5.3.1
+      - jupyterlab
+      - pyyaml
       - tensorboard
-      - requests==2.23.0
-      - pillow==7.2.0
-      # pinned hydra-core and the associated omegaconf version to 1.1.0 pre-release
-      - hydra-core<1.2
+      - requests
+      - pillow
+      - hydra-core
+      # Hydra nevergrad sweeper currently only support python 3.10
       - hydra-nevergrad-sweeper==1.3.0.dev0
       - gym[box2d]<0.23; python_version < '3.8'
       - pyglet<2.0; python_version < '3.8'
       - gym<0.23; python_version >= '3.8'
       - networkx==2.4
-      - matplotlib==3.2.2
-      - seaborn==0.10.1
-      - tqdm==4.50.2
-      - imageio==2.9.0
+      - matplotlib
+      - seaborn
+      - tqdm
+      - imageio
       # train
       - redis==3.4.1
-      - cloudpickle==1.2.2
+      - cloudpickle
       # testing
-      - pytest==7.3.0
-      - pytest-cov==2.12.1
-      - pytest-xdist==2.5.0
-      - pytest-random-order==1.0.4
-      - pytest-timeout==2.1.0
-      - pytest-redis==2.0.0
+      - pytest
+      - pytest-cov
+      - pytest-xdist
+      - pytest-random-order
+      - pytest-timeout
+      - pytest-redis

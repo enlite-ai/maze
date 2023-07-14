@@ -48,6 +48,7 @@ setup(name="maze-rl",
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.11',
       ],
 
       install_requires=[
@@ -61,6 +62,7 @@ setup(name="maze-rl",
           "gym[box2d]<0.23; python_version < '3.8'",
           "pyglet<2.0; python_version < '3.8'",
           "gym<0.23; python_version >= '3.8'",
+          'pygame',
           "pandas",
           "networkx",
           "matplotlib",
@@ -73,14 +75,14 @@ setup(name="maze-rl",
           "cloudpickle",
 
           # testing
-          "pytest == 6.2.5",
-          "zipp == 3.8.0",
+          "pytest",
+          "zipp",
           "pytest-timeout",
           "pytest-redis"
       ],
       extras_require={
           "testing": [
-              "pytest == 6.2.5",
+              "pytest",
               "pytest-redis"
           ]
       },
