@@ -43,9 +43,9 @@ class GreedyPolicy(Policy):
         candidates = []
 
         # Parse the observation space
-        inventory = observation['inventory'].astype(np.int)
+        inventory = observation['inventory'].astype(int)
         inventory_size = int(observation['inventory_size'][0])
-        order = observation['ordered_piece'].astype(np.int)
+        order = observation['ordered_piece'].astype(int)
 
         # Keep the original positions of pieces in inventory
         inventory_index = np.arange(len(inventory)).reshape(-1, 1)

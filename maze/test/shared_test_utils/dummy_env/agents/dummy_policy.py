@@ -56,5 +56,5 @@ class DummyGreedyPolicy(Policy):
         return {
             "action_0_0": int(val % 10),
             "action_1_0": int(val % 10),
-            "action_1_1": np.asarray([round(val - int(val))] * 5, dtype=np.int8)
+            "action_1_1": np.asarray([round(val - int(val))] * 5, dtype=int)
         }
