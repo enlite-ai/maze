@@ -135,7 +135,7 @@ class BaseRandomPolicy(Policy):
                 options_ss = np.where(observation[action_mask_name] == 1)[0]
             options.append(list(options_ss))
 
-        num_options = np.product(list(map(len, options)))
+        num_options = np.prod(list(map(len, options)))
         if num_options > 100000:
             if num_candidates is None:
                 BColors.print_colored(f'Too many options ({num_options}) to fully enumerate the space, please specify '

@@ -111,7 +111,7 @@ class RolloutGenerator:
                 record = self._record_sub_step(policy=policy)
                 step_record.append(record)
                 # note that this also handles the special case of a done env after the first step
-                if np.alltrue(record.done):
+                if np.all(record.done):
                     break
 
             if self.record_step_stats:

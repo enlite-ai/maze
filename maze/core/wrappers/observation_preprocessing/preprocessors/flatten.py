@@ -23,7 +23,7 @@ class FlattenPreProcessor(PreProcessor):
     def processed_shape(self) -> Tuple[int, ...]:
         """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor` interface
         """
-        num_flattened_features = np.product(self._original_observation_space.shape[-self.num_flatten_dims:])
+        num_flattened_features = np.prod(self._original_observation_space.shape[-self.num_flatten_dims:])
         return tuple(list(self._original_observation_space.shape[:-self.num_flatten_dims]) + [num_flattened_features])
 
     @override(PreProcessor)

@@ -11,6 +11,8 @@ dependencies:
   - pip
   - pandas<2.0
   - numpy
+  # swig is needed for Box2D, box2d-py but does not work with the pip installer
+  - swig
   - pip:
       # you can find more info on how to install torch-scatter for your specific cuda version here:
       # https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels
@@ -27,6 +29,8 @@ dependencies:
       - gym[box2d]<0.23; python_version < '3.8'
       - pyglet<2.0; python_version < '3.8'
       - gym<0.23; python_version >= '3.8'
+      - pygame; python_version >= '3.8'
+      - box2d-py; python_version >= '3.8'
       - networkx
       - matplotlib
       - seaborn

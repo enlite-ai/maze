@@ -18,7 +18,7 @@ class UniformReplayBuffer(BaseReplayBuffer):
 
     def __init__(self, buffer_size: int, seed: int):
         self._buffer_size = int(buffer_size)
-        self._buffer = np.full(shape=(buffer_size,), fill_value=np.nan, dtype=np.object)
+        self._buffer = np.full(shape=(buffer_size,), fill_value=np.nan, dtype=object)
         self._buffer_idx = 0
         self._fill_state = 0
         self.cum_moving_avg_num_picks = 0.0

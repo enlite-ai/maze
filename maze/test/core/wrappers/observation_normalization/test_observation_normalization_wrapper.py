@@ -115,8 +115,8 @@ def test_observation_normalization_manual_stats():
                                               manual_config=normalization_config["manual_config"])
 
         # check if action space clipping was applied
-        assert np.alltrue(env.observation_space["observation"].high <= 1.0)
-        assert np.alltrue(env.observation_space["observation"].low >= 0.0)
+        assert np.all(env.observation_space["observation"].high <= 1.0)
+        assert np.all(env.observation_space["observation"].low >= 0.0)
 
         # check if stats have been set properly
         statistics = env.get_statistics()
@@ -159,8 +159,8 @@ def test_observation_normalization_manual_default_stats():
                                           manual_config=normalization_config["manual_config"])
 
     # check if action space clipping was applied
-    assert np.alltrue(env.observation_space["observation"].high <= 1.0)
-    assert np.alltrue(env.observation_space["observation"].low >= 0.0)
+    assert np.all(env.observation_space["observation"].high <= 1.0)
+    assert np.all(env.observation_space["observation"].low >= 0.0)
 
     # check if stats have been set properly
     statistics = env.get_statistics()
