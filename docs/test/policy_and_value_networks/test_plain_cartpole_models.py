@@ -49,7 +49,7 @@ def test_cartpole_model_composer():
     path_to_model_config = code_snippets.__path__._path[0] + '/custom_plain_cartpole_net.yaml'
 
     model_composer = Factory(base_type=BaseModelComposer).instantiate(
-        yaml.load(open(path_to_model_config, 'r')),
+        yaml.safe_load(open(path_to_model_config, 'r')),
         action_spaces_dict=env.action_spaces_dict,
         observation_spaces_dict=env.observation_spaces_dict,
         agent_counts_dict=env.agent_counts_dict)

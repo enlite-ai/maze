@@ -3,10 +3,9 @@ import logging
 import multiprocessing
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Any
 
 from hydra import TaskFunction
-from hydra.core.config_loader import ConfigLoader
 from hydra.core.config_store import ConfigStore
 from hydra.core.utils import (
     JobReturn,
@@ -47,23 +46,23 @@ class MazeLocalLauncher(Launcher):
 
     def __init__(self, n_jobs: int):
         self.config: Optional[DictConfig] = None
-        self.config_loader: Optional[ConfigLoader] = None
+        self.hydra_context: Optional[Any] = None
         self.task_function: Optional[TaskFunction] = None
 
         # determine number of parallel jobs
         self._n_jobs = multiprocessing.cpu_count() if n_jobs == -1 else n_jobs
 
-    def setup(self, config: DictConfig, config_loader: ConfigLoader, task_function: TaskFunction) -> None:
+    def setup(self, config: DictConfig, hydra_context: Any, task_function: TaskFunction) -> None:
         """Implementation of Launcher.setup, called before the launch
 
         :param config: The master config
-        :param config_loader: The config loader, used to derive the job configurations from the sweep run.
+        :param hydra_context: The hydra context.
         :param task_function: The job entry point as function object. This is not used at all, as it is much simpler
             to call the same command from bash than to serialize the function object, transfer it to the pod and
             calling the deserialized method there.
         """
         self.config = config
-        self.config_loader = config_loader
+        self.hydra_context = hydra_context
         self.task_function = task_function
 
     def launch(self, job_overrides: Sequence[Sequence[str]], initial_job_idx: int) -> Sequence[JobReturn]:
@@ -75,7 +74,7 @@ class MazeLocalLauncher(Launcher):
         """
         setup_globals()
         assert self.config is not None
-        assert self.config_loader is not None
+        assert self.hydra_context is not None
         assert self.task_function is not None
 
         configure_log(self.config.hydra.hydra_logging, self.config.hydra.verbose)
@@ -94,7 +93,7 @@ class MazeLocalLauncher(Launcher):
             lst = " ".join(filter_overrides(overrides))
             logger.info(f"\t#{idx} : {lst}")
 
-            sweep_config = self.config_loader.load_sweep_config(
+            sweep_config = self.hydra_context.config_loader.load_sweep_config(
                 self.config, list(overrides)
             )
             with open_dict(sweep_config):
@@ -103,6 +102,7 @@ class MazeLocalLauncher(Launcher):
 
             p = Process(target=run_job,
                         kwargs=dict(config=sweep_config,
+                                    hydra_context=self.hydra_context,
                                     task_function=self.task_function,
                                     job_dir_key="hydra.sweep.dir",
                                     job_subdir_key="hydra.sweep.subdir"))

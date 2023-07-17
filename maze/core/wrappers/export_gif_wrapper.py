@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Tuple, Dict, Union, Any
 
 import gym
-import imageio
+import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 
 from maze.core.annotations import override
@@ -113,3 +113,8 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
     def clone_from(self, env: 'ExportGifWrapper') -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         raise RuntimeError("Cloning the 'ExportGifWrapper' is not supported.")
+
+    def close(self) -> None:
+        """Close the wrapper, performing cleanup or dumping data."""
+        if self._writer:
+            self._writer.close()
