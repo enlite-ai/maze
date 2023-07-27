@@ -29,9 +29,7 @@ def random_env_steps(env: ObservationNormalizationWrapper, steps: int) -> np.nda
     for _ in range(steps):
         action = env.sampling_policy.compute_action(obs, maze_state=None, env=env, actor_id=ActorID(0, 0), deterministic=False)
         obs, rew, done, info = env.step(action)
-        observations.append(obs["observation"])
-        if done:
-            obs = env.reset()
+        if not done:
             observations.append(obs["observation"])
     return np.vstack(observations)
 
@@ -67,6 +65,34 @@ def run_observation_normalization_pipeline(normalization_config) -> ObservationN
     return env
 
 
+def perform_config_test(normalization_config):
+    # init environment
+    env = GymMazeEnv("CartPole-v0")
+
+    # wrap env with observation normalization
+    env = ObservationNormalizationWrapper(env,
+                                          default_strategy=normalization_config["default_strategy"],
+                                          default_strategy_config=normalization_config["default_strategy_config"],
+                                          default_statistics=normalization_config["default_statistics"],
+                                          statistics_dump=normalization_config["statistics_dump"],
+                                          sampling_policy=normalization_config['sampling_policy'],
+                                          exclude=normalization_config["exclude"],
+                                          manual_config=normalization_config["manual_config"])
+
+    # check if action space clipping was applied
+    assert np.all(env.observation_space["observation"].high <= 1.0)
+    assert np.all(env.observation_space["observation"].low >= 0.0)
+
+    # check if stats have been set properly
+    statistics = env.get_statistics()
+    assert np.all(statistics["observation"]["mean"] == np.zeros(shape=4))
+    assert np.all(statistics["observation"]["std"] == np.ones(shape=4))
+
+    # test sampling
+    obs = random_env_steps(env, steps=100)
+    assert np.min(obs) >= 0 and np.max(obs) <= 1
+
+
 def test_observation_normalization_manual_stats():
     """ observation normalization test """
 
@@ -100,35 +126,8 @@ def test_observation_normalization_manual_stats():
         "manual_config": None,
     }
 
-    def test_config(normalization_config):
-        # init environment
-        env = GymMazeEnv("CartPole-v0")
-
-        # wrap env with observation normalization
-        env = ObservationNormalizationWrapper(env,
-                                              default_strategy=normalization_config["default_strategy"],
-                                              default_strategy_config=normalization_config["default_strategy_config"],
-                                              default_statistics=normalization_config["default_statistics"],
-                                              statistics_dump=normalization_config["statistics_dump"],
-                                              sampling_policy=normalization_config['sampling_policy'],
-                                              exclude=normalization_config["exclude"],
-                                              manual_config=normalization_config["manual_config"])
-
-        # check if action space clipping was applied
-        assert np.all(env.observation_space["observation"].high <= 1.0)
-        assert np.all(env.observation_space["observation"].low >= 0.0)
-
-        # check if stats have been set properly
-        statistics = env.get_statistics()
-        assert np.all(statistics["observation"]["mean"] == np.zeros(shape=4))
-        assert np.all(statistics["observation"]["std"] == np.ones(shape=4))
-
-        # test sampling
-        obs = random_env_steps(env, steps=100)
-        assert np.min(obs) >= 0 and np.max(obs) <= 1
-
-    test_config(normalization_config_1)
-    test_config(normalization_config_2)
+    perform_config_test(normalization_config_1)
+    perform_config_test(normalization_config_2)
 
 
 def test_observation_normalization_manual_default_stats():

@@ -284,7 +284,9 @@ class ObservationWrapper(Wrapper[EnvType], ABC):
     def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
         observation, reward, done, info = self.env.step(action)
-        return self.observation(observation), reward, done, info
+        if not done:
+            observation = self.observation(observation)
+        return observation, reward, done, info
 
     @abstractmethod
     def observation(self, observation: Any) -> Any:
