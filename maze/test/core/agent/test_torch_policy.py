@@ -15,7 +15,7 @@ def test_actor_id_is_optional_for_single_network_policies():
 
 
 def test_torch_policy_with_discrete_only_action_space():
-    env = build_dummy_maze_environment_with_discrete_action_space()
+    env = build_dummy_maze_environment_with_discrete_action_space(2)
     policy = flatten_concat_probabilistic_policy_for_env(env)
 
     obs = env.reset()

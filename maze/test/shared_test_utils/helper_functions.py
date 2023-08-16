@@ -9,7 +9,8 @@ from torch import nn
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_env import MazeEnv
-from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet
+from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
+from maze.perception.models.critics import StateCriticComposer
 from maze.perception.models.custom_model_composer import CustomModelComposer
 from maze.perception.models.policies import ProbabilisticPolicyComposer
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -87,18 +88,18 @@ def build_dummy_maze_env_with_structured_core_env() -> DummyEnvironment:
     observation_conversion = ObservationConversion()
 
     return DummyEnvironment(
-        core_env=DummyStructuredCoreEnvironment(observation_conversion.space()),
+        core_env=DummyStructuredCoreEnvironment(observation_conversion.space(), 2),
         action_conversion=[DictActionConversion()],
         observation_conversion=[observation_conversion]
     )
 
 
-def build_dummy_maze_environment_with_discrete_action_space() -> DummyEnvironment:
+def build_dummy_maze_environment_with_discrete_action_space(n_agents: int) -> DummyEnvironment:
     """Instantiates a dummy Maze env with discrete actions space."""
     observation_conversion = ObservationConversion()
 
     return DummyEnvironment(
-        core_env=DummyCoreEnvironment(observation_conversion.space()),
+        core_env=DummyStructuredCoreEnvironment(observation_conversion.space(), n_agents),
         action_conversion=[DictDiscreteActionConversion()],
         observation_conversion=[observation_conversion]
     )
@@ -137,6 +138,34 @@ def flatten_concat_probabilistic_policy_for_env(env: MazeEnv):
     )
 
     return composer.policy
+
+
+def flatten_concat_probabilistic_policy_and_critic_for_env(env: MazeEnv):
+    """Build a probabilistic policy using a small flatten-concat network for a given env.
+
+    Note: Supports structured envs with integer step keys.
+
+    :param env: Env to build a policy for.
+    """
+    n_sub_steps = len(env.observation_spaces_dict.keys())
+
+    composer = CustomModelComposer(
+        action_spaces_dict=env.action_spaces_dict,
+        observation_spaces_dict=env.observation_spaces_dict,
+        agent_counts_dict=env.agent_counts_dict,
+        distribution_mapper_config={},
+        policy=dict(
+            _target_=ProbabilisticPolicyComposer,
+            networks=[dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps,
+            substeps_with_separate_agent_nets=[]
+        ),
+        critic=dict(
+            _target_=StateCriticComposer,
+            networks=[dict(_target_=FlattenConcatStateValueNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps,
+        )
+    )
+
+    return composer.policy, composer.critic
 
 
 def convert_np_array_to_tuple(arr: np.ndarray) -> Union[Tuple, np.ndarray]:

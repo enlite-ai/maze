@@ -1,5 +1,5 @@
 """Dummy structured (multi-agent, with two agents) core environment."""
-
+import copy
 from typing import Tuple, Dict, Any, Optional
 
 import gym
@@ -12,26 +12,27 @@ from maze.core.env.structured_env import StepKeyType, ActorID
 class DummyStructuredCoreEnvironment(CoreEnv):
     """Dummy structured (multi-agent, with two agents) core environment.
 
-    :param observation_space: The observation space to sample observations from
+    :param observation_space: The observation space to sample observations from.
+    :param n_agents: The number of agents the env should have.
     """
 
-    def __init__(self, observation_space: gym.spaces.space.Space):
+    def __init__(self, observation_space: gym.spaces.space.Space, n_agents: int):
         super().__init__()
         self.observation_space = observation_space
+        self.n_agents = n_agents
         self.current_agent = 0
 
     @override(CoreEnv)
     def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
         """Switch agents, increment env step after the second agent"""
-        if self.current_agent == 0:
-            self.current_agent = 1
-            # No reward yet
-            return self.get_maze_state(), 0, False, {}
-        else:
-            # Increment env step, return reward of 2 (sum for both agents)
+        self.current_agent += 1
+
+        if self.current_agent % self.n_agents == 0:
             self.current_agent = 0
             self.context.increment_env_step()
             return self.get_maze_state(), 2, False, {}
+
+        return self.get_maze_state(), 0, False, {}
 
     @override(CoreEnv)
     def get_maze_state(self) -> Dict[str, np.ndarray]:
@@ -47,7 +48,7 @@ class DummyStructuredCoreEnvironment(CoreEnv):
     @override(CoreEnv)
     def seed(self, seed: int) -> None:
         """No randomness in this env."""
-        pass
+        self.observation_space.seed(seed)
 
     @override(CoreEnv)
     def get_serializable_components(self) -> Dict[str, Any]:
@@ -68,7 +69,7 @@ class DummyStructuredCoreEnvironment(CoreEnv):
     @override(CoreEnv)
     def agent_counts_dict(self) -> Dict[StepKeyType, int]:
         """Single-step, two-agent environment"""
-        return {0: 2}
+        return {0: self.n_agents}
 
     @override(CoreEnv)
     def is_actor_done(self) -> bool:
@@ -78,9 +79,15 @@ class DummyStructuredCoreEnvironment(CoreEnv):
     @override(CoreEnv)
     def get_actor_rewards(self) -> Optional[np.ndarray]:
         """Return reward of 1 for each actor as the last reward"""
-        return np.array([1, 1])
+        return np.array([1] * self.n_agents)
 
     @override(CoreEnv)
     def close(self) -> None:
         """Nothing to clean up"""
         pass
+
+    @override(CoreEnv)
+    def clone_from(self, env: 'CoreEnv') -> None:
+        self.current_agent = env.current_agent
+        self.n_agents = env.n_agents
+        self.context = copy.deepcopy(env.context)

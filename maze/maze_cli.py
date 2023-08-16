@@ -1,6 +1,8 @@
 """Implements the Maze command line interface for running rollouts, trainings and else."""
 import glob
+import logging
 import os
+import traceback
 from typing import Optional
 
 import hydra
@@ -18,6 +20,10 @@ from maze.runner import Runner
 from maze.utils.bcolors import BColors
 from maze.utils.log_stats_utils import clear_global_state
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
+
+
+logger = logging.getLogger("maze_cli")
+logger.setLevel(logging.INFO)
 
 
 def set_matplotlib_backend() -> None:
@@ -108,7 +114,12 @@ def maze_run(cfg: DictConfig) -> Optional[float]:
 
     # regular single runs
     if not is_multi_run:
-        _run_job(cfg)
+        try:
+            _run_job(cfg)
+        except Exception:
+            logger.exception(f'{traceback.format_exc()}')
+            raise
+
     # multirun (e.g., gird search, nevergrad, ...)
     else:
         max_mean_reward = _run_multirun_job(cfg)
