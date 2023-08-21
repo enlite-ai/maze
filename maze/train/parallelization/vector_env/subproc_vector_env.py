@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 from typing import Callable, List, Iterable, Any, Tuple, Dict, Optional
 
@@ -15,7 +16,10 @@ from maze.train.parallelization.vector_env.structured_vector_env import Structur
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.parallelization.vector_env.vector_env_utils import disable_epoch_level_stats
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
+from maze.utils.bcolors import BColors
 
+logger = logging.getLogger('SubProcVecEnv')
+logger.setLevel(logging.DEBUG)
 
 def _worker(remote, parent_remote, env_fn_wrapper):
     # switch to non-interactive matplotlib backend
@@ -43,15 +47,15 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 if env_done:
                     # save final observation where user can get it, then reset
                     info['terminal_observation'] = observation
-                    observation = env.reset()
-                    # collect episode stats after the reset
-                    episode_stats = env.get_stats(LogStatsLevel.EPISODE).last_stats
-
-                remote.send((observation, reward, env_done, info, actor_done, actor_id, episode_stats,
-                             env.get_env_time()))
+                    remote.send((None, reward, env_done, info, None, None, None, None))
+                else:
+                    remote.send((observation, reward, env_done, info, actor_done, actor_id, episode_stats,
+                                 env.get_env_time()))
             elif cmd == 'seed':
                 env.seed(data)
             elif cmd == 'reset':
+                if data is not None:
+                    env.seed(data)
                 observation = env.reset()
                 actor_done = env.is_actor_done()
                 actor_id = env.actor_id()
@@ -123,6 +127,8 @@ class SubprocVectorEnv(StructuredVectorEnv):
                  start_method: str = None):
         self.waiting = False
         self.closed = False
+        self.seeds = None
+        self.cur_seed_idx = 0
         n_envs = len(env_factories)
 
         if start_method is None:
@@ -180,8 +186,11 @@ class SubprocVectorEnv(StructuredVectorEnv):
 
     def reset(self) -> Dict[str, np.ndarray]:
         """VectorEnv implementation"""
+        self.cur_seed_idx = 0
+
         for remote in self.remotes:
-            remote.send(('reset', None))
+            remote.send(('reset', self.get_new_seed()))
+            self.cur_seed_idx += 1
         results = [remote.recv() for remote in self.remotes]
         obs, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
 
@@ -199,8 +208,13 @@ class SubprocVectorEnv(StructuredVectorEnv):
     @override(VectorEnv)
     def seed(self, seeds: List[Any]) -> None:
         """VectorEnv implementation"""
+        self.seeds = seeds
+        self.cur_seed_idx = 0
+
+        assert len(self.seeds) >= len(self.remotes)
         for (remote, seed) in zip(self.remotes, seeds):
             remote.send(('seed', seed))
+            self.cur_seed_idx += 1
 
     def close(self) -> None:
         """VectorEnv implementation"""
@@ -228,6 +242,19 @@ class SubprocVectorEnv(StructuredVectorEnv):
             remote.send(('step', action))
         self.waiting = True
 
+    def get_new_seed(self) -> Optional[Any]:
+        """Return the next seed to use.
+
+        :return: The next seed to use.
+        """
+        if self.seeds is None:
+            return None
+
+        self.cur_seed_idx += 1
+        if self.cur_seed_idx >= len(self.seeds):
+            self.cur_seed_idx = 0
+        return self.seeds[self.cur_seed_idx - 1]
+
     def _step_wait(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """
         Wait for the step taken with step_async().
@@ -236,6 +263,21 @@ class SubprocVectorEnv(StructuredVectorEnv):
         """
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
+
+        done_envs = [idx for idx, rr in enumerate(results) if rr[2]]
+        for done_env_idx in done_envs:
+            assert results[done_env_idx][2]
+            new_seed = self.get_new_seed()
+            self.remotes[done_env_idx].send(('reset', new_seed))
+
+        new_results = [self.remotes[remote_idx].recv() for remote_idx in done_envs]
+
+        for org_idx, new_result in zip(done_envs, new_results):
+            # Preserve the reward of previous step, the done, and the info. Otherwise, give the information for the
+            # next step (e.g., observation).
+            results[org_idx] = (new_result[0], results[org_idx][1], True, results[org_idx][3], new_result[1],
+                                new_result[2], new_result[3], new_result[4])
+
         obs, rews, env_dones, infos, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
 
         self._env_times = np.stack(env_times)

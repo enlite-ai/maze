@@ -27,6 +27,8 @@ class SequentialVectorEnv(StructuredVectorEnv):
     def __init__(self, env_factories: List[Callable[[], MazeEnv]],
                  logging_prefix: Optional[str] = None):
         self.envs = [LogStatsWrapper.wrap(env_fn()) for env_fn in env_factories]
+        self.seeds = None
+        self.cur_seed_idx = 0
 
         super().__init__(
             n_envs=len(env_factories),
@@ -47,14 +49,15 @@ class SequentialVectorEnv(StructuredVectorEnv):
 
         for i, env in enumerate(self.envs):
             o, r, env_done, i = env.step(actions[i])
-            actor_dones.append(env.is_actor_done())
-            actor_ids.append(env.actor_id())
-
             if env_done:
+                i['terminal_observation'] = o
+                env.seed(self.get_new_seed())
                 o = env.reset()
                 # collect the episode statistics for finished environments
                 self.epoch_stats.receive(env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
+            actor_dones.append(env.is_actor_done())
+            actor_ids.append(env.actor_id())
             observations.append(o)
             rewards.append(r)
             env_dones.append(env_done)
@@ -85,7 +88,9 @@ class SequentialVectorEnv(StructuredVectorEnv):
     def reset(self) -> Dict[str, np.ndarray]:
         """VectorEnv implementation"""
         observations = []
+        self.cur_seed_idx = 0
         for env in self.envs:
+            env.seed(self.get_new_seed())
             observations.append(env.reset())
             # send the episode statistics of the environment collected before the reset()
             self.epoch_stats.receive(env.get_stats(LogStatsLevel.EPISODE).last_stats)
@@ -96,12 +101,28 @@ class SequentialVectorEnv(StructuredVectorEnv):
 
         return stack_numpy_dict_list(observations)
 
+    def get_new_seed(self) -> Optional[Any]:
+        """Return the next seed to use.
+
+        :return: The next seed to use.
+        """
+        if self.seeds is None:
+            return None
+
+        self.cur_seed_idx += 1
+        if self.cur_seed_idx >= len(self.seeds):
+            self.cur_seed_idx = 0
+        return self.seeds[self.cur_seed_idx - 1]
+
     @override(VectorEnv)
     def seed(self, seeds: List[Any]) -> None:
         """VectorEnv implementation"""
-        assert len(seeds) == len(self.envs)
+        self.seeds = seeds
+        self.cur_seed_idx = 0
+        assert len(seeds) >= len(self.envs)
         for env, seed in zip(self.envs, seeds):
             env.seed(seed)
+            self.cur_seed_idx += 1
 
     def close(self) -> None:
         """VectorEnv implementation"""
