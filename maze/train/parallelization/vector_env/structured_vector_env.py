@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Union, Optional, Callable
+from typing import Dict, Union, Optional, Callable, Any
 
 import gym
 import numpy as np
@@ -46,6 +46,21 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
         self._actor_ids = None
         self._actor_dones = None
         self._env_times = None
+
+        self.seeds = None
+        self._next_seed_idx = 0
+
+    def get_next_seed(self) -> Optional[Any]:
+        """Return the next seed to use.
+
+        :return: The next seed to use.
+        """
+        if self.seeds is None:
+            return None
+
+        seed = self.seeds[self._next_seed_idx]
+        self._next_seed_idx = (self._next_seed_idx + 1) % len(self.seeds)
+        return seed
 
     @override(StructuredEnv)
     def actor_id(self) -> ActorID:

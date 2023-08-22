@@ -127,8 +127,6 @@ class SubprocVectorEnv(StructuredVectorEnv):
                  start_method: str = None):
         self.waiting = False
         self.closed = False
-        self.seeds = None
-        self.cur_seed_idx = 0
         n_envs = len(env_factories)
 
         if start_method is None:
@@ -186,11 +184,10 @@ class SubprocVectorEnv(StructuredVectorEnv):
 
     def reset(self) -> Dict[str, np.ndarray]:
         """VectorEnv implementation"""
-        self.cur_seed_idx = 0
+        self._next_seed_idx = 0
 
         for remote in self.remotes:
-            remote.send(('reset', self.get_new_seed()))
-            self.cur_seed_idx += 1
+            remote.send(('reset', self.get_next_seed()))
         results = [remote.recv() for remote in self.remotes]
         obs, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
 
@@ -209,12 +206,11 @@ class SubprocVectorEnv(StructuredVectorEnv):
     def seed(self, seeds: List[Any]) -> None:
         """VectorEnv implementation"""
         self.seeds = seeds
-        self.cur_seed_idx = 0
+        self._next_seed_idx = 0
 
         assert len(self.seeds) >= len(self.remotes)
-        for (remote, seed) in zip(self.remotes, seeds):
-            remote.send(('seed', seed))
-            self.cur_seed_idx += 1
+        for remote in self.remotes:
+            remote.send(('seed', self.get_next_seed()))
 
     def close(self) -> None:
         """VectorEnv implementation"""
@@ -242,19 +238,6 @@ class SubprocVectorEnv(StructuredVectorEnv):
             remote.send(('step', action))
         self.waiting = True
 
-    def get_new_seed(self) -> Optional[Any]:
-        """Return the next seed to use.
-
-        :return: The next seed to use.
-        """
-        if self.seeds is None:
-            return None
-
-        self.cur_seed_idx += 1
-        if self.cur_seed_idx >= len(self.seeds):
-            self.cur_seed_idx = 0
-        return self.seeds[self.cur_seed_idx - 1]
-
     def _step_wait(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """
         Wait for the step taken with step_async().
@@ -267,8 +250,7 @@ class SubprocVectorEnv(StructuredVectorEnv):
         done_envs = [idx for idx, rr in enumerate(results) if rr[2]]
         for done_env_idx in done_envs:
             assert results[done_env_idx][2]
-            new_seed = self.get_new_seed()
-            self.remotes[done_env_idx].send(('reset', new_seed))
+            self.remotes[done_env_idx].send(('reset', self.get_next_seed()))
 
         new_results = [self.remotes[remote_idx].recv() for remote_idx in done_envs]
 
