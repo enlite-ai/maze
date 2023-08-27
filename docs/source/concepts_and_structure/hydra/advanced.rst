@@ -111,7 +111,7 @@ having to specify more overrides.
 
 Specializations are well explained  `in Hydra docs here`_.
 
-.. _`in Hydra docs here`: https://hydra.cc/docs/next/patterns/specializing_config
+.. _`in Hydra docs here`: https://hydra.cc/docs/patterns/specializing_config
 
 
 Where to Go Next
