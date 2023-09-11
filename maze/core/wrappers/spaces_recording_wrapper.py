@@ -77,7 +77,7 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
     def write_episode_record(self) -> None:
         """Serializes the episode record, if available."""
         if self.episode_record and len(self.episode_record.step_records) > 0:
-            output_path = self.output_dir / f"{self.episode_record.id}.pkl"
+            output_path = self.output_dir / f"{self.episode_record.seed_id}.pkl"
             self.output_dir.mkdir(parents=True, exist_ok=True)
             with open(output_path, "wb") as out_f:
                 pickle.dump(self.episode_record, out_f)

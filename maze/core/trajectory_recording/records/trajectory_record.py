@@ -18,7 +18,7 @@ class TrajectoryRecord(Generic[StepRecordType]):
     """
 
     def __init__(self, id: Any):
-        self.id = id
+        self.seed_id = id
         self.step_records: List[StepRecordType] = []
 
     def __len__(self):
@@ -35,7 +35,7 @@ class TrajectoryRecord(Generic[StepRecordType]):
 
     def __repr__(self):
         return f"\nTrajectory record:\n" \
-               f"   ID: {self.id}\n" \
+               f"   ID: {self.seed_id}\n" \
                f"   Length: {len(self)}"
 
 
@@ -76,7 +76,7 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         """
         assert len(set([len(t) for t in trajectories])) == 1, "all trajectories must have the same length"
 
-        stacked_trajectory = SpacesTrajectoryRecord(id=np.stack([trajectory.id for trajectory in trajectories]))
+        stacked_trajectory = SpacesTrajectoryRecord(id=np.stack([trajectory.seed_id for trajectory in trajectories]))
         step_records_in_time = list(zip(*[t.step_records for t in trajectories]))
         stacked_trajectory.step_records = [StructuredSpacesRecord.stack_records(list(recs)) for recs in
                                            step_records_in_time]

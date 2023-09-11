@@ -40,7 +40,7 @@ def test_trajectory_stacking():
     assert np.all(stacked_trajectory.step_records[2].observations_dict[0]['observation'] == [13, 23, 33])
 
     # IDs should be stacked as well
-    assert np.all(stacked_trajectory.id == [1, 2, 3])
+    assert np.all(stacked_trajectory.seed_id == [1, 2, 3])
 
     # (2) Stack up the (already stacked) trajectory into one single stacked step record
     stacked_record = stacked_trajectory.stack()
