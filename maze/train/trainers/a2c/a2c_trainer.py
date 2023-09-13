@@ -69,7 +69,7 @@ class A2C(ActorCritic):
         critic_train_stats = defaultdict(lambda: defaultdict(list))
         self._append_train_stats(policy_train_stats, critic_train_stats,
                                  record.actor_ids, policy_losses, entropies,
-                                 critic_output.detached_values, value_losses)
+                                 critic_output.detached_values, value_losses, returns)
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)

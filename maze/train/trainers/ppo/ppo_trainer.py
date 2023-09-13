@@ -135,10 +135,13 @@ class PPO(ActorCritic):
                 # perform gradient step
                 self._gradient_step(policy_losses=policy_losses, entropies=entropies, value_losses=value_losses)
 
+                batch_detached_values = [tt[batch_idxs] for tt in critic_output_old.detached_values]
+                batch_discounted_returns = [tt[batch_idxs].detach() for tt in returns]
                 # append training stats for logging
                 self._append_train_stats(policy_train_stats, critic_train_stats,
                                          record.actor_ids,
-                                         policy_losses, entropies, critic_output_old.detached_values, value_losses)
+                                         policy_losses, entropies, batch_detached_values, value_losses,
+                                         batch_discounted_returns)
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)

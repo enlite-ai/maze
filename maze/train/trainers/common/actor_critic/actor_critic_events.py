@@ -42,6 +42,11 @@ class ActorCriticEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('critic_id')
+    def discounted_returns(self, critic_id: int, value: float):
+        """actual returns of the env"""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping('critic_id')
     def critic_value(self, critic_id: int, value: float):
         """critic value of the step critic"""
 

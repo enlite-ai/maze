@@ -7,9 +7,11 @@ from typing import List, Union, Dict, Optional
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm import tqdm
+from typing.io import BinaryIO
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
-from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.structured_env import ActorID
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.rollout.rollout_generator import RolloutGenerator
@@ -24,8 +26,6 @@ from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmCo
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 from maze.train.utils.train_utils import compute_gradient_norm
 from maze.utils.bcolors import BColors
-from tqdm import tqdm
-from typing.io import BinaryIO
 
 
 class ActorCritic(Trainer, ABC):
@@ -108,20 +108,20 @@ class ActorCritic(Trainer, ABC):
                 self.algorithm_config.entropy_coef = entropy_coef
 
             # compute evaluation reward
-            reward = -np.inf
+            stopping_metric = -np.inf
             if self.evaluator:
                 self.evaluate()
             # take training reward and notify best model selection manually
             else:
                 if epoch > 0:
-                    prev_reward = reward
+                    prev_metric = stopping_metric
                     try:
-                        reward = self.rollout_generator.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH,
-                                                                        name="mean")
+                        stopping_metric = self.rollout_generator.get_stats_value(ActorCriticEvents.critic_value,
+                                                                                 LogStatsLevel.EPOCH, name="mean")
                     except:
-                        reward = prev_reward
+                        stopping_metric = prev_metric
 
-                self.model_selection.update(reward)
+                self.model_selection.update(stopping_metric)
 
             # early stopping
             if self.algorithm_config.patience and \
@@ -222,7 +222,8 @@ class ActorCritic(Trainer, ABC):
                             policy_losses: List[torch.Tensor],
                             entropies: List[torch.Tensor],
                             detached_values: List[torch.Tensor],
-                            value_losses: List[torch.Tensor]) -> None:
+                            value_losses: List[torch.Tensor],
+                            discounted_returns: List[torch.Tensor]) -> None:
         """Append logging statistics for policies and critic.
 
         :param policy_train_stats: List of policy training statistics.
@@ -231,6 +232,7 @@ class ActorCritic(Trainer, ABC):
         :param entropies: List of policy entropies.
         :param detached_values: List of detached values.
         :param value_losses: List of value losses.
+        :param discounted_returns: List of discounted returns.
         """
 
         # Policies
@@ -246,12 +248,16 @@ class ActorCritic(Trainer, ABC):
         #  - otherwise, use sub-step keys to identify the critics.
         first_critic_id = list(self.model.critic.networks.keys())[-1]
         critic_ids = [first_critic_id] if self.model.critic.num_critics == 1 else list(map(lambda x: x[0], actor_ids))
-        for critic_id, substep_detached_values, substep_losses in zip(critic_ids, detached_values, value_losses):
+        for critic_id, substep_detached_values, substep_losses, substep_discounted_returns in zip(critic_ids,
+                                                                                                  detached_values,
+                                                                                                  value_losses,
+                                                                                                  discounted_returns):
             critic_train_stats[critic_id]["critic_value"].append(substep_detached_values.mean().item())
             critic_train_stats[critic_id]["critic_value_loss"].append(substep_losses.detach().item())
 
             grad_norm = compute_gradient_norm(self.model.critic.networks[critic_id].parameters())
             critic_train_stats[critic_id]["critic_grad_norm"].append(grad_norm)
+            critic_train_stats[critic_id]['discounted_returns'].append(substep_discounted_returns.mean().item())
 
     def _log_train_stats(self, policy_train_stats: Dict[Union[str, int], Dict[str, List[float]]],
                          critic_train_stats: Dict[Union[str, int], Dict[str, List[float]]]) -> None:
@@ -275,6 +281,7 @@ class ActorCritic(Trainer, ABC):
             self.ac_events.critic_value(critic_id=critic_id, value=np.mean(stats["critic_value"]))
             self.ac_events.critic_value_loss(critic_id=critic_id, value=np.mean(stats["critic_value_loss"]))
             self.ac_events.critic_grad_norm(critic_id=critic_id, value=np.mean(stats["critic_grad_norm"]))
+            self.ac_events.discounted_returns(critic_id=critic_id, value=np.mean(stats['discounted_returns']))
 
     @classmethod
     def _normalize_advantages(cls, advantages: List[torch.Tensor]) -> List[torch.Tensor]:

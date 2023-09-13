@@ -132,7 +132,7 @@ class IMPALA(ActorCritic):
         critic_train_stats = defaultdict(lambda: defaultdict(list))
         self._append_train_stats(policy_train_stats, critic_train_stats,
                                  record.actor_ids, policy_losses, entropy_losses,
-                                 learner_critic_output.detached_values, value_losses)
+                                 learner_critic_output.detached_values, value_losses, vtrace_returns.vs)
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)
