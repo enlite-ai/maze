@@ -61,6 +61,10 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
         actor_id = self.env.actor_id()  # Get actor Id before the step, so it corresponds to the action taken
         observation, reward, done, info = self.env.step(action)
 
+        # store the terminal observation in info
+        if done:
+            info["terminal_observation"] = observation
+
         # Record the spaces of the current (sub)step
         self.episode_record.step_records[-1].append(SpacesRecord(
             actor_id=actor_id,
