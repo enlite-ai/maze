@@ -31,24 +31,24 @@ class PPO(ActorCritic):
         self._flatten_sub_step_items(flat_record.actions)
         self._flatten_sub_step_items(flat_record.observations)
 
+        # compute action log-probabilities of actions taken (aka old action log probs)
+        with torch.no_grad():
+            policy_output_old, critic_output_old = self.model.compute_actor_critic_output(record)
+            returns = self.model.critic.compute_structured_return(gamma=self.algorithm_config.gamma,
+                                                                  gae_lambda=self.algorithm_config.gae_lambda,
+                                                                  rewards=record.rewards,
+                                                                  values=critic_output_old.detached_values,
+                                                                  dones=record.dones[-1])
+            action_log_probs_old = policy_output_old.log_probs_for_actions(record.actions)
+            # manually empty GPU cache
+            torch.cuda.empty_cache()
+
+        # flatten items for batch processing/
+        returns = [r.flatten() for r in returns]
+        self._flatten_sub_step_items(action_log_probs_old)
+        critic_output_old.reshape(returns[0].shape)
+
         for k in range(self.algorithm_config.n_optimization_epochs):
-            # compute action log-probabilities of actions taken (aka old action log probs)
-            with torch.no_grad():
-                policy_output_old, critic_output_old = self.model.compute_actor_critic_output(record)
-                returns = self.model.critic.compute_structured_return(gamma=self.algorithm_config.gamma,
-                                                                      gae_lambda=self.algorithm_config.gae_lambda,
-                                                                      rewards=record.rewards,
-                                                                      values=critic_output_old.detached_values,
-                                                                      dones=record.dones[-1])
-                action_log_probs_old = policy_output_old.log_probs_for_actions(record.actions)
-                # manually empty GPU cache
-                torch.cuda.empty_cache()
-
-            # flatten items for batch processing/
-            returns = [r.flatten() for r in returns]
-            self._flatten_sub_step_items(action_log_probs_old)
-            critic_output_old.reshape(returns[0].shape)
-
             # iterate mini-batch updates
             indices = np.random.permutation(n_samples)
             n_batches = int(np.ceil(float(n_samples) / self.algorithm_config.batch_size))
