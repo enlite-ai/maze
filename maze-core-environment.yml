@@ -18,7 +18,7 @@ dependencies:
   - pip:
       # you can find more info on how to install torch-scatter for your specific cuda version here:
       # https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels
-      - --find-links https://data.pyg.org/whl/torch-2.0.1+cpu.html
+      - --find-links https://data.pyg.org/whl/torch-2.1.0+cpu.html
       - torch-scatter
       - jupyterlab
       - pyyaml
