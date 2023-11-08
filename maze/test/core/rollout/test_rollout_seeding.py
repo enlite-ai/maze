@@ -1,5 +1,6 @@
 """File holding tests for rollout seeding."""
 import copy
+import time
 from typing import Dict
 
 import numpy as np
@@ -35,17 +36,21 @@ def perform_rollout_seeding_test(hydra_overrides_sequential: Dict[str, str],
     """
     sequential_writer = LogStatsWriterExtract()
     register_log_stats_writer(sequential_writer)
-    hydra_overrides_sequential.update({'runner': 'sequential', 'runner.n_episodes': 8})
+    hydra_overrides_sequential.update({'runner': 'sequential', 'runner.n_episodes': 2})
     run_maze_job(hydra_overrides_sequential,
                  config_module='maze.conf', config_name='conf_rollout')
     sequential_data = copy.deepcopy(sequential_writer.data)
+    assert sequential_data[('BaseEnvEvents', 'reward', 'episode_count')] == 2
 
+    time.sleep(1)
     parallel_writer = LogStatsWriterExtract()
     register_log_stats_writer(parallel_writer)
-    hydra_overrides_parallel.update({'runner': 'parallel', 'runner.n_episodes': 8, 'runner.n_processes': 2})
+    hydra_overrides_parallel.update({'runner': 'parallel', 'runner.n_episodes': 2, 'runner.n_processes': 2})
     run_maze_job(hydra_overrides_parallel,
                  config_module='maze.conf', config_name='conf_rollout')
     parallel_data = copy.deepcopy(parallel_writer.data)
+    assert ('BaseEnvEvents', 'reward', 'episode_count') in parallel_data
+    assert parallel_data[('BaseEnvEvents', 'reward', 'episode_count')] == 2
 
     for kk in sequential_data.keys():
         assert np.isclose(sequential_data[kk], parallel_data[kk]), f'Not equal stats: {kk} -> ' \

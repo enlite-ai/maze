@@ -92,6 +92,7 @@ class ParallelRolloutWorker:
         if seeding_queue.empty():
             return
 
+        ran_rollout = False
         env_seed, agent_seed = None, None
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
@@ -112,7 +113,10 @@ class ParallelRolloutWorker:
                         logger.warning("Exception encountered in collection reset()")
                         ParallelRolloutWorker._log_exception(e)
 
-                    reporting_queue.put(episode_recorder.get_last_episode_data())
+                    if ran_rollout:
+                        # Keep track if any rollout has been run with this process and only put the event to the queue
+                        # if a rollout has been run.
+                        reporting_queue.put(episode_recorder.get_last_episode_data())
 
                     return
 
@@ -122,6 +126,7 @@ class ParallelRolloutWorker:
                     obs = env.reset()
                     agent.reset()
 
+                    ran_rollout = True
                     RolloutRunner.run_episode(env=env, agent=agent, obs=obs, deterministic=deterministic, render=False)
                     ParallelRolloutWorker._log_episode_info(agent_seed=agent_seed, env=env)
                 except Exception as e:
