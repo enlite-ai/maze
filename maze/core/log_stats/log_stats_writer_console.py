@@ -43,7 +43,11 @@ class LogStatsWriterConsole(LogStatsWriter):
                 # if tuple is provided extract actual value as the entry at position 0
                 if isinstance(value[0], tuple):
                     value = [v[0] for v in value]
-                value_str = '[len:{0}, μ:{1:.1f}]'.format(len(value), np.mean(value))
+                if isinstance(value[0], str):
+                    value_str = '[len:{0}, unique:{1:.1f}]'.format(len(value), len(np.unique(value)))
+                else:
+                    value_str = '[len:{0}, μ:{1:.1f}]'.format(len(value), np.mean(value))
+
                 print("{0:>5}|{1:<88}|{2:>20}".format(step, "".join(tag), value_str))
             else:
                 print("{0:>5}|{1:<88}|{2:>20.3f}".format(step, "".join(tag), value))

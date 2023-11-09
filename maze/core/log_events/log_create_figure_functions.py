@@ -41,7 +41,9 @@ def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[
         fig = create_relative_bar_plot(value)
     elif isinstance(value[0], int):
         fig = create_histogram(value)
-    elif isinstance(value[0], float):
+    elif isinstance(value[0], str):
+        fig = create_full_histogram(value)
+    else:
         raise NotImplementedError('plotting for this data type not implemented yet')
 
     return fig
@@ -56,6 +58,21 @@ def create_histogram(value) -> plt.Figure:
     """
     fig = plt.figure()
     plt.hist(x=value)
+    return fig
+
+
+def create_full_histogram(value) -> plt.Figure:
+    """
+    Creates simple matplotlib histogram of value with all possible bins.
+
+    :param value: output of an event
+    :return: plt.figure that contains a bar plot
+    """
+    fig = plt.figure()
+    num_bins = len(np.unique(value))
+    plt.hist(x=sorted(value), bins=num_bins)
+    plt.xticks(rotation=68, ha='right')
+    plt.tight_layout()
     return fig
 
 
