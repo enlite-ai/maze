@@ -54,6 +54,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
         batch_size=10,
         n_optimization_epochs=1,
         clip_range=0.2,
+        n_training_seeds=10,
         rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True)
     )
 

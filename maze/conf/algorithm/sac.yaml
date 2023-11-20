@@ -70,6 +70,9 @@ epoch_length: 100
 # Number of steps used for early stopping
 patience: 50
 
+# Number of seeds to be generated and used to seed the environment except when passing a list of explicit seeds"""
+n_training_seeds: 100
+
 # Rollout evaluator (used for best model selection)
 rollout_evaluator:
   _target_: maze.train.trainers.common.evaluators.rollout_evaluator.RolloutEvaluator

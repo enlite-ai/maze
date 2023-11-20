@@ -52,7 +52,7 @@ class PPOAlgorithmConfig(AlgorithmConfig):
     """The batch size used for policy and value updates"""
 
     n_optimization_epochs: int
-    """Number of epochs for for policy and value optimization"""
+    """Number of epochs for policy and value optimization"""
 
     clip_range: float
     """Clipping parameter of surrogate loss"""
@@ -60,3 +60,6 @@ class PPOAlgorithmConfig(AlgorithmConfig):
     # Should be Union[RolloutEvaluator, ConfigType], which Hydra does not support (yet).
     rollout_evaluator: RolloutEvaluator
     """Rollout evaluator."""
+
+    n_training_seeds: int
+    """Number of seeds to be generated for seeding the environment except when passing a list of explicit seeds."""

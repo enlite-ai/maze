@@ -51,3 +51,6 @@ class A2CAlgorithmConfig(AlgorithmConfig):
     # Should be Union[RolloutEvaluator, ConfigType], which Hydra does not support (yet).
     rollout_evaluator: RolloutEvaluator
     """Rollout evaluator."""
+
+    n_training_seeds: int
+    """Number of seeds to be generated for seeding the environment except when passing a list of explicit seeds."""

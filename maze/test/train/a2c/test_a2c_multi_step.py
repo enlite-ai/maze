@@ -51,6 +51,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> A2C:
         entropy_coef=0.0,
         max_grad_norm=0.0,
         device="cpu",
+        n_training_seeds=10,
         rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True)
     )
 
