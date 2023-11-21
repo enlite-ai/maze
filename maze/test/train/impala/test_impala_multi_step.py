@@ -56,7 +56,8 @@ def _algorithm_config():
         actors_batch_size=5,
         critic_burn_in_epochs=0,
         rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1,
-                                           model_selection=None, deterministic=True)
+                                           model_selection=None, deterministic=True),
+        n_training_seeds=10,
     )
 
 

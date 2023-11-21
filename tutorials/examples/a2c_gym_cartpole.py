@@ -54,7 +54,8 @@ def main(n_epochs: int) -> None:
         entropy_coef=0.0,
         max_grad_norm=0.0,
         device="cpu",
-        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True)
+        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True),
+        n_training_seeds=100,
     )
 
     # initialize actor critic model

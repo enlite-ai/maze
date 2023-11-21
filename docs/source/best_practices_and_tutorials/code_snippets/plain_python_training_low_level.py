@@ -174,7 +174,8 @@ def train(n_epochs):
             n_episodes=1,
             model_selection=None,
             deterministic=True
-        )
+        ),
+        n_training_seeds=100
     )
 
     # Distributed Environments

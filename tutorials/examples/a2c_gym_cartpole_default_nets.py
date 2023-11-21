@@ -94,6 +94,7 @@ def main(n_epochs: int, rnn_steps: int) -> None:
         entropy_coef=0.0,
         max_grad_norm=0.0,
         device="cpu",
+        n_training_seeds=100,
         rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1,
                                            model_selection=None, deterministic=True)
     )
