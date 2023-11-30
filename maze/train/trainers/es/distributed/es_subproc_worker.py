@@ -66,11 +66,12 @@ class ESSubprocWorker:
                     raise
 
     def _update_policy_if_available(self) -> None:
-        shared_policy_version_counter = self.broadcasting_container.policy_version()
-        if self.policy_version_counter < shared_policy_version_counter:
-            self.policy_version_counter = shared_policy_version_counter
-            self.policy.load_state_dict(self.broadcasting_container.policy_state_dict())
-            self.aux_data = self.broadcasting_container.aux_data()
+        current_version, state_dict, aux_data = self.broadcasting_container.get_current_policy(
+            last_version=self.policy_version_counter)
+        if self.policy_version_counter < current_version:
+            self.policy_version_counter = current_version
+            self.policy.load_state_dict(state_dict)
+            self.aux_data = aux_data
 
     def _abort_handler(self, _signum, _frame):
         """Invoked if SIGUSR is send, interrupts current computation"""

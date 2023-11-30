@@ -169,10 +169,11 @@ def _actor_worker(pickled_env_factory: bytes, pickled_policy: bytes,
 
         while not broadcasting_container.stop_flag():
             # Update the policy if new version is available
-            shared_policy_version_counter = broadcasting_container.policy_version()
-            if policy_version_counter < shared_policy_version_counter:
-                policy.load_state_dict(broadcasting_container.policy_state_dict())
-                policy_version_counter = shared_policy_version_counter
+            current_version, state_dict, aux_data = broadcasting_container.get_current_policy(
+                last_version=policy_version_counter)
+            if policy_version_counter < current_version:
+                policy.load_state_dict(state_dict)
+                policy_version_counter = current_version
 
             trajectory = rollout_generator.rollout(policy, n_steps=n_rollout_steps)
             actor_output_queue.put(trajectory)

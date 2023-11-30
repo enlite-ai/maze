@@ -62,10 +62,11 @@ class DummyDistributedWorkersWithBuffer(BaseDistributedWorkersWithBuffer):
 
         for i in range(self.rollouts_per_iteration):
             # Update the policy if a new version of the policy has been published by the learner
-            shared_policy_version_counter = self.broadcasting_container.policy_version()
-            if self.policy_version_counter < shared_policy_version_counter:
-                self._worker_policy.load_state_dict(self.broadcasting_container.policy_state_dict())
-                self.policy_version_counter = shared_policy_version_counter
+            current_version, state_dict, aux_data = self.broadcasting_container.get_current_policy(
+                last_version=self.policy_version_counter)
+            if self.policy_version_counter < current_version:
+                self._worker_policy.load_state_dict(state_dict)
+                self.policy_version_counter = current_version
 
             trajectory = self.workers[self.current_worker_idx].rollout(policy=self._worker_policy,
                                                                        n_steps=self.n_rollout_steps)
