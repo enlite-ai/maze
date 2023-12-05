@@ -16,3 +16,12 @@ class SeedWrapper:
     def __repr__(self) -> str:
         """Get a string representation of the instance."""
         return f'{self.seed} + {self.random_seed}'
+
+    def __hash__(self) -> int:
+        return hash((self.seed, self.random_seed))
+
+    def __eq__(self, other: Any) -> bool:
+        if type(other) is type(self):
+            return self.seed == other.seed and self.random_seed == other.random_seed
+        else:
+            return False
