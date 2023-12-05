@@ -3,6 +3,7 @@ import copy
 import os
 import pickle
 from collections import defaultdict
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, Union, List, Optional
 
@@ -200,6 +201,7 @@ class ObservationNormalizationWrapper(ObservationWrapper[MazeEnv]):
         """Dump statistics to file.
         """
         all_stats = self.get_statistics()
+        Path(self.statistics_dump).parent.mkdir(parents=True, exist_ok=True)
         with open(self.statistics_dump, "wb") as fp:
             pickle.dump(all_stats, fp)
 
