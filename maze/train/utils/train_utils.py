@@ -119,19 +119,17 @@ def debatch_actor_ids(actor_ids: List[ActorID]) -> List[ActorID]:
         reversed for it to work properly with all other parts of the framework. """
     for idx in range(len(actor_ids)):
         actor_id_tmp = actor_ids[idx]
-        if isinstance(actor_id_tmp.agent_id, torch.Tensor) and isinstance(actor_id_tmp.step_key, torch.Tensor):
-            assert len(set(actor_id_tmp.agent_id.tolist())) == 1, actor_id_tmp.agent_id
+
+        assert isinstance(actor_id_tmp.agent_id, torch.Tensor)
+        assert len(set(actor_id_tmp.agent_id.tolist())) == 1, actor_id_tmp.agent_id
+        step_key = actor_id_tmp.step_key[0].item()
+        if isinstance(actor_id_tmp.step_key, torch.Tensor):
             assert len(set(actor_id_tmp.step_key.tolist())) == 1, actor_id_tmp.step_key
-            actor_ids[idx] = ActorID(step_key=actor_id_tmp.step_key[0].item(),
-                                     agent_id=actor_id_tmp.agent_id[0].item())
-        elif isinstance(actor_id_tmp.agent_id, int) and isinstance(actor_id_tmp.step_key, (int, str)):
-            pass
-        elif isinstance(actor_id_tmp.agent_id, torch.Tensor) and isinstance(actor_id_tmp.step_key, tuple):
-            assert len(set(actor_id_tmp.agent_id.tolist())) == 1, actor_id_tmp.agent_id
+            agent_id = actor_id_tmp.agent_id[0].item()
+        elif isinstance(actor_id_tmp.step_key, tuple):
             assert len(set(actor_id_tmp.step_key)) == 1, actor_id_tmp.step_key
-            actor_ids[idx] = ActorID(step_key=actor_id_tmp.step_key[0],
-                                     agent_id=actor_id_tmp.agent_id[0].item())
+            agent_id = actor_id_tmp.agent_id[0].item()
         else:
             raise NotImplementedError(f'Not implemented batched actor id type found: {type(actor_id_tmp.agent_id)}')
-
+        actor_ids[idx] = ActorID(step_key=step_key, agent_id=agent_id)
     return actor_ids
