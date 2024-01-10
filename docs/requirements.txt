@@ -4,3 +4,4 @@ sphinx_rtd_theme
 sphinx-tabs==2.1.0
 Jinja2<3.1.0
 docutils==0.17.0
+alabaster==0.7.13

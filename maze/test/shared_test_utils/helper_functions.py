@@ -10,6 +10,7 @@ from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_env import MazeEnv
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet, FlattenConcatStateValueNet
+from maze.perception.models.built_in.flatten_concat_masked import FlattenConcatMaskedPolicyNet
 from maze.perception.models.critics import StateCriticComposer
 from maze.perception.models.custom_model_composer import CustomModelComposer
 from maze.perception.models.policies import ProbabilisticPolicyComposer
@@ -140,14 +141,21 @@ def flatten_concat_probabilistic_policy_for_env(env: MazeEnv):
     return composer.policy
 
 
-def flatten_concat_probabilistic_policy_and_critic_for_env(env: MazeEnv):
+def flatten_concat_probabilistic_policy_and_critic_for_env(env: MazeEnv, masking: bool):
     """Build a probabilistic policy using a small flatten-concat network for a given env.
 
     Note: Supports structured envs with integer step keys.
 
     :param env: Env to build a policy for.
+    :param masking: Weather to use masking policy or not.
     """
     n_sub_steps = len(env.observation_spaces_dict.keys())
+
+    if masking:
+        network = [dict(_target_=FlattenConcatMaskedPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32],
+                        remove_mask_from_obs=True)]
+    else:
+        network = [dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])]
 
     composer = CustomModelComposer(
         action_spaces_dict=env.action_spaces_dict,
@@ -156,7 +164,7 @@ def flatten_concat_probabilistic_policy_and_critic_for_env(env: MazeEnv):
         distribution_mapper_config={},
         policy=dict(
             _target_=ProbabilisticPolicyComposer,
-            networks=[dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps,
+            networks=network * n_sub_steps,
             substeps_with_separate_agent_nets=[]
         ),
         critic=dict(

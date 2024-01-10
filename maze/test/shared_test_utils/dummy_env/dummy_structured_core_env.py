@@ -1,9 +1,10 @@
 """Dummy structured (multi-agent, with two agents) core environment."""
-import copy
+import pickle
 from typing import Tuple, Dict, Any, Optional
 
 import gym
 import numpy as np
+
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.structured_env import StepKeyType, ActorID
@@ -21,11 +22,15 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         self.observation_space = observation_space
         self.n_agents = n_agents
         self.current_agent = 0
+        # Keep track of what actions have been taken
+        self._current_path_id = 0
 
     @override(CoreEnv)
     def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
         """Switch agents, increment env step after the second agent"""
         self.current_agent += 1
+        action_hash = hash(tuple([tt if isinstance(tt, (int, np.int64)) else tuple(tt) for tt in maze_action.values()]))
+        self._current_path_id += action_hash if action_hash >= 0 else - action_hash
 
         if self.current_agent % self.n_agents == 0:
             self.current_agent = 0
@@ -37,12 +42,15 @@ class DummyStructuredCoreEnvironment(CoreEnv):
     @override(CoreEnv)
     def get_maze_state(self) -> Dict[str, np.ndarray]:
         """Sample a random observation."""
+        # Seed the observation space before sampling with the id of the current path in order to be seeding consistent
+        self.observation_space.seed(self._current_path_id)
         return self.observation_space.sample()
 
     @override(CoreEnv)
     def reset(self) -> Dict[str, np.ndarray]:
         """Reset current agent"""
         self.current_agent = 0
+        self._current_path_id = 0
         return self.get_maze_state()
 
     @override(CoreEnv)
@@ -86,8 +94,19 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         """Nothing to clean up"""
         pass
 
+    def serialize_state(self) -> Any:
+        """Serialize the current env state and return an object that can be used to deserialize the env again.
+        """
+        return pickle.dumps(
+            [self.current_agent, self.n_agents, self.context.step_id, self.context.episode_id, self.observation_space,
+             self._current_path_id])
+
+    def deserialize_state(self, serialized_state: Any) -> None:
+        """Deserialize the current env from the given env state."""
+        self.current_agent, self.n_agents, self.context.step_id, self.context._episode_id, self.observation_space, \
+            self._current_path_id = pickle.loads(serialized_state)
+
     @override(CoreEnv)
     def clone_from(self, env: 'CoreEnv') -> None:
-        self.current_agent = env.current_agent
-        self.n_agents = env.n_agents
-        self.context = copy.deepcopy(env.context)
+        """Clone from the given env."""
+        self.deserialize_state(env.serialize_state())

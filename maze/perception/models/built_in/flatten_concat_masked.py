@@ -32,6 +32,8 @@ class FlattenConcatMaskedPolicyNet(FlattenConcatBaseNet):
             for action in action_logits_shapes.keys():
                 if action + '_mask' in obs_shapes:
                     del new_obs_shapes[action + '_mask']
+        else:
+            new_obs_shapes = obs_shapes
         super().__init__(new_obs_shapes, hidden_units, non_lin)
 
         module_init = make_module_init_normc(std=0.01)

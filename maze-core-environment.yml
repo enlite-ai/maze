@@ -20,6 +20,8 @@ dependencies:
       # https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels
       - --find-links https://data.pyg.org/whl/torch-2.1.0+cpu.html
       - torch-scatter
+      # needed by torch
+      - fsspec
       - jupyterlab
       - pyyaml
       - tensorboard
