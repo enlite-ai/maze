@@ -122,13 +122,13 @@ def debatch_actor_ids(actor_ids: List[ActorID]) -> List[ActorID]:
 
         assert isinstance(actor_id_tmp.agent_id, torch.Tensor)
         assert len(set(actor_id_tmp.agent_id.tolist())) == 1, actor_id_tmp.agent_id
-        step_key = actor_id_tmp.step_key[0].item()
+        agent_id = actor_id_tmp.agent_id[0].item()
         if isinstance(actor_id_tmp.step_key, torch.Tensor):
             assert len(set(actor_id_tmp.step_key.tolist())) == 1, actor_id_tmp.step_key
-            agent_id = actor_id_tmp.agent_id[0].item()
+            step_key = actor_id_tmp.step_key[0].item()
         elif isinstance(actor_id_tmp.step_key, tuple):
             assert len(set(actor_id_tmp.step_key)) == 1, actor_id_tmp.step_key
-            agent_id = actor_id_tmp.agent_id[0].item()
+            step_key = actor_id_tmp.step_key[0]
         else:
             raise NotImplementedError(f'Not implemented batched actor id type found: {type(actor_id_tmp.agent_id)}')
         actor_ids[idx] = ActorID(step_key=step_key, agent_id=agent_id)
