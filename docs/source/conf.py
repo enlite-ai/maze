@@ -140,6 +140,7 @@ nitpick_ignore = [
 
     # type template declarations
     ('py:class', 'T'),
+    ('py:class', '*.T'),
     ('py:class', 'EnvType'),
     ('py:class', 'WrapperType'),
     ('py:class', 'BaseType'),
