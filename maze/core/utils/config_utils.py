@@ -56,13 +56,13 @@ def int_range_10000() -> Sequence:
 
 
 def random_1000() -> Sequence:
-    """Simple wrapper which can be used in Hydra yaml configs"""
+    """Simple seeds generator which can be used in Hydra yaml configs"""
     rng = np.random.RandomState(1234)
     return [rng.randint(np.iinfo(np.int32).max) for _ in range(1000)]
 
 
 def random_10000() -> Sequence:
-    """Simple wrapper which can be used in Hydra yaml configs"""
+    """Simple seeds generator which can be used in Hydra yaml configs"""
     rng = np.random.RandomState(1234)
     return [rng.randint(np.iinfo(np.int32).max) for _ in range(10000)]
 
