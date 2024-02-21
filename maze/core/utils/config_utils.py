@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Mapping, Union, Sequence
 
 import hydra
+import numpy as np
 import yaml
 from hydra import initialize_config_module, compose
 from hydra.core.hydra_config import HydraConfig
@@ -52,6 +53,18 @@ def int_range_1000() -> Sequence:
 def int_range_10000() -> Sequence:
     """Simple wrapper around builtin.range which can be used in Hydra yaml configs"""
     return range(10000)
+
+
+def random_1000() -> Sequence:
+    """Simple wrapper which can be used in Hydra yaml configs"""
+    rng = np.random.RandomState(1234)
+    return [rng.randint(np.iinfo(np.int32).max) for _ in range(1000)]
+
+
+def random_10000() -> Sequence:
+    """Simple wrapper which can be used in Hydra yaml configs"""
+    rng = np.random.RandomState(1234)
+    return [rng.randint(np.iinfo(np.int32).max) for _ in range(10000)]
 
 
 class EnvFactory:
