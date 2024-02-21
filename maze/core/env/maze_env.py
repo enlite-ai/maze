@@ -206,6 +206,11 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.is_actor_done()
 
+    def is_flat_step(self) -> bool:
+        """forward call to :attr:`self.core_env <core_env>`"""
+        return (self.actor_id().agent_id == 0 and
+                self.actor_id().step_key == list(self.observation_conversion_dict.keys())[0])
+
     @property
     @override(StructuredEnv)
     def agent_counts_dict(self) -> Dict[StepKeyType, int]:
