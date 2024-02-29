@@ -62,6 +62,9 @@ def query_cpu() -> int:
     :return: Alloted CPUs.
     """
 
+    if 'TEST_LEVEL' in os.environ and os.environ["TEST_LEVEL"] == "GITLAB":
+        return 1
+
     cpu_quota = -1
 
     if os.path.isfile('/sys/fs/cgroup/cpu/cpu.cfs_quota_us'):
