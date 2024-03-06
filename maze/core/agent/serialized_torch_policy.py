@@ -65,7 +65,7 @@ class SerializedTorchPolicy(TorchPolicy):
                        actor_id: ActorID = None,
                        deterministic: bool = False) -> ActionType:
         return super().compute_action(observation=observation, maze_state=maze_state, env=env, actor_id=actor_id,
-                                      deterministic=self.deterministic)
+                                      deterministic=deterministic or self.deterministic)
 
     @override(TorchPolicy)
     def seed(self, seed: int):
