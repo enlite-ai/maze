@@ -46,7 +46,7 @@ def test_serialized_torch_policy():
 
     # init policy
     policy = SerializedTorchPolicy(model=model_config, state_dict_file="state_dict.pt",
-                                   spaces_dict_file="spaces_config.pkl", device="cpu", deterministic=False)
+                                   spaces_dict_file="spaces_config.pkl", device="cpu")
 
     action = policy.compute_action(observation=env.observation_space.sample(), actor_id=ActorID(0, 0))
     assert isinstance(action, dict)

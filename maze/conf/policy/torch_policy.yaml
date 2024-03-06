@@ -14,6 +14,3 @@ spaces_dict_file: spaces_config.pkl
 model: ${model}
 
 device: cpu
-
-# If True actions are computed deterministically; else sample from the probability distribution
-deterministic: false

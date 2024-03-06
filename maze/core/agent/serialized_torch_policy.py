@@ -28,15 +28,13 @@ class SerializedTorchPolicy(TorchPolicy):
     :param state_dict_file: Path to dumped state dictionaries of the trained policies
     :param spaces_dict_file: Path to dumped spaces configuration (action and observation spaces of
                                   the env the policy was trained on, used for model initialization)
-    :param deterministic: If True actions are computed deterministically; else sample from the probability distribution.
     """
 
     def __init__(self,
                  model: Union[DictConfig, Dict],
                  state_dict_file: str,
                  spaces_dict_file: str,
-                 device: str,
-                 deterministic: bool):
+                 device: str):
         spaces_config = SpacesConfig.load(spaces_dict_file)
         model_composer = Factory(base_type=BaseModelComposer).instantiate(
             model,
@@ -55,7 +53,6 @@ class SerializedTorchPolicy(TorchPolicy):
         self.load_state_dict(state_dict)
         self.eval()
 
-        self.deterministic = deterministic
 
     @override(TorchPolicy)
     def compute_action(self,
@@ -65,7 +62,7 @@ class SerializedTorchPolicy(TorchPolicy):
                        actor_id: ActorID = None,
                        deterministic: bool = False) -> ActionType:
         return super().compute_action(observation=observation, maze_state=maze_state, env=env, actor_id=actor_id,
-                                      deterministic=deterministic or self.deterministic)
+                                      deterministic=deterministic)
 
     @override(TorchPolicy)
     def seed(self, seed: int):
