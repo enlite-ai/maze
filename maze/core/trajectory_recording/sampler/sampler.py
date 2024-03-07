@@ -1,19 +1,24 @@
 """File holdings the custom sampler for sampling the indices from a dataset."""
 from typing import Iterable, Sized, Iterator
 
+import torch
 from torch.utils.data import Sampler, BatchSampler, IterDataPipe
 from torch.utils.data.datapipes.datapipe import _IterDataPipeSerializationWrapper, MapDataPipe, \
     _MapDataPipeSerializationWrapper
 
 from maze.core.annotations import override
 from maze.core.env.structured_env import ActorID
+from numpy.random._generator import Generator
 
 
-class ActorIdSampler(Sampler):
-    """Sampler that randomly samples such as the entries of the bath obtained have all a consistent actor id"""
+class ActorIdSampler:
+    """Sampler that randomly samples such as the entries of the bath obtained have all a consistent actor id
+    :param data_source: Dataset to be used for sampling.
+    :param generator: Generator used in sampling.
+    """
 
-    def __init__(self, data_source: Sized):
-        super().__init__(data_source)
+    def __init__(self, data_source: Sized, generator: Generator | None = None):
+        self.generator = generator
         self.data_source = data_source
         if isinstance(data_source, IterDataPipe):
             self.data_source = _IterDataPipeSerializationWrapper(data_source)
@@ -36,7 +41,6 @@ class ActorIdSampler(Sampler):
             indices[actor_id.agent_id].append(idx)
         return indices
 
-    @override(Sampler)
     def __iter__(self) -> Iterator[int]:
         raise NotImplementedError
 
@@ -44,6 +48,8 @@ class ActorIdSampler(Sampler):
         """Returns n iterators based on the keys of the indices dictionary."""
         iterators = []
         for value in self.indices.values():
+            if self.generator is not None:
+                self.generator.shuffle(value)
             iterators.append(iter(value))
         return iterators
 
