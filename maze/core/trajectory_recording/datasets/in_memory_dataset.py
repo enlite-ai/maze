@@ -14,6 +14,7 @@ from omegaconf import ListConfig
 from torch.utils.data import Dataset, Subset
 from tqdm import tqdm
 
+from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType, TorchActionType
 from maze.core.env.observation_conversion import ObservationType, TorchObservationType
 from maze.core.env.structured_env import ActorID
@@ -336,6 +337,40 @@ class InMemoryDataset(Dataset, ABC):
             data_subsets.append(Subset(self, flat_indices))
 
         return data_subsets
+
+
+class FlattenInMemoryDataset(InMemoryDataset):
+    """Overrides InMemoryDataset for imitation learning.
+        It flattens at the sub step level such as each sub step is now a flat_step.
+    """
+
+    @override(InMemoryDataset)
+    def _store_loaded_trajectory(self, records: List[StructuredSpacesRecord]) -> None:
+        """Stores the flatten step records, keeping a reference that they belong to the same episode.
+        Each substep entry of the step_records within the trajectory is stored as a step_record
+        with exactly 1 substep.
+        Keeping the reference is important in case we want to split the dataset later -- samples from
+        one episode should end up in the same part (i.e., only training or only validation).
+        """
+        # Keep a record of which indices belong to the same episode
+        offset = len(self)
+        flatten_records = []  # will hold the sequence of flatten substeps.
+        for flat_step_record in records:
+            # make sure that these are handled in the proper way...
+            n_substeps = len(flat_step_record.substep_records)
+            for substep_idx, substep_record in enumerate(flat_step_record.substep_records):
+                # map each substep in a flat_step of size equal to 1.
+                single_step_record = StructuredSpacesRecord()
+                single_step_record.append(substep_record)
+                # store the flat step stats in the last single_step_record.
+                if substep_idx == n_substeps-1:
+                    single_step_record.episode_stats = flat_step_record.episode_stats
+                    single_step_record.event_log = flat_step_record.event_log
+                    single_step_record.step_stats = flat_step_record.step_stats
+                flatten_records.append(single_step_record)
+        # Store the flatten record data and update the references.
+        self.trajectory_references.append(range(offset, offset + len(flatten_records)))
+        self.step_records.extend(flatten_records)
 
 
 class DataLoadWorker:
