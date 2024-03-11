@@ -6,12 +6,15 @@ from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.log_events.monitoring_events import RewardEvents
+from maze.core.log_events.skipping_events import SkipEvent
 from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.wrapper import Wrapper
 from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_reset_wrapper import StepSkipInResetWrapper
-from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper
-from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, build_dummy_structured_env
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper, \
+    ConfigurableStepSkipInStepWrapper
+from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, build_dummy_structured_env, \
+    build_dummy_maze_env_with_structured_core_env
 
 
 class _EventsInResetWrapper(Wrapper[MazeEnv]):
@@ -217,3 +220,106 @@ def test_counts_episodes_that_skip_and_error_in_reset():
             BaseEnvEvents.reward,
             LogStatsLevel.EPOCH,
             name="total_step_count")
+
+
+def test_step_skipping_in_step_with_structured_env_and_events():
+    """Tests skipping utilizing structured envs (multiple agents) and events in step method."""
+    # Create env with 2 agents and wrap it
+    env = build_dummy_maze_env_with_structured_core_env()
+
+    # NO skipping at all
+    # The environment has 3 (artificial) sub steps as defined in skip_sequence. We step the environment for 9 steps
+    # without any skipping. This results in 9 total sub steps (interactions) with the core env and 3 flat steps.
+    skip_sequence = [False, False, False]
+    env = ConfigurableStepSkipInStepWrapper.wrap(env, skip_sequence=skip_sequence, n_agents=env.agent_counts_dict[0])
+    env = LogStatsWrapper.wrap(env)
+
+    env.reset()
+    dones = []
+    for _ in range(9):
+        _, _, done, _ = env.step(env.action_space.sample())
+        dones.append(done)
+    assert len(dones) == 9
+    assert sum(dones) == 3
+
+    # Events should be collected for 9 steps in total
+    assert len(env.episode_event_log.step_event_logs) == 9
+
+    # Stepped the env for 3 flat steps with 3 sub steps each, no skipping
+    env.write_epoch_stats()
+    assert env.get_stats_value(SkipEvent.sub_step, LogStatsLevel.EPOCH, name='sum_skipped') == 0
+    assert env.get_stats_value(SkipEvent.flat_step, LogStatsLevel.EPOCH, name='sum_skipped') == 0
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 9
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 9
+
+    env = build_dummy_maze_env_with_structured_core_env()
+
+    # SUB STEP skipping
+    # The environment has 3 (artificial) sub steps as defined in skip_sequence. Again, we step the environment for 9
+    # steps. This time we skip the 2nd out of the 3 sub steps. This results in 14 total sub steps (interactions) with
+    # the core env and 4 flat steps. This is because when we take the first step, it additionally takes the second one,
+    # since this is a skip step.
+    # Here stepping is done in the following way:
+    # (1) 2 Sub steps (1 normal, 1 skip)
+    # (2) 1 Sub step
+    # Flat step done
+    # (3) 2 Sub steps (1 normal, 1 skip)
+    # (4) 1 Sub step
+    # Flat step done
+    # (5) 2 Sub steps (1 normal, 1 skip)
+    # (6) 1 Sub step
+    # Flat step done
+    # (7) 2 Sub steps (1 normal, 1 skip)
+    # (8) 1 Sub step
+    # Flat step done
+    # (9) 2 Sub steps (1 normal, 1 skip)
+    skip_sequence = [False, True, False]
+    env = ConfigurableStepSkipInStepWrapper.wrap(env, skip_sequence=skip_sequence, n_agents=env.agent_counts_dict[0])
+    env = LogStatsWrapper.wrap(env)
+
+    env.reset()
+    dones = []
+    for _ in range(9):
+        _, _, done, _ = env.step(env.action_space.sample())
+        dones.append(done)
+    assert len(dones) == 9
+    assert sum(dones) == 4
+
+    # Events should be collected for 14 steps in total (sum up all sub steps in the comment above)
+    assert len(env.episode_event_log.step_event_logs) == 14
+
+    # Skipped 5 sub steps but no flat step, see comment above
+    env.write_epoch_stats()
+    assert env.get_stats_value(SkipEvent.sub_step, LogStatsLevel.EPOCH, name='sum_skipped') == 5
+    assert env.get_stats_value(SkipEvent.flat_step, LogStatsLevel.EPOCH, name='sum_skipped') == 0
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 14
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 9
+
+    env = build_dummy_maze_env_with_structured_core_env()
+
+    # FLAT STEP skipping
+    # The environment has 3 (artificial) sub steps as defined in skip_sequence. Here, we step the environment for 9
+    # steps. This time we skip all 3 sub steps. This results in 27 total sub steps (interactions) with the core env and
+    # 9 flat steps (each interaction is a flat step).
+    skip_sequence = [True, True, True]
+    env = ConfigurableStepSkipInStepWrapper.wrap(env, skip_sequence=skip_sequence, n_agents=env.agent_counts_dict[0])
+    env = LogStatsWrapper.wrap(env)
+
+    env.reset()
+    dones = []
+    for _ in range(9):
+        _, _, done, _ = env.step(env.action_space.sample())
+        dones.append(done)
+    assert len(dones) == 9
+    assert sum(dones) == 9
+
+    # Events should be collected for 27 steps in total
+    assert len(env.episode_event_log.step_event_logs) == 27
+
+    # If we take one step, we additionally skip 2 more steps.
+    env.write_epoch_stats()
+    assert env.get_stats_value(SkipEvent.sub_step, LogStatsLevel.EPOCH, name='sum_skipped') == 18
+    # Skipped every sub step = flat step skipping.
+    assert env.get_stats_value(SkipEvent.flat_step, LogStatsLevel.EPOCH, name='sum_skipped') == 9
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 27
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 9
