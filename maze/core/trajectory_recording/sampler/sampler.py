@@ -89,14 +89,4 @@ class BatchActorIdSampler(BatchSampler):
                         break
         else:
             raise NotImplementedError
-            # batch = [0] * self.batch_size
-            # idx_in_batch = 0
-            # for idx in self.sampler:
-            #    batch[idx_in_batch] = idx
-            #    idx_in_batch += 1
-            #    if idx_in_batch == self.batch_size:
-            #        yield batch
-            #        idx_in_batch = 0
-            #        batch = [0] * self.batch_size
-            # if idx_in_batch > 0:
-            #    yield batch[:idx_in_batch]
+
