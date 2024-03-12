@@ -24,6 +24,7 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         self.current_agent = 0
         # Keep track of what actions have been taken
         self._current_path_id = 0
+        self._current_seed = None
 
     @override(CoreEnv)
     def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
@@ -56,7 +57,12 @@ class DummyStructuredCoreEnvironment(CoreEnv):
     @override(CoreEnv)
     def seed(self, seed: int) -> None:
         """No randomness in this env."""
+        self._current_seed = seed
         self.observation_space.seed(seed)
+
+    def get_current_seed(self) -> int:
+        """Return the current seed of the env."""
+        return self._current_seed
 
     @override(CoreEnv)
     def get_serializable_components(self) -> Dict[str, Any]:

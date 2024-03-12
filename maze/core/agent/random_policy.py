@@ -149,7 +149,7 @@ class BaseRandomPolicy(Policy):
         candidates_idx = self.rng.permutation(self.rng.choice(num_options, size=num_candidates, replace=False))
         candidates = [complete_options[idx] for idx in candidates_idx][:num_candidates]
 
-        return True, [{action_key: vv for action_key, vv in zip(action_space, cc)} for cc in candidates]
+        return True, [{action_key: vv for action_key, vv in zip(action_space.spaces.keys(), cc)} for cc in candidates]
 
     @override(Policy)
     def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
