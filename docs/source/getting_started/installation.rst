@@ -31,13 +31,16 @@ Installation
    available in your Python environment.
 
 .. note::
-   For the graph neural network perception blocks you also need to install torch_scatter by following
+   For the graph neural network perception blocks you also need to install **torch_scatter** by following
    `the instructions here <https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels>`_.
 
 .. note::
-    Maze is compatible with Python 3.7 to 3.9. We encourage you to start with **Python 3.7**, as many popular environments like
-    Atari or Box2D can not easily be installed in newer Python environments. If you use a Python 3.9 environment, you might
-    need to install a few additional dependencies because of `this OpenAI gym issue <https://github.com/openai/gym/issues/2138>`_
+   The graphical representation of models requires **pygraphviz** to be installed, see `this page <http://pygraphviz.github.io/>`_ for
+   detailed information on the installation instructions.
+
+.. note::
+    Maze is compatible with Python 3.7 to 3.10. We encourage you to start with **Python 3.10**. If you intend to use popular
+    environments like Atari or Box2D you might need to install a few additional dependencies because of `this OpenAI gym issue <https://github.com/openai/gym/issues/2138>`_
     (for Debian systems `sudo apt install libjpeg8-dev zlib1g-dev`, more info on
     `building pillow <https://pillow.readthedocs.io/en/stable/installation.html#building-on-linux>`_)
 

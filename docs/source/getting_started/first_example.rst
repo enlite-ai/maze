@@ -15,7 +15,7 @@ To :ref:`train a policy <training>` with the synchronous advantage actor-critic 
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c algorithm.n_epochs=5
+    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c algorithm.n_epochs=5 runner.eval_concurrency=1
 
 All training outputs including model weights will be stored in
 :code:`outputs/<exp-dir>/<time-stamp>`
@@ -49,7 +49,7 @@ To see the policy directly in action you can also perform sequential rollouts wi
 .. code:: console
 
    $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp> \
-     runner=sequential runner.render=true
+     runner=sequential runner.render=true runner.record_trajectory=true
 
 .. note::
 
@@ -105,6 +105,10 @@ an preserves it in the *TEXT* tab of Tensorboard along with the original trainin
     log_base_dir: outputs
     model:
     ...
+
+.. note::
+   For the graphical representation of models to work, you need to install **pygraphviz**. Detailed information on the
+   installation instructions can be found `on this page <http://pygraphviz.github.io/>`_.
 
 You will also find PDFs showing the :ref:`inference graphs of the policy and critic networks <perception_module>`
 in the experiment output directory. This turns out to be extremely useful when playing around with model architectures

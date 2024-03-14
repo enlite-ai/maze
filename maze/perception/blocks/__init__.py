@@ -23,7 +23,6 @@ from maze.perception.blocks.joint_blocks.strided_conv_dense import StridedConvol
 from maze.perception.blocks.joint_blocks.vgg_conv_dense import VGGConvolutionDenseBlock
 from maze.perception.blocks.joint_blocks.vgg_conv_gap import VGGConvolutionGAPBlock
 from maze.perception.blocks.recurrent.lstm import LSTMBlock
-from maze.perception.blocks.feed_forward.graph_nn import GNNBlock
 
 # feed forward
 assert issubclass(DenseBlock, PerceptionBlock)
@@ -31,7 +30,6 @@ assert issubclass(GraphAttentionBlock, PerceptionBlock)
 assert issubclass(GraphConvBlock, PerceptionBlock)
 assert issubclass(StridedConvolutionBlock, PerceptionBlock)
 assert issubclass(VGGConvolutionBlock, PerceptionBlock)
-assert issubclass(GNNBlock, PerceptionBlock)
 
 # general
 assert issubclass(SliceBlock, PerceptionBlock)

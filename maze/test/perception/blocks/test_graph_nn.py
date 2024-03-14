@@ -2,11 +2,17 @@
 from typing import Dict
 
 import numpy as np
+import pytest
 import torch.nn
 
-from maze.perception.blocks.feed_forward.graph_nn import GNNBlock
 from maze.test.perception.perception_test_utils import build_multi_input_dict
 from maze.train.utils.train_utils import compute_gradient_norm
+
+from maze.utils.bcolors import BColors
+try:
+    from maze.perception.blocks.feed_forward.graph_nn import GNNBlock
+except ModuleNotFoundError as e:
+    BColors.print_colored(f'torch_scatter not found found: {e}', BColors.WARNING)
 
 
 def run_gnn_config(node2node_aggr: bool, edge2node_aggr: bool, node2edge_aggr: bool, edge2edge_aggr: bool,
@@ -78,6 +84,7 @@ def run_gnn_config(node2node_aggr: bool, edge2node_aggr: bool, node2edge_aggr: b
         assert set(net.out_keys).issubset(set(out_dict.keys()))
 
 
+pytest.importorskip("torch_scatter", reason="No module named 'torch_scatter'")
 def test_gnn_block():
     """ perception test """
 
