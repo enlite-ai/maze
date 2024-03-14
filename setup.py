@@ -25,7 +25,7 @@ setup(name="maze-rl",
       # python 3.5: we run into conflicts with hydra 1.0.4
       # python 3.9: no ray distribution available
       # gym[box2d] is not compatible with python 3.8
-      python_requires='>=3.7,<3.11',
+      python_requires='>=3.9,<3.11',
 
       classifiers=[
           # How mature is this project? Common values are
@@ -45,13 +45,8 @@ setup(name="maze-rl",
           # matches "license" above
           'License :: Other/Proprietary License',
 
-          'Programming Language :: Python :: 3.7',
-          'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
           'Programming Language :: Python :: 3.10'
-      ],
-      setup_requires=[
-          "swig"
       ],
       install_requires=[
           "tensorboard",
@@ -61,11 +56,9 @@ setup(name="maze-rl",
 
           "hydra-core",
 
-          "gym[box2d]<0.23; python_version < '3.8'",
-          "pyglet<2.0; python_version < '3.8'",
-          "gym<0.23; python_version >= '3.8'",
-          "pygame; python_version >= '3.8'",
-          "box2d-py; python_version >= '3.8'",
+          "gym<0.23",
+          "pygame",
+          "box2d-py",
           "pandas",
           "networkx",
           "matplotlib",

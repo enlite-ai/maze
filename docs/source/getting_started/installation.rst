@@ -39,10 +39,10 @@ Installation
    detailed information on the installation instructions.
 
 .. note::
-    Maze is compatible with Python 3.7 to 3.10. We encourage you to start with **Python 3.10**. If you intend to use popular
+    Maze is compatible with Python 3.9 to 3.10. We encourage you to start with **Python 3.10**. If you intend to use popular
     environments like Atari or Box2D you might need to install a few additional dependencies because of `this OpenAI gym issue <https://github.com/openai/gym/issues/2138>`_
     (for Debian systems `sudo apt install libjpeg8-dev zlib1g-dev`, more info on
-    `building pillow <https://pillow.readthedocs.io/en/stable/installation.html#building-on-linux>`_)
+    `building pillow <https://pillow.readthedocs.io/en/stable/installation.html#building-on-linux>`_).
 
 :raw-html:`</br>`
 
