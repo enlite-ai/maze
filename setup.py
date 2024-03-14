@@ -58,7 +58,6 @@ setup(name="maze-rl",
 
           "gym<0.23",
           "pygame",
-          "box2d-py",
           "pandas",
           "networkx",
           "matplotlib",
