@@ -50,7 +50,9 @@ setup(name="maze-rl",
           'Programming Language :: Python :: 3.9',
           'Programming Language :: Python :: 3.10'
       ],
-
+      setup_requires=[
+          "swig"
+      ],
       install_requires=[
           "tensorboard",
           "pyyaml",
