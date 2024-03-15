@@ -19,7 +19,7 @@ def test_grid_search():
     assert result.returncode == 0, result.stderr.decode("utf-8")
 
 
-pytest.importorskip("torch_scatter")
+pytest.importorskip("torch_scatter", reason="No module named 'torch_scatter'")
 def test_nevergrad():
     """Simple test for the nevergrad hyper parameter optimizer."""
     result = subprocess.run(["maze-run", "-cn", "conf_train",
