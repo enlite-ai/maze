@@ -9,15 +9,17 @@ from maze.test.perception.perception_test_utils import build_multi_input_dict
 from maze.train.utils.train_utils import compute_gradient_norm
 
 from maze.utils.bcolors import BColors
+
 try:
     from maze.perception.blocks.feed_forward.graph_nn import GNNBlock
 except ModuleNotFoundError as e:
-    BColors.print_colored(f'torch_scatter not found found: {e}', BColors.WARNING)
+    BColors.print_colored(
+        f'The graph neural networks could not be run since torch_scatter was not found: {e}', BColors.WARNING
+    )
 
 
 def run_gnn_config(node2node_aggr: bool, edge2node_aggr: bool, node2edge_aggr: bool, edge2edge_aggr: bool,
                    with_node_embedding: bool, with_edge_embedding: bool):
-
     n_nodes = 7
     edges = [(0, 1), (0, 2), (1, 3), (4, 5), (2, 5), (0, 3), (0, 6), (1, 5)]
     n_edges = len(edges)
