@@ -44,6 +44,10 @@ Installation
     (for Debian systems `sudo apt install libjpeg8-dev zlib1g-dev`, more info on
     `building pillow <https://pillow.readthedocs.io/en/stable/installation.html#building-on-linux>`_).
 
+.. note::
+    Using Box2D environments such as `LunarLander`, additionally require the installation of `swig <https://www.swig.org/>`_
+    and `box2d-py <https://box2d.org/>`_. This can be done simply via pip with `pip install swig` followed by `pip install box2d-py`.
+
 :raw-html:`</br>`
 
 |github| To install the bleeding-edge development version from github, first clone the repo.
