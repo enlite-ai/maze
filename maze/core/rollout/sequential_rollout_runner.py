@@ -6,6 +6,7 @@ from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegis
 from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
 from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
+from maze.core.log_stats.log_stats_writer_logger import LogStatsWriterLogger
 from maze.core.rollout.rollout_runner import RolloutRunner
 from maze.core.trajectory_recording.writers.trajectory_writer_file import TrajectoryWriterFile
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
@@ -55,6 +56,7 @@ class SequentialRolloutRunner(RolloutRunner):
         # Set up the wrappers
         # Hydra handles working directory
         register_log_stats_writer(LogStatsWriterConsole())
+        register_log_stats_writer(LogStatsWriterLogger())
         if not isinstance(env, LogStatsWrapper):
             env = LogStatsWrapper.wrap(env, logging_prefix="rollout_data")
         if self.record_event_logs:

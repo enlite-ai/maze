@@ -20,6 +20,7 @@ from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get
 from maze.core.log_stats.log_stats import LogStatsConsumer, LogStats
 from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
+from maze.core.log_stats.log_stats_writer_logger import LogStatsWriterLogger
 from maze.core.rollout.rollout_runner import RolloutRunner
 from maze.core.trajectory_recording.writers.trajectory_writer_file import TrajectoryWriterFile
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
@@ -270,6 +271,7 @@ class ParallelRolloutRunner(RolloutRunner):
         if self.record_event_logs:
             LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir="./event_logs"))
         register_log_stats_writer(LogStatsWriterConsole())
+        register_log_stats_writer(LogStatsWriterLogger())
         self.epoch_stats_aggregator = LogStatsAggregator(LogStatsLevel.EPOCH)
         self.epoch_stats_aggregator.register_consumer(get_stats_logger("rollout_stats"))
 
