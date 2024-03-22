@@ -159,8 +159,11 @@ class InferenceGraph:
         :param name: The name of the network to be drawn (used in the tile only).
         :param save_path: The path the figure should be saved.
         """
-        self._draw(name=name, figure_size=(18, 12))
         full_save_path = os.path.join(save_path, name + '.pdf')
+        if os.path.exists(full_save_path):
+            # no need to re-update it.
+            return
+        self._draw(name=name, figure_size=(18, 12))
         if not os.path.exists(full_save_path):
             print(f'Graphical depiction of the model \'{name}\' saved at: {os.path.abspath(full_save_path)}')
         plt.savefig(full_save_path, transparent=True)
