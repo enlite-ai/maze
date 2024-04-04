@@ -55,7 +55,6 @@ class SequentialRolloutRunner(RolloutRunner):
 
         # Set up the wrappers
         # Hydra handles working directory
-        register_log_stats_writer(LogStatsWriterConsole())
         register_log_stats_writer(LogStatsWriterLogger())
         if not isinstance(env, LogStatsWrapper):
             env = LogStatsWrapper.wrap(env, logging_prefix="rollout_data")

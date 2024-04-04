@@ -270,7 +270,6 @@ class ParallelRolloutRunner(RolloutRunner):
         # Perform writer registration -- after the forks so that it is not carried over to child processes
         if self.record_event_logs:
             LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir="./event_logs"))
-        register_log_stats_writer(LogStatsWriterConsole())
         register_log_stats_writer(LogStatsWriterLogger())
         self.epoch_stats_aggregator = LogStatsAggregator(LogStatsLevel.EPOCH)
         self.epoch_stats_aggregator.register_consumer(get_stats_logger("rollout_stats"))

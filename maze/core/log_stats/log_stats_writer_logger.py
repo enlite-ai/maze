@@ -24,11 +24,11 @@ class LogStatsWriterLogger(LogStatsWriter):
 
         # print run directory
         exp_dir = os.path.abspath(".")
-        print("Output directory: {}".format(exp_dir))
+        logger.info("Output directory: {}".format(exp_dir))
 
         # print stats
-        print("{0:>5}|{1:<104}|{2:>20}".format("step", "path", "value"))
-        print("{0:>5}|{1:<104}|{2:>20}".format("="*5, "="*100, "="*20))
+        logger.info("{0:>5}|{1:<104}|{2:>20}".format("step", "path", "value"))
+        logger.info("{0:>5}|{1:<104}|{2:>20}".format("="*5, "="*104, "="*20))
 
         lines = []
         for (event, name, groups), value in stats.items():
