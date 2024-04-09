@@ -1,7 +1,4 @@
 """Test the creation of data loaders from recorded trajectories."""
-
-
-"""File holdings the tests required for the sub step skipping."""
 import pickle
 
 import numpy as np

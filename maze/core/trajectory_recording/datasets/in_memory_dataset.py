@@ -354,10 +354,12 @@ class InMemoryDataset(Dataset, ABC):
         """Concatenates multiple datasets into the current one.
         :param in_dataset: Dataset or list of datasets to be concatenated to the current instance.
         """
-        if isinstance(in_dataset, InMemoryDataset):
+        if not isinstance(in_dataset, list):
             in_dataset = [in_dataset]
         for dt in in_dataset:
-            assert isinstance(dt, InMemoryDataset)
+            if isinstance(dt, Subset):
+                dt = dt.dataset
+            assert isinstance(dt, type(self))
             self._store_loaded_trajectory(dt.step_records)
 
 
@@ -410,14 +412,6 @@ class FlattenInMemoryDataset(InMemoryDataset):
         return DataLoader(dataset=self, shuffle=False, batch_size=1,
                           num_workers=num_workers, batch_sampler=train_batch_sampler, generator=None)
 
-    @override(InMemoryDataset)
-    def concatenate(self, in_dataset: Dataset | list[Dataset]) -> None:
-        """ Intercepts the InMemoryDataset.concatenate method to ensure consistency."""
-        if isinstance(in_dataset, InMemoryDataset):
-            in_dataset = [in_dataset]
-        for dt in in_dataset:
-            assert isinstance(dt, FlattenInMemoryDataset)
-            self._store_loaded_trajectory(dt.step_records)
 
 class DataLoadWorker:
     """Data loading worker used to map states to actual observations."""
