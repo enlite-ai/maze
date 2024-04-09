@@ -7,13 +7,13 @@ import numpy as np
 import torch
 from omegaconf import DictConfig
 from torch.optim.optimizer import Optimizer
-from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset, Subset
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
 from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
@@ -65,7 +65,7 @@ class BCRunner(TrainingRunner):
         env = self.env_factory()
 
         with SwitchWorkingDirectoryToInput(cfg.input_dir):
-            dataset = Factory(base_type=Dataset).instantiate(self.dataset, conversion_env_factory=self.env_factory)
+            dataset = Factory(base_type=InMemoryDataset).instantiate(self.dataset, conversion_env_factory=self.env_factory)
 
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
@@ -78,7 +78,8 @@ class BCRunner(TrainingRunner):
 
         # Create data loaders
         torch_generator = torch.Generator().manual_seed(self.maze_seeding.generate_env_instance_seed())
-        train_data_loader = DataLoader(train, shuffle=True, batch_size=cfg.algorithm.batch_size,
+
+        train_data_loader = train.dataset.create_data_loader(batch_size=cfg.algorithm.batch_size,
                                        generator=torch_generator, num_workers=self.dataset.n_workers)
 
         policy = TorchPolicy(
@@ -108,8 +109,9 @@ class BCRunner(TrainingRunner):
         # evaluate using the validation set
         self.evaluators = []
         if len(validation) > 0:
-            validation_data_loader = DataLoader(validation, shuffle=True, batch_size=cfg.algorithm.batch_size,
-                                                generator=torch_generator, num_workers=self.dataset.n_workers)
+            validation_data_loader =validation.dataset.create_data_loader(batch_size=cfg.algorithm.batch_size,
+                                       generator=torch_generator, num_workers=self.dataset.n_workers)
+
             self.evaluators += [BCValidationEvaluator(
                 data_loader=validation_data_loader, loss=loss, logging_prefix="eval-validation",
                 model_selection=self._model_selection  # use the validation set evaluation to select the best model
