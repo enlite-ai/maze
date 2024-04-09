@@ -350,7 +350,7 @@ class InMemoryDataset(Dataset, ABC):
         return DataLoader(dataset=self, shuffle=True, batch_size=batch_size,
                           num_workers=num_workers, batch_sampler=None, generator=generator)
 
-    def concatenate(self, in_dataset: Dataset | list[Dataset]) -> None:
+    def concatenate(self, in_dataset: Union[Dataset, list[Dataset]]) -> None:
         """Concatenates multiple datasets into the current one.
         :param in_dataset: Dataset or list of datasets to be concatenated to the current instance.
         """

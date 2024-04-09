@@ -1,15 +1,14 @@
 """File holdings the custom sampler for sampling the indices from a dataset."""
-from typing import Iterable, Sized, Iterator
+from typing import Iterable, Sized, Iterator, Optional
 
 import numpy as np
 import torch
-from torch.utils.data import Sampler, BatchSampler, IterDataPipe
-from torch.utils.data.datapipes.datapipe import _IterDataPipeSerializationWrapper, MapDataPipe, \
-    _MapDataPipeSerializationWrapper
+from torch.utils.data import Sampler, BatchSampler, IterDataPipe, MapDataPipe
+from torch.utils.data.datapipes.datapipe import (_IterDataPipeSerializationWrapper,
+                                                 _MapDataPipeSerializationWrapper)
 
 from maze.core.annotations import override
 from maze.core.env.structured_env import ActorID
-from numpy.random._generator import Generator
 
 
 class ActorIdSampler:
@@ -18,7 +17,7 @@ class ActorIdSampler:
     :param generator: Generator used in sampling.
     """
 
-    def __init__(self, data_source: Sized, generator: torch.Generator | None = None):
+    def __init__(self, data_source: Sized, generator: Optional[torch.Generator]):
         self.generator = generator
         self.data_source = data_source
         if isinstance(data_source, IterDataPipe):
@@ -91,4 +90,3 @@ class BatchActorIdSampler(BatchSampler):
                         break
         else:
             raise NotImplementedError
-
