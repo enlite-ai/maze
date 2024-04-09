@@ -11,7 +11,7 @@ from typing import Dict, Sequence, Generator
 
 import torch
 from omegaconf import ListConfig
-from torch.utils.data import Dataset, Subset
+from torch.utils.data import Dataset, Subset, DataLoader
 from tqdm import tqdm
 
 from maze.core.annotations import override
@@ -22,6 +22,7 @@ from maze.core.trajectory_recording.datasets.trajectory_processor import \
     TrajectoryProcessor
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
+from maze.core.trajectory_recording.sampler.sampler import ActorIdSampler, BatchActorIdSampler
 from maze.core.utils.factory import ConfigType, Factory
 from maze.utils.exception_report import ExceptionReport
 
@@ -194,7 +195,7 @@ class InMemoryDataset(Dataset, ABC):
         return len(self.step_records)
 
     def __getitem__(self, index: int) -> Tuple[List[Union[ObservationType, TorchObservationType]],
-                                               List[Union[ActionType, TorchActionType]], List[ActorID]]:
+    List[Union[ActionType, TorchActionType]], List[ActorID]]:
         """Get a record.
 
         :param index: Index of the record to get.
@@ -203,7 +204,7 @@ class InMemoryDataset(Dataset, ABC):
         """
 
         return self.step_records[index].observations, self.step_records[index].actions, \
-               self.step_records[index].actor_ids
+            self.step_records[index].actor_ids
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
@@ -338,6 +339,27 @@ class InMemoryDataset(Dataset, ABC):
 
         return data_subsets
 
+    def create_data_loader(self, batch_size: int, num_workers: int,
+                           generator: torch.Generator) -> DataLoader:
+        """Creates a data loader from the given input.
+        :param batch_size: Batch size for the sampler.
+        :param num_workers: Number of parallel workers.
+        :param generator: Generator used for the random permutation.
+        :return: the DataLoader object.
+        """
+        return DataLoader(dataset=self, shuffle=True, batch_size=batch_size,
+                          num_workers=num_workers, batch_sampler=None, generator=generator)
+
+    def concatenate(self, in_dataset: Dataset | list[Dataset]) -> None:
+        """Concatenates multiple datasets into the current one.
+        :param in_dataset: Dataset or list of datasets to be concatenated to the current instance.
+        """
+        if isinstance(in_dataset, InMemoryDataset):
+            in_dataset = [in_dataset]
+        for dt in in_dataset:
+            assert isinstance(dt, InMemoryDataset)
+            self._store_loaded_trajectory(dt.step_records)
+
 
 class FlattenInMemoryDataset(InMemoryDataset):
     """Overrides InMemoryDataset for imitation learning.
@@ -363,7 +385,7 @@ class FlattenInMemoryDataset(InMemoryDataset):
                 single_step_record = StructuredSpacesRecord()
                 single_step_record.append(substep_record)
                 # store the flat step stats in the last single_step_record.
-                if substep_idx == n_substeps-1:
+                if substep_idx == n_substeps - 1:
                     single_step_record.episode_stats = flat_step_record.episode_stats
                     single_step_record.event_log = flat_step_record.event_log
                     single_step_record.step_stats = flat_step_record.step_stats
@@ -372,6 +394,30 @@ class FlattenInMemoryDataset(InMemoryDataset):
         self.trajectory_references.append(range(offset, offset + len(flatten_records)))
         self.step_records.extend(flatten_records)
 
+    @override(InMemoryDataset)
+    def create_data_loader(self, batch_size: int, num_workers: int,
+                           generator: torch.Generator) -> DataLoader:
+        """Creates a data loader from the given input.
+        :param batch_size: Batch size for the sampler.
+        :param num_workers: Number of parallel workers.
+        :param generator: Generator used for the random permutation.
+        :return: the DataLoader object.
+        """
+        train_sampler = ActorIdSampler(self, generator=generator)
+        train_batch_sampler = BatchActorIdSampler(train_sampler, batch_size=batch_size,
+                                                  drop_last=True)
+
+        return DataLoader(dataset=self, shuffle=False, batch_size=1,
+                          num_workers=num_workers, batch_sampler=train_batch_sampler, generator=None)
+
+    @override(InMemoryDataset)
+    def concatenate(self, in_dataset: Dataset | list[Dataset]) -> None:
+        """ Intercepts the InMemoryDataset.concatenate method to ensure consistency."""
+        if isinstance(in_dataset, InMemoryDataset):
+            in_dataset = [in_dataset]
+        for dt in in_dataset:
+            assert isinstance(dt, FlattenInMemoryDataset)
+            self._store_loaded_trajectory(dt.step_records)
 
 class DataLoadWorker:
     """Data loading worker used to map states to actual observations."""

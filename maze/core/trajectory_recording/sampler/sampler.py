@@ -1,6 +1,7 @@
 """File holdings the custom sampler for sampling the indices from a dataset."""
 from typing import Iterable, Sized, Iterator
 
+import numpy as np
 import torch
 from torch.utils.data import Sampler, BatchSampler, IterDataPipe
 from torch.utils.data.datapipes.datapipe import _IterDataPipeSerializationWrapper, MapDataPipe, \
@@ -17,7 +18,7 @@ class ActorIdSampler:
     :param generator: Generator used in sampling.
     """
 
-    def __init__(self, data_source: Sized, generator: Generator | None = None):
+    def __init__(self, data_source: Sized, generator: torch.Generator | None = None):
         self.generator = generator
         self.data_source = data_source
         if isinstance(data_source, IterDataPipe):
@@ -49,7 +50,8 @@ class ActorIdSampler:
         iterators = []
         for value in self.indices.values():
             if self.generator is not None:
-                self.generator.shuffle(value)
+                shuffled = torch.randperm(len(value), generator=self.generator).tolist()
+                value = np.asarray(value)[shuffled]
             iterators.append(iter(value))
         return iterators
 
