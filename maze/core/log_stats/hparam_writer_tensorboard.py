@@ -22,7 +22,7 @@ def flatten(struc_dict: Dict[str, Any], parent_key: str = '', sep: str = '.') ->
     """
     items = []
     for k, v in struc_dict.items():
-        new_key = parent_key + sep + k if parent_key else k
+        new_key = parent_key + sep + str(k) if parent_key else k
         if isinstance(v, dict):
             items.extend(flatten(v, new_key, sep=sep).items())
         elif isinstance(v, list):

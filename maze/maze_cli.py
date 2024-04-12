@@ -64,10 +64,11 @@ def _run_job(cfg: DictConfig) -> None:
 
 
 def _run_multirun_job(cfg: DictConfig) -> float:
-    """Runs a maze job which is part of a Hydra --multirun and returns the maximum mean reward of this run.
+    """Runs a maze job which is part of a Hydra --multirun and returns the maximum mean key metric of this run.
 
     :param cfg: Hydra configuration for the rollout.
-    :return: The maximum mean reward achieved throughout the training run.
+    :return: The maximum mean accuracy if behavioral cloning;
+             otherwise, the maximum mean reward achieved throughout the training run.
     """
     # required for Hydra --multirun (e.g., sweeper)
     clear_global_state()
@@ -85,14 +86,21 @@ def _run_multirun_job(cfg: DictConfig) -> float:
     assert len(tf_summary_files) == 1, f"expected exactly 1 tensorflow summary file {tf_summary_files}"
     events_df = tensorboard_to_pandas(tf_summary_files[0])
 
-    # compute maximum mean reward
-    max_mean_reward = np.max(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
+    # if run is BC then use mean discrete accuracy
+    if 'imitation.bc_runners' in cfg['runner']['_target_']:
+        # compute max avg discrete accuracy
+        max_mean_optimised_metric = np.max(np.asarray(
+            events_df.loc['eval-validation_ImitationEvents/mean_step_discrete_accuracy']))
+        metrics = [('eval-validation_ImitationEvents/mean_step_discrete_accuracy', max_mean_optimised_metric, 'max')]
+    else:
+        # compute maximum mean reward
+        max_mean_optimised_metric = np.max(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
+        # Add hparams logging to tensorboard
+        metrics = [('train_BaseEnvEvents/reward/mean', max_mean_optimised_metric, 'max')]
 
-    # Add hparams logging to tensorboard
-    metrics = [('train_BaseEnvEvents/reward/mean', max_mean_reward, 'max')]
     manipulate_hparams_logging_for_exp('.', metrics, clear_hparams=False)
 
-    return float(max_mean_reward)
+    return float(max_mean_optimised_metric)
 
 
 @hydra.main(config_path="conf", config_name="conf_rollout")
