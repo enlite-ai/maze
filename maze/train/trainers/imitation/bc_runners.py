@@ -70,7 +70,7 @@ class BCRunner(TrainingRunner):
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
         size_in_byte, size_in_gbyte = getsize(dataset)
-        print(f'Size of loaded dataset: {size_in_byte} -> {size_in_gbyte} GB')
+        print(f'Size of loaded dataset: {size_in_byte} -> {round(size_in_gbyte,3)} GB')
 
         validation, train = self._split_dataset(dataset, cfg.algorithm.validation_percentage,
                                                 self.maze_seeding.generate_env_instance_seed())

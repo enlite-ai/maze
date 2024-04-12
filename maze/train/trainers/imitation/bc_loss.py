@@ -105,6 +105,8 @@ class BCLoss:
                 events.discrete_accuracy(
                     step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                     value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
+                events.mean_step_discrete_accuracy(
+                    value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
 
                 if logits.shape[-1] > 10:
                     events.discrete_top_5_accuracy(

@@ -39,6 +39,10 @@ class ImitationEvents(ABC):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
+    def mean_step_discrete_accuracy(self,  value: int):
+        """Accuracy for discrete (categorical) subspaces."""
+
+    @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
     def discrete_top_5_accuracy(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
         """Accuracy for discrete (categorical) subspaces."""
