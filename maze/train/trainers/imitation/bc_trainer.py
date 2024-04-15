@@ -5,7 +5,6 @@ from typing import Dict, Union, Optional, List
 
 import os
 import torch
-import glob
 
 from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
@@ -74,8 +73,9 @@ class BCTrainer(Trainer):
         self.optimizer = optimizer
         self.loss = loss
         # log events stats to file.
-        log_events_path = os.path.abspath(".") + "/event_log"
-        LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir=log_events_path))
+        if self.algorithm_config.dump_events_to_file:
+            log_events_path = os.path.abspath(".") + "/event_logs"
+            LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir=log_events_path))
 
 
     def _run_evaluation(self,evaluator: Evaluator, run_rollout: bool) -> None:
