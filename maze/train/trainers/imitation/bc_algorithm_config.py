@@ -41,3 +41,9 @@ class BCAlgorithmConfig(AlgorithmConfig):
 
     loss: BCLoss
     """The loss to be used for the behavioural cloning"""
+
+    eval_start_epoch: int
+    """Number of epochs before which to start evaluation."""
+
+    eval_frequency: int
+    """Number of epochs to elapse between two evaluation runs."""

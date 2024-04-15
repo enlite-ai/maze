@@ -120,7 +120,7 @@ class BCRunner(TrainingRunner):
         # if evaluation episodes are set, perform additional evaluation by policy rollout
         if cfg.algorithm.n_eval_episodes > 0:
             eval_env = self.create_distributed_eval_env(self.env_factory, self.eval_concurrency,
-                                                        logging_prefix="eval-rollout")
+                                                        logging_prefix="bc-eval-rollout")
             eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
                                        range(self.eval_concurrency)]
             eval_env.seed(eval_env_instance_seeds)

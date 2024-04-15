@@ -24,6 +24,12 @@ validation_percentage: 20
 # Number of episodes to run during each evaluation rollout (set to 0 to evaluate using validation only)
 n_eval_episodes: 8
 
+# Number of epochs to elapse before evaluating the policy
+eval_start_epoch: 0
+
+# Number of epochs to elapse between two policy evaluations
+eval_frequency: 1
+
 # Entropy coefficient for policy optimization.
 entropy_coef: 0.0
 

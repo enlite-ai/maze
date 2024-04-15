@@ -84,6 +84,9 @@ class LogStatsWriterTensorboard(LogStatsWriter):
         # write nan values explicitly to stop tensorboard from interpolating missing values in the graphs
         for tag in self.previous_step_tags:
             if tag not in self.this_step_tags:
+                # do not add NaN for bc-eval related tags
+                if tag.startswith("bc-eval"):
+                    continue
                 self.summary_writer.add_scalar(tag, math.nan, GlobalLogState.global_step)
 
         # update previous tags and reset tags for next step

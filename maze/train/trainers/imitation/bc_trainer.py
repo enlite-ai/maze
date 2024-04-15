@@ -3,7 +3,12 @@
 from dataclasses import dataclass
 from typing import Dict, Union, Optional, List
 
+import os
 import torch
+import glob
+
+from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from typing.io import BinaryIO
@@ -13,6 +18,8 @@ from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType, TorchActionType
 from maze.core.env.observation_conversion import ObservationType, TorchObservationType
 from maze.core.env.structured_env import ActorID
+from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
+from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, increment_log_step
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
@@ -21,6 +28,7 @@ from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 from maze.train.utils.train_utils import compute_gradient_norm, debatch_actor_ids
+from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
 
 @dataclass
@@ -65,6 +73,22 @@ class BCTrainer(Trainer):
         self.policy = policy
         self.optimizer = optimizer
         self.loss = loss
+        # log events stats to file.
+        log_events_path = os.path.abspath(".") + "/event_log"
+        LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir=log_events_path))
+
+
+    def _run_evaluation(self,evaluator: Evaluator, run_rollout: bool) -> None:
+        """Evaluate the evaluators if needed.
+        :param evaluator: Evaluator to evaluate.
+        :param run_rollout: Whether to run the rollout evaluator or not.
+        :return: None
+        """
+        assert isinstance(evaluator, MultiEvaluator)
+
+        for _ev in evaluator.evaluators:
+            if run_rollout or not isinstance(_ev, RolloutEvaluator):
+                _ev.evaluate(self.policy)
 
     @override(Trainer)
     def train(
@@ -85,7 +109,9 @@ class BCTrainer(Trainer):
 
         for epoch in range(n_epochs):
             print(f"\n********** Epoch {epoch + 1} started **********")
-            evaluator.evaluate(self.policy)
+            eval_with_rollout = (epoch >= self.algorithm_config.eval_start_epoch and
+                                 epoch % self.algorithm_config.eval_frequency == 0)
+            self._run_evaluation(evaluator, eval_with_rollout )
             increment_log_step()
 
             for iteration, data in enumerate(self.data_loader, 0):
@@ -100,7 +126,7 @@ class BCTrainer(Trainer):
                     increment_log_step()
 
         print(f"\n********** Final evaluation **********")
-        evaluator.evaluate(self.policy)
+        self._run_evaluation(evaluator, True)
         increment_log_step()
 
     def load_state_dict(self, state_dict: Dict) -> None:
