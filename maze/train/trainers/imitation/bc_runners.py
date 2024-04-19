@@ -122,7 +122,7 @@ class BCRunner(TrainingRunner):
             eval_env = self.create_distributed_eval_env(self.env_factory, self.eval_concurrency,
                                                         logging_prefix="bc-eval-rollout")
             eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
-                                       range(self.eval_concurrency)]
+                                       range(self._cfg.algorithm.n_eval_episodes)]
             eval_env.seed(eval_env_instance_seeds)
             self.evaluators += [
                 RolloutEvaluator(eval_env, n_episodes=cfg.algorithm.n_eval_episodes, model_selection=None)
