@@ -215,8 +215,10 @@ def get_colored_config_str(cfg: DictConfig, resolve: bool) -> str:
 
     runner_config = full_config.pop('runner')
 
-    full_config_str = BColors.format_colored(yaml.dump({'env': full_config.pop('env')}), BColors.OKGREEN)
-    full_config_str += BColors.format_colored(yaml.dump({'wrappers': full_config.pop('wrappers')}), BColors.OKGREEN)
+    full_config_str = BColors.format_colored(yaml.dump({'env': full_config.pop('env')}, sort_keys=False),
+                                             BColors.OKGREEN)
+    full_config_str += BColors.format_colored(yaml.dump({'wrappers': full_config.pop('wrappers')}, sort_keys=False),
+                                              BColors.OKGREEN)
     if 'model' in full_config:
         full_config_str += BColors.format_colored(yaml.dump({'model': full_config.pop('model')}), BColors.OKCYAN)
 
