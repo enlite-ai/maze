@@ -72,6 +72,7 @@ class BCTrainer(Trainer):
         self.policy = policy
         self.optimizer = optimizer
         self.loss = loss
+        self.log_substep_events = self.algorithm_config.log_substep_events
         # log events stats to file.
         if self.algorithm_config.dump_events_to_file:
             log_events_path = os.path.abspath(".") + "/event_logs"
@@ -166,7 +167,7 @@ class BCTrainer(Trainer):
         actions = convert_to_torch(actions, device=self.policy.device, cast=None, in_place=True)
         total_loss = self.loss.calculate_loss(policy=self.policy, observations=observations,
                                               actions=actions, actor_ids=actor_ids, events=self.imitation_events,
-                                              action_logits=None)
+                                              action_logits=None, log_substep_events=self.log_substep_events)
         total_loss.backward()
         self.optimizer.step()
 
@@ -175,7 +176,11 @@ class BCTrainer(Trainer):
             l2_norm = sum([param.norm() for param in self.policy.network_for(actor_id).parameters()])
             grad_norm = compute_gradient_norm(self.policy.network_for(actor_id).parameters())
 
-            self.imitation_events.policy_l2_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                                 value=l2_norm.item())
-            self.imitation_events.policy_grad_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                                   value=grad_norm)
+            if self.log_substep_events:
+                self.imitation_events.policy_l2_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
+                                                     value=l2_norm.item())
+                self.imitation_events.policy_grad_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
+                                                       value=grad_norm)
+
+            self.imitation_events.mean_step_policy_l2_norm(value=l2_norm.item())
+            self.imitation_events.mean_step_policy_grad_norm(value=grad_norm)

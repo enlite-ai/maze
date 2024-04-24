@@ -27,7 +27,6 @@ from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.bc_trainer import BCTrainer
 from maze.train.trainers.imitation.bc_validation_evaluator import BCValidationEvaluator
-from maze.utils.bcolors import BColors
 from maze.utils.get_size_of_objects import getsize
 from maze.utils.process import query_cpu
 
@@ -114,7 +113,8 @@ class BCRunner(TrainingRunner):
 
             self.evaluators += [BCValidationEvaluator(
                 data_loader=validation_data_loader, loss=loss, logging_prefix="eval-validation",
-                model_selection=self._model_selection  # use the validation set evaluation to select the best model
+                model_selection=self._model_selection,  # use the validation set evaluation to select the best model
+                log_substep_events = cfg.algorithm.log_substep_events
             )]
 
         # if evaluation episodes are set, perform additional evaluation by policy rollout

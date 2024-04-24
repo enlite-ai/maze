@@ -40,6 +40,7 @@ class BCLoss:
                        action_logits: Optional[List[TorchActionType]],
                        actor_ids: List[ActorID],
                        events: ImitationEvents,
+                       log_substep_events: bool
                        ) -> torch.Tensor:
         """Calculate and return the training loss for one step (= multiple sub-steps in structured scenarios).
 
@@ -49,6 +50,7 @@ class BCLoss:
         :param action_logits: The optional action logits of the policy.
         :param actor_ids: List of actor ids.
         :param events: Events of current episode.
+        :param log_substep_events: Whether to log individually the substep events.
         :return: Total loss
         """
         losses = []
@@ -62,13 +64,15 @@ class BCLoss:
             policy_output = policy.compute_substep_policy_output(observation, actor_id=actor_id)
             substep_losses = self._get_substep_loss(actor_id, policy_output.action_logits, policy_target,
                                                     policy_target_action, self.action_spaces_dict[actor_id.step_key],
-                                                    events=events)
+                                                    events=events, log_substep_events=log_substep_events)
 
             losses.append(substep_losses)
 
             # Compute and report policy entropy
             entropy = policy_output.entropy.mean()
-            events.policy_entropy(step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=entropy.item())
+            if log_substep_events:
+                events.policy_entropy(step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=entropy.item())
+            events.mean_step_policy_entropy(value=entropy.item())
             if self.entropy_coef > 0:
                 losses.append(-self.entropy_coef * entropy)
 
@@ -79,7 +83,8 @@ class BCLoss:
                           target_dict: Dict[str, torch.Tensor],
                           target_actions_dict: Dict[str, torch.Tensor],
                           action_spaces_dict: gym.spaces.Dict,
-                          events: ImitationEvents) -> torch.Tensor:
+                          events: ImitationEvents,
+                          log_substep_events: bool) -> torch.Tensor:
         """Iterate over the action space of a given policy and calculate the loss based on the types of the
         subspaces.
 
@@ -88,6 +93,7 @@ class BCLoss:
         :param target_dict: The policy target for the given substep.
         :param target_actions_dict: The policy target actions for the given substep.
         :param action_spaces_dict: Dict action space for the given substep
+        :param log_substep_events: Whether to log individually the substep events.
         :return: Total loss for this substep
         """
         losses = []
@@ -102,9 +108,11 @@ class BCLoss:
                     logits = logits.unsqueeze(0)
                 losses.append(self.loss_discrete(logits, target))
 
-                events.discrete_accuracy(
-                    step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                    value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
+                if log_substep_events:
+                    events.discrete_accuracy(
+                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
+                        value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
+
                 events.mean_step_discrete_accuracy(
                     value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
 
@@ -122,10 +130,11 @@ class BCLoss:
 
                 batch_ranks = \
                     torch.where(torch.argsort(logits, dim=-1, descending=True) == target_actions.unsqueeze(-1))[1]
-                events.discrete_action_rank(
-                    step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                    value=batch_ranks.float().mean().item())
-
+                if log_substep_events:
+                    events.discrete_action_rank(
+                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
+                        value=batch_ranks.float().mean().item())
+                events.mean_step_discrete_action_rank(subspace_name=subspace_id, value=batch_ranks.float().mean().item())
             # Multi-binary (multi-binary spaces)
             elif isinstance(action_space, gym.spaces.MultiBinary):
                 losses.append(self.loss_multi_binary(logits, target))
@@ -145,5 +154,7 @@ class BCLoss:
                 raise NotImplementedError("Only Discrete, Box, and MultiBinary action spaces are supported.")
 
         loss = sum(losses)
-        events.policy_loss(step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=loss.item())
+        if log_substep_events:
+            events.policy_loss(step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=loss.item())
+        events.mean_step_policy_loss(value=loss.item())
         return loss

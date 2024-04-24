@@ -26,17 +26,19 @@ class BCValidationEvaluator(Evaluator):
     :param data_loader: The data used for evaluation.
     :param loss: Loss function to be used.
     :param model_selection: Model selection interface that will be notified of the recorded rewards.
+    :param log_substep_events: Whether to log the individual substep events or not.
     """
 
     def __init__(self,
                  loss: BCLoss,
                  model_selection: Optional[ModelSelectionBase],
                  data_loader: DataLoader,
+                 log_substep_events: bool,
                  logging_prefix: Optional[str] = "eval"):
         self.loss = loss
         self.data_loader = data_loader
         self.model_selection = model_selection
-
+        self.log_substep_events = log_substep_events
         self.env = None
         if logging_prefix:
             self.eval_stats = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger(logging_prefix))
@@ -66,7 +68,8 @@ class BCValidationEvaluator(Evaluator):
 
                 total_loss.append(
                     self.loss.calculate_loss(policy=policy, observations=observations, actions=actions,
-                                             events=self.eval_events, actor_ids=actor_ids, action_logits=action_logits).item())
+                                             events=self.eval_events, actor_ids=actor_ids, action_logits=action_logits,
+                                             log_substep_events=self.log_substep_events).item())
 
             if self.model_selection:
                 self.model_selection.update(-np.mean(total_loss).item())

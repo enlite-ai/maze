@@ -47,3 +47,6 @@ class BCAlgorithmConfig(AlgorithmConfig):
 
     eval_frequency: int
     """Number of epochs to elapse between two evaluation runs."""
+
+    log_substep_events: bool
+    """Whether to log substep-wise events or show only aggregated one."""

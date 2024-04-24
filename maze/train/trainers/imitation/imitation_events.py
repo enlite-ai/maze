@@ -39,8 +39,29 @@ class ImitationEvents(ABC):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
-    def mean_step_discrete_accuracy(self,  value: int):
+    def mean_step_policy_loss(self, value: float):
+        """Optimization loss of the step policy."""
+
+    @define_epoch_stats(np.nanmean)
+    def mean_step_policy_entropy(self, value: float):
+        """Entropy of the step policies."""
+
+    @define_epoch_stats(np.nanmean)
+    def mean_step_policy_l2_norm(self, value: float):
+        """L2 norm of the step policies."""
+
+    @define_epoch_stats(np.nanmean)
+    def mean_step_policy_grad_norm(self, value: float):
+        """Gradient norm of the step policies."""
+
+    @define_epoch_stats(np.nanmean)
+    def mean_step_discrete_accuracy(self, value: int):
         """Accuracy for discrete (categorical) subspaces."""
+
+    @define_epoch_stats(np.nanmean)
+    @define_stats_grouping("subspace_name")
+    def mean_step_discrete_action_rank(self, subspace_name: str, value: int):
+        """Rank of target action in discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
