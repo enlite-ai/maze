@@ -30,7 +30,7 @@ class ActorIdSampler:
     def _generate_indices(self) -> dict[int, list[int]]:
         """Generate the indices such as these will produce a consistent minibatch w.r.t. the actor id.
 
-        If the datasource is a li
+        Differentiate between a given ConcatDataset source and a maze dataset.
 
         :return: Mapping of the agent_id with the indices of their entries in the dataset.
         """

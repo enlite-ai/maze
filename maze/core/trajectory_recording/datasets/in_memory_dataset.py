@@ -455,6 +455,7 @@ def get_maze_dataset_class(dataset: Union[ConcatDataset, Subset, InMemoryDataset
     """Get the base dataset class of the concat dataset.
 
     :param dataset: The concat dataset to get the base class of.
+    :return: The type of the underlying maze dataset.
     """
     if isinstance(dataset, InMemoryDataset):
         return type(dataset)

@@ -1,5 +1,6 @@
 """Runner implementations for Behavioral Cloning."""
 import dataclasses
+import logging
 from abc import abstractmethod
 from typing import Tuple, Callable, Union, Optional, List
 
@@ -29,6 +30,10 @@ from maze.train.trainers.imitation.bc_trainer import BCTrainer
 from maze.train.trainers.imitation.bc_validation_evaluator import BCValidationEvaluator
 from maze.utils.get_size_of_objects import getsize
 from maze.utils.process import query_cpu
+
+
+logger = logging.getLogger('BCRunner')
+logger.setLevel(logging.INFO)
 
 
 @dataclasses.dataclass
@@ -70,11 +75,11 @@ class BCRunner(TrainingRunner):
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
         size_in_byte, size_in_gbyte = getsize(dataset)
-        print(f'Size of loaded dataset: {size_in_byte} -> {round(size_in_gbyte, 3)} GB')
+        logger.info(f'Size of loaded dataset: {size_in_byte} -> {round(size_in_gbyte, 3)} GB')
 
         validation, train = self._split_dataset(dataset, cfg.algorithm.validation_percentage,
                                                 self.maze_seeding.generate_env_instance_seed())
-        print(f'Sample Counts (train: {len(train)}, validation: {len(validation)})')
+        logger.info(f'Sample Counts (train: {len(train)}, validation: {len(validation)})')
 
         # Create data loaders
         torch_generator = torch.Generator().manual_seed(self.maze_seeding.generate_env_instance_seed())
