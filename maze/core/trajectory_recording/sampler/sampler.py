@@ -1,9 +1,9 @@
 """File holdings the custom sampler for sampling the indices from a dataset."""
-from typing import Iterable, Sized, Iterator, Optional
+from typing import Iterable, Iterator, Optional
 
 import numpy as np
 import torch
-from torch.utils.data import Sampler, BatchSampler, IterDataPipe, MapDataPipe
+from torch.utils.data import Sampler, BatchSampler, IterDataPipe, MapDataPipe, Subset, Dataset
 from torch.utils.data.datapipes.datapipe import (_IterDataPipeSerializationWrapper,
                                                  _MapDataPipeSerializationWrapper)
 
@@ -17,7 +17,7 @@ class ActorIdSampler:
     :param generator: Generator used in sampling.
     """
 
-    def __init__(self, data_source: Sized, generator: Optional[torch.Generator]):
+    def __init__(self, data_source: Dataset, generator: Optional[torch.Generator]):
         self.generator = generator
         self.data_source = data_source
         if isinstance(data_source, IterDataPipe):
@@ -29,16 +29,31 @@ class ActorIdSampler:
 
     def _generate_indices(self) -> dict[int, list[int]]:
         """Generate the indices such as these will produce a consistent minibatch w.r.t. the actor id.
+
+        If the datasource is a li
+
         :return: Mapping of the agent_id with the indices of their entries in the dataset.
         """
-        indices = {}
-        for idx, row in enumerate(self.data_source):
-            assert len(row[-1]) == 1
-            actor_id = row[-1][0]
-            assert isinstance(actor_id, ActorID)
-            if actor_id.agent_id not in indices:
-                indices[actor_id.agent_id] = []
-            indices[actor_id.agent_id].append(idx)
+        if isinstance(self.data_source, list):
+            assert all(isinstance(tt, Subset) for tt in self.data_source)
+            indices = {}
+            for subset_idx, subset in enumerate(self.data_source):
+                for row_idx, row in enumerate(subset):
+                    assert len(row[-1]) == 1
+                    actor_id = row[-1][0]
+                    assert isinstance(actor_id, ActorID)
+                    if actor_id.agent_id not in indices:
+                        indices[actor_id.agent_id] = []
+                    indices[actor_id.agent_id].append((subset_idx, row_idx))
+        else:
+            indices = {}
+            for row_idx, row in enumerate(self.data_source):
+                assert len(row[-1]) == 1
+                actor_id = row[-1][0]
+                assert isinstance(actor_id, ActorID)
+                if actor_id.agent_id not in indices:
+                    indices[actor_id.agent_id] = []
+                indices[actor_id.agent_id].append(row_idx)
         return indices
 
     def __iter__(self) -> Iterator[int]:

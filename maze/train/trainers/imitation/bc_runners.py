@@ -13,7 +13,7 @@ from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
+from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset, get_maze_dataset_class
 from maze.core.utils.config_utils import SwitchWorkingDirectoryToInput
 from maze.core.utils.factory import Factory
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
@@ -64,12 +64,13 @@ class BCRunner(TrainingRunner):
         env = self.env_factory()
 
         with SwitchWorkingDirectoryToInput(cfg.input_dir):
-            dataset = Factory(base_type=InMemoryDataset).instantiate(self.dataset, conversion_env_factory=self.env_factory)
+            dataset = Factory(base_type=InMemoryDataset).instantiate(self.dataset,
+                                                                     conversion_env_factory=self.env_factory)
 
         assert len(dataset) > 0, f"Expected to find trajectory data, but did not find any. Please check that " \
                                  f"the path you supplied is correct."
         size_in_byte, size_in_gbyte = getsize(dataset)
-        print(f'Size of loaded dataset: {size_in_byte} -> {round(size_in_gbyte,3)} GB')
+        print(f'Size of loaded dataset: {size_in_byte} -> {round(size_in_gbyte, 3)} GB')
 
         validation, train = self._split_dataset(dataset, cfg.algorithm.validation_percentage,
                                                 self.maze_seeding.generate_env_instance_seed())
@@ -78,8 +79,9 @@ class BCRunner(TrainingRunner):
         # Create data loaders
         torch_generator = torch.Generator().manual_seed(self.maze_seeding.generate_env_instance_seed())
 
-        train_data_loader = train.dataset.create_data_loader(batch_size=cfg.algorithm.batch_size,
-                                       generator=torch_generator, num_workers=self.dataset.n_workers)
+        data_class = get_maze_dataset_class(train)
+        train_data_loader = data_class.create_data_loader(train, batch_size=cfg.algorithm.batch_size,
+                                                          generator=torch_generator, num_workers=self.dataset.n_workers)
 
         policy = TorchPolicy(
             networks=self._model_composer.policy.networks,
@@ -108,13 +110,15 @@ class BCRunner(TrainingRunner):
         # evaluate using the validation set
         self.evaluators = []
         if len(validation) > 0:
-            validation_data_loader =validation.dataset.create_data_loader(batch_size=cfg.algorithm.batch_size,
-                                       generator=torch_generator, num_workers=self.dataset.n_workers)
+            data_class = get_maze_dataset_class(validation)
+            validation_data_loader = data_class.create_data_loader(validation, batch_size=cfg.algorithm.batch_size,
+                                                                   generator=torch_generator,
+                                                                   num_workers=self.dataset.n_workers)
 
             self.evaluators += [BCValidationEvaluator(
                 data_loader=validation_data_loader, loss=loss, logging_prefix="eval-validation",
                 model_selection=self._model_selection,  # use the validation set evaluation to select the best model
-                log_substep_events = cfg.algorithm.log_substep_events
+                log_substep_events=cfg.algorithm.log_substep_events
             )]
 
         # if evaluation episodes are set, perform additional evaluation by policy rollout
@@ -166,9 +170,10 @@ class BCRunner(TrainingRunner):
         """
         validation_size = int(np.round(validation_percentage * len(dataset) / 100.0))
 
-        method = getattr(dataset, 'random_split', None)
-        if method is not None and callable(method):
-            return method([validation_size, len(dataset) - validation_size], torch.Generator().manual_seed(1234))
+        if isinstance(dataset, InMemoryDataset):
+            splits = dataset.random_split([validation_size, len(dataset) - validation_size],
+                                        torch.Generator().manual_seed(1234))
+            return splits[0], splits[1]
         else:
             validation_set, train_set = torch.utils.data.random_split(
                 dataset=dataset,

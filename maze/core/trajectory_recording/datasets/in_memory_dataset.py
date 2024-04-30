@@ -11,7 +11,7 @@ from typing import Dict, Sequence, Generator
 
 import torch
 from omegaconf import ListConfig
-from torch.utils.data import Dataset, Subset, DataLoader
+from torch.utils.data import Dataset, Subset, DataLoader, ConcatDataset
 from tqdm import tqdm
 
 from maze.core.annotations import override
@@ -339,28 +339,19 @@ class InMemoryDataset(Dataset, ABC):
 
         return data_subsets
 
-    def create_data_loader(self, batch_size: int, num_workers: int,
+    @staticmethod
+    def create_data_loader(dataset: Dataset, batch_size: int, num_workers: int,
                            generator: torch.Generator) -> DataLoader:
         """Creates a data loader from the given input.
+
+        :param dataset: The dataset. This could be the in-memory dataset or a concatenation dataset.
         :param batch_size: Batch size for the sampler.
         :param num_workers: Number of parallel workers.
         :param generator: Generator used for the random permutation.
         :return: the DataLoader object.
         """
-        return DataLoader(dataset=self, shuffle=True, batch_size=batch_size,
+        return DataLoader(dataset=dataset, shuffle=True, batch_size=batch_size,
                           num_workers=num_workers, batch_sampler=None, generator=generator)
-
-    def concatenate(self, in_dataset: Union[Dataset, list[Dataset]]) -> None:
-        """Concatenates multiple datasets into the current one.
-        :param in_dataset: Dataset or list of datasets to be concatenated to the current instance.
-        """
-        if not isinstance(in_dataset, list):
-            in_dataset = [in_dataset]
-        for dt in in_dataset:
-            if isinstance(dt, Subset):
-                dt = dt.dataset
-            assert isinstance(dt, type(self))
-            self._store_loaded_trajectory(dt.step_records)
 
 
 class FlattenInMemoryDataset(InMemoryDataset):
@@ -396,20 +387,23 @@ class FlattenInMemoryDataset(InMemoryDataset):
         self.trajectory_references.append(range(offset, offset + len(flatten_records)))
         self.step_records.extend(flatten_records)
 
+    @staticmethod
     @override(InMemoryDataset)
-    def create_data_loader(self, batch_size: int, num_workers: int,
+    def create_data_loader(dataset: Dataset, batch_size: int, num_workers: int,
                            generator: torch.Generator) -> DataLoader:
         """Creates a data loader from the given input.
+
+        :param dataset: The dataset. This could be the in-memory dataset or a concatenation dataset.
         :param batch_size: Batch size for the sampler.
         :param num_workers: Number of parallel workers.
         :param generator: Generator used for the random permutation.
         :return: the DataLoader object.
         """
-        train_sampler = ActorIdSampler(self, generator=generator)
+        train_sampler = ActorIdSampler(dataset, generator=generator)
         train_batch_sampler = BatchActorIdSampler(train_sampler, batch_size=batch_size,
                                                   drop_last=True)
 
-        return DataLoader(dataset=self, shuffle=False, batch_size=1,
+        return DataLoader(dataset=dataset, shuffle=False, batch_size=1,
                           num_workers=num_workers, batch_sampler=train_batch_sampler, generator=None)
 
 
@@ -455,3 +449,21 @@ class DataLoadWorker:
             # Ship exception along with a traceback to the main process
             reporting_queue.put(ExceptionReport(exception))
             raise
+
+
+def get_maze_dataset_class(dataset: Union[ConcatDataset, Subset, InMemoryDataset]) -> type(InMemoryDataset):
+    """Get the base dataset class of the concat dataset.
+
+    :param dataset: The concat dataset to get the base class of.
+    """
+    if isinstance(dataset, InMemoryDataset):
+        return type(dataset)
+    elif isinstance(dataset, ConcatDataset):
+        subset = dataset.datasets[0]
+        assert isinstance(subset, Subset), f'Actual type: {type(subset)}'
+        maze_dataset = subset.dataset
+    else:
+        assert isinstance(dataset, Subset)
+        maze_dataset = dataset.dataset
+    assert isinstance(maze_dataset, InMemoryDataset)
+    return type(maze_dataset)
