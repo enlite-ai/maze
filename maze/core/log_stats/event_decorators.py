@@ -276,24 +276,17 @@ def define_plot(create_figure_function: Callable, input_name: str = None) -> Cal
     return decorator
 
 
-def define_shared_event(shared_event: bool = True) -> Callable:
+def define_shared_event(func_obj: Callable) -> Callable:
     """
     Event method decorator, defines a shared event.
 
-    :param shared_event: Indicating a shared event.
-    :return: The decorator function.
+    :param func_obj: The actual function to be decorated.
+    :return: The decorated function.
     """
 
-    def decorator(func_obj):
-        """
-        :param func_obj: The actual function to be decorated
-        :return The unmodified function object (required by the Python decorator semantics)
-        """
-        shared_event_ = getattr(func_obj, 'shared_event', None)
-        assert shared_event_ is None, 'more than one "shared_event" decorator detected'
+    shared_event_ = getattr(func_obj, 'shared_event', None)
+    assert shared_event_ is None, 'more than one "shared_event" decorator detected'
 
-        setattr(func_obj, 'shared_event', shared_event)
+    setattr(func_obj, 'shared_event', True)
 
-        return func_obj
-
-    return decorator
+    return func_obj
