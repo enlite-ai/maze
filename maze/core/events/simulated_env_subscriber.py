@@ -18,11 +18,12 @@ def share_sim_env_events_to_main_env(func_obj: Callable) -> Callable:
 
     def decorator(*args, **kwargs):
         # Check for policy
-        assert len(args) == 1
+        assert len(args) > 0
         assert isinstance(args[0], Policy)
-
-        # Get policy
         policy = args[0]
+
+        # Assert for simulated env
+        assert hasattr(policy, 'sim_env') or hasattr(policy, 'simulated_env')
 
         # Check for subscriber
         shared_event_subscriber = getattr(policy, 'shared_event_subscriber', SimulationEnvSharedEventsSubscriber())
@@ -30,20 +31,24 @@ def share_sim_env_events_to_main_env(func_obj: Callable) -> Callable:
             # Add Subscriber
             setattr(policy, 'shared_event_subscriber', shared_event_subscriber)
 
-            # Get main env
-            env = None
-            for key, val in kwargs.items():
-                if key == 'env':
-                    env = val
-                    break
+            # Get main env. There are two options, the env can either be in the args directly, or it can be in kwargs.
+            if len(args) > 3:
+                env = args[3]
+            else:
+                env = kwargs.get('env', None)
             assert env is not None
 
             # Get available event topics/interfaces from main env and register the subscriber
             # Note: Simulated envs are replicates of main env, therefore they have the same events
             for interface_cls, interface_ref in env.core_env.context.event_service.topics.items():
                 policy.shared_event_subscriber.set_interface(interface_cls, interface_ref)
-            for pubsub in policy.sim_env.core_env.context.event_service.scopes:
-                pubsub.register_subscriber(policy.shared_event_subscriber)
+
+            if hasattr(policy, 'sim_env'):
+                for pubsub in policy.sim_env.core_env.context.event_service.scopes:
+                    pubsub.register_subscriber(policy.shared_event_subscriber)
+            else:
+                for pubsub in policy.simulated_env.core_env.context.event_service.scopes:
+                    pubsub.register_subscriber(policy.shared_event_subscriber)
         else:
             assert isinstance(shared_event_subscriber, SimulationEnvSharedEventsSubscriber)
 
