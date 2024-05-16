@@ -32,7 +32,7 @@ def to_rnn_dict_space_environment(env: str, rnn_steps: int) -> GymMazeEnv:
                          "tag": None,
                          "delta": False,
                          "stack_steps": rnn_steps}]
-        env = ObservationStackWrapper.wrap(env, stack_config=stack_config)
+        env = ObservationStackWrapper.wrap(env, stack_config=stack_config, stack_mode='flatten_history')
 
     return env
 

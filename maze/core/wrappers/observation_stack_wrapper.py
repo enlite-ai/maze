@@ -1,16 +1,18 @@
 """ Implements observation stacking as an environment wrapper. """
+from __future__ import annotations
+
 import copy
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 from gym import spaces
-
 from maze.core.annotations import override
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
+from maze.core.env.structured_env import ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.structured_env_utils import flat_structured_space
 from maze.core.wrappers.wrapper import ObservationWrapper, Wrapper
@@ -33,10 +35,22 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         tag:                Optional[str], tag to add to observation (e.g. stacked)
         delta:              Bool, if true deltas are stacked to the previous observation
         stack_steps:        Int, number of past steps to be stacked
+    :param stack_mode: Specifies how to stack observations.
+        'group_by_actor_id': Stacks previous observations by actor ID
+        'flatten_history': Stacks the most recent previous observations from flattened history
     """
 
-    def __init__(self, env: StructuredEnvSpacesMixin, stack_config: List[Dict[str, Any]]):
+    SUPPORTED_STACK_MODES = ['group_by_actor_id', 'flatten_history']
+
+    def __init__(self, env: StructuredEnvSpacesMixin, stack_config: list[dict[str, Any]], stack_mode: str):
         super().__init__(env)
+
+        assert stack_mode in self.SUPPORTED_STACK_MODES, f'stack_mode should be in {self.SUPPORTED_STACK_MODES}'
+
+        self.stack_mode = stack_mode
+        self._observation_stack: dict[str, list[np.ndarray]] | dict[ActorID, dict[str, list[np.ndarray]]] = (
+            defaultdict(list) if stack_mode == 'flatten_history' else defaultdict(lambda: defaultdict(list))
+        )
 
         self.stack_config = stack_config
         self.drop_original = False
@@ -51,31 +65,37 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         self._initialize_stacking()
 
         # initialize observation stack
-        self.max_steps = max([c["stack_steps"] for c in self.stack_config])
-        self._observation_stack: Dict[str, List[np.ndarray]] = defaultdict(list)
+        self.max_steps = max([c['stack_steps'] for c in self.stack_config])
 
     @override(ObservationWrapper)
-    def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def observation(self, observation: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """Stack observations.
 
         :param observation: The observation to be stacked.
         :return: The sacked observation.
         """
 
+        actor_id = self.actor_id()
+
         # iteratively process observations
         for config in self.stack_config:
-
             # extract config
-            obs_key = config["observation"]
-            keep_original = config["keep_original"]
-            tag = config["tag"]
-            delta = config["delta"]
-            stack_steps = config["stack_steps"]
+            obs_key = config['observation']
+            keep_original = config['keep_original']
+            tag = config['tag']
+            delta = config['delta']
+            stack_steps = config['stack_steps']
 
             # update observation stack
             if obs_key in observation:
-                self._observation_stack[obs_key].append(observation[obs_key])
-                self._observation_stack[obs_key] = self._observation_stack[obs_key][-self.max_steps:]
+                if self.stack_mode == 'flatten_history':
+                    self._observation_stack[obs_key].append(observation[obs_key])
+                    self._observation_stack[obs_key] = self._observation_stack[obs_key][-self.max_steps :]
+                elif self.stack_mode == 'group_by_actor_id':
+                    self._observation_stack[actor_id][obs_key].append(observation[obs_key])
+                    self._observation_stack[actor_id][obs_key] = self._observation_stack[actor_id][obs_key][
+                        -self.max_steps :
+                    ]
 
             # nothing to do
             if stack_steps < 2 or obs_key not in observation:
@@ -83,53 +103,61 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
 
             # compute delta stack
             if delta:
-                stacked = np.stack(self._observation_stack[obs_key])
+                if self.stack_mode == 'flatten_history':
+                    stacked = np.stack(self._observation_stack[obs_key])
+                elif self.stack_mode == 'group_by_actor_id':
+                    stacked = np.stack(self._observation_stack[actor_id][obs_key])
                 if stacked.shape[0] > 1:
                     diff = np.diff(stacked, axis=0)
-                    stacked[-(len(diff) + 1):-1] = diff
+                    stacked[-(len(diff) + 1) : -1] = diff
 
             # just stack
             else:
-                stacked = np.stack(self._observation_stack[obs_key])
+                if self.stack_mode == 'flatten_history':
+                    stacked = np.stack(self._observation_stack[obs_key])
+                elif self.stack_mode == 'group_by_actor_id':
+                    stacked = np.stack(self._observation_stack[actor_id][obs_key])
 
             # pad with zeros if necessary
             shape = [stack_steps] + list(self._flat_observation_space[obs_key].shape)
             observation_stack = np.zeros(shape=shape, dtype=np.float32)
-            observation_stack[-len(stacked):] = stacked
+            observation_stack[-len(stacked) :] = stacked
 
             # drop original observation
             if not keep_original:
                 del observation[obs_key]
 
             # put observation into dictionary
-            full_tag = obs_key if tag is None else f"{obs_key}-{tag}"
+            full_tag = obs_key if tag is None else f'{obs_key}-{tag}'
             observation[full_tag] = observation_stack
 
         return observation
 
     @override(ObservationWrapper)
-    def reset(self) -> Dict[str, np.ndarray]:
+    def reset(self) -> dict[str, np.ndarray]:
         """Intercept ``ObservationWrapper.reset`` and map observation."""
         # reset observation stack
-        self._observation_stack: Dict[str, List[np.ndarray]] = defaultdict(list)
+        if self.stack_mode == 'flatten_history':
+            self._observation_stack = defaultdict(list)
+        elif self.stack_mode == 'group_by_actor_id':
+            self._observation_stack[self.actor_id()] = defaultdict(list)
         return super().reset()
 
     def _initialize_stacking(self) -> None:
-        """Initialize observation stacking for all sub steps and all dictionary observations.
-        """
+        """Initialize observation stacking for all sub steps and all dictionary observations."""
 
         # iterate stacking config
         for mapping in self.stack_config:
-            obs_key = mapping["observation"]
-            assert obs_key in self._flat_observation_space.spaces, \
-                f"Observation {obs_key} not contained in flat observation space."
+            obs_key = mapping['observation']
+            assert (
+                obs_key in self._flat_observation_space.spaces
+            ), f'Observation {obs_key} not contained in flat observation space.'
 
             # iterate all structured env sub steps and update observation spaces accordingly
             for sub_step_key, sub_space in self._original_observation_spaces_dict.items():
                 if obs_key in sub_space.spaces:
-
                     # nothing to stack
-                    stack_steps = mapping["stack_steps"]
+                    stack_steps = mapping['stack_steps']
                     if stack_steps < 2:
                         continue
 
@@ -137,7 +165,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
                     cur_space = self.observation_spaces_dict[sub_step_key][obs_key]
 
                     # compute stacked low / high
-                    if mapping["delta"]:
+                    if mapping['delta']:
                         float_max = np.finfo(np.float32).max
                         float_min = np.finfo(np.float32).min
 
@@ -157,40 +185,44 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
                         high = np.stack([cur_space.high] * stack_steps)
 
                     # remove original key from observation space
-                    if not mapping["keep_original"]:
+                    if not mapping['keep_original']:
                         self.observation_spaces_dict[sub_step_key].spaces.pop(obs_key)
 
                     # add stacked observation space
-                    full_tag = obs_key if mapping["tag"] is None else f"{obs_key}-{mapping['tag']}"
+                    full_tag = obs_key if mapping['tag'] is None else f"{obs_key}-{mapping['tag']}"
                     new_space = spaces.Box(low=low, high=high, shape=None, dtype=cur_space.dtype)
                     self.observation_spaces_dict[sub_step_key].spaces[full_tag] = new_space
                     assert cur_space.low.ndim == (new_space.low.ndim - 1)
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType], first_step_in_episode: bool
+    ) -> tuple[Optional[dict[Union[int, str], Any]], Optional[dict[Union[int, str], Any]]]:
         """If this is the first step in an episode, reset the observation stack."""
         if first_step_in_episode:
-            self._observation_stack: Dict[str, List[np.ndarray]] = defaultdict(list)
+            if self.stack_mode == 'flatten_history':
+                self._observation_stack = defaultdict(list)
+            elif self.stack_mode == 'group_by_actor_id':
+                self._observation_stack = defaultdict(lambda: defaultdict(list))
 
         return super().get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'ObservationStackWrapper') -> None:
+    def clone_from(self, env: ObservationStackWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self._observation_stack = copy.deepcopy(env._observation_stack)
         self.env.clone_from(env)
 
-    def set_observation_stack(self, observation_stack: Dict[str, List[np.ndarray]]) -> None:
+    def set_observation_stack(
+        self, observation_stack: dict[str, list[np.ndarray]] | dict[ActorID, dict[str, list[np.ndarray]]]
+    ) -> None:
         """Set the observation stack of the wrapper.
 
         :param observation_stack: The observation stack to be set.
         """
         self._observation_stack = observation_stack
 
-    def get_observation_stack(self) -> Dict[str, List[np.ndarray]]:
+    def get_observation_stack(self) -> dict[str, list[np.ndarray]] | dict[ActorID, dict[str, list[np.ndarray]]]:
         """Retrieve the observation stack of the wrapper.
 
         :return: The current observation stack of th wrapper.
