@@ -45,7 +45,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
     def __init__(self, env: StructuredEnvSpacesMixin, stack_config: list[dict[str, Any]], stack_mode: str):
         super().__init__(env)
 
-        assert stack_mode in self.SUPPORTED_STACK_MODES, f'stack_mode should be in {self.SUPPORTED_STACK_MODES}'
+        assert stack_mode in self.SUPPORTED_STACK_MODES, f'stack_mode: {stack_mode} should be in {self.SUPPORTED_STACK_MODES}'
 
         self.stack_mode = stack_mode
         self._observation_stack: dict[str, list[np.ndarray]] | dict[ActorID, dict[str, list[np.ndarray]]] = (
@@ -140,7 +140,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         if self.stack_mode == 'flatten_history':
             self._observation_stack = defaultdict(list)
         elif self.stack_mode == 'group_by_actor_id':
-            self._observation_stack[self.actor_id()] = defaultdict(list)
+            self._observation_stack = defaultdict(lambda: defaultdict(list))
         return super().reset()
 
     def _initialize_stacking(self) -> None:
