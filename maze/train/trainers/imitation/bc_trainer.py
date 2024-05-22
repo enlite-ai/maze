@@ -27,7 +27,6 @@ from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 from maze.train.utils.train_utils import compute_gradient_norm, debatch_actor_ids
-from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
 
 @dataclass
@@ -182,5 +181,5 @@ class BCTrainer(Trainer):
                 self.imitation_events.policy_grad_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
                                                        value=grad_norm)
 
-            self.imitation_events.mean_step_policy_l2_norm(value=l2_norm.item())
-            self.imitation_events.mean_step_policy_grad_norm(value=grad_norm)
+            self.imitation_events.mean_step_policy_l2_norm(step_id=actor_id.step_key, value=l2_norm.item())
+            self.imitation_events.mean_step_policy_grad_norm(step_id=actor_id.step_key, value=grad_norm)

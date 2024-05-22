@@ -128,7 +128,6 @@ class LogStatsAggregator(LogStatsConsumer):
         # handle grouping
         group_by_list = getattr(event, "group_by", None)
         group = tuple(event_record.attributes[group_by] for group_by in group_by_list) if group_by_list else None
-
         # add all event attributes if there are reducers operating on the event level
         if None in input_to_reducers:
             # flatten the dict if there is only a single event attribute

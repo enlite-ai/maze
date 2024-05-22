@@ -72,7 +72,7 @@ class BCLoss:
             entropy = policy_output.entropy.mean()
             if log_substep_events:
                 events.policy_entropy(step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=entropy.item())
-            events.mean_step_policy_entropy(value=entropy.item())
+            events.mean_step_policy_entropy(step_id=actor_id.step_key, value=entropy.item())
             if self.entropy_coef > 0:
                 losses.append(-self.entropy_coef * entropy)
 
@@ -113,7 +113,7 @@ class BCLoss:
                         step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
                         value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
 
-                events.mean_step_discrete_accuracy(
+                events.mean_step_discrete_accuracy(step_id=actor_id.step_key,
                     value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
 
                 if logits.shape[-1] > 10:
@@ -156,5 +156,5 @@ class BCLoss:
         loss = sum(losses)
         if log_substep_events:
             events.policy_loss(step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=loss.item())
-        events.mean_step_policy_loss(value=loss.item())
+        events.mean_step_policy_loss(step_id=actor_id.step_key, value=loss.item())
         return loss
