@@ -125,6 +125,8 @@ nitpick_ignore = [
     ('py:class', 'Callable[[...], Any]'),
     ('py:class', 'Union[None, Dict[Any, Any]]'),
     ('py:class', 'Union[None, Dict[Any, Any]]'),
+    ('py:class', 'dict[str, list[numpy.ndarray]] | dict[maze.core.env.structured_env.ActorID, dict[str, list[numpy.ndarray]]]'),
+
 
     # # torch can't be resolved
     ('py:class', 'torch.dtype'),
