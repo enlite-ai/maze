@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Dict, List
 
 import numpy as np
 from gym import spaces
@@ -42,13 +42,13 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
 
     SUPPORTED_STACK_MODES = ['group_by_actor_id', 'flatten_history']
 
-    def __init__(self, env: StructuredEnvSpacesMixin, stack_config: list[dict[str, Any]], stack_mode: str):
+    def __init__(self, env: StructuredEnvSpacesMixin, stack_config: List[Dict[str, Any]], stack_mode: str):
         super().__init__(env)
 
         assert stack_mode in self.SUPPORTED_STACK_MODES, f'stack_mode: {stack_mode} should be in {self.SUPPORTED_STACK_MODES}'
 
         self.stack_mode = stack_mode
-        self._observation_stack: dict[str, list[np.ndarray]] | dict[ActorID, dict[str, list[np.ndarray]]] = (
+        self._observation_stack: Union[Dict[str, List[np.ndarray]], Dict[ActorID, Dict[str, List[np.ndarray]]]] = (
             defaultdict(list) if stack_mode == 'flatten_history' else defaultdict(lambda: defaultdict(list))
         )
 
@@ -68,7 +68,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         self.max_steps = max([c['stack_steps'] for c in self.stack_config])
 
     @override(ObservationWrapper)
-    def observation(self, observation: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
         """Stack observations.
 
         :param observation: The observation to be stacked.
@@ -134,7 +134,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         return observation
 
     @override(ObservationWrapper)
-    def reset(self) -> dict[str, np.ndarray]:
+    def reset(self) -> Dict[str, np.ndarray]:
         """Intercept ``ObservationWrapper.reset`` and map observation."""
         # reset observation stack
         if self.stack_mode == 'flatten_history':
@@ -197,7 +197,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
     @override(Wrapper)
     def get_observation_and_action_dicts(
         self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType], first_step_in_episode: bool
-    ) -> tuple[Optional[dict[Union[int, str], Any]], Optional[dict[Union[int, str], Any]]]:
+    ) -> tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
         """If this is the first step in an episode, reset the observation stack."""
         if first_step_in_episode:
             if self.stack_mode == 'flatten_history':
@@ -214,7 +214,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         self.env.clone_from(env)
 
     def set_observation_stack(
-        self, observation_stack: dict[str, list[np.ndarray]] | dict[ActorID, dict[str, list[np.ndarray]]]
+        self, observation_stack: Union[Dict[str, List[np.ndarray]], Dict[ActorID, Dict[str, List[np.ndarray]]]]
     ) -> None:
         """Set the observation stack of the wrapper.
 
@@ -222,7 +222,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         """
         self._observation_stack = observation_stack
 
-    def get_observation_stack(self) -> dict[str, list[np.ndarray]] | dict[ActorID, dict[str, list[np.ndarray]]]:
+    def get_observation_stack(self) -> Union[Dict[str, List[np.ndarray]], Dict[ActorID, Dict[str, List[np.ndarray]]]]:
         """Retrieve the observation stack of the wrapper.
 
         :return: The current observation stack of th wrapper.
