@@ -256,6 +256,8 @@ class GymCoreEnv(CoreEnv):
         control_envs = (CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv)
         if isinstance(target_env, control_envs):
             assert isinstance(source_env, control_envs)
+            # Copy rng
+            target_env.np_random = deepcopy(source_env.np_random)
             parent_target_env.env = deepcopy(parent_source_env.env)
         # clone state of atari environments
         elif AtariEnv and isinstance(target_env, AtariEnv):
