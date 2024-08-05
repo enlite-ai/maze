@@ -3,6 +3,7 @@ import copy
 
 from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
 from maze.core.trajectory_recording.datasets.trajectory_processor import ClipTerminatedEpisodeTrajectoryProcessor
+from maze.core.trajectory_recording.datasets.utils import retrieve_done_info
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 
 
@@ -28,7 +29,7 @@ def test_terminated_trajectory():
     test_file = trajectory_files[0]
     trajectory_record = list(InMemoryDataset.deserialize_trajectory(test_file))[0]
 
-    terminated, truncated, info = ClipTerminatedEpisodeTrajectoryProcessor.retrieve_done_info(trajectory_record)
+    terminated, truncated, info = retrieve_done_info(trajectory_record)
 
     print(len(trajectory_record))
     print(info)
@@ -78,7 +79,7 @@ def test_clip_terminated_false():
     test_file = trajectory_files[0]
     trajectory_record = list(InMemoryDataset.deserialize_trajectory(test_file))[0]
 
-    terminated, truncated, info = ClipTerminatedEpisodeTrajectoryProcessor.retrieve_done_info(trajectory_record)
+    terminated, truncated, info = retrieve_done_info(trajectory_record)
 
     assert truncated
     assert not terminated

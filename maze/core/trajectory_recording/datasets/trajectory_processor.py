@@ -9,9 +9,7 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.trajectory_recording.datasets.utils import retrieve_done_info
 from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
-from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord, SpacesTrajectoryRecord
-from maze.core.utils.factory import ConfigType, Factory
-from maze_dev.train.trainers.alphazero.discount_return import BaseComputeDiscountedReturns
+from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
 
 
 class TrajectoryProcessor:
@@ -256,55 +254,3 @@ class FilterTrajectoryWithSmallerKSubStepsProcessor(TrajectoryProcessor):
             trajectory.step_records = list()
 
         return trajectory
-
-
-class ComputeDiscountedReturnsProcessor(TrajectoryProcessor):
-    """Compute the discounted returns trajectory preprocessor
-
-    :param compute_discounted_returns: The Discounting instance for computing the discounted returns.
-    :param gamma: The gamma that should be used for discounting.
-    """
-
-    def __init__(self, compute_discounted_returns: Union[ConfigType, BaseComputeDiscountedReturns],
-                 gamma: float):
-        super().__init__()
-        self.process_strictly_on_structured_traj = True
-        self.compute_discounted_returns = Factory(BaseComputeDiscountedReturns).instantiate(compute_discounted_returns)
-        self.gamma = gamma
-
-    @override(TrajectoryProcessor)
-    def pre_process(self, trajectory: SpacesTrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
-        """
-        return trajectory
-
-    def process(self, trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[List[StructuredSpacesRecord]]:
-        """Convert an individual trajectory, by calling the pre_processing method followed by the
-        convert_trajectory_with_env
-
-        :param trajectory: Episode record to load.
-        :param conversion_env: Env to use for conversion of MazeStates and MazeActions into observations and actions.
-                               Required only if state records are being loaded (i.e. conversion to raw actions and
-                               observations is needed).
-        :return: A list (corresponding to the trajectories) of lists (corresponding to the steps of a individual
-                 trajectory) of Structured Spaces Records. Each Structures Spaces Record holds a single environment
-                 step with all corresponding information such as sub-step observations and actions as well as rewards
-                 and actor ids.
-        """
-
-        pre_processed_trajectories = self.pre_process(trajectory)
-        if not isinstance(pre_processed_trajectories, list):
-            pre_processed_trajectories = [pre_processed_trajectories]
-
-        env_processed_trajectories = [self.convert_trajectory_with_env(pre_processed_trajectory, conversion_env)
-                                      for pre_processed_trajectory in pre_processed_trajectories]
-
-        post_processed_step_records = []
-        for traj in env_processed_trajectories:
-            tmp = SpacesTrajectoryRecord(id='tmp_id')
-            tmp.step_records = traj
-            self.compute_discounted_returns(tmp, self.gamma, None)
-            post_processed_step_records.append(tmp.step_records)
-
-        return env_processed_trajectories
