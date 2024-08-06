@@ -31,7 +31,8 @@ def test_concat_model_builder() -> None:
     modality_config["image"] = {"block_type": "maze.perception.blocks.VGGConvolutionDenseBlock",
                                 "block_params": {"hidden_channels": [8, 16],
                                                  "hidden_units": [64, 64],
-                                                 "non_lin": "torch.nn.ReLU"}}
+                                                 "non_lin": "torch.nn.ReLU",
+                                                 "use_batch_norm_conv": False}}
 
     for rnn_steps in [0, 2]:
 

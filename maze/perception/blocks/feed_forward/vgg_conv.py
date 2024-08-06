@@ -1,4 +1,5 @@
-""" Contains a vgg style convolution block. """
+""" Contains a vgg style convolution block with batch normalization intra layers."""
+
 from collections import OrderedDict
 from typing import Union, List, Sequence, Dict
 
@@ -21,13 +22,15 @@ class VGGConvolutionBlock(ShapeNormalizationBlock):
     :param in_shapes: List of input shapes.
     :param hidden_channels: List containing the number of hidden channels for hidden layers.
     :param non_lin: The non-linearity to apply after each layer.
+    :param use_batch_norm: Whether to use batch normalization.
     """
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], hidden_channels: List[int],
-                 non_lin: Union[str, type(nn.Module)]):
+                 non_lin: Union[str, type(nn.Module)], use_batch_norm: bool):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=4, out_num_dims=4)
         self.input_channels = self.in_shapes[0][-3]
+        self.use_batch_norm = use_batch_norm
         self.hidden_channels = hidden_channels
         self.non_lin = Factory(base_type=nn.Module).type_from_name(non_lin)
         self.output_channels = self.hidden_channels[-1]
@@ -70,11 +73,15 @@ class VGGConvolutionBlock(ShapeNormalizationBlock):
         layer_dict["conv_00"] = nn.Conv2d(in_channels=self.input_channels,
                                           out_channels=self.hidden_channels[0],
                                           kernel_size=3, stride=1, padding=1)
+        if self.use_batch_norm:
+            layer_dict['bn_00'] = nn.BatchNorm2d(num_features=self.hidden_channels[0])
         layer_dict[f"{self.non_lin.__name__}_00"] = self.non_lin()
 
         layer_dict["conv_01"] = nn.Conv2d(in_channels=self.hidden_channels[0],
                                           out_channels=self.hidden_channels[0],
                                           kernel_size=3, stride=1, padding=1)
+        if self.use_batch_norm:
+            layer_dict['bn_01'] = nn.BatchNorm2d(num_features=self.hidden_channels[0])
         layer_dict[f"{self.non_lin.__name__}_01"] = self.non_lin()
 
         layer_dict["pool_01"] = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -84,11 +91,15 @@ class VGGConvolutionBlock(ShapeNormalizationBlock):
             layer_dict[f"conv_{i}0"] = nn.Conv2d(in_channels=self.hidden_channels[i - 1],
                                                  out_channels=self.hidden_channels[i],
                                                  kernel_size=3, stride=1, padding=1)
+            if self.use_batch_norm:
+                layer_dict[f'bn_{i}0'] = nn.BatchNorm2d(num_features=self.hidden_channels[i])
             layer_dict[f"{self.non_lin.__name__}_{i}0"] = self.non_lin()
 
             layer_dict[f"conv_{i}1"] = nn.Conv2d(in_channels=self.hidden_channels[i],
                                                  out_channels=self.hidden_channels[i],
                                                  kernel_size=3, stride=1, padding=1)
+            if self.use_batch_norm:
+                layer_dict[f'bn_{i}1'] = nn.BatchNorm2d(num_features=self.hidden_channels[i])
             layer_dict[f"{self.non_lin.__name__}_{i}1"] = self.non_lin()
 
             layer_dict[f"pool_{i}1"] = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
@@ -96,8 +107,9 @@ class VGGConvolutionBlock(ShapeNormalizationBlock):
         return layer_dict
 
     def __repr__(self):
+        batch_norm_txt = ' & batch2d norm. intra conv layers' if self.use_batch_norm else ''
         txt = f"{VGGConvolutionBlock.__name__}({self.non_lin.__name__})"
-        txt += f"\n(2x 3x3 conv & 2x2 max-pool)"
+        txt += f"\n(2x 3x3 conv & 2x2 max-pool{batch_norm_txt})"
         txt += f"\nFeature Maps: {self.input_channels}->" + "->".join([f"{h}" for h in self.hidden_channels])
         txt += f"\nOut Shapes: {self.out_shapes()}"
         return txt

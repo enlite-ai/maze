@@ -11,7 +11,8 @@ def test_feed_forward_convolution_block():
     """ perception test """
     in_dict = build_input_dict(dims=[100, 3, 64, 64])
     net: VGGConvolutionBlock = VGGConvolutionBlock(in_keys="in_key", out_keys="out_key",
-                                                   in_shapes=(3, 64, 64), hidden_channels=[4, 8, 16], non_lin=nn.ReLU)
+                                                   in_shapes=(3, 64, 64), hidden_channels=[4, 8, 16], non_lin=nn.ReLU,
+                                                   use_batch_norm=False)
     str(net)
     out_dict = net(in_dict)
 

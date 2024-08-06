@@ -15,7 +15,7 @@ def test_feed_forward_conv_gap_block():
     in_dict = build_input_dict(dims=[100, 3, 64, 64])
     net: VGGConvolutionGAPBlock = VGGConvolutionGAPBlock(in_keys="in_key", out_keys="out_key",
                                                          in_shapes=(3, 64, 64), hidden_channels=[4, 8, 16],
-                                                         non_lin=nn.ReLU)
+                                                         non_lin=nn.ReLU, use_batch_norm_conv=False)
     str(net)
     out_dict = net(in_dict)
 
@@ -30,7 +30,8 @@ def test_feed_forward_conv_dense_block():
     in_dict = build_input_dict(dims=[100, 3, 64, 64])
     net: VGGConvolutionDenseBlock = VGGConvolutionDenseBlock(in_keys="in_key", out_keys="out_key",
                                                              in_shapes=(3, 64, 64), hidden_channels=[4, 8, 16],
-                                                             hidden_units=[32, 32], non_lin=nn.ReLU)
+                                                             hidden_units=[32, 32], non_lin=nn.ReLU,
+                                                             use_batch_norm_conv=False)
     str(net)
     out_dict = net(in_dict)
 

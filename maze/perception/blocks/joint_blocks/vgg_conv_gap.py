@@ -21,16 +21,18 @@ class VGGConvolutionGAPBlock(PerceptionBlock):
     :param in_shapes: List of input shapes.
     :param hidden_channels: List containing the number of hidden channels for hidden layers.
     :param non_lin: The non-linearity to apply after each layer.
+    :param use_batch_norm_conv: Whether to apply batch normalization after convolution.
     """
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], hidden_channels: List[int],
-                 non_lin: Union[str, type(nn.Module)]):
+                 non_lin: Union[str, type(nn.Module)], use_batch_norm_conv: bool):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
         out_keys_conv = [f"{k}_conv" for k in self.out_keys]
         self.conv_block = VGGConvolutionBlock(in_keys=in_keys, out_keys=out_keys_conv, in_shapes=in_shapes,
-                                              hidden_channels=hidden_channels, non_lin=non_lin)
+                                              hidden_channels=hidden_channels, non_lin=non_lin,
+                                              use_batch_norm=use_batch_norm_conv)
 
         self.gap_block = GlobalAveragePoolingBlock(in_keys=out_keys_conv, out_keys=out_keys,
                                                    in_shapes=self.conv_block.out_shapes())

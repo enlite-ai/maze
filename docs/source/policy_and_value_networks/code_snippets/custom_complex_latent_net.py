@@ -33,7 +33,7 @@ class CustomComplexLatentNet:
         # build latent pixel embedding block
         self.perception_dict['latent_screen'] = VGGConvolutionDenseBlock(
             in_keys='observation_screen', out_keys='latent_screen', in_shapes=obs_shapes['observation_screen'],
-            non_lin=non_lin, hidden_channels=[8, 16, 32], hidden_units=[32])
+            non_lin=non_lin, hidden_channels=[8, 16, 32], hidden_units=[32], use_batch_norm_conv=False)
 
         # Concatenate latent features
         self.perception_dict['latent_concat'] = ConcatenationBlock(

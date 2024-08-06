@@ -40,7 +40,8 @@ def build_perception_dict():
                                    in_shapes=[in_dict["obs_screen"].shape[-3:]],
                                    hidden_channels=[8, 16, 32],
                                    hidden_units=[32],
-                                   non_lin=nn.ReLU)
+                                   non_lin=nn.ReLU,
+                                   use_batch_norm_conv=False)
     perception_dict["obs_screen_latent"] = net
 
     # --- block ---

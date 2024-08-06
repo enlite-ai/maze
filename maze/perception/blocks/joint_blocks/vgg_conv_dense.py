@@ -25,6 +25,7 @@ class VGGConvolutionDenseBlock(PerceptionBlock):
     :param hidden_channels: List containing the number of hidden channels for hidden layers.
     :param hidden_units: List containing the number of hidden units for hidden layers.
     :param non_lin: The non-linearity to apply after each layer.
+    :param use_batch_norm_conv: Whether to apply batch normalization after convolution.
     """
 
     def __init__(self,
@@ -33,12 +34,14 @@ class VGGConvolutionDenseBlock(PerceptionBlock):
                  in_shapes: Union[Sequence[int], List[Sequence[int]]],
                  hidden_channels: List[int],
                  hidden_units: List[int],
-                 non_lin: Union[str, type(nn.Module)]):
+                 non_lin: Union[str, type(nn.Module)],
+                 use_batch_norm_conv: bool):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
         out_keys_conv = [f"{k}_conv" for k in self.out_keys]
         self.conv_block = VGGConvolutionBlock(in_keys=in_keys, out_keys=out_keys_conv, in_shapes=in_shapes,
-                                              hidden_channels=hidden_channels, non_lin=non_lin)
+                                              hidden_channels=hidden_channels, non_lin=non_lin,
+                                              use_batch_norm=use_batch_norm_conv)
 
         out_keys_flatten = [f"{k}_flat" for k in out_keys_conv] if len(hidden_units) > 0 else out_keys
         self.flatten_block = FlattenBlock(in_keys=out_keys_conv, out_keys=out_keys_flatten,
