@@ -1,0 +1,155 @@
+"""File holding methods for plotting the env profiling."""
+import os
+from typing import Callable, List
+
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+
+
+def read_event_log(input_dir: str, event_name: str) -> pd.DataFrame:
+    """Read the event tsv file and return a dataframe.
+
+    :param input_dir: The input directory.
+    :param event_name: The event name.
+    """
+    path = os.path.join(input_dir, 'event_logs', event_name)
+    if not os.path.exists(path):
+        raise ValueError(f'path {path} does not exist')
+
+    return pd.read_csv(path, sep='\t')
+
+
+def autopct_format(values: List[float]) -> Callable:
+    """Format the pie chart values such that absolute and relative values are displayed.
+
+    :param values: The list of all absolute values to display.
+
+    :return: The method for formatting the text of slices.
+    """
+
+    def my_format(pct: float) -> str:
+        """Format function for an individual slice of the pie chart.
+
+        :param pct: The percentage of the slice in the pie chart.
+
+        :return: The string to displayed inside the slice.
+        """
+        total = sum(values)
+        val = pct * total / 100.0
+        txt = '{:.1f}%\n[{v:.3f}s]'.format(pct, v=val)
+        if pct < 5:
+            txt = txt.replace('\n', ' -- ')
+        return txt
+
+    return my_format
+
+
+def print_as_dataframe(total_timings: dict, total_time: float, wrapper_df: pd.DataFrame,
+                       maze_env_df: pd.DataFrame, obs_conv_df: pd.DataFrame, act_conv_df: pd.DataFrame,
+                       core_env_df: pd.DataFrame) -> None:
+    """Print the profiling values as w dataframe."""
+    accumulated_percentages = dict(wrapper_df.groupby('wrapper_name')['per'].mean().sort_index())
+    accumulated_percentages.update(
+        {'MazeEnv-other': maze_env_df['per'].mean(), 'MazeEnv-ObsConv': obs_conv_df['per'].mean(),
+         'MazeEnv-ActConv': act_conv_df['per'].mean(), 'CoreEnv': core_env_df['per'].mean()})
+    arr_total_timings = np.array(list(total_timings.values()))
+    arr_accumulated_per = np.array(list(accumulated_percentages.values()))
+    tt = pd.DataFrame([arr_total_timings, arr_total_timings / total_time, arr_accumulated_per],
+                      columns=list(total_timings.keys())).T
+    tt.columns = ['Sum of Measured Time [s]', 'Measured Time / Total Time', 'Mean of measured percents']
+    pd.set_option("display.max_rows", None)
+    pd.set_option("display.max_columns", None)
+    pd.set_option("display.width", None)
+    print('')
+    print(str(tt).replace('\n', '\n\t'))
+    print(f'--> Note that the mean of \'measured percentages differs\' to the \'Measured Time / Total Time\' due to '
+          f'varying step times.')
+
+
+def plot_pi_chart(total_time: float, total_steps: int, total_timings: dict, title_txt: str,
+                  output_file_path: str) -> None:
+    """Create a pie chart of the profiling times and save in the experiment directory."""
+    for_plotting = {'smaller': 0}
+    smaller_keys = []
+    for ll, time_spend in total_timings.items():
+        per = time_spend / total_time
+        if float(per) < 0.02:
+            for_plotting['smaller'] += time_spend
+            smaller_keys.append(ll)
+        else:
+            for_plotting[ll] = time_spend
+    for_plotting['\n'.join(smaller_keys)] = for_plotting['smaller']
+    del for_plotting['smaller']
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
+    ax.pie(list(for_plotting.values()), labels=list(for_plotting.keys()),
+           autopct=autopct_format(list(np.array(list(for_plotting.values())) / total_steps)))
+    plt.title(title_txt)
+    plt.tight_layout()
+    plt.savefig(output_file_path)
+    print(f'\tEnv profiling saved at: {output_file_path}')
+
+
+def plot_env_profiling(cur_dir: str) -> None:
+    """Plot the env profiling events as a pie chart and save it the experiment directory.
+
+    :param cur_dir: The experiment directory.
+    """
+    try:
+        print('Running Environment profiling:')
+        full_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.full_env_step_time.tsv')
+        core_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.core_env_step_time.tsv')
+        maze_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.maze_env_step_time.tsv')
+        obs_conv_df = read_event_log(cur_dir, 'EnvProfilingEvents.observation_conv_time.tsv')
+        act_conv_df = read_event_log(cur_dir, 'EnvProfilingEvents.action_conv_time.tsv')
+        wrapper_df = read_event_log(cur_dir, 'EnvProfilingEvents.wrapper_step_time.tsv')
+
+        sub_step_mean = full_env_df['value'].mean()
+        print(f'\tAverage Sub-Step time:                {sub_step_mean:.4f}s based on '
+              f'{full_env_df["value"].count()} steps')
+
+        flat_step_mean = full_env_df.groupby(['episode_id', 'env_time']).sum()['value']
+        print(f'\tAverage Flat-Step time:               {flat_step_mean.mean():.4f}s based on '
+              f'{flat_step_mean.count()} steps')
+
+        episode_mean = full_env_df.groupby('episode_id').sum()['value']
+        print(f'\tAverage Episode (without reset) time: {episode_mean.mean():.4f}s based on {episode_mean.count()} '
+              f'episodes')
+
+        print(f'\tTotal time spend in steps:            {full_env_df["value"].sum():.4f}s based on '
+              f'{full_env_df["value"].count()} steps')
+
+        total_time = full_env_df['value'].sum()
+        sub_step_count = full_env_df['value'].count()
+        total_timings = dict(wrapper_df.groupby('wrapper_name')['time'].sum().sort_index())
+        total_timings.update({'MazeEnv-other': maze_env_df['time'].sum(), 'MazeEnv-ObsConv': obs_conv_df['time'].sum(),
+                              'MazeEnv-ActConv': act_conv_df['time'].sum(), 'CoreEnv': core_env_df['time'].sum()})
+        assert np.isclose(total_time, sum(total_timings.values())), f'{total_time} vs {sum(total_timings.values())}'
+
+        print_as_dataframe(total_timings, total_time, wrapper_df, maze_env_df, obs_conv_df, act_conv_df, core_env_df)
+
+        plot_pi_chart(total_time, sub_step_count, total_timings,
+                      title_txt=f'Full Sub-step mean time: {sub_step_mean:.4f}s over: {sub_step_count} steps',
+                      output_file_path=f'{cur_dir}/env_profiling.png')
+
+        # In case the investigate_time was declared in the core env, the different operations of the core env
+        # can be profiled as well. Here not everything has to be specified, thus we calculate the difference to the
+        # core env step time and mark it as 'untracked_time'.
+        if os.path.exists(os.path.join(cur_dir, 'event_logs', 'EnvProfilingEvents.investigate_time.tsv')):
+            profiling_df = read_event_log(cur_dir, 'EnvProfilingEvents.investigate_time.tsv')
+            print(profiling_df.groupby('name')['time'].sum())
+            total_timings = dict(profiling_df.groupby('name')['time'].sum())
+            time_core_env = core_env_df['time'].sum()
+            untracked_time = time_core_env - sum(total_timings.values())
+            assert 'untracked_time' not in total_timings
+            total_timings['untracked_time'] = untracked_time
+            per_core_env = time_core_env / total_time
+
+            plot_pi_chart(
+                time_core_env, sub_step_count, total_timings,
+                title_txt=(f'CoreEnv (Sub-) step mean time: {time_core_env.sum() / sub_step_count:.4f}s '
+                           f'[{per_core_env * 100:.3f}% of flat step] over: {sub_step_count} steps'),
+                output_file_path=f'{cur_dir}/core_env_profiling.png')
+    except Exception as e:
+        print(f'Error encountered producing profiling plot: {e}')

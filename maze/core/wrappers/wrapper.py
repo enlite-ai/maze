@@ -1,6 +1,8 @@
 """Extension of gym Wrapper to support environment interfaces"""
+import logging
+import time
 from abc import abstractmethod, ABC
-from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional
+from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, List
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
@@ -9,8 +11,12 @@ from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
+from maze.core.log_events.env_profiling_events import EnvProfilingEvents
 
 EnvType = TypeVar("EnvType")
+
+logger = logging.getLogger('WRAPPER')
+logger.setLevel(logging.INFO)
 
 
 class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
@@ -23,6 +29,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     of isinstance() for arbitrarily nested wrappers.
 
     Suppose we want to check the base class:
+
 
         class MyGymWrapper(Wrapper[gym.Env]):
             ...
@@ -59,6 +66,20 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         base_classes = self._base_classes(env)
         base_classes = list(dict.fromkeys(base_classes))
 
+        # Setup profiling events
+        self.__profiling_events = self.core_env.context.event_service.create_event_topic(EnvProfilingEvents)
+
+        # Each wrapper has it own profiling time
+        self._last_profiling_time = 0.0
+        # In case a skipping wrapper is used, this timing needs to be dealt with separately.
+        self._cumulative_time_for_skipping_wrapper = 0
+        # Used as a placeholder to keep track of the full wrapper stack used.
+        self._full_wrapper_stack = None
+
+        # Notify the sub-wrappers with the full stack of wrappers uses.
+        self.notify_full_wrapper_stack(self.get_full_wrapper_stack())
+        self.last_step_id = None
+
         # we create a new Class type, that implements all base classes of the wrapping chain. This class is never
         # actually instantiated.
         class _FakeClass(*base_classes):
@@ -75,6 +96,13 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     def step_with_callbacks(self, *args, **kwargs) -> Any:
         """A wrapper for the env.step function. Checks whether callbacks for this step have already been process
         (i.e., detects whether this is the outermost wrapper). Triggers the post-step callbacks if required."""
+        self._first_step_started = True
+
+        if (self.context.current_wrapper_pos is not None and
+                self.position_in_wrapper_stack() >= self.context.current_wrapper_pos):
+            self._record_profiling_events()
+            self.context.current_wrapper_pos = None
+        self._last_profiling_time = 0.0
 
         # check if new step has been initiated before fully completing the previous one (= step-skipping etc.)
         if self.context.step_in_progress and not self.context.step_is_initiating:
@@ -91,15 +119,77 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
             self.context.step_is_initiating = True
             # once pre-step callbacks are supported, they can be called here
 
+        start_time = time.time()
+
         # now do the step (env step + any functionality this wrapper implements on top of that)
         return_value = self.__step(*args, **kwargs)
+
+        self._last_profiling_time = time.time() - start_time
 
         # if this is the outer-most wrapper, mark the step as done and trigger post-step callbacks
         if is_outermost_wrapper:
             self.context.step_in_progress = False
+            self._record_profiling_events()
             self.context.run_post_step_callbacks()
+            self.context.current_wrapper_pos = None
+        else:
+            self.context.current_wrapper_pos = self.position_in_wrapper_stack()
 
         return return_value
+
+    def _record_profiling_events(self) -> None:
+        """Record the profiling events for each wrapper as the abs wall time and percentage of the full step."""
+
+        # First check if skipping was used. If so, this time needs to be subtracted from the recorded profiling time.
+        skipping_cum_time = 0
+        if not self.context.step_in_progress and self.is_actual_outermost_wrapper():
+            skipping_cum_time = self.skipping_happened_since_last_call_to_this_wrapper()
+            if skipping_cum_time > self._last_profiling_time:
+                skipping_cum_time = 0
+
+        total_time = self._last_profiling_time - skipping_cum_time
+        assert total_time >= 0
+        self.__profiling_events.full_env_step_time(total_time)
+
+        # Record the profiling time for each of the wrappers used.
+        current_env = self
+        step_down_env = self.env
+        recorded_wrappers = set(self._full_wrapper_stack[:])
+        while hasattr(step_down_env, 'env') and hasattr(step_down_env, '_last_profiling_time'):
+            current_run_time = current_env._last_profiling_time - step_down_env._last_profiling_time
+            if step_down_env._cumulative_time_for_skipping_wrapper > 0:
+                current_run_time = current_run_time - skipping_cum_time
+            name = type(current_env).__name__
+            recorded_wrappers.remove(name)
+            self.__profiling_events.wrapper_step_time(wrapper_name=name, time=current_run_time,
+                                                      per=current_run_time / total_time)
+            current_env = step_down_env
+            step_down_env = current_env.env
+
+        # Record 0 for all wrappers that where not called (due to skipping).
+        for wr in recorded_wrappers:
+            self.__profiling_events.wrapper_step_time(wrapper_name=wr, time=0, per=0)
+
+        self.record_skipping_time(list(recorded_wrappers), total_time)
+
+        # Now current env is maze env and step_down env is core env.
+        maze_env_run_time = current_env._last_profiling_time
+        core_env_run_time = current_env.profiling_times['core_env']
+        maze_env_run_time_diff = (
+                maze_env_run_time - core_env_run_time - current_env.profiling_times['observation_conversion'] -
+                current_env.profiling_times['action_conversion'])
+        self.__profiling_events.maze_env_step_time(time=maze_env_run_time_diff, per=maze_env_run_time_diff / total_time)
+        self.__profiling_events.core_env_step_time(time=core_env_run_time, per=core_env_run_time / total_time)
+        self.__profiling_events.observation_conv_time(
+            time=current_env.profiling_times['observation_conversion'],
+            per=current_env.profiling_times['observation_conversion'] / total_time)
+        self.__profiling_events.action_conv_time(time=current_env.profiling_times['action_conversion'],
+                                                 per=current_env.profiling_times['action_conversion'] / total_time)
+
+        # In case the reserved dictionary is used in the core env, retrieve the values and log them.
+        if hasattr(self, '_investigate_step_function_parts'):
+            for key, value in self._investigate_step_function_parts.items():
+                self.__profiling_events.investigate_time(name=key, time=value, per=value / core_env_run_time)
 
     @property
     def __class__(self):
@@ -137,6 +227,69 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
             return
 
         return setattr(env, name, value)
+
+    def get_full_wrapper_stack(self) -> List[str]:
+        """Get a list of the full wrapper stack.
+
+        :return: A list of wrapper from this wrapper going to the maze env.
+        """
+        wrapper_stack = []
+        current_env = self
+        while hasattr(current_env, 'env'):
+            wrapper_stack.append(type(current_env).__name__)
+            current_env = current_env.env
+        return wrapper_stack[:-1]
+
+    def notify_full_wrapper_stack(self, wrapper_names: List[str]):
+        """Pass the full list of wrappers used down to every wrapper, such that each wrapper has the full list.
+
+        :param wrapper_names: List of wrapper names used.
+        """
+        self._full_wrapper_stack = wrapper_names
+        if hasattr(self, 'env') and hasattr(self.env, 'notify_full_wrapper_stack'):
+            self.env.notify_full_wrapper_stack(wrapper_names)
+
+    def position_in_wrapper_stack(self) -> int:
+        """Return the current position in the wrapper stack as an integer."""
+        recorded_wrappers = self._full_wrapper_stack[:]
+        if type(self).__name__ not in recorded_wrappers:
+            return len(recorded_wrappers)
+        else:
+            return recorded_wrappers.index(type(self).__name__)
+
+    def skipping_happened_since_last_call_to_this_wrapper(self) -> float:
+        """Check if skipping has happen since the last call to this wrapper."""
+        cur_env = self
+        while hasattr(cur_env, 'env') and hasattr(cur_env, '_cumulative_time_for_skipping_wrapper'):
+            if cur_env._cumulative_time_for_skipping_wrapper > 0:
+                return cur_env._cumulative_time_for_skipping_wrapper
+            cur_env = cur_env.env
+        return False
+
+    def is_actual_outermost_wrapper(self) -> bool:
+        """Return true if this is the actual outermost wrapper, this is necessary since skipping in reset is sometimes
+        possible."""
+        recorded_wrappers = set(self._full_wrapper_stack[:])
+        current_env = self
+        while hasattr(current_env.env, 'env') and hasattr(current_env.env, '_last_profiling_time'):
+            name = type(current_env).__name__
+            recorded_wrappers.remove(name)
+            current_env = current_env.env
+        return len(recorded_wrappers) == 0
+
+    def record_skipping_time(self, recorded_wrappers: List[str], total_time: float) -> None:
+        """Record the skipping time if necessary.
+
+        :param recorded_wrappers: List of wrapper names used.
+        :param total_time: Total time taken to execute this wrapper.
+        """
+        if len(recorded_wrappers) > 0:
+            self._cumulative_time_for_skipping_wrapper += total_time
+        else:
+            cur_env = self
+            while hasattr(cur_env, 'env') and hasattr(cur_env, '_cumulative_time_for_skipping_wrapper'):
+                cur_env._cumulative_time_for_skipping_wrapper = 0
+                cur_env = cur_env.env
 
     @classmethod
     def _base_classes(cls, env: BaseEnv) -> Generator[BaseEnv, None, None]:

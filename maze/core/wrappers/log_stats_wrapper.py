@@ -93,7 +93,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         # record the reward
         self.reward_events.append(EventRecord(BaseEnvEvents, BaseEnvEvents.reward, dict(value=rew)))
 
-        self._record_stats_if_ready()
+        # Stats are recorded with the post step callbacks
 
         return obs, rew, done, info
 

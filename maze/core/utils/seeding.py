@@ -101,11 +101,13 @@ class MazeSeeding:
         """
         if self._explicit_agent_seeds is not None:
             return self._explicit_agent_seeds[:n_seeds]
-        else:
-            seeds = [self.generate_agent_instance_seed() for _ in range(n_seeds)]
-            if self._shuffle_seeds:
-                seeds = list(map(int, self.agent_rng.permutation(seeds)))
-            return seeds
+        elif self._explicit_env_seeds is not None:
+            n_seeds = len(self._explicit_env_seeds[:n_seeds])
+
+        seeds = [self.generate_agent_instance_seed() for _ in range(n_seeds)]
+        if self._shuffle_seeds:
+            seeds = list(map(int, self.agent_rng.permutation(seeds)))
+        return seeds
 
     def get_env_base_seed(self) -> int:
         """Return the env base seed.

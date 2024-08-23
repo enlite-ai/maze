@@ -8,6 +8,7 @@ RL training algorithms require a more rigid representation. To that end :class:`
 gym-compatible environment in a reusable form, by utilizing mappings from the MazeState to the observations space and
 from the MazeAction to the action space.
 """
+import time
 from copy import deepcopy
 from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
@@ -93,6 +94,8 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # Initial env time: Env time this episode started at
         self.initial_env_time = None
 
+        self.profiling_times = {'core_env': 0.0, 'observation_conversion': 0.0, 'action_conversion': 0.0}
+
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
@@ -100,6 +103,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         :param action: the action the agent wants to take.
         :return: observation, reward, done, info
         """
+        self.profiling_times = {'core_env': 0.0, 'observation_conversion': 0.0, 'action_conversion': 0.0}
         assert self.initial_env_time is not None, "Environment must be reset before stepping."
 
         # first, take step without observation
@@ -107,7 +111,9 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         # convert state to observation
         maze_state = self.core_env.get_maze_state()
+        start_time = time.time()
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
+        self.profiling_times['observation_conversion'] = time.time() - start_time
 
         return observation, reward, done, info
 
@@ -316,10 +322,15 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         # compile action object
         maze_state = self.core_env.get_maze_state()
+        start_time = time.time()
         maze_action = self.action_conversion.space_to_maze(action, maze_state)
+        self.profiling_times['action_conversion'] = time.time() - start_time
 
+        start_time = time.time()
         # take environment step
         maze_state, reward, done, info = self.core_env.step(maze_action)
+        # record step time.
+        self.profiling_times['core_env'] = time.time() - start_time
 
         if self.is_single_substep_env or last_env_time != self.get_env_time():
             # reward captured immediately after the reward aggregation

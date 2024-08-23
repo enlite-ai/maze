@@ -44,6 +44,9 @@ class EnvironmentContext:
         self.step_in_progress = False  # True during the whole env.step
         self.step_is_initiating = False  # True while descending through the wrapper stack, until the env time increment
 
+        # The current position of the wrapper stack.
+        self.current_wrapper_pos = None
+
         self._post_step_callbacks = []
 
     @property

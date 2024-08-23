@@ -19,6 +19,7 @@ from maze.core.utils.seeding import MazeSeeding
 from maze.runner import Runner
 from maze.utils.bcolors import BColors
 from maze.utils.log_stats_utils import clear_global_state
+from maze.utils.plot_env_profiling import plot_env_profiling
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
 
@@ -61,6 +62,9 @@ def _run_job(cfg: DictConfig) -> None:
     runner = Factory(base_type=Runner).instantiate(cfg.runner)
     runner.setup(cfg)
     runner.run()
+
+    # Plot runtime
+    plot_env_profiling(os.path.abspath("."))
 
 
 def _run_multirun_job(cfg: DictConfig) -> float:
