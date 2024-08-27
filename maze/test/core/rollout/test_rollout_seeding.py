@@ -53,6 +53,8 @@ def perform_rollout_seeding_test(hydra_overrides_sequential: Dict[str, str],
     assert parallel_data[('BaseEnvEvents', 'reward', 'episode_count')] == 2
 
     for kk in sequential_data.keys():
+        if 'ProfilingEvents' in kk[0]:
+            continue
         assert np.isclose(sequential_data[kk], parallel_data[kk]), f'Not equal stats: {kk} -> ' \
                                                                    f'{sequential_data[kk]} vs {parallel_data[kk]}'
 

@@ -67,7 +67,13 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         base_classes = list(dict.fromkeys(base_classes))
 
         # Setup profiling events
-        self.__profiling_events = self.core_env.context.event_service.create_event_topic(EnvProfilingEvents)
+        self.log_profiling_events = True
+        if not hasattr(self, 'core_env'):
+            self.log_profiling_events = False
+
+        self.__profiling_events = None
+        if self.log_profiling_events:
+            self.__profiling_events = self.core_env.context.event_service.create_event_topic(EnvProfilingEvents)
 
         # Each wrapper has it own profiling time
         self._last_profiling_time = 0.0
@@ -100,7 +106,8 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
         if (self.context.current_wrapper_pos is not None and
                 self.position_in_wrapper_stack() >= self.context.current_wrapper_pos):
-            self._record_profiling_events()
+            if self.log_profiling_events:
+                self._record_profiling_events()
             self.context.current_wrapper_pos = None
         self._last_profiling_time = 0.0
 
@@ -129,7 +136,8 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         # if this is the outer-most wrapper, mark the step as done and trigger post-step callbacks
         if is_outermost_wrapper:
             self.context.step_in_progress = False
-            self._record_profiling_events()
+            if self.log_profiling_events:
+                self._record_profiling_events()
             self.context.run_post_step_callbacks()
             self.context.current_wrapper_pos = None
         else:
@@ -154,8 +162,8 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         # Record the profiling time for each of the wrappers used.
         current_env = self
         step_down_env = self.env
-        recorded_wrappers = set(self._full_wrapper_stack[:])
-        while hasattr(step_down_env, 'env') and hasattr(step_down_env, '_last_profiling_time'):
+        recorded_wrappers = self._full_wrapper_stack[:]
+        while self.is_wrapper(step_down_env):
             current_run_time = current_env._last_profiling_time - step_down_env._last_profiling_time
             if step_down_env._cumulative_time_for_skipping_wrapper > 0:
                 current_run_time = current_run_time - skipping_cum_time
@@ -228,6 +236,11 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
         return setattr(env, name, value)
 
+    @staticmethod
+    def is_wrapper(env: Any) -> bool:
+        """Return true if the given env is a wrapper."""
+        return hasattr(env, 'env') and hasattr(env, '_last_profiling_time')
+
     def get_full_wrapper_stack(self) -> List[str]:
         """Get a list of the full wrapper stack.
 
@@ -235,7 +248,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         """
         wrapper_stack = []
         current_env = self
-        while hasattr(current_env, 'env'):
+        while self.is_wrapper(current_env):
             wrapper_stack.append(type(current_env).__name__)
             current_env = current_env.env
         return wrapper_stack[:-1]
@@ -246,7 +259,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         :param wrapper_names: List of wrapper names used.
         """
         self._full_wrapper_stack = wrapper_names
-        if hasattr(self, 'env') and hasattr(self.env, 'notify_full_wrapper_stack'):
+        if self.is_wrapper(self.env):
             self.env.notify_full_wrapper_stack(wrapper_names)
 
     def position_in_wrapper_stack(self) -> int:
@@ -260,18 +273,18 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     def skipping_happened_since_last_call_to_this_wrapper(self) -> float:
         """Check if skipping has happen since the last call to this wrapper."""
         cur_env = self
-        while hasattr(cur_env, 'env') and hasattr(cur_env, '_cumulative_time_for_skipping_wrapper'):
+        while self.is_wrapper(cur_env):
             if cur_env._cumulative_time_for_skipping_wrapper > 0:
                 return cur_env._cumulative_time_for_skipping_wrapper
             cur_env = cur_env.env
-        return False
+        return 0
 
     def is_actual_outermost_wrapper(self) -> bool:
         """Return true if this is the actual outermost wrapper, this is necessary since skipping in reset is sometimes
         possible."""
-        recorded_wrappers = set(self._full_wrapper_stack[:])
+        recorded_wrappers = self._full_wrapper_stack[:]
         current_env = self
-        while hasattr(current_env.env, 'env') and hasattr(current_env.env, '_last_profiling_time'):
+        while self.is_wrapper(current_env.env):
             name = type(current_env).__name__
             recorded_wrappers.remove(name)
             current_env = current_env.env
@@ -287,7 +300,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
             self._cumulative_time_for_skipping_wrapper += total_time
         else:
             cur_env = self
-            while hasattr(cur_env, 'env') and hasattr(cur_env, '_cumulative_time_for_skipping_wrapper'):
+            while self.is_wrapper(cur_env):
                 cur_env._cumulative_time_for_skipping_wrapper = 0
                 cur_env = cur_env.env
 

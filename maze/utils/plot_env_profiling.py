@@ -1,6 +1,5 @@
 """File holding methods for plotting the env profiling."""
 import os
-from typing import Callable, List
 
 import numpy as np
 import pandas as pd
@@ -18,31 +17,6 @@ def read_event_log(input_dir: str, event_name: str) -> pd.DataFrame:
         raise ValueError(f'path {path} does not exist')
 
     return pd.read_csv(path, sep='\t')
-
-
-def autopct_format(values: List[float]) -> Callable:
-    """Format the pie chart values such that absolute and relative values are displayed.
-
-    :param values: The list of all absolute values to display.
-
-    :return: The method for formatting the text of slices.
-    """
-
-    def my_format(pct: float) -> str:
-        """Format function for an individual slice of the pie chart.
-
-        :param pct: The percentage of the slice in the pie chart.
-
-        :return: The string to displayed inside the slice.
-        """
-        total = sum(values)
-        val = pct * total / 100.0
-        txt = '{:.1f}%\n[{v:.3f}s]'.format(pct, v=val)
-        if pct < 5:
-            txt = txt.replace('\n', ' -- ')
-        return txt
-
-    return my_format
 
 
 def print_as_dataframe(total_timings: dict, total_time: float, wrapper_df: pd.DataFrame,
@@ -67,8 +41,8 @@ def print_as_dataframe(total_timings: dict, total_time: float, wrapper_df: pd.Da
           f'varying step times.')
 
 
-def plot_pi_chart(total_time: float, total_steps: int, total_timings: dict, title_txt: str,
-                  output_file_path: str) -> None:
+def plot_pi_chart(total_time: float, total_steps: int, total_timings: dict, std_timings: dict,
+                  title_txt: str, output_file_path: str) -> None:
     """Create a pie chart of the profiling times and save in the experiment directory."""
     for_plotting = {'smaller': 0}
     smaller_keys = []
@@ -79,12 +53,33 @@ def plot_pi_chart(total_time: float, total_steps: int, total_timings: dict, titl
             smaller_keys.append(ll)
         else:
             for_plotting[ll] = time_spend
-    for_plotting['\n'.join(smaller_keys)] = for_plotting['smaller']
+    if for_plotting['smaller'] > 0:
+        for_plotting['\n'.join(smaller_keys)] = for_plotting['smaller']
     del for_plotting['smaller']
 
+    labels = []
+    for kk in for_plotting.keys():
+        if kk in std_timings and for_plotting[kk]/total_time > 0.03:
+            labels.append(f'{for_plotting[kk]/total_time * 100:.2f}%\n'
+                          f'[$\mu$: {for_plotting[kk] / total_steps:.2f}s, $\sigma$: {std_timings[kk]:.2f}s]')
+        else:
+            labels.append(f'{for_plotting[kk]/total_time * 100:.2f}%')
+
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
-    ax.pie(list(for_plotting.values()), labels=list(for_plotting.keys()),
-           autopct=autopct_format(list(np.array(list(for_plotting.values())) / total_steps)))
+    wedges, texts = ax.pie(list(for_plotting.values()), labels=list(for_plotting.keys()), startangle=0,
+                                      wedgeprops=dict(width=1))
+    # Place the custom labels inside the slices
+    for i, wedge in enumerate(wedges):
+        # Calculate the angle of the center of the wedge
+        angle = (wedge.theta2 - wedge.theta1) / 2.0 + wedge.theta1
+
+        # Calculate the x and y position of the label
+        x = np.cos(np.radians(angle)) * 0.6
+        y = np.sin(np.radians(angle)) * 0.6
+
+        # Add the label
+        ax.text(x, y, labels[i], ha='center', va='center', fontsize=12, color='white')
+
     plt.title(title_txt)
     plt.tight_layout()
     plt.savefig(output_file_path)
@@ -125,11 +120,15 @@ def plot_env_profiling(cur_dir: str) -> None:
         total_timings = dict(wrapper_df.groupby('wrapper_name')['time'].sum().sort_index())
         total_timings.update({'MazeEnv-other': maze_env_df['time'].sum(), 'MazeEnv-ObsConv': obs_conv_df['time'].sum(),
                               'MazeEnv-ActConv': act_conv_df['time'].sum(), 'CoreEnv': core_env_df['time'].sum()})
+        std_timings = dict(wrapper_df.groupby('wrapper_name')['time'].std().sort_index())
+        std_timings.update({'MazeEnv-other': maze_env_df['time'].std(), 'MazeEnv-ObsConv': obs_conv_df['time'].std(),
+                            'MazeEnv-ActConv': act_conv_df['time'].std(), 'CoreEnv': core_env_df['time'].std()})
+
         assert np.isclose(total_time, sum(total_timings.values())), f'{total_time} vs {sum(total_timings.values())}'
 
         print_as_dataframe(total_timings, total_time, wrapper_df, maze_env_df, obs_conv_df, act_conv_df, core_env_df)
 
-        plot_pi_chart(total_time, sub_step_count, total_timings,
+        plot_pi_chart(total_time, sub_step_count, total_timings, std_timings,
                       title_txt=f'Full Sub-step mean time: {sub_step_mean:.4f}s over: {sub_step_count} steps',
                       output_file_path=f'{cur_dir}/env_profiling.png')
 
@@ -140,6 +139,7 @@ def plot_env_profiling(cur_dir: str) -> None:
             profiling_df = read_event_log(cur_dir, 'EnvProfilingEvents.investigate_time.tsv')
             print(profiling_df.groupby('name')['time'].sum())
             total_timings = dict(profiling_df.groupby('name')['time'].sum())
+            std_timings = dict(profiling_df.groupby('name')['time'].std())
             time_core_env = core_env_df['time'].sum()
             untracked_time = time_core_env - sum(total_timings.values())
             assert 'untracked_time' not in total_timings
@@ -147,9 +147,13 @@ def plot_env_profiling(cur_dir: str) -> None:
             per_core_env = time_core_env / total_time
 
             plot_pi_chart(
-                time_core_env, sub_step_count, total_timings,
+                time_core_env, sub_step_count, total_timings, std_timings,
                 title_txt=(f'CoreEnv (Sub-) step mean time: {time_core_env.sum() / sub_step_count:.4f}s '
                            f'[{per_core_env * 100:.3f}% of flat step] over: {sub_step_count} steps'),
                 output_file_path=f'{cur_dir}/core_env_profiling.png')
     except Exception as e:
         print(f'Error encountered producing profiling plot: {e}')
+
+
+if __name__ == '__main__':
+    plot_env_profiling('/home/anton/maze_runs/homepod/outputs/2024-08-27/13-41-00')
