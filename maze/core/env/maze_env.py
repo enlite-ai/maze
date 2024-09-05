@@ -94,6 +94,8 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # Initial env time: Env time this episode started at
         self.initial_env_time = None
 
+        # Dictionary to hold the profiling times for the different components of the maze env. These will always be
+        # reset at the beginning of the step function and are logged as events in the logger base class after the step.
         self.profiling_times = {'core_env': 0.0, 'observation_conversion': 0.0, 'action_conversion': 0.0}
 
     @override(BaseEnv)

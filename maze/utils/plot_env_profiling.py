@@ -11,6 +11,8 @@ def read_event_log(input_dir: str, event_name: str) -> pd.DataFrame:
 
     :param input_dir: The input directory.
     :param event_name: The event name.
+
+    :return: A pandas dataframe holding the collected events.
     """
     path = os.path.join(input_dir, 'event_logs', event_name)
     if not os.path.exists(path):
@@ -22,7 +24,16 @@ def read_event_log(input_dir: str, event_name: str) -> pd.DataFrame:
 def print_as_dataframe(total_timings: dict, total_time: float, wrapper_df: pd.DataFrame,
                        maze_env_df: pd.DataFrame, obs_conv_df: pd.DataFrame, act_conv_df: pd.DataFrame,
                        core_env_df: pd.DataFrame) -> None:
-    """Print the profiling values as w dataframe."""
+    """Print the profiling values as w dataframe.
+
+    :param total_timings: A dictionary holding the cumulative timings of the measured components.
+    :param total_time: The overall total time measured of all steps.
+    :param wrapper_df: The dataframe holding the wrapper measurements.
+    :param maze_env_df: The dataframe holding the maze environment measurements.
+    :param obs_conv_df: The dataframe holding the observation conversion measurements.
+    :param act_conv_df: The dataframe holding the activation conversion measurements.
+    :param core_env_df: The dataframe holding the core environment measurements.
+    """
     accumulated_percentages = dict(wrapper_df.groupby('wrapper_name')['per'].mean().sort_index())
     accumulated_percentages.update(
         {'MazeEnv-other': maze_env_df['per'].mean(), 'MazeEnv-ObsConv': obs_conv_df['per'].mean(),
@@ -43,7 +54,15 @@ def print_as_dataframe(total_timings: dict, total_time: float, wrapper_df: pd.Da
 
 def plot_pi_chart(total_time: float, total_steps: int, total_timings: dict, std_timings: dict,
                   title_txt: str, output_file_path: str) -> None:
-    """Create a pie chart of the profiling times and save in the experiment directory."""
+    """Create a pie chart of the profiling times and save in the experiment directory.
+
+    :param total_time: The total time measured of all steps.
+    :param total_steps: The total number of steps.
+    :param total_timings: A dictionary holding the cumulative timings of the measured components.
+    :param std_timings: A dictionary holding the standard deviations of the measured components.
+    :param title_txt: The title of the pie chart.
+    :param output_file_path: The output file path.
+    """
     for_plotting = {'smaller': 0}
     smaller_keys = []
     for ll, time_spend in total_timings.items():
@@ -53,6 +72,9 @@ def plot_pi_chart(total_time: float, total_steps: int, total_timings: dict, std_
             smaller_keys.append(ll)
         else:
             for_plotting[ll] = time_spend
+
+    # Here all profiled parts that take up less than 2% are accumulated together and are plotted as a single pie slice
+    # to make the graph readable.
     if for_plotting['smaller'] > 0:
         for_plotting['\n'.join(smaller_keys)] = for_plotting['smaller']
     del for_plotting['smaller']

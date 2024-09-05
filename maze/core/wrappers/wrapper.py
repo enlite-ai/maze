@@ -66,7 +66,8 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         base_classes = self._base_classes(env)
         base_classes = list(dict.fromkeys(base_classes))
 
-        # Setup profiling events
+        # Setup profiling events in case there is a core env present in the underlying wrapper stack. Otherwise it is
+        # disabled.
         self.log_profiling_events = True
         if not hasattr(self, 'core_env'):
             self.log_profiling_events = False
@@ -80,7 +81,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         # In case a skipping wrapper is used, this timing needs to be dealt with separately.
         self._cumulative_time_for_skipping_wrapper = 0
         # Used as a placeholder to keep track of the full wrapper stack used.
-        self._full_wrapper_stack = None
+        self._full_wrapper_stack: List[str] = []
 
         # Notify the sub-wrappers with the full stack of wrappers uses.
         self.notify_full_wrapper_stack(self.get_full_wrapper_stack())
@@ -109,7 +110,6 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
             if self.log_profiling_events:
                 self._record_profiling_events()
             self.context.current_wrapper_pos = None
-        self._last_profiling_time = 0.0
 
         # check if new step has been initiated before fully completing the previous one (= step-skipping etc.)
         if self.context.step_in_progress and not self.context.step_is_initiating:
@@ -239,7 +239,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     @staticmethod
     def is_wrapper(env: Any) -> bool:
         """Return true if the given env is a wrapper."""
-        return hasattr(env, 'env') and hasattr(env, '_last_profiling_time')
+        return isinstance(env, Wrapper)
 
     def get_full_wrapper_stack(self) -> List[str]:
         """Get a list of the full wrapper stack.
@@ -251,6 +251,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         while self.is_wrapper(current_env):
             wrapper_stack.append(type(current_env).__name__)
             current_env = current_env.env
+        # Since the MazeEnv inherits from wrapper is counts as a wrapper and needs to be excluded.
         return wrapper_stack[:-1]
 
     def notify_full_wrapper_stack(self, wrapper_names: List[str]):

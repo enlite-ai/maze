@@ -28,37 +28,38 @@ class EnvProfilingEvents(ABC):
     @define_step_stats(np.mean, input_name='per', output_name='st_mean')
     @define_stats_grouping("wrapper_name")
     def wrapper_step_time(self, wrapper_name: str, time: float, per: float):
-        """Record the wrapper step time in percent wrt to the full env step."""
+        """Record the abs and relative time of the wrapper. The relative time here is measured as a percentage
+        of the runtime wrt the outermost wrapper."""
 
     @define_epoch_stats(np.mean, input_name="ep_mean", output_name="mean")
     @define_episode_stats(np.mean, output_name="ep_mean")
     @define_step_stats(np.mean, input_name='per')
     def maze_env_step_time(self, time: float, per: float):
-        """Record the maze env step time in percent wrt to the full env step."""
+        """Record the maze env step time as wall time and percent wrt to the full env step."""
 
     @define_epoch_stats(np.mean, input_name="ep_mean", output_name="mean")
     @define_episode_stats(np.mean, output_name="ep_mean")
     @define_step_stats(np.mean, input_name='per')
     def core_env_step_time(self, time: float, per: float):
-        """Record the core env step time in percent wrt to the full env step."""
+        """Record the core env step time as wall time and percent wrt to the full env step."""
 
     @define_epoch_stats(np.mean, input_name="ep_mean", output_name="mean")
     @define_episode_stats(np.mean, output_name="ep_mean")
     @define_step_stats(np.mean, input_name='per')
     def observation_conv_time(self, time: float, per: float):
-        """Record the observation conversion time in percent wrt to the full env step."""
+        """Record the observation conversion time as wall time and percent wrt to the full env step."""
 
     @define_epoch_stats(np.mean, input_name="ep_mean", output_name="mean")
     @define_episode_stats(np.mean, output_name="ep_mean")
     @define_step_stats(np.mean, input_name='per')
     def action_conv_time(self, time: float, per: float):
-        """Record the action conversion time in percent wrt to the full env step."""
+        """Record the action conversion time  as wall time and percent wrt to the full env step."""
 
     @define_epoch_stats(np.mean, input_name="ep_mean", output_name="per_of_core_env")
-    @define_episode_stats(np.mean, input_name='time', output_name="ep_mean")
-    @define_step_stats(np.mean, input_name='per', output_name='time')
+    @define_episode_stats(np.mean, input_name='step_per', output_name="ep_mean")
+    @define_step_stats(np.mean, input_name='per', output_name='step_per')
     @define_stats_grouping("name")
     def investigate_time(self, name: str, time: float, per: float):
         """In case anywhere in the wrappers, maze_env or core env the attribute self._investigate_relative_time is
-        written it will be divided by the total step time and logged with this event.."""
+        written it will be divided by the total step time and logged with this event."""
 
