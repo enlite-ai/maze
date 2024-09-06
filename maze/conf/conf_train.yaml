@@ -1,6 +1,7 @@
 # Default configuration for policy training.
 
 defaults:
+  - _self_
   - runner: local
   - env: gym_env
   - wrappers: no_wrappers

@@ -5,7 +5,6 @@ import os
 import traceback
 from typing import Optional
 
-import hydra
 import matplotlib
 import numpy as np
 import yaml
@@ -13,7 +12,7 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
 from maze.core.log_stats.hparam_writer_tensorboard import manipulate_hparams_logging_for_exp
-from maze.core.utils.config_utils import get_colored_config_str
+from maze.core.utils.config_utils import get_colored_config_str, version_based_hydra_main
 from maze.core.utils.factory import Factory
 from maze.core.utils.seeding import MazeSeeding
 from maze.runner import Runner
@@ -107,7 +106,7 @@ def _run_multirun_job(cfg: DictConfig) -> float:
     return float(max_mean_optimised_metric)
 
 
-@hydra.main(config_path="conf", config_name="conf_rollout")
+@version_based_hydra_main(config_path="conf", config_name="conf_rollout")
 def maze_run(cfg: DictConfig) -> Optional[float]:
     """
     Run a CLI task based on the provided configuration.

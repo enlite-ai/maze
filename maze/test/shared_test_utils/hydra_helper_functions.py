@@ -9,7 +9,7 @@ from torch import nn
 
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.utils.config_utils import make_env_from_hydra, EnvFactory
+from maze.core.utils.config_utils import make_env_from_hydra, EnvFactory, get_hydra_version_base
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.observation_normalization_utils import obtain_normalization_statistics
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
@@ -52,7 +52,8 @@ def get_all_configs_from_hydra(default_conf: str, all_hydra_config_modules: List
 
     for config_module in all_hydra_config_modules:
         # setup Hydra for the given config module
-        with initialize_config_module(config_module):
+        kwargs = get_hydra_version_base()
+        with initialize_config_module(config_module, **kwargs):
             # query all argument overrides for this config module
             for overrides in _get_all_overrides_from_hydra():
                 # add a single combination of module and hydra arguments to the list
@@ -71,7 +72,8 @@ def check_env_instantiation(config_module: str, config: str, overrides: Dict[str
 
 def check_env_and_model_instantiation(config_module: str, config: str, overrides: Dict[str, str]) -> None:
     """Check if env instantiation works."""
-    with initialize_config_module(config_module):
+    kwargs = get_hydra_version_base()
+    with initialize_config_module(config_module, **kwargs):
         # config is relative to a module
         cfg = compose(config, overrides=[key + "=" + value for key, value in overrides.items()])
 
@@ -126,7 +128,8 @@ def load_hydra_config(config_module: str, config_name: str, hydra_overrides: Dic
     :param hydra_overrides: The hydra overrides that should be applied
     :return: A dict config of the created hydra config
     """
-    with initialize_config_module(config_module=config_module):
+    kwargs = get_hydra_version_base()
+    with initialize_config_module(config_module=config_module, **kwargs):
         # Config is relative to a module
         # For the HydraConfig init below, we need the hydra key there as well (=> return_hydra_config=True)
         cfg = compose(config_name=config_name,

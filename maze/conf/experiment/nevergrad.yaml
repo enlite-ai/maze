@@ -2,6 +2,7 @@
 
 # defaults to override
 defaults:
+  - _self_
   - override /algorithm: ppo
   - override /hydra/sweeper: nevergrad
   - override /hydra/launcher: local

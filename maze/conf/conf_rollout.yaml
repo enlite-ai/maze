@@ -1,6 +1,7 @@
 # Default configuration for policy rollouts.
 
 defaults:
+  - _self_
   - runner: parallel
   - env: gym_env
   - wrappers: no_wrappers

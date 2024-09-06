@@ -6,6 +6,7 @@ from hydra.core.hydra_config import HydraConfig
 from hydra import initialize_config_module, compose
 from omegaconf import open_dict, DictConfig
 
+from maze.core.utils.config_utils import get_hydra_version_base
 from maze.maze_cli import maze_run
 
 
@@ -16,7 +17,8 @@ def run_maze_job(hydra_overrides: Dict[str, str], config_module: str, config_nam
     :param config_module: The config module.
     :param config_name: The name of the default config.
     """
-    with initialize_config_module(config_module=config_module):
+    kwargs = get_hydra_version_base()
+    with initialize_config_module(config_module=config_module, **kwargs):
         # Config is relative to a module
         # For the HydraConfig init below, we need the hydra key there as well (=> return_hydra_config=True)
         cfg = compose(config_name=config_name,

@@ -1,4 +1,5 @@
 """Utility methods used throughout the code base"""
+import functools
 import os
 from pathlib import Path
 from typing import Mapping, Union, Sequence
@@ -9,6 +10,7 @@ import yaml
 from hydra import initialize_config_module, compose
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
+from packaging.version import Version
 
 from maze.core.agent.serialized_torch_policy import SerializedTorchPolicy
 from maze.core.env.maze_env import MazeEnv
@@ -95,6 +97,56 @@ def make_env(env: ConfigType, wrappers: CollectionOfConfigType) -> MazeEnv:
     return env_factory()
 
 
+def get_hydra_version_base() -> dict[str, str]:
+    """Return hydra version base to use.
+
+    :return: Hydra version base.
+    """
+    hydra_version = Version(hydra.__version__)
+    assert hydra_version.major >= 1, f'Hydra major version must be at least >= 1; It is: {hydra_version}'
+
+    if hydra_version.minor < 3:
+        return {}
+
+    return {'version_base': '1.1'}
+
+
+def version_based_hydra_main(config_path: str, config_name: str):
+    """Extend the hydra.main decorator >>@hydra.main(config_path="conf", config_name="conf_rollout")<< to add
+    version_base if hydra version is above 1.2.xx.
+
+    :param config_path: Path of the config file.
+    :param config_name: Name of the config file.
+    :return: The extended hydra.main decorator iff the hydra version is above 1.2.xx, otherwise the standard hydra.main
+             deccorator.
+    """
+    def decorator(func):
+        """Decorator that wraps a method.
+
+        :param func: Method to wrap.
+        """
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            """The wrapper function that is called instead of the original function.
+
+            :param args: Arguments passed to the original function.
+            :param kwargs: Keyword arguments passed to the original function.
+            :return: Wrapped function.
+            """
+            # Add additional hydra version base to hydra.main decorator
+            hydra_version_base = get_hydra_version_base()
+            return hydra.main(
+                config_path=config_path,
+                config_name=config_name,
+                **hydra_version_base
+            )(func)(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def read_hydra_config(config_module: str,
                       config_name: str = None,
                       **hydra_overrides: str) -> DictConfig:
@@ -105,7 +157,9 @@ def read_hydra_config(config_module: str,
     :param hydra_overrides: Overrides as kwargs, e.g. env="cartpole", configuration="test"
     :return: Hydra DictConfig instance, assembled according to the given module, name, and overrides.
     """
-    with initialize_config_module(config_module):
+    # Add additional version_base iff hydra version is above 1.2.xx.
+    kwargs = get_hydra_version_base()
+    with initialize_config_module(config_module, **kwargs):
         cfg = compose(config_name, overrides=[key + "=" + value for key, value in hydra_overrides.items()])
 
     return cfg
