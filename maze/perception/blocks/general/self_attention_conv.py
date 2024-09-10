@@ -15,6 +15,7 @@ from torch import nn
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+from maze.perception.weight_init import make_param_initializer
 
 
 class SelfAttentionConvBlock(PerceptionBlock):
@@ -59,7 +60,10 @@ class SelfAttentionConvBlock(PerceptionBlock):
         self.query_conv = nn.Conv2d(in_channels=self.in_dim, out_channels=self.embedding_dim, kernel_size=1, bias=bias)
         self.key_conv = nn.Conv2d(in_channels=self.in_dim, out_channels=self.embedding_dim, kernel_size=1, bias=bias)
         self.value_conv = nn.Conv2d(in_channels=self.in_dim, out_channels=self.in_dim, kernel_size=1, bias=bias)
-        self.gamma = nn.Parameter(torch.zeros(1, dtype=torch.float32))
+        self.gamma = nn.Parameter(torch.randn(1))
+        # init gamma.
+        _ = make_param_initializer()(self.gamma)
+
         self.softmax = nn.Softmax(dim=-1)
         self.dropout = nn.Dropout(p=dropout if dropout is not None else 0.0)
 

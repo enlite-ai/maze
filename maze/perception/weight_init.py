@@ -9,6 +9,23 @@ from maze.perception.blocks.feed_forward.graph_attention import GraphAttentionLa
 from maze.perception.blocks.feed_forward.graph_conv import GraphConvLayer, GraphConvBlock
 
 
+def make_param_initializer(std: float = 1.0) -> Callable[[torch.Tensor], None]:
+    """Compiles parameter initialization function.
+
+    :param std: The standard deviation.
+    :return: The tensor initialization function.
+    """
+
+    def initializer(tensor: torch.Tensor) -> None:
+        """Initializes the given tensor.
+
+        :param tensor: The tensor to initialize.
+        """
+        assert len(tensor.shape) == 1
+        tensor.data = torch.normal(mean=0.0, std=std, size=(tensor.numel(),)).clamp(-1, 1)
+    return initializer
+
+
 def make_normc_initializer(std: float = 1.0) -> Callable[[torch.Tensor], None]:
     """Compiles normc tensor initialization function.
 

@@ -12,6 +12,7 @@ from torch import nn
 
 from maze.core.annotations import override
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
+from maze.perception.weight_init import make_param_initializer
 
 
 class SelfAttentionSeqBlock(ShapeNormalizationBlock):
@@ -75,7 +76,10 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
         self.self_attn = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads,
                                                dropout=dropout if dropout is not None else 0.0,
                                                bias=bias)
-        self.gamma = nn.Parameter(torch.zeros(1, dtype=torch.float32))
+
+        self.gamma = nn.Parameter(torch.randn(1))
+        # init gamma.
+        _ = make_param_initializer()(self.gamma)
 
     @override(ShapeNormalizationBlock)
     def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
