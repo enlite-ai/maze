@@ -32,14 +32,18 @@ class BaseEnvEvents(ABC):
     def reward(self, value: float):
         """reward value for the current step"""
 
-    @define_epoch_stats(np.mean, output_name="mean")
-    @define_epoch_stats(np.std, output_name="std")
-    @define_epoch_stats(np.min, output_name="min")
-    @define_epoch_stats(np.max, output_name="max")
+    # The decorators allow specifying which reduction method to use. For string values, this requires special handling,
+    # as methods like min or max cannot be applied to strings. The lambda function addresses this by returning the
+    # input value unchanged if it's a string (acting as an identity function), or applying the specified reduction
+    # otherwise.
+    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.mean(x), output_name="mean")
+    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.std(x), output_name="std")
+    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.min(x), output_name="min")
+    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.max(x), output_name="max")
     @define_episode_stats(None)
     @define_step_stats(None)
     @define_stats_grouping("name")
-    def kpi(self, name: str, value: float):
+    def kpi(self, name: str, value: float | str):
         """Event representing a KPI metric (Key Performance Indicator).
 
         KPI metrics are expected to be calculated at the end of the episode. Only one KPI value
