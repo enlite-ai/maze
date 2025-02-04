@@ -1,22 +1,26 @@
 """File holding methods for plotting the env profiling."""
+import logging
 import os
+from typing import Union
 
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
+logger = logging.getLogger(os.path.basename(__file__))
 
-def read_event_log(input_dir: str, event_name: str) -> pd.DataFrame:
+
+def read_event_log(input_dir: str, event_name: str) -> Union[pd.DataFrame, None]:
     """Read the event tsv file and return a dataframe.
 
     :param input_dir: The input directory.
     :param event_name: The event name.
 
-    :return: A pandas dataframe holding the collected events.
+    :return: A pandas dataframe holding the collected events or None if the event tsv file is missing.
     """
     path = os.path.join(input_dir, 'event_logs', event_name)
     if not os.path.exists(path):
-        raise ValueError(f'path {path} does not exist')
+        return None
 
     return pd.read_csv(path, sep='\t')
 
@@ -113,68 +117,77 @@ def plot_env_profiling(cur_dir: str) -> None:
 
     :param cur_dir: The experiment directory.
     """
-    try:
-        print('Running Environment profiling:')
-        full_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.full_env_step_time.tsv')
-        core_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.core_env_step_time.tsv')
-        maze_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.maze_env_step_time.tsv')
-        obs_conv_df = read_event_log(cur_dir, 'EnvProfilingEvents.observation_conv_time.tsv')
-        act_conv_df = read_event_log(cur_dir, 'EnvProfilingEvents.action_conv_time.tsv')
-        wrapper_df = read_event_log(cur_dir, 'EnvProfilingEvents.wrapper_step_time.tsv')
+    # Check if necessary events exists and can be loaded
+    full_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.full_env_step_time.tsv')
+    core_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.core_env_step_time.tsv')
+    maze_env_df = read_event_log(cur_dir, 'EnvProfilingEvents.maze_env_step_time.tsv')
+    obs_conv_df = read_event_log(cur_dir, 'EnvProfilingEvents.observation_conv_time.tsv')
+    act_conv_df = read_event_log(cur_dir, 'EnvProfilingEvents.action_conv_time.tsv')
+    wrapper_df = read_event_log(cur_dir, 'EnvProfilingEvents.wrapper_step_time.tsv')
+    if (
+        full_env_df is None
+        or core_env_df is None
+        or maze_env_df is None
+        or obs_conv_df is None
+        or act_conv_df is None
+        or wrapper_df is None
+    ):
+        logger.info('Events for environment profiling not recorded')
+        return
 
-        sub_step_mean = full_env_df['value'].mean()
-        print(f'\tAverage Sub-Step time:                {sub_step_mean:.4f}s based on '
-              f'{full_env_df["value"].count()} steps')
+    print('Running Environment profiling:')
 
-        flat_step_mean = full_env_df.groupby(['episode_id', 'env_time']).sum()['value']
-        print(f'\tAverage Flat-Step time:               {flat_step_mean.mean():.4f}s based on '
-              f'{flat_step_mean.count()} steps')
+    sub_step_mean = full_env_df['value'].mean()
+    print(f'\tAverage Sub-Step time:                {sub_step_mean:.4f}s based on '
+          f'{full_env_df["value"].count()} steps')
 
-        episode_mean = full_env_df.groupby('episode_id').sum()['value']
-        print(f'\tAverage Episode (without reset) time: {episode_mean.mean():.4f}s based on {episode_mean.count()} '
-              f'episodes')
+    flat_step_mean = full_env_df.groupby(['episode_id', 'env_time']).sum()['value']
+    print(f'\tAverage Flat-Step time:               {flat_step_mean.mean():.4f}s based on '
+          f'{flat_step_mean.count()} steps')
 
-        print(f'\tTotal time spend in steps:            {full_env_df["value"].sum():.4f}s based on '
-              f'{full_env_df["value"].count()} steps')
+    episode_mean = full_env_df.groupby('episode_id').sum()['value']
+    print(f'\tAverage Episode (without reset) time: {episode_mean.mean():.4f}s based on {episode_mean.count()} '
+          f'episodes')
 
-        total_time = full_env_df['value'].sum()
-        sub_step_count = full_env_df['value'].count()
-        total_timings = dict(wrapper_df.groupby('wrapper_name')['time'].sum().sort_index())
-        total_timings.update({'MazeEnv-other': maze_env_df['time'].sum(), 'MazeEnv-ObsConv': obs_conv_df['time'].sum(),
-                              'MazeEnv-ActConv': act_conv_df['time'].sum(), 'CoreEnv': core_env_df['time'].sum()})
-        std_timings = dict(wrapper_df.groupby('wrapper_name')['time'].std().sort_index())
-        std_timings.update({'MazeEnv-other': maze_env_df['time'].std(), 'MazeEnv-ObsConv': obs_conv_df['time'].std(),
-                            'MazeEnv-ActConv': act_conv_df['time'].std(), 'CoreEnv': core_env_df['time'].std()})
+    print(f'\tTotal time spend in steps:            {full_env_df["value"].sum():.4f}s based on '
+          f'{full_env_df["value"].count()} steps')
 
-        assert np.isclose(total_time, sum(total_timings.values())), f'{total_time} vs {sum(total_timings.values())}'
+    total_time = full_env_df['value'].sum()
+    sub_step_count = full_env_df['value'].count()
+    total_timings = dict(wrapper_df.groupby('wrapper_name')['time'].sum().sort_index())
+    total_timings.update({'MazeEnv-other': maze_env_df['time'].sum(), 'MazeEnv-ObsConv': obs_conv_df['time'].sum(),
+                          'MazeEnv-ActConv': act_conv_df['time'].sum(), 'CoreEnv': core_env_df['time'].sum()})
+    std_timings = dict(wrapper_df.groupby('wrapper_name')['time'].std().sort_index())
+    std_timings.update({'MazeEnv-other': maze_env_df['time'].std(), 'MazeEnv-ObsConv': obs_conv_df['time'].std(),
+                        'MazeEnv-ActConv': act_conv_df['time'].std(), 'CoreEnv': core_env_df['time'].std()})
 
-        print_as_dataframe(total_timings, total_time, wrapper_df, maze_env_df, obs_conv_df, act_conv_df, core_env_df)
+    assert np.isclose(total_time, sum(total_timings.values())), f'{total_time} vs {sum(total_timings.values())}'
 
-        plot_pi_chart(total_time, sub_step_count, total_timings, std_timings,
-                      title_txt=f'Full Sub-step mean time: {sub_step_mean:.4f}s over: {sub_step_count} steps',
-                      output_file_path=f'{cur_dir}/env_profiling.png')
+    print_as_dataframe(total_timings, total_time, wrapper_df, maze_env_df, obs_conv_df, act_conv_df, core_env_df)
 
-        # In case the investigate_time was declared in the core env, the different operations of the core env
-        # can be profiled as well. Here not everything has to be specified, thus we calculate the difference to the
-        # core env step time and mark it as 'untracked_time'.
-        if os.path.exists(os.path.join(cur_dir, 'event_logs', 'EnvProfilingEvents.investigate_time.tsv')):
-            profiling_df = read_event_log(cur_dir, 'EnvProfilingEvents.investigate_time.tsv')
-            print(profiling_df.groupby('name')['time'].sum())
-            total_timings = dict(profiling_df.groupby('name')['time'].sum())
-            std_timings = dict(profiling_df.groupby('name')['time'].std())
-            time_core_env = core_env_df['time'].sum()
-            untracked_time = time_core_env - sum(total_timings.values())
-            assert 'untracked_time' not in total_timings
-            total_timings['untracked_time'] = untracked_time
-            per_core_env = time_core_env / total_time
+    plot_pi_chart(total_time, sub_step_count, total_timings, std_timings,
+                  title_txt=f'Full Sub-step mean time: {sub_step_mean:.4f}s over: {sub_step_count} steps',
+                  output_file_path=f'{cur_dir}/env_profiling.png')
 
-            plot_pi_chart(
-                time_core_env, sub_step_count, total_timings, std_timings,
-                title_txt=(f'CoreEnv (Sub-) step mean time: {time_core_env.sum() / sub_step_count:.4f}s '
-                           f'[{per_core_env * 100:.3f}% of flat step] over: {sub_step_count} steps'),
-                output_file_path=f'{cur_dir}/core_env_profiling.png')
-    except Exception as e:
-        print(f'Error encountered producing profiling plot: {e}')
+    # In case the investigate_time was declared in the core env, the different operations of the core env
+    # can be profiled as well. Here not everything has to be specified, thus we calculate the difference to the
+    # core env step time and mark it as 'untracked_time'.
+    profiling_df = read_event_log(cur_dir, 'EnvProfilingEvents.investigate_time.tsv')
+    if profiling_df is not None:
+        print(profiling_df.groupby('name')['time'].sum())
+        total_timings = dict(profiling_df.groupby('name')['time'].sum())
+        std_timings = dict(profiling_df.groupby('name')['time'].std())
+        time_core_env = core_env_df['time'].sum()
+        untracked_time = time_core_env - sum(total_timings.values())
+        assert 'untracked_time' not in total_timings
+        total_timings['untracked_time'] = untracked_time
+        per_core_env = time_core_env / total_time
+
+        plot_pi_chart(
+            time_core_env, sub_step_count, total_timings, std_timings,
+            title_txt=(f'CoreEnv (Sub-) step mean time: {time_core_env.sum() / sub_step_count:.4f}s '
+                       f'[{per_core_env * 100:.3f}% of flat step] over: {sub_step_count} steps'),
+            output_file_path=f'{cur_dir}/core_env_profiling.png')
 
 
 if __name__ == '__main__':
