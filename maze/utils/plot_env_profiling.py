@@ -8,6 +8,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 logger = logging.getLogger(os.path.basename(__file__))
+logger.setLevel(logging.INFO)
 
 
 def read_event_log(input_dir: str, event_name: str) -> Union[pd.DataFrame, None]:
@@ -132,7 +133,7 @@ def plot_env_profiling(cur_dir: str) -> None:
         or act_conv_df is None
         or wrapper_df is None
     ):
-        logger.info('Events for environment profiling not recorded')
+        logger.debug('Events for environment profiling not recorded')
         return
 
     print('Running Environment profiling:')
