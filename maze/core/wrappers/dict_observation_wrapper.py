@@ -3,12 +3,13 @@
 import gym
 import numpy as np
 from maze.core.annotations import override
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 
 from maze.core.wrappers.wrapper import ObservationWrapper
 
 
-class DictObservationWrapper(ObservationWrapper[gym.Env]):
+class DictObservationWrapper(ObservationWrapper[MazeEnv]):
     """Wraps a single observation into a dictionary space.
     """
 

@@ -9,6 +9,7 @@ import numpy as np
 
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.pubsub import Pubsub
@@ -31,7 +32,7 @@ from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversi
     as DummyObservationConversion
 
 
-def _run_rollout_loop(env: Union[BaseEnv, gym.Env], n_steps_per_episode: int, n_episodes: int, writer: LogEventsWriter):
+def _run_rollout_loop(env: Union[BaseEnv, MazeEnv], n_steps_per_episode: int, n_episodes: int, writer: LogEventsWriter):
     LogEventsWriterRegistry.writers = []  # Ensure there is no other writer
     LogEventsWriterRegistry.register_writer(writer)
 

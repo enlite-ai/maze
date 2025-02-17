@@ -4,12 +4,13 @@ from typing import Dict, Tuple, Union
 import gym
 import numpy as np
 from maze.core.annotations import override
+from maze.core.env.maze_env import MazeEnv
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 
 from maze.core.wrappers.wrapper import ActionWrapper
 
 
-class DictActionWrapper(ActionWrapper[gym.Env]):
+class DictActionWrapper(ActionWrapper[MazeEnv]):
     """Wraps either a single action space or a tuple action space into dictionary space.
 
     :param env: The environment to wrap.

@@ -4,8 +4,6 @@ import pickle
 from pathlib import Path
 from typing import Union, Any, Tuple, Dict, Optional
 
-import gym
-
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
@@ -28,7 +26,7 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
                        will be named after the episode ID, with ".pkl" suffix.
     """
 
-    def __init__(self, env: Union[gym.Env, MazeEnv], output_dir: str = "space_records"):
+    def __init__(self, env: Union[MazeEnv], output_dir: str = "space_records"):
         super().__init__(env)
 
         self.episode_record: Optional[SpacesTrajectoryRecord] = None

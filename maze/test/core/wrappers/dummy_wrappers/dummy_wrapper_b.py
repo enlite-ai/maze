@@ -4,8 +4,7 @@ Dummy wrappers for generic wrapper configuration's unit tests.
 
 from typing import Union
 
-import gym
-
+from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.wrapper import Wrapper
 from maze.test.core.wrappers.dummy_wrappers.dummy_wrappers import DummyWrapper
 
@@ -17,7 +16,7 @@ class DummyWrapperB(DummyWrapper):
 
     def __init__(
             self,
-            env: Union[gym.Env, Wrapper],
+            env: Union[MazeEnv, Wrapper],
             arg_b: str,
             arg_c: str
     ):
