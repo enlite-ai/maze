@@ -40,8 +40,10 @@ class ImpalaRunner(TrainingRunner):
         Adjusts initial values where necessary.
         """
 
-        if self.eval_concurrency <= 0:
+        if self.eval_concurrency < 0:
             self.eval_concurrency = query_cpu()
+        elif self.eval_concurrency == 0:
+            self.eval_concurrency = 1
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:
