@@ -57,11 +57,12 @@ class Process(mp.Process):
 
 def query_cpu() -> int:
     """
-    Queries alloted CPUs.
+    Queries allotted CPUs.
     Source: https://bugs.python.org/issue36054.
-    :return: Alloted CPUs.
+    :return: Allotted CPUs.
     """
 
+    # Use single CPU if this runs within a gitlab pipeline
     if 'TEST_LEVEL' in os.environ and os.environ["TEST_LEVEL"] == "GITLAB":
         return 1
 

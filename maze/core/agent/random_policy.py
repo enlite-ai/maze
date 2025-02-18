@@ -207,7 +207,7 @@ class DistributedRandomPolicy(RandomPolicy):
 
     def __init__(self, action_spaces_dict: Dict[Union[str, int], spaces.Space], concurrency: int):
         super().__init__(action_spaces_dict)
-        self.concurrency = concurrency if concurrency > 0 else query_cpu()
+        self.concurrency = concurrency if concurrency > 0 else 1 if concurrency == 0 else query_cpu()
 
     def compute_action(self,
                        observation: ObservationType,
