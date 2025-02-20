@@ -52,7 +52,9 @@ class SACRunner(TrainingRunner):
         """
         Adjusts initial values where necessary.
         """
-        self.eval_concurrency = self.eval_concurrency if self.eval_concurrency > 0 else 1 if self.eval_concurrency == 0 else query_cpu()
+
+        if self.eval_concurrency <= 0:
+            self.eval_concurrency = query_cpu()
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:
