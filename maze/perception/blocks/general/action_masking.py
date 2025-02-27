@@ -71,7 +71,7 @@ class ActionMaskingBlock(PerceptionBlock):
                                                          f'action_mask.shape: {action_mask.shape}'
 
         # forward pass
-        inverted_mask = torch.tensor(1.0).to(action_mask.device) - action_mask
+        inverted_mask = torch.logical_not(action_mask)
         logits_tensor_out = action_logits + inverted_mask * np.finfo(np.float32).min
 
         return {self.out_keys[0]: logits_tensor_out}
