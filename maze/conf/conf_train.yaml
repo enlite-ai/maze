@@ -46,6 +46,14 @@ seeding:
   # Specify whether to set the cudnn determinism flag, this will ensure guaranty when working on the gpu, however some
   # torch modules will raise runtime errors, and the processing speed will be decreased.
   cudnn_determinism_flag: false
+  # Optionally specify an explicit sequence of seeds used for seeding the environment (w.r.t. each episode).
+  explicit_env_seeds: ~
+  # Optionally specify an explicit sequence of seeds used for seeding the evaluation environment (w.r.t. each episode).
+  explicit_env_eval_seeds: ~
+  # Optionally specify an explicit sequence of seeds used for seeding the agent (w.r.t. each episode).
+  explicit_agent_seeds: ~
+  # Specify whether the explicit sequence of seeds should be shuffled (based on the env/agent _base_seed).
+  shuffle_seeds: false
 
 # Configuration for Hydra
 hydra:

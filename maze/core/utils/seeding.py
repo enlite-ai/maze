@@ -49,6 +49,7 @@ class MazeSeeding:
 
     def __init__(self, env_seed: int, agent_seed: int, cudnn_determinism_flag: bool,
                  explicit_env_seeds: Optional[Union[Sequence[Any], ConfigType]],
+                 explicit_env_eval_seeds: Optional[Union[Sequence[Any], ConfigType]],
                  explicit_agent_seeds: Optional[Union[Sequence[Any], ConfigType]],
                  shuffle_seeds: bool):
         self._env_base_seed = env_seed
@@ -60,6 +61,8 @@ class MazeSeeding:
         self._shuffle_seeds = shuffle_seeds
 
         self._explicit_env_seeds = explicit_env_seeds
+        self._explicit_env_eval_seeds = explicit_env_eval_seeds
+
         if self._explicit_env_seeds is not None:
             self._explicit_env_seeds = list(Factory(Sequence).instantiate(explicit_env_seeds))
             if self._shuffle_seeds:
@@ -67,6 +70,14 @@ class MazeSeeding:
                 self._explicit_env_seeds = list(self.env_rng.permutation(self._explicit_env_seeds))
                 if seed_is_int:
                     self._explicit_env_seeds = list(map(int, self._explicit_env_seeds))
+
+        if self._explicit_env_eval_seeds is not None:
+            self._explicit_env_eval_seeds = list(Factory(Sequence).instantiate(explicit_env_eval_seeds))
+            if self._shuffle_seeds:
+                seed_is_int = isinstance(self._explicit_env_eval_seeds[0], int)
+                self._explicit_env_eval_seeds = list(self.env_rng.permutation(self._explicit_env_eval_seeds))
+                if seed_is_int:
+                    self._explicit_env_eval_seeds = list(map(int, self._explicit_env_eval_seeds))
 
         self._explicit_agent_seeds = explicit_agent_seeds
         if self._explicit_agent_seeds is not None:
@@ -87,6 +98,20 @@ class MazeSeeding:
         """
         if self._explicit_env_seeds is not None:
             return self._explicit_env_seeds[:n_seeds]
+        else:
+            seeds = [self.generate_env_instance_seed() for _ in range(n_seeds)]
+            if self._shuffle_seeds:
+                seeds = list(map(int, self.env_rng.permutation(seeds)))
+            return seeds
+
+    def get_explicit_env_eval_seeds(self, n_seeds: int) -> List[Any]:
+        """Return a list of explicit env seeds to be used in the evaluation env.
+
+        :param n_seeds: The number of seeds to be returned.
+        :return: A list of seeds.
+        """
+        if self._explicit_env_eval_seeds is not None:
+            return self._explicit_env_eval_seeds[:n_seeds]
         else:
             seeds = [self.generate_env_instance_seed() for _ in range(n_seeds)]
             if self._shuffle_seeds:
