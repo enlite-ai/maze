@@ -54,7 +54,7 @@ class RolloutRunner(Runner, ABC):
         self.maze_seeding = MazeSeeding(env_seed=np.random.randint(np.iinfo(np.int32).max),
                                         agent_seed=np.random.randint(np.iinfo(np.int32).max),
                                         cudnn_determinism_flag=False, explicit_env_seeds=None,
-                                        explicit_agent_seeds=None, shuffle_seeds=False)
+                                        explicit_env_eval_seeds=None, explicit_agent_seeds=None, shuffle_seeds=False)
 
     @override(Runner)
     def setup(self, cfg: DictConfig) -> None:
@@ -69,6 +69,7 @@ class RolloutRunner(Runner, ABC):
         # Generate a random state used for sampling random seeds for the envs and agents
         self.maze_seeding = MazeSeeding(env_seed=cfg.seeding.env_base_seed, agent_seed=cfg.seeding.agent_base_seed,
                                         cudnn_determinism_flag=cfg.seeding.cudnn_determinism_flag,
+                                        explicit_env_eval_seeds=cfg.seeding.explicit_env_eval_seeds,
                                         explicit_env_seeds=cfg.seeding.explicit_env_seeds,
                                         explicit_agent_seeds=cfg.seeding.explicit_agent_seeds,
                                         shuffle_seeds=cfg.seeding.shuffle_seeds)
