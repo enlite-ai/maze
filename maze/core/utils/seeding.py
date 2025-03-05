@@ -44,7 +44,10 @@ class MazeSeeding:
         working on the gpu, however some torch modules will raise runtime errors, and the processing speed will be
         decreased. For more information on this topic please refer to:
         https://pytorch.org/docs/1.7.1/notes/randomness.html?highlight=reproducability
-
+    :param explicit_env_seeds: Explicit sequence of seeds used for seeding the environment (w.r.t. each episode).
+    :param explicit_env_eval_seeds: Explicit sequence of seeds used for seeding the evaluation environment (w.r.t. each episode).
+    :param explicit_agent_seeds: Explicit sequence of seeds used for seeding the agent (w.r.t. each episode).
+    :param shuffle_seeds: Whether the explicit sequence of seeds should be shuffled (based on the env/agent _base_seed).
     """
 
     def __init__(self, env_seed: int, agent_seed: int, cudnn_determinism_flag: bool,
