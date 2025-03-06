@@ -24,14 +24,14 @@ jobs:
           driver-opts: network=host
 
       - name: Cache layers for image.
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-rlltf-env
           key: buildx-rlltf-env-${{ github.sha }}
           restore-keys: buildx-rlltf-env-
 
       - name: Cache layers for image.
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-rlltf
           key: buildx-rlltf-${{ github.sha }}
@@ -111,14 +111,14 @@ jobs:
           driver-opts: network=host
 
       - name: Cache layers for image with environment.
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-env
           key: buildx-env-${{ github.sha }}
           restore-keys: buildx-env-
 
       - name: Cache layers for image with environment and code.
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: buildx-${{ github.sha }}
