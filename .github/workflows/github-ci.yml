@@ -19,7 +19,7 @@ jobs:
         run: sudo rm -rf "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY" "/usr/share/dotnet/" "/usr/local/lib/android"
 
       - name: Set up Docker Buildx.
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
         with:
           driver-opts: network=host
 
@@ -38,13 +38,13 @@ jobs:
           restore-keys: buildx-rlltf-
 
       - name: Login to DockerHub.
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build image.
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           file: docker/maze-core-env.dockerfile
           cache-from: type=local,src=/tmp/.buildx-cache-rlltf-env
@@ -53,7 +53,7 @@ jobs:
           push: true
 
       - name: Build image with code.
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           file: docker/maze-core.dockerfile
           build-args: MAZE_CORE_ENV=localhost:5000/enliteai/maze:core-env
@@ -106,7 +106,7 @@ jobs:
         run: sudo rm -rf "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY" "/usr/share/dotnet/"
 
       - name: Set up Docker Buildx.
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
         with:
           driver-opts: network=host
 
@@ -125,13 +125,13 @@ jobs:
           restore-keys: buildx-
 
       - name: Login to DockerHub.
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build image with environment.
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           file: docker/maze-core-env.dockerfile
           cache-from: type=local,src=/tmp/.buildx-cache-env
@@ -140,7 +140,7 @@ jobs:
           push: true
 
       - name: Build and push image with environment and code.
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           file: docker/maze-core.dockerfile
           build-args: MAZE_CORE_ENV=localhost:5000/enliteai/maze:env
@@ -168,17 +168,17 @@ jobs:
     steps:
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push playground Docker image
         id: docker_build_playground
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           file: docker/playground.dockerfile
           tags: enliteai/maze:playground
