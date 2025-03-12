@@ -3,7 +3,7 @@ from collections import OrderedDict
 from typing import Dict, Union, Sequence
 
 import torch.nn as nn
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
@@ -115,7 +115,7 @@ def train_function(n_epochs: int, epoch_length: int, deterministic_eval: bool,
     """
 
     # initialize distributed env
-    env_factory = lambda: GymMazeEnv(env="LunarLanderContinuous-v2")
+    env_factory = lambda: GymMazeEnv(env="LunarLanderContinuous-v3", render_mode=None)
 
     # initialize the env and enable statistics collection
     eval_env = distributed_env_cls([env_factory for _ in range(2)],
@@ -125,7 +125,7 @@ def train_function(n_epochs: int, epoch_length: int, deterministic_eval: bool,
     # init distribution mapper
     distribution_mapper = DistributionMapper(
         action_space=env.action_space,
-        distribution_mapper_config=[{'action_space': 'gym.spaces.Box',
+        distribution_mapper_config=[{'action_space': 'gymnasium.spaces.Box',
                                      'distribution': 'maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution'}])
 
     action_shapes = {step_key: {action_head: tuple(distribution_mapper.required_logits_shape(action_head))

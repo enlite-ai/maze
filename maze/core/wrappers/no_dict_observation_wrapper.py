@@ -1,7 +1,7 @@
 """Contains a dictionary-space removal observation wrapper."""
 from typing import Dict, Union, Any
 
-import gym
+import gymnasium as gym
 from maze.core.annotations import override
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin

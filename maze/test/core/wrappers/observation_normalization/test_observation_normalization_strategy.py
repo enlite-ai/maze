@@ -1,6 +1,6 @@
 """Contains observation normalization strategy tests"""
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.wrappers.observation_normalization.normalization_strategies.mean_zero_std_one import \

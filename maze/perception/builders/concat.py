@@ -1,7 +1,7 @@
 """ Contains a concatenation model builder. """
 from typing import Dict, Union, Any, Optional, List
 
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory

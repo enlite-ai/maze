@@ -2,7 +2,7 @@
 
 from typing import Dict
 
-import gym
+import gymnasium as gym
 
 from maze.core.env.observation_conversion import ObservationConversionInterface
 

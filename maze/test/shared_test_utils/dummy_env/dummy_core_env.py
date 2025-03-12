@@ -3,7 +3,7 @@ Includes the implementation of the dummy core environment.
 """
 from typing import Tuple, Dict, Any, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.env.core_env import CoreEnv

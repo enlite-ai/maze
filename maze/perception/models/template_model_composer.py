@@ -2,7 +2,7 @@
 import functools
 from typing import Optional, Dict, Union, Type, Tuple, List
 
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchSharedStateActionCritic, \

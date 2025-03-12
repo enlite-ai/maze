@@ -2,7 +2,7 @@
 from typing import Tuple, Sequence
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.wrappers.observation_preprocessing.preprocessors.base import PreProcessor
 from maze.core.annotations import override

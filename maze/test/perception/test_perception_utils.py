@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 import torch
-from gym import spaces
+from gymnasium import spaces
 
 from maze.perception.perception_utils import flatten_spaces, observation_spaces_to_in_shapes, \
     map_nested_structure, convert_to_torch, convert_to_numpy, stack_and_flatten_spaces

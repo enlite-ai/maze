@@ -2,7 +2,7 @@
 import pickle
 from typing import Tuple, Dict, Any, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.annotations import override

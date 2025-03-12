@@ -18,7 +18,7 @@ from maze.utils.timeout import Timeout
 
 
 def _env_factory():
-    return GymMazeEnv("CartPole-v0")
+    return GymMazeEnv("CartPole-v1", render_mode=None)
 
 
 def _policy(env: GymMazeEnv):

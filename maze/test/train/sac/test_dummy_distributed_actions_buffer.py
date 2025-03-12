@@ -22,7 +22,7 @@ def create_dummy_distributed_actors(rollouts_per_iteration: int, n_rollout_steps
     """Create a dummy distributed actors and tests the rollout and buffer
     """
 
-    hydra_overrides = {'env': 'gym_env', 'env.name': "LunarLanderContinuous-v2", 'model': 'vector_obs',
+    hydra_overrides = {'env': 'gym_env', 'env.name': "LunarLanderContinuous-v3", 'model': 'vector_obs',
                        'model.critic': 'null', 'wrappers': 'vector_obs'}
     cfg = load_hydra_config('maze.conf', 'conf_rollout', hydra_overrides)
     env_factory = EnvFactory(cfg.env, cfg.wrappers if "wrappers" in cfg else {})

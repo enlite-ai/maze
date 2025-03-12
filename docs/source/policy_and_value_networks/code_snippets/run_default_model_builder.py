@@ -1,5 +1,5 @@
 """Builds an inference graph visualization from a given model config."""
-import gym
+import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml

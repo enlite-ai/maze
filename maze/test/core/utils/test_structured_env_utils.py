@@ -1,5 +1,5 @@
 """ Contains unit tests for maze core utility functions. """
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.utils.structured_env_utils import flat_structured_space, flat_structured_shapes, \
     stacked_shapes

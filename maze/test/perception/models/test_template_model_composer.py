@@ -27,7 +27,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
                                        shared_embedding_keys: Optional[Union[List[str], Dict[StepKeyType, List[str]]]]):
     """ helper function """
     # init environment
-    env = GymMazeEnv('CartPole-v0')
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
     observation_space = env.observation_space
     action_space = env.action_space
 

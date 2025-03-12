@@ -1,5 +1,5 @@
 """ Unit tests for pre-processors. """
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.wrappers.observation_preprocessing.preprocessors.flatten import FlattenPreProcessor

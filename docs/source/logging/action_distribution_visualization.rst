@@ -40,7 +40,7 @@ Discrete and Multi Binary Actions
 Each :ref:`action space <action_spaces_and_distributions>` has a dedicated visualization assigned.
 Discrete and multi-binary action spaces are visualized via histograms.
 The example below shows an action sampling distribution for the discrete version of
-`LunarLander-v2 <https://gym.openai.com/envs/LunarLander-v2/>`_.
+`LunarLander-v3 <https://www.gymlibrary.dev/environments/box2d/lunar_lander/>`_.
 The indices on the x-axis correspond to the available actions:
 
 - Action :math:`a_0` - do nothing
@@ -58,7 +58,7 @@ Continuous Actions
 
 Continuous actions (Box spaces) are visualized via violin plots.
 The example below shows an action sampling distribution for
-`LunarLanderContinuous-v2 <https://gym.openai.com/envs/LunarLanderContinuous-v2/>`_.
+`LunarLanderContinuous-v3 <https://www.gymlibrary.dev/environments/box2d/lunar_lander/>`_.
 The indices on the x-axis correspond to the available actions:
 
 - Action :math:`a_1` - controls the main engine:

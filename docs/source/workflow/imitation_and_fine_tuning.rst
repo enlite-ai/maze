@@ -29,7 +29,7 @@ As the training trajectories might be already available (e.g., collected in prac
 this step is optional.
 
 As an example environment we pick the discrete version of the
-`LunarLander environment <https://gym.openai.com/envs/LunarLander-v2>`_
+`LunarLander environment <https://www.gymlibrary.dev/environments/box2d/lunar_lander/>`_
 as it already provides a heuristic policy which we can use to collect or training trajectories for imitation learning.
 
 .. image:: lunar_lander.png
@@ -40,7 +40,7 @@ But first let's check if the policy actually does something meaningful by runnin
 
 .. code-block:: console
 
-  maze-run env.name=LunarLander-v2 policy=lunar_lander_heuristics \
+  maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics \
   runner=sequential runner.render=true runner.n_episodes=3
 
 Hopefully this looks good and we can continue with actually collecting example trajectories for imitation learning.
@@ -50,7 +50,7 @@ and records them to the output directory.
 
 .. code-block:: console
 
-  maze-run env.name=LunarLander-v2 policy=lunar_lander_heuristics runner.n_episodes=3
+  maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics runner.n_episodes=3
 
 You will get the following output summarizing the statistics of the rollouts.
 
@@ -96,7 +96,7 @@ To do so we simply provide the trajectory data as an argument and run:
 
 .. code-block:: console
 
-    maze-run -cn conf_train env.name=LunarLander-v2 model=vector_obs wrappers=vector_obs \
+    maze-run -cn conf_train env.name=LunarLander-v3 model=vector_obs wrappers=vector_obs \
     algorithm=bc algorithm.validation_percentage=50 \
     runner.dataset.dir_or_file=<absolute_experiment_path>/trajectory_data
 
@@ -133,7 +133,7 @@ Once training is complete we can check how the behaviourally cloned policy perfo
 
 .. code-block:: console
 
-    maze-run env.name=LunarLander-v2 model=vector_obs wrappers=vector_obs \
+    maze-run env.name=LunarLander-v3 model=vector_obs wrappers=vector_obs \
     policy=torch_policy input_dir=outputs/<imitation-learning-experiment>
 
 .. code-block:: console
@@ -163,7 +163,7 @@ It is basically a standard PPO training run initialized with the imitation learn
 
 .. code-block:: console
 
-    maze-run -cn conf_train env.name=LunarLander-v2 model=vector_obs critic=template_state wrappers=vector_obs \
+    maze-run -cn conf_train env.name=LunarLander-v3 model=vector_obs critic=template_state wrappers=vector_obs \
     algorithm=ppo runner.eval_repeats=100 runner.critic_burn_in_epochs=10 \
     input_dir=outputs/<imitation-learning-experiment>
 

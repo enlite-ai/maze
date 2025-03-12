@@ -1,6 +1,6 @@
 import numpy as np
 from typing import Dict
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationConversionInterface

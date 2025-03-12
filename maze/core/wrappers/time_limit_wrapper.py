@@ -12,7 +12,7 @@ from maze.core.wrappers.wrapper import Wrapper, EnvType
 
 
 class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
-    """Wrapper to limit the environment step count, equivalent to gym.wrappers.time_limit.
+    """Wrapper to limit the environment step count, equivalent to gymnasium.wrappers.time_limit.
 
     Additionally to the gym wrapper, this one supports adjusting the limit after construction.
 

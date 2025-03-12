@@ -1,6 +1,6 @@
 """ Contains unit tests for concat model builder """
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.builders.concat import ConcatModelBuilder

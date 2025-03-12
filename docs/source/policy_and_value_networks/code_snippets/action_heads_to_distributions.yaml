@@ -1,6 +1,6 @@
 # @package model
 distribution_mapper_config:
-  - action_space: gym.spaces.Box
+  - action_space: gymnasium.spaces.Box
     distribution: maze.distributions.beta.BetaProbabilityDistribution
   - action_head: special_action
     distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution

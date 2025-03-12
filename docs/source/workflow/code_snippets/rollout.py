@@ -3,7 +3,7 @@ from maze.core.rollout.sequential_rollout_runner import SequentialRolloutRunner
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 
 # Instantiate an example environment and agent
-env = GymMazeEnv("CartPole-v0")
+env = GymMazeEnv("CartPole-v1")
 agent = DummyCartPolePolicy()
 
 # Run a sequential rollout with rendering

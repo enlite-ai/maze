@@ -12,20 +12,20 @@ from maze.utils.timeout import Timeout
 trainings = [
     # PPO
     [180, {"algorithm": "ppo", "algorithm.n_epochs": "3", "algorithm.rollout_evaluator.n_episodes": "0",
-           "env": "gym_env", "env.name": "CartPole-v0"}],
+           "env": "gym_env", "env.name": "CartPole-v1"}],
     # A2C
     [180, {"algorithm": "a2c", "algorithm.n_epochs": "5", "algorithm.rollout_evaluator.n_episodes": "0",
-           "env": "gym_env", "env.name": "CartPole-v0"}],
+           "env": "gym_env", "env.name": "CartPole-v1"}],
     # IMPALA
     [180, {"algorithm": "impala", "algorithm.n_epochs": "5", "algorithm.rollout_evaluator.n_episodes": "0",
-           "env": "gym_env", "env.name": "CartPole-v0"}],
+           "env": "gym_env", "env.name": "CartPole-v1"}],
     # SAC
     [180, {"algorithm": "sac", "algorithm.n_epochs": "30", "algorithm.rollout_evaluator.n_episodes": "0",
-           "env": "gym_env", "env.name": "CartPole-v0",
+           "env": "gym_env", "env.name": "CartPole-v1",
            "model": "vector_obs", "critic": "template_state_action"}],
     # ES
     [180, {"algorithm": "es", "algorithm.n_epochs": "100", "algorithm.n_rollouts_per_update": "20",
-           "env": "gym_env", "env.name": "CartPole-v0"}],
+           "env": "gym_env", "env.name": "CartPole-v1"}],
 ]
 
 

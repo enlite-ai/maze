@@ -38,7 +38,7 @@ def run_observation_normalization_pipeline(normalization_config) -> ObservationN
     """ observation normalization test """
 
     # wrap env with observation normalization
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
     env = ObservationNormalizationWrapper(env,
                                           default_strategy=normalization_config["default_strategy"],
                                           default_strategy_config=normalization_config["default_strategy_config"],
@@ -67,7 +67,7 @@ def run_observation_normalization_pipeline(normalization_config) -> ObservationN
 
 def perform_config_test(normalization_config):
     # init environment
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
 
     # wrap env with observation normalization
     env = ObservationNormalizationWrapper(env,
@@ -97,7 +97,7 @@ def test_observation_normalization_manual_stats():
     """ observation normalization test """
 
     # init environment
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
 
     # manual normalization configs
     normalization_config_1 = {
@@ -134,7 +134,7 @@ def test_observation_normalization_manual_default_stats():
     """ observation normalization test """
 
     # init environment
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
 
     # normalization config
     normalization_config = {
@@ -175,7 +175,7 @@ def test_observation_normalization_pipeline():
     """ observation normalization test """
 
     # wrap env with observation normalization
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
     # normalization config
     normalization_config = {
         "default_strategy": "maze.normalization_strategies.RangeZeroOneObservationNormalizationStrategy",
@@ -222,7 +222,7 @@ def test_observation_normalization_pipeline():
     assert os.path.exists("statistics.pkl")
 
     # wrap env with observation normalization
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
     env = ObservationNormalizationWrapper(env,
                                           default_strategy=normalization_config["default_strategy"],
                                           default_strategy_config=normalization_config["default_strategy_config"],
@@ -321,7 +321,7 @@ def test_observation_normalization_init_from_yaml_config():
     config = load_env_config(test_observation_normalization_module, "dummy_config_file.yml")
 
     # init environment
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
     env = ObservationNormalizationWrapper(env, **config["observation_normalization_wrapper"])
     assert isinstance(env, ObservationNormalizationWrapper)
 
@@ -361,7 +361,7 @@ def test_observation_statistics_logging():
     register_log_stats_writer(LogStatsWriterConsole())
 
     # init environment
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
 
     # wrap env with observation normalization
     env = ObservationNormalizationWrapper(env,

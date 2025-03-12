@@ -4,7 +4,7 @@ from abc import ABC
 from typing import Tuple, Optional
 from typing import Union, List, Type, Dict
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.env.base_env import BaseEnv
@@ -146,7 +146,7 @@ def test_logs_events_for_generic_gym_envs():
 
     writer = TestWriter()
     _run_rollout_loop(
-        env=GymMazeEnv(gym.make('CartPole-v0')),
+        env=GymMazeEnv(gym.make('CartPole-v1', render_mode=None), render_mode=None),
         n_episodes=5,
         n_steps_per_episode=10,
         writer=writer)

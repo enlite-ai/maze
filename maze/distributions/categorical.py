@@ -2,7 +2,7 @@
 from typing import Sequence
 
 import torch
-from gym import spaces
+from gymnasium import spaces
 from torch.distributions import Categorical
 
 from maze.core.annotations import override

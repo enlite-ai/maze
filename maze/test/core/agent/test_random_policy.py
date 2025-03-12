@@ -3,7 +3,7 @@ import copy
 from typing import List
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.agent.random_policy import RandomPolicy, MaskedRandomPolicy
 from maze.core.env.action_conversion import ActionType

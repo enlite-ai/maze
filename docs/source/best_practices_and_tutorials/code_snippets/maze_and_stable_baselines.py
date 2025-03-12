@@ -13,9 +13,9 @@ from maze.core.wrappers.observation_normalization.observation_normalization_wrap
 
 from stable_baselines3 import A2C
 
-# ENV INSTANTIATION: a GymMazeEnv instead of a gym.Env
+# ENV INSTANTIATION: a GymMazeEnv instead of a gymnasium.Env
 # ----------------------------------------------------
-env = GymMazeEnv('CartPole-v0')
+env = GymMazeEnv('CartPole-v1')
 
 # OBSERVATION NORMALIZATION
 # -------------------------

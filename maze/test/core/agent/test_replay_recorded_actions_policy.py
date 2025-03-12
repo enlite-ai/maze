@@ -10,7 +10,7 @@ def test_replay_recorded_actions_policy():
 
     teacher_policy = HeuristicLunarLanderPolicy()
 
-    env = GymMazeEnv("LunarLander-v2")
+    env = GymMazeEnv("LunarLander-v3", render_mode=None)
     env = ActionRecordingWrapper.wrap(env, record_maze_actions=False, record_actions=True,
                                       output_dir="action_records")
 

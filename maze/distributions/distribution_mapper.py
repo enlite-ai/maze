@@ -2,7 +2,7 @@
 from typing import Dict, Tuple, Any, Sequence
 
 import torch
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.utils.factory import Factory, CollectionOfConfigType
 from maze.distributions.bernoulli import BernoulliProbabilityDistribution

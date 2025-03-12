@@ -16,7 +16,7 @@ from maze.perception.perception_utils import observation_spaces_to_in_shapes
 
 
 def test_cartpole_policy_model():
-    env = GymMazeEnv(env='CartPole-v0')
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     observation_spaces_dict = env.observation_spaces_dict
     action_spaces_dict = env.action_spaces_dict
 
@@ -47,7 +47,7 @@ def test_cartpole_policy_model():
 
 
 def test_cartpole_model_composer():
-    env = GymMazeEnv(env='CartPole-v0')
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     path_to_model_config = code_snippets.__path__._path[0] + '/custom_cartpole_net.yaml'
 
     model_composer = Factory(base_type=BaseModelComposer).instantiate(

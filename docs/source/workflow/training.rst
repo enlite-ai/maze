@@ -39,7 +39,7 @@ with default settings using the command:
 
 .. code:: console
 
-  $ maze-run -cn conf_train env=gym_env env.name=CartPole-v0
+  $ maze-run -cn conf_train env=gym_env env.name=CartPole-v1
 
 
 The ``-cn conf_train`` argument specifies that we would like to use
@@ -47,7 +47,7 @@ The ``-cn conf_train`` argument specifies that we would like to use
 needed as by default, configuration for :ref:`rollouts<rollouts>` is used.
 
 Furthermore, we specify that ``gym_env`` configuration should be used, with
-``CartPole-v0`` as the Gym environment name. (For more information on how to read and customize the default configuration files,
+``CartPole-v1`` as the Gym environment name. (For more information on how to read and customize the default configuration files,
 see :ref:`Hydra overview<hydra-overview-config_root>`.)
 
 Such a training run consists of these main stages, loaded based on the default configuration provided by Maze:
@@ -134,7 +134,7 @@ that we would like to instantiate:
 
 .. code:: console
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2
+  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3
 
 
 With appropriate overrides, we can also include vector observation model and wrappers
@@ -142,7 +142,7 @@ With appropriate overrides, we can also include vector observation model and wra
 
 .. code:: console
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 wrappers=vector_obs model=vector_obs
+  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 wrappers=vector_obs model=vector_obs
 
 Alternatively, we could use the :ref:`tutorial Cutting 2D environment <env_from_scratch>`:
 
@@ -176,13 +176,13 @@ This is the initial training run:
 
 .. code:: console
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo
+  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 algorithm=ppo
 
 We could also resume training with a refined learning rate:
 
 .. code:: console
 
-      $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v2 algorithm=ppo \
+      $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 algorithm=ppo \
         algorithm.lr=0.0001 input_dir=outputs/<experiment-dir>
 
 or even with a different (compatible) trainer such as a2c:

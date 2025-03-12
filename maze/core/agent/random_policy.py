@@ -3,7 +3,7 @@ import itertools
 from typing import Union, Dict, Tuple, Sequence, Optional
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from omegaconf import DictConfig
 
 from maze.core.agent.policy import Policy

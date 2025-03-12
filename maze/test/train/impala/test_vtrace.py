@@ -25,7 +25,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.distributions.distribution_mapper import DistributionMapper

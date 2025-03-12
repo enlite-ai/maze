@@ -2,7 +2,7 @@
 
 import torch
 import torch.nn as nn
-from gym import spaces
+from gymnasium import spaces
 
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import observation_spaces_to_in_shapes

@@ -1,7 +1,7 @@
 """Dummy action conversion. Actions and MazeActions are represented as integers."""
 from typing import Dict
 
-import gym
+import gymnasium as gym
 
 from maze.core.env.action_conversion import ActionConversionInterface
 from maze.core.env.maze_state import MazeStateType

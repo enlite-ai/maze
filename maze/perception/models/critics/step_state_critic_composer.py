@@ -1,7 +1,7 @@
 """Composer implementation for step critic."""
 from typing import Dict, Union
 
-from gym import spaces
+from gymnasium import spaces
 from torch import nn
 
 from maze.core.agent.torch_state_critic import TorchStepStateCritic

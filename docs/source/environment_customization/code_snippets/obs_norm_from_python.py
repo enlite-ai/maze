@@ -7,7 +7,7 @@ from maze.core.wrappers.observation_normalization.observation_normalization_util
     obtain_normalization_statistics
 
 # instantiate a maze environment
-env = GymMazeEnv("CartPole-v0")
+env = GymMazeEnv("CartPole-v1")
 
 # this is the normalization config as a python dict
 normalization_config = {
@@ -34,7 +34,7 @@ normalization_statistics = obtain_normalization_statistics(env, n_samples=1000)
 # ----------------------------------------------
 
 # instantiate a maze environment
-training_env = GymMazeEnv("CartPole-v0")
+training_env = GymMazeEnv("CartPole-v1")
 # wrap the environment for observation normalization
 training_env = ObservationNormalizationWrapper.wrap(training_env, **normalization_config)
 

@@ -36,20 +36,20 @@ Instantiating a Gym Environment as a Maze Environment
 -----------------------------------------------------
 
 The config snippet below shows how to instantiate an existing, already registered Gym environment
-as a GymMazeEnv referenced by its environment name (here *CartPole-v0*).
+as a GymMazeEnv referenced by its environment name (here *CartPole-v1*).
 
 .. code-block:: YAML
 
     # @package env
     _target_: maze.core.wrappers.maze_gym_env_wrapper.make_gym_maze_env
-    name: CartPole-v0
+    name: CartPole-v1
 
 To achieve the same result directly with plain Python you can start with the code snippet below.
 
 .. code-block:: PYTHON
 
     from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1")
 
 In case your custom Gym environment is not yet registered with Gym,
 you can also explicitly instantiate the environment before passing it to the GymMazeEnv.

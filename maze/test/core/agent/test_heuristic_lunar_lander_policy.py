@@ -6,7 +6,7 @@ from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 def test_heuristic_lunar_lander_policy():
     """unit tests"""
     policy = HeuristicLunarLanderPolicy()
-    env = GymMazeEnv("LunarLander-v2")
+    env = GymMazeEnv("LunarLander-v3", render_mode=None)
 
     obs = env.reset()
     action = policy.compute_action(obs)

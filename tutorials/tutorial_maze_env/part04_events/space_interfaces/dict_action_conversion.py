@@ -1,5 +1,5 @@
 from typing import Dict
-from gym import spaces
+from gymnasium import spaces
 from maze.core.env.action_conversion import ActionConversionInterface
 
 from ..env.maze_action import Cutting2DMazeAction

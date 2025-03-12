@@ -4,7 +4,7 @@ import os
 from abc import abstractmethod, ABC
 from typing import Dict, Optional
 
-import gym
+import gymnasium as gym
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchStateCritic

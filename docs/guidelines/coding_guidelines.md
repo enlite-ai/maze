@@ -20,7 +20,7 @@ The built-in collection types should not be used as type hints (lowercase ```lis
 Always use to ```Any``` class from the typing package, as the built-in ```any``` is not recognized by the documentation system.
 
 ### Import conflicts
-Due to regular confusions of ```gym.spaces``` and ```typing``` imports we decided to follow the convention below:
+Due to regular confusions of ```gymnasium.spaces``` and ```typing``` imports we decided to follow the convention below:
 
 For type hinting we use direct imports such and avoid built in types such as tuple or dict:
 
@@ -32,7 +32,7 @@ from typing import Dict, Tuple
 For gym spaces we follow this import scheme:
 
 ```python
-from gym import spaces
+from gymnasium import spaces
 -> spaces.Dict, -> spaces.Tuple
 ```
 
@@ -145,32 +145,32 @@ In the simple case of only one event interface, the reward calculation can take 
 
 ## Observation and Action Spaces
 
-When implementing new environments we currently (only) support flat dictionary spaces (gym.spaces.Dict).
+When implementing new environments we currently (only) support flat dictionary spaces (gymnasium.spaces.Dict).
 
 ### Action Spaces
-The action space dictionary holds the actual sub-action spaces (gym.spaces.MultiBinary, gym.spaces.Categorical, ...)
+The action space dictionary holds the actual sub-action spaces (gymnasium.spaces.MultiBinary, gymnasium.spaces.Categorical, ...)
 as mapping of string action keys to gym spaces:
 
 ```
 action_dict = dict()
-action_dict["action_0"] = gym.spaces.MultiBinary(5)
-action_dict["action_1"] = gym.spaces.Categorical(5)
+action_dict["action_0"] = gymnasium.spaces.MultiBinary(5)
+action_dict["action_1"] = gymnasium.spaces.Categorical(5)
 
-action_space = gym.spaces.Dict(spaces=action_dict)
+action_space = gymnasium.spaces.Dict(spaces=action_dict)
 ```
 
 ### Observation Spaces
 
-Observation spaces are dictionary spaces with gym.spaces.Box observation sub-spaces where keys should be again strings
-identifying the respective observation. The datatype of the gym.spaces.Box sub-spaces should be np.float32 already from
+Observation spaces are dictionary spaces with gymnasium.spaces.Box observation sub-spaces where keys should be again strings
+identifying the respective observation. The datatype of the gymnasium.spaces.Box sub-spaces should be np.float32 already from
 the beginning. Also make sure to set low and high bounds properly.
 
 ```
 observation_dict: dict = dict()
-observation_dict["observation_0"] = gym.spaces.Box(low=0, high=10, shape=(100,), dtype=np.float32)
-observation_dict["observation_1"] = gym.spaces.Box(low=0, high=1, shape=(5,), dtype=np.float32)
+observation_dict["observation_0"] = gymnasium.spaces.Box(low=0, high=10, shape=(100,), dtype=np.float32)
+observation_dict["observation_1"] = gymnasium.spaces.Box(low=0, high=1, shape=(5,), dtype=np.float32)
 
-observation_space = gym.spaces.Dict(spaces=action_dict)
+observation_space = gymnasium.spaces.Dict(spaces=action_dict)
 ```
 
 This has several reasons:

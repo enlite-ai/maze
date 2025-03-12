@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 
 
 class PreProcessor(ABC):

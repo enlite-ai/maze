@@ -1,6 +1,6 @@
 """Contains a dictionary observation space wrapper."""
 
-import gym
+import gymnasium as gym
 import numpy as np
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv

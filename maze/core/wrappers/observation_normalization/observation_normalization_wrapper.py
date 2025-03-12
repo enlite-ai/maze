@@ -7,7 +7,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, Union, List, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override

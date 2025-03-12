@@ -34,7 +34,7 @@ def test_heuristic_rollouts(hydra_overrides: Dict[str, str]):
 
 
 def test_rollouts_from_python():
-    env, agent = GymMazeEnv("CartPole-v0"), DummyCartPolePolicy()
+    env, agent = GymMazeEnv("CartPole-v1", render_mode=None), DummyCartPolePolicy()
 
     sequential = SequentialRolloutRunner(
         n_episodes=2,
@@ -68,7 +68,7 @@ def test_rollouts_from_python():
 
 
 def test_sequential_rollout_with_rendering():
-    env, agent = GymMazeEnv("CartPole-v0"), DummyCartPolePolicy()
+    env, agent = GymMazeEnv("CartPole-v1", render_mode=None), DummyCartPolePolicy()
     sequential = SequentialRolloutRunner(
         n_episodes=2,
         max_episode_steps=2,
@@ -85,7 +85,7 @@ def test_sequential_rollout_with_rendering():
 def test_action_record_rollout():
     teacher_policy = HeuristicLunarLanderPolicy()
 
-    env = GymMazeEnv("LunarLander-v2")
+    env = GymMazeEnv("LunarLander-v3", render_mode=None)
     env = ActionRecordingWrapper.wrap(env, record_maze_actions=False, record_actions=True,
                                       output_dir="action_records")
 
@@ -100,7 +100,7 @@ def test_action_record_rollout():
             env.seed(1234)
             env.reset()
 
-    env = GymMazeEnv("LunarLander-v2")
+    env = GymMazeEnv("LunarLander-v3", render_mode=None)
 
     runner = ActionRecordRolloutRunner(max_episode_steps=10000,
                                        deterministic=False,

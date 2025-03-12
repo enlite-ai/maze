@@ -2,9 +2,9 @@
 import copy
 from typing import Dict, Union, Optional, Mapping
 
-import gym
+import gymnasium as gym
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from maze.core.agent.state_critic_input_output import StateCriticStepInput
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
@@ -17,7 +17,6 @@ from maze.perception.models.critics.base_state_action_critic_composer import Bas
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.models.model_composer import BaseModelComposer
 from maze.perception.models.policies.base_policy_composer import BasePolicyComposer
-from maze.perception.perception_utils import map_nested_structure
 
 
 class CustomModelComposer(BaseModelComposer):

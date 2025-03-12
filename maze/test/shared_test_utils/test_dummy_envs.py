@@ -1,7 +1,7 @@
 """
 This script includes unit tests for the dummy environments
 """
-from gym import spaces
+from gymnasium import spaces
 
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \

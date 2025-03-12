@@ -3,7 +3,7 @@ import warnings
 from typing import TypeVar, Union, Any, Tuple, Dict, Optional
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType

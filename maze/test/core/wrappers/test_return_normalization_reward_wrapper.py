@@ -28,7 +28,7 @@ def test_return_normalization_wrapper_clone_from():
     """ Unit tests """
 
     def make_env():
-        env = GymMazeEnv("CartPole-v0")
+        env = GymMazeEnv("CartPole-v1", render_mode=None)
         env = ReturnNormalizationRewardWrapper.wrap(env, gamma=0.99, epsilon=1e-8)
         return env
 

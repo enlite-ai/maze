@@ -4,7 +4,7 @@ Auxiliary routines for tests related to observation statistics.
 
 from typing import Any, Callable, Iterable
 
-import gym
+import gymnasium as gym
 import numpy as np
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
     ObservationNormalizationWrapper

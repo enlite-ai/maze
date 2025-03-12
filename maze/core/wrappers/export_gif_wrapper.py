@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional, Tuple, Dict, Union, Any
 
-import gym
+import gymnasium as gym
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 
@@ -84,7 +84,7 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         # Gym style rendering
         if self._is_gym_env:
             assert isinstance(self.env.core_env, GymCoreEnv)
-            img = self.env.core_env.env.render(mode="rgb_array")
+            img = self.env.core_env.env.render()
         # Maze style rendering
         else:
             renderer = self.env.get_renderer()

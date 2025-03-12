@@ -15,7 +15,7 @@ To :ref:`train a policy <training>` with the synchronous advantage actor-critic 
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c algorithm.n_epochs=5 runner.eval_concurrency=1
+    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=a2c algorithm.n_epochs=5 runner.eval_concurrency=1
 
 All training outputs including model weights will be stored in
 :code:`outputs/<exp-dir>/<time-stamp>`
@@ -25,7 +25,7 @@ To :ref:`perform rollouts <rollouts>` for evaluating the trained policy, run:
 
 .. code:: console
 
-    $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp>
+    $ maze-run env.name=CartPole-v1 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp>
 
 This performs 50 rollouts and prints the resulting performance statistics to the command line:
 
@@ -48,7 +48,7 @@ To see the policy directly in action you can also perform sequential rollouts wi
 
 .. code:: console
 
-   $ maze-run env.name=CartPole-v0 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp> \
+   $ maze-run env.name=CartPole-v1 policy=torch_policy input_dir=outputs/<exp-dir>/<time-stamp> \
      runner=sequential runner.render=true runner.record_trajectory=true
 
 .. note::
@@ -100,7 +100,7 @@ an preserves it in the *TEXT* tab of Tensorboard along with the original trainin
       value_loss_coef: 0.5
     env:
       _target_: maze.core.wrappers.maze_gym_env_wrapper.make_gym_maze_env
-      name: CartPole-v0
+      name: CartPole-v1
     input_dir: ''
     log_base_dir: outputs
     model:

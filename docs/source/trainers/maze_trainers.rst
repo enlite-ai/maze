@@ -62,7 +62,7 @@ In International conference on machine learning (pp. 1928-1937).
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=a2c model=vector_obs critic=template_state
+    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=a2c model=vector_obs critic=template_state
 
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.a2c.a2c_algorithm_config.A2CAlgorithmConfig`
@@ -108,7 +108,7 @@ arXiv preprint arXiv:1707.06347.
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo model=vector_obs critic=template_state
+    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=ppo model=vector_obs critic=template_state
 
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.ppo.ppo_algorithm_config.PPOAlgorithmConfig`
@@ -155,7 +155,7 @@ arXiv preprint arXiv:1802.01561.
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=impala model=vector_obs critic=template_state
+    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=impala model=vector_obs critic=template_state
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.impala.impala_algorithm_config.ImpalaAlgorithmConfig`
 
@@ -215,8 +215,8 @@ preprint arXiv:1910.07207.
 
 .. code:: console
 
-    $ maze-run env.name=LunarLander-v2 policy=lunar_lander_heuristics runner.n_episodes=1000
-    $ maze-run -cn conf_train env.name=LunarLander-v2 algorithm=sacfd model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
+    $ maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics runner.n_episodes=1000
+    $ maze-run -cn conf_train env.name=LunarLander-v3 algorithm=sacfd model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.sac.sac_algorithm_config.SACAlgorithmConfig`
 
@@ -319,7 +319,7 @@ arXiv preprint arXiv:1703.03864.
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=es model=vector_obs
+    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=es model=vector_obs
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.es.es_algorithm_config.ESAlgorithmConfig`
 

@@ -34,7 +34,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
 
     def __init__(self, env: MazeEnv):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
-        # BaseEnv is a subset of gym.Env
+        # BaseEnv is a subset of gymnasium.Env
         super().__init__(env)
 
         self.episode_record: Optional[StateTrajectoryRecord] = None

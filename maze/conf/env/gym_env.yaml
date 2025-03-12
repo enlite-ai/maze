@@ -1,3 +1,4 @@
 # @package env
 _target_: maze.core.wrappers.maze_gym_env_wrapper.make_gym_maze_env
-name: "CartPole-v0"
+name: "CartPole-v1"
+render_mode: ~

@@ -48,7 +48,7 @@ If you are using plain Python you can start with the code snippet below.
     from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
     from maze.core.wrappers.monitoring_wrapper import MazeEnvMonitoringWrapper
 
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1")
     env = MazeEnvMonitoringWrapper.wrap(env, observation_logging=True, action_logging=False, reward_logging=False)
 
 For both cases observations will be logged and distribution plots will be added to Tensorboard.

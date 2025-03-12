@@ -3,7 +3,7 @@
 # defines environment to instantiate
 env:
   _target_: maze.core.wrappers.maze_gym_env_wrapper.GymMazeEnv
-  env: "CartPole-v0"
+  env: "CartPole-v1"
 
 # defines wrappers to apply
 wrappers:

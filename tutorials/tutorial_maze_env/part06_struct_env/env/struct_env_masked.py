@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import Dict, List, Tuple
 
-import gym
+import gymnasium as gym
 import numpy as np
 from tutorial_maze_env.part06_struct_env.env.maze_env import maze_env_factory
 from tutorial_maze_env.part06_struct_env.env.struct_env import StructuredCutting2DEnvironment

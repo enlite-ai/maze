@@ -1,5 +1,5 @@
 """ Contains unit test for the maze gym environment wrapper """
-import gym
+import gymnasium as gym
 import numpy as np
 import pytest
 
@@ -18,7 +18,7 @@ except:
 
 def test_maze_gym_env_wrapper():
     """ gym env wrapper unit test """
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     env.seed(1234)
     obs = env.reset()
     env.observation_conversion.space_to_maze(obs)
@@ -30,17 +30,17 @@ def test_maze_gym_env_wrapper():
 
 
 def test_multi_step_dict_gym_env():
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     assert isinstance(env.action_spaces_dict[0], gym.spaces.Dict)
     assert isinstance(env.observation_spaces_dict[0], gym.spaces.Dict)
 
 
 def test_gets_formatted_actions_and_observations():
-    gym_env = gym.make("CartPole-v0")
-    gym_obs = gym_env.reset()
+    gym_env = gym.make("CartPole-v1")
+    gym_obs, _ = gym_env.reset()
     gym_act = gym_env.action_space.sample()
 
-    wrapped_env = GymMazeEnv(env="CartPole-v0")
+    wrapped_env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     wrapped_env.seed(1234)
     assert not wrapped_env.is_actor_done()
     assert wrapped_env.actor_id() == (0, 0)
@@ -52,7 +52,7 @@ def test_gets_formatted_actions_and_observations():
 
 def test_random_sampling_seeding():
     """Test the seeding with a random env version and random sampling (fully stochastic)"""
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     policy = RandomPolicy(env.action_spaces_dict)
 
     perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=False)
@@ -60,14 +60,14 @@ def test_random_sampling_seeding():
 
 def test_heuristic_sampling():
     """Test the seeding with a deterministic env and deterministic heuristic"""
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     policy = DummyCartPolePolicy()
 
     perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=True)
 
 
 # Environments to be tested
-env_ids = ["CartPole-v0", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v1"]
+env_ids = ["CartPole-v1", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v1"]
 if ATARI_AVAILABLE:
     env_ids.append("PongNoFrameskip-v4")
 
@@ -77,7 +77,7 @@ def test_maze_gym_env_clone_from(env_id: str):
     """ time limit wrapper unit tests """
 
     def _make_env():
-        env = GymMazeEnv(env_id)
+        env = GymMazeEnv(env_id, render_mode=None)
         return env
 
     assert_wrapper_clone_from(_make_env, assert_member_list=[])

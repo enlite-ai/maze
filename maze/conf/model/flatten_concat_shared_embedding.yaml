@@ -2,7 +2,7 @@
 _target_: maze.perception.models.custom_model_composer.CustomModelComposer
 
 distribution_mapper_config:
-  - action_space: gym.spaces.Box
+  - action_space: gymnasium.spaces.Box
     distribution: maze.distributions.squashed_gaussian.SquashedGaussianProbabilityDistribution
 
 policy:

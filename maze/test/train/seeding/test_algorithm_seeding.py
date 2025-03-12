@@ -15,14 +15,14 @@ from maze.utils.timeout import Timeout
 
 trainings = [
     {"algorithm": "ppo", "configuration": "test",
-     "env": "gym_env", "env.name": "CartPole-v0"},
+     "env": "gym_env", "env.name": "CartPole-v1"},
 
     {"algorithm": "a2c", "configuration": "test",
-     "env": "gym_env", "env.name": "CartPole-v0"},
+     "env": "gym_env", "env.name": "CartPole-v1"},
 
     # Only dev ES runner is deterministic.
     {"algorithm": "es", "configuration": "test", "runner": "dev",
-     "env": "gym_env", "env.name": "CartPole-v0"}
+     "env": "gym_env", "env.name": "CartPole-v1"}
 ]
 
 

@@ -1,6 +1,6 @@
 """Test the dict action wrapper"""
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 
 from maze.core.wrappers.dict_action_wrapper import DictActionWrapper
 
@@ -15,7 +15,7 @@ class DummyTupleEnv:
 
 def test_dict_action_wrapper():
     """ gym env wrapper unit test """
-    base_env = gym.make("CartPole-v0")
+    base_env = gym.make("CartPole-v1")
     env = DictActionWrapper.wrap(base_env)
 
     assert isinstance(env.action_space, spaces.Dict)

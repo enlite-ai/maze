@@ -2,7 +2,7 @@
 
 from typing import Tuple, Sequence, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
 import pytest
 
@@ -315,7 +315,7 @@ def test_configures_from_hydra():
 
 
 def test_works_with_gym_maze_envs():
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
     policy = RandomPolicy(action_spaces_dict=env.action_spaces_dict)
 
     agent_deployment = AgentDeployment(
@@ -323,13 +323,14 @@ def test_works_with_gym_maze_envs():
         env=env
     )
 
-    external_env = gym.make("CartPole-v0")
+    external_env = gym.make("CartPole-v1")
 
-    maze_state = external_env.reset()
+    maze_state, _ = external_env.reset()
     reward, done, info = 0, False, {}
 
     for i in range(10):
         maze_action = agent_deployment.act(maze_state, reward, done, info)
-        maze_state, reward, done, info = external_env.step(maze_action)
+        maze_state, reward, terminated, truncated, info = external_env.step(maze_action)
+        done = np.logical_or(terminated, truncated)
 
     agent_deployment.close(maze_state, reward, done, info)

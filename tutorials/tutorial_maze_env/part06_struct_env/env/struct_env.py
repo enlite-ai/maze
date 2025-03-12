@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import Dict, Any, Union, Tuple, Optional, List
 
-import gym
+import gymnasium as gym
 import numpy as np
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv

@@ -3,7 +3,7 @@
 import pickle
 from typing import Dict, Any
 
-import gym
+import gymnasium as gym
 from maze.core.env.structured_env import StepKeyType
 
 

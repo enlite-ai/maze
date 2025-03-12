@@ -20,15 +20,15 @@ def main(n_epochs: int) -> None:
     """
 
     # initialize distributed env
-    envs = SequentialVectorEnv([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(8)],
+    envs = SequentialVectorEnv([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(8)],
                                logging_prefix="train")
 
     # initialize the env and enable statistics collection
-    eval_env = SequentialVectorEnv([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(8)],
+    eval_env = SequentialVectorEnv([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(8)],
                                    logging_prefix="eval")
 
     # init distribution mapper
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
 
     # init default distribution mapper
     distribution_mapper = DistributionMapper(action_space=env.action_space, distribution_mapper_config={})

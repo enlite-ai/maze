@@ -60,7 +60,7 @@ def test_time_limit_wrapper_clone_from():
     """ time limit wrapper unit tests """
 
     def make_env():
-        env = GymMazeEnv("CartPole-v0")
+        env = GymMazeEnv("CartPole-v1", render_mode=None)
         env = TimeLimitWrapper.wrap(env, max_episode_steps=5)
         return env
 

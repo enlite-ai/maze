@@ -1,7 +1,7 @@
 """Wrapper for discretizing individual actions."""
 from typing import Union, Dict, List
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.annotations import override
@@ -17,7 +17,7 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
      ones.
 
     An example is given by having a continuous action called 'action_up' with space:
-    gym.spaces.Box(shape=(5,), low=[-1,-1,-1,-1,-1], high=[1,1,1,1,1]
+    gymnasium.spaces.Box(shape=(5,), low=[-1,-1,-1,-1,-1], high=[1,1,1,1,1]
 
     discretization_config:
         action_up:

@@ -20,14 +20,14 @@ def train_function(n_epochs: int, distributed_env_cls) -> A2C:
     """
 
     # initialize distributed env
-    envs = distributed_env_cls([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(2)])
+    envs = distributed_env_cls([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(2)])
 
     # initialize the env and enable statistics collection
-    eval_env = distributed_env_cls([lambda: GymMazeEnv(env="CartPole-v0") for _ in range(2)],
+    eval_env = distributed_env_cls([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(2)],
                                    logging_prefix='eval')
 
     # init distribution mapper
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     distribution_mapper = DistributionMapper(action_space=env.action_space, distribution_mapper_config={})
 
     # initialize policies

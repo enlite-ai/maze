@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Dict, Union, List, Optional
 
-import gym
+import gymnasium as gym
 import torch
 import torch.nn as nn
 import torch.nn.functional

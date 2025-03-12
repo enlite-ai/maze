@@ -1,10 +1,10 @@
-import gym
+import gymnasium as gym
 
 from maze.core.agent.random_policy import RandomPolicy
 from maze.core.agent_deployment.agent_deployment import AgentDeployment
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 
-env = GymMazeEnv("CartPole-v0")
+env = GymMazeEnv("CartPole-v1")
 policy = RandomPolicy(action_spaces_dict=env.action_spaces_dict)
 
 agent_deployment = AgentDeployment(
@@ -13,7 +13,7 @@ agent_deployment = AgentDeployment(
 )
 
 # Simulate an external production environment that does not use Maze
-external_env = gym.make("CartPole-v0")
+external_env = gym.make("CartPole-v1")
 
 maze_state = external_env.reset()
 reward, done, info = 0, False, {}

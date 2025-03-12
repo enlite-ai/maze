@@ -3,7 +3,7 @@ from abc import abstractmethod
 from typing import Mapping, Union, List, Dict
 
 import torch
-from gym import spaces
+from gymnasium import spaces
 from torch import nn
 
 from maze.core.agent.state_critic import StateCritic

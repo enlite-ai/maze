@@ -3,7 +3,7 @@ import copy
 from abc import ABC, abstractmethod
 from typing import Dict, List, Union, Iterable, Tuple, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 # specify data types
@@ -16,10 +16,10 @@ class ObservationNormalizationStrategy(ABC):
     """Abstract base class for normalization strategies.
 
     Provides functionality for:
-        - normalizing gym.Box observations as well as for normalizing the originally defined observation space.
+        - normalizing gymnasium.Box observations as well as for normalizing the originally defined observation space.
         - setting and getting the currently employed normalization statistics.
         - interface definition for estimating the normalization statistics from a list of observations
-        - interface definition for normalizing a given gym.Box (np.ndarray) observation
+        - interface definition for normalizing a given gymnasium.Box (np.ndarray) observation
 
     :param observation_space: The observations space to be normalized.
     :param clip_range: The minimum and maximum value allowed for an observation.

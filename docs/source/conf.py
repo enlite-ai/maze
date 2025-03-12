@@ -97,13 +97,13 @@ html_css_files = [
 ]
 
 nitpick_ignore = [
-    ('py:class', 'gym.Env'),
-    ('py:class', 'gym.spaces.Space'),
-    ('py:class', 'gym.spaces.Dict'),
-    ('py:class', 'gym.spaces.Box'),
-    ('py:class', 'gym.spaces.MultiDiscrete'),
-    ('py:class', 'gym.spaces.MultiBinary'),
-    ('py:class', 'gym.spaces.Discrete'),
+    ('py:class', 'gymnasium.Env'),
+    ('py:class', 'gymnasium.spaces.Space'),
+    ('py:class', 'gymnasium.spaces.Dict'),
+    ('py:class', 'gymnasium.spaces.Box'),
+    ('py:class', 'gymnasium.spaces.MultiDiscrete'),
+    ('py:class', 'gymnasium.spaces.MultiBinary'),
+    ('py:class', 'gymnasium.spaces.Discrete'),
     ('py:class', 'pandas.DataFrame'),
     ('py:class', 'omegaconf.DictConfig'),
     ('py:class', 'multiprocessing.context.BaseContext.Queue'),
@@ -175,7 +175,7 @@ autodoc_mock_imports = [
     "tensorboard",
     "ray",
 
-    "gym",
+    "gymnasium",
     "omegaconf",
     "hydra",
 

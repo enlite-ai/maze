@@ -2,7 +2,7 @@
 from abc import abstractmethod, ABC
 from typing import Union, Dict
 
-import gym
+import gymnasium as gym
 
 
 class StructuredEnvSpacesMixin(ABC):

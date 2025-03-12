@@ -101,7 +101,7 @@ def train_setup(n_epochs: int, policy_wrapper=None) -> Tuple[TorchPolicy, Struct
     """
 
     # initialize distributed env
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
 
     # initialize distribution mapper
     distribution_mapper = DistributionMapper(action_space=env.action_space, distribution_mapper_config={})
@@ -155,7 +155,7 @@ def test_subproc_distributed_rollouts():
     policy, env, trainer = train_setup(n_epochs=2)
 
     rollouts = ESSubprocDistributedRollouts(
-        env_factory=lambda: GymMazeEnv(env="CartPole-v0"),
+        env_factory=lambda: GymMazeEnv(env="CartPole-v1", render_mode=None),
         n_training_workers=2,
         n_eval_workers=1,
         shared_noise=trainer.shared_noise,
@@ -170,7 +170,7 @@ def test_subproc_distributed_rollouts_with_policy_wrapper():
     policy, env, trainer = train_setup(n_epochs=2, policy_wrapper={"_target_": DummyPolicyWrapper})
 
     rollouts = ESSubprocDistributedRollouts(
-        env_factory=lambda: GymMazeEnv(env="CartPole-v0"),
+        env_factory=lambda: GymMazeEnv(env="CartPole-v1", render_mode=None),
         n_training_workers=2,
         n_eval_workers=1,
         shared_noise=trainer.shared_noise,

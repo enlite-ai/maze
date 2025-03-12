@@ -34,7 +34,7 @@ your first rollout, it suffices to execute:
 
 .. code-block:: console
 
-  $ maze-run env=gym_env env.name=CartPole-v0
+  $ maze-run env=gym_env env.name=CartPole-v1
 
 This runs a rollout of a random policy on :code:`cartpole` environment. Statistics
 from the rollout are printed to the console, and trajectory data with event logs
@@ -45,7 +45,7 @@ and render the env (but more on that and other configuration options below):
 
 .. code-block:: console
 
-  $ maze-run env=gym_env env.name=CartPole-v0 runner=sequential runner.n_episodes=1 runner.render=true
+  $ maze-run env=gym_env env.name=CartPole-v1 runner=sequential runner.n_episodes=1 runner.render=true
 
 
 .. _rollouts-runner_config:
@@ -66,7 +66,7 @@ opting for the :code:`sequential` runner configuration:
 
 .. code-block:: console
 
-  $ maze-run env=gym_env env.name=CartPole-v0 runner=sequential
+  $ maze-run env=gym_env env.name=CartPole-v1 runner=sequential
 
 This is mainly useful when running a single episode only or for debugging, as
 sequential rollouts are much slower.
@@ -104,7 +104,7 @@ and be comprised of 100 episodes, each of max 50 steps:
 
 .. code-block:: console
 
-  $ maze-run env=gym_env env.name=CartPole-v0 runner.n_processes=3 \
+  $ maze-run env=gym_env env.name=CartPole-v1 runner.n_processes=3 \
     runner.n_episodes=100 runner.max_episode_steps=10
 
 (Alternatively, you can create your own configuration file that you will then

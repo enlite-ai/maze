@@ -24,7 +24,7 @@ in the default config
 
 .. code:: bash
 
-     $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo algorithm.lr=0.0001
+     $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=ppo algorithm.lr=0.0001
 
 
 The example above changes the trainer to PPO and optimizes with a learning rate of 0.0001.
@@ -73,7 +73,7 @@ The example below shows how to launch the same experiment with three different l
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo \
+    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=ppo \
       algorithm.n_epochs=5 algorithm.lr=0.0001,0.0005,0.001 --multirun
 
 
@@ -104,7 +104,7 @@ To repeat the grid search from above, but this time with multiple parallel worke
 
 .. code:: console
 
-    $ maze-run -cn conf_train env.name=CartPole-v0 algorithm=ppo \
+    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=ppo \
       algorithm.n_epochs=5 algorithm.lr=0.0001,0.0005,0.001 +experiment=grid_search --multirun
 
 Besides the built-in :class:`MazeLocalLauncher <hydra_plugins.maze_local_launcher.MazeLocalLauncher>`,

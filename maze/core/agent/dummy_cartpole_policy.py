@@ -2,7 +2,7 @@
 
 from typing import Sequence, Tuple, Optional
 
-import gym
+import gymnasium as gym
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
@@ -20,7 +20,7 @@ class DummyCartPolePolicy(Policy):
     """
 
     def __init__(self):
-        self.action_space = gym.make("CartPole-v0").action_space
+        self.action_space = gym.make("CartPole-v1").action_space
 
     def seed(self, seed: int) -> None:
         """Not applicable since heuristic is deterministic"""

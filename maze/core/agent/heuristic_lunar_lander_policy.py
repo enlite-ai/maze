@@ -6,7 +6,7 @@ The implementation is adopted from here: https://github.com/openai/gym/blob/mast
 
 from typing import Union, Sequence, Tuple, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.agent.policy import Policy
@@ -25,7 +25,7 @@ class HeuristicLunarLanderPolicy(Policy):
     """
 
     def __init__(self):
-        self.action_space = gym.make("LunarLander-v2").action_space
+        self.action_space = gym.make("LunarLander-v3").action_space
 
     @override(Policy)
     def needs_state(self) -> bool:

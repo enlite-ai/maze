@@ -21,7 +21,7 @@ def main(n_epochs) -> None:
     """Trains the cart pole environment with the ES implementation.
     """
 
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     distribution_mapper = DistributionMapper(action_space=env.action_space, distribution_mapper_config={})
 
     obs_shapes = observation_spaces_to_in_shapes(env.observation_spaces_dict)

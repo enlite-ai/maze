@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import Any, Optional, Union, Dict, List
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from maze.core.annotations import override
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv

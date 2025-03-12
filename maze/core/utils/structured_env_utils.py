@@ -1,7 +1,7 @@
 """Contains utility functions for structured environments."""
 from typing import Dict, Union, Sequence
 
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.env.structured_env import StepKeyType
 

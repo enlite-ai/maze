@@ -56,8 +56,7 @@ setup(name="maze-rl",
 
           "hydra-core",
 
-          "gym<0.23",
-          "pygame",
+          "gymnasium",
 
           "pandas",
           "networkx",

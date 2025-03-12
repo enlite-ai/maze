@@ -5,7 +5,7 @@ A simple action conversion which does nothing, except defining the action space 
 
 from typing import Dict, Any
 
-import gym
+import gymnasium as gym
 
 from maze.core.env.action_conversion import ActionConversionInterface
 from maze.core.env.maze_state import MazeStateType

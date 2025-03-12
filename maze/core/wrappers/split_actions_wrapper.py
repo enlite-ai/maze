@@ -1,7 +1,7 @@
 """Wrapper for splitting up individual actions."""
 from typing import Union, Dict, Tuple, List
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.annotations import override
@@ -14,7 +14,7 @@ from maze.core.wrappers.wrapper import ActionWrapper, EnvType
 class SplitActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesMixin, StructuredEnv]]):
     """Splits an actions into separate ones.
 
-    An example is given by the LunarLanderContinuous-v2 env. Here we have a box action spaces with shape (2,) such that
+    An example is given by the LunarLanderContinuous-v3 env. Here we have a box action spaces with shape (2,) such that
     dimension 0 is the up/down action and dimension 1 is the left/right action. Now if we would like to split this
     action correspondingly we can wrap the env with the following config:
 

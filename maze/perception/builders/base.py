@@ -3,7 +3,7 @@ from abc import abstractmethod, ABC
 from typing import Dict, Union, Any, Optional, List, Iterable
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from omegaconf import ListConfig, DictConfig
 
 from maze.core.env.structured_env import StepKeyType

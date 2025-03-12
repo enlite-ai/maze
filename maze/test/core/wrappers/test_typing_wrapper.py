@@ -1,7 +1,8 @@
 from abc import ABC
 from typing import Any
 
-import gym
+import gymnasium as gym
+import numpy as np
 
 from maze.core.env.base_env import BaseEnv
 from maze.core.wrappers.wrapper import Wrapper
@@ -17,12 +18,26 @@ class _EnvInterfaceWrapper(ABC):
         raise NotImplementedError
 
 
-class _InnerEnv(BaseEnv, _EnvInterfaceInner):
+class _InnerEnv(gym.Env, _EnvInterfaceInner):
     action_space = None
     observation_space = None
     reward_range = None
     metadata = None
 
+    def method_inner(self) -> int:
+        return 41
+
+
+class _WrapperWithInterface(gym.Wrapper, _EnvInterfaceWrapper):
+    def method_wrapper(self):
+        # forward the call to the inner method
+        value = self.env.method_inner()
+
+        # just do something
+        return value + 1
+
+
+class _MazeInnerEnv(BaseEnv, _EnvInterfaceInner):
     def seed(self, seed: int) -> None:
         pass
 
@@ -39,7 +54,7 @@ class _InnerEnv(BaseEnv, _EnvInterfaceInner):
         return 41
 
 
-class _WrapperWithInterface(gym.Wrapper, _EnvInterfaceWrapper):
+class _MazeWrapperWithInterface(Wrapper, _EnvInterfaceWrapper):
     def method_wrapper(self):
         # forward the call to the inner method
         value = self.env.method_inner()
@@ -48,18 +63,65 @@ class _WrapperWithInterface(gym.Wrapper, _EnvInterfaceWrapper):
         return value + 1
 
 
-def test_typing_wrapper():
+def test_gym_typing_wrapper():
+    #
+    # == test if the wrapper correctly mimics isinstance() behaviour ==
+    # Note: gym.Wrapper does not allow to pass methods in between them (new with gymnasium)
+    #
+    env = _InnerEnv()
+    assert env.method_inner() == 41
+
+    env = gym.Wrapper(env)
+
+    with np.testing.assert_raises(AttributeError):
+        # check if we can still call the inner method
+        env.method_inner()
+
+    env = _WrapperWithInterface(env)
+
+    with np.testing.assert_raises(AttributeError):
+        # check if we can still call the inner method
+        env.method_inner()
+
+    with np.testing.assert_raises(AttributeError):
+        # check if we can still call the inner method
+        env.method_wrapper()
+
+    env = Wrapper(env)
+
+    with np.testing.assert_raises(AttributeError):
+        # check if we can still call the inner method
+        env.method_inner()
+
+    with np.testing.assert_raises(AttributeError):
+        # check if the wrapper works correctly
+        env.method_wrapper()
+
+    assert (
+        isinstance(env, _EnvInterfaceWrapper) and
+        isinstance(env, _EnvInterfaceInner) and
+        isinstance(env, _WrapperWithInterface)
+    )
+
+
+def test_maze_typing_wrapper_is_instance():
     #
     # == test if the wrapper correctly mimics isinstance() behaviour ==
     #
-    env = _InnerEnv()
-    env = gym.Wrapper(env)
-    env = _WrapperWithInterface(env)
+    env = _MazeInnerEnv()
+    assert env.method_inner() == 41
+
+    env = _MazeWrapperWithInterface(env)
+    assert env.method_inner() == 41
+    assert env.method_wrapper() == 42
+
     env = Wrapper(env)
 
-    assert (isinstance(env, _EnvInterfaceWrapper) and
-            isinstance(env, _EnvInterfaceInner) and
-            isinstance(env, _WrapperWithInterface))
+    assert (
+        isinstance(env, _EnvInterfaceWrapper) and
+        isinstance(env, _EnvInterfaceInner) and
+        isinstance(env, _MazeWrapperWithInterface)
+    )
 
     # check if we can still call the inner method
     assert env.method_inner() == 41
@@ -67,14 +129,28 @@ def test_typing_wrapper():
     # check if the wrapper works correctly
     assert env.method_wrapper() == 42
 
+def test_maze_typing_wrapper_idempotency():
     #
-    # == test idempotency ==
+    # == test wrapper idempotency ==
     #
+    env = _MazeInnerEnv()
+    assert env.method_inner() == 41
+
+    env = _MazeWrapperWithInterface(env)
+    assert env.method_inner() == 41
+    assert env.method_wrapper() == 42
+
+    env = _MazeWrapperWithInterface(env)
+    env = _MazeWrapperWithInterface(env)
+    env = _MazeWrapperWithInterface(env)
+
     env = Wrapper(env)
 
-    assert (isinstance(env, _EnvInterfaceWrapper) and
-            isinstance(env, _EnvInterfaceInner) and
-            isinstance(env, _WrapperWithInterface))
+    assert (
+        isinstance(env, _EnvInterfaceWrapper) and
+        isinstance(env, _EnvInterfaceInner) and
+        isinstance(env, _MazeWrapperWithInterface)
+    )
 
     # check if we can still call the inner method
     assert env.method_inner() == 41

@@ -4,7 +4,7 @@ A simple state observation which does nothing, except defining the observation s
 
 from typing import Dict
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.env.observation_conversion import ObservationConversionInterface

@@ -11,8 +11,8 @@ dependencies:
   - pytorch=2.3.0
   - pygraphviz
   - pip
-  - pandas<2.0
-  - numpy
+  - pandas
+  - numpy>=1.21.0
   # swig is needed for Box2D, box2d-py but does not work with the pip installer
   - swig
   - pip:
@@ -30,11 +30,7 @@ dependencies:
       - hydra-core
       # Hydra nevergrad sweeper currently only support python 3.10
       - hydra-nevergrad-sweeper==1.3.0.dev0
-      - gym[box2d]<0.23; python_version < '3.8'
-      - pyglet<2.0; python_version < '3.8'
-      - gym<0.23; python_version >= '3.8'
-      - pygame; python_version >= '3.8'
-      - box2d-py; python_version >= '3.8'
+      - gymnasium[all]
       - networkx
       - matplotlib
       - seaborn

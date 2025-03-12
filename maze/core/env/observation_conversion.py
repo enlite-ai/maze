@@ -4,7 +4,7 @@ from typing import Dict
 
 import numpy as np
 import torch
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.env.maze_state import MazeStateType
 

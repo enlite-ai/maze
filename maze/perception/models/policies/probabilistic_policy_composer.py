@@ -1,7 +1,7 @@
 """Composer for probabilistic policy (actor) networks."""
 from typing import Dict, List
 
-from gym import spaces
+from gymnasium import spaces
 from torch import nn
 
 from maze.core.agent.torch_policy import TorchPolicy

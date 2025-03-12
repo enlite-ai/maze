@@ -4,7 +4,7 @@ Tests observation normalization for environments.
 from functools import partial
 from typing import Dict, Callable, Iterable
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.env.maze_env import CoreEnvType
@@ -91,8 +91,8 @@ def match_observation_space_structure(space_a: Iterable, space_b: Iterable) -> b
         if not space_a.shape == space_b.shape:
             return False
 
-    # Note that we only consider three possible datatypes here: dict (equivalent to gym.spaces.Dict), tuple
-    # (equivalent to gym.spaces.Tuple) and numerical numpy.ndarray (equivalent to gym.spaces.Box).
+    # Note that we only consider three possible datatypes here: dict (equivalent to gymnasium.spaces.Dict), tuple
+    # (equivalent to gym.spaces.Tuple) and numerical numpy.ndarray (equivalent to gymnasium.spaces.Box).
     # Other datatypes are only checked in terms of type equality.
 
     return True

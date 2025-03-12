@@ -4,7 +4,7 @@ Includes the implementation of the dummy structured environment.
 
 from typing import Any, Dict, Union, Tuple, Callable, Optional, List
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.env.maze_env import MazeEnv

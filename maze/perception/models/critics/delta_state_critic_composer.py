@@ -2,7 +2,7 @@
 from typing import Dict, Union
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from torch import nn
 
 from maze.core.agent.torch_state_critic import TorchDeltaStateCritic

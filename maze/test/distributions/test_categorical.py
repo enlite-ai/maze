@@ -1,7 +1,7 @@
 """Contains distribution tests."""
 import numpy as np
 import torch
-from gym import spaces
+from gymnasium import spaces
 
 from maze.distributions.categorical import CategoricalProbabilityDistribution
 

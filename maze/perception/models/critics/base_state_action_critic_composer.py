@@ -2,7 +2,7 @@
 from abc import abstractmethod
 from typing import Dict, Union
 
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.annotations import override

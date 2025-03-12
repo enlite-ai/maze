@@ -4,7 +4,7 @@ from typing import Sequence, Generic, TypeVar
 
 import torch
 import torch.distributions as torch_dist
-from gym import spaces
+from gymnasium import spaces
 from maze.core.annotations import override
 from maze.distributions.distribution import ProbabilityDistribution
 

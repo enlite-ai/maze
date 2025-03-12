@@ -3,7 +3,7 @@ from typing import Dict
 
 import numpy as np
 import pytest
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.wrappers.discretize_actions_wrapper import DiscretizeActionsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
@@ -13,7 +13,7 @@ from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
 
 def test_discrete_action_wrapper() -> None:
     """ DiscretizeActions wrapper unit test """
-    base_env = GymMazeEnv(env="LunarLanderContinuous-v2")
+    base_env = GymMazeEnv(env="LunarLanderContinuous-v3", render_mode=None)
     split_config = {
         'action': {
             'action_up': {

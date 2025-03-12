@@ -3,10 +3,10 @@ from collections import defaultdict
 from collections.abc import MutableSequence
 from typing import Union, Dict, Any, Callable, Sequence, Iterable
 
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.structured_env_utils import flat_structured_space

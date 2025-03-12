@@ -21,7 +21,7 @@ def assert_gif_export(env: MazeEnv) -> None:
 
 def test_gym_env_gif_export():
     """ Gif export unit test """
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode="rgb_array")
     env = ExportGifWrapper.wrap(env, export=True, duration=0.1)
     assert_gif_export(env)
 

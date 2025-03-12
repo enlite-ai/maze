@@ -34,7 +34,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
 
     def __init__(self, env: MazeEnv, logging_prefix: Optional[str] = None):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
-        # BaseEnv is a subset of gym.Env
+        # BaseEnv is a subset of gymnasium.Env
         super().__init__(env)
 
         # initialize step aggregator

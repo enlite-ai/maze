@@ -2,7 +2,7 @@
 from typing import Dict, Sequence
 
 import torch
-from gym import spaces
+from gymnasium import spaces
 from torch import nn
 
 from maze.distributions.distribution_mapper import DistributionMapper

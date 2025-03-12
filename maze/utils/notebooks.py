@@ -19,7 +19,7 @@ def fix_gym_syspath() -> None:
 
     try:
         # Try to import gym to see if messing with sys.path is necessary.
-        import gym
+        import gymnasium as gym
     except ModuleNotFoundError:
         try:
             # Get info on gym installation path.

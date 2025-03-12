@@ -23,7 +23,7 @@ def to_rnn_dict_space_environment(env: str, rnn_steps: int) -> GymMazeEnv:
     """
 
     # instantiate structured environment
-    env = GymMazeEnv(env=env)
+    env = GymMazeEnv(env=env, render_mode=None)
 
     # add observation stacking for rnn processing
     if rnn_steps > 1:
@@ -40,7 +40,7 @@ def to_rnn_dict_space_environment(env: str, rnn_steps: int) -> GymMazeEnv:
 def main(n_epochs: int, rnn_steps: int) -> None:
     """Trains the cart pole environment with the multi-step a2c implementation.
     """
-    env_name = "CartPole-v0"
+    env_name = "CartPole-v1"
 
     # initialize distributed env
     envs = SequentialVectorEnv([lambda: to_rnn_dict_space_environment(env=env_name, rnn_steps=rnn_steps)

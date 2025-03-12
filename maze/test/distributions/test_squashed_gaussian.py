@@ -1,7 +1,7 @@
 """Contains distribution tests."""
 import numpy as np
 import torch
-from gym.spaces import Box
+from gymnasium.spaces import Box
 
 from maze.distributions.squashed_gaussian import SquashedGaussianProbabilityDistribution
 

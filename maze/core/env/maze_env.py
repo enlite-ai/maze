@@ -1,18 +1,18 @@
-"""A general implementation for wrapping a core environment in a (gym style) environment.
+"""A general implementation for wrapping a core environment in a (gymnasium style) environment.
 
 Implementations based on core environments (:class:`~.core_env.CoreEnv`) come with a set of individually
 tailored MazeState and MazeAction objects. Having no global assumptions on the structure of these objects allows for
 optimal representations and minimal, clean environment logic.
 
 RL training algorithms require a more rigid representation. To that end :class:`MazeEnv` wraps the environment as
-gym-compatible environment in a reusable form, by utilizing mappings from the MazeState to the observations space and
-from the MazeAction to the action space.
+gymnasium-compatible environment in a reusable form, by utilizing mappings from the MazeState to the observations space
+and from the MazeAction to the action space.
 """
 import time
 from copy import deepcopy
 from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.annotations import override
@@ -69,13 +69,13 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         super().__init__(self.core_env)
 
-        # this is required to stay compatible with the gym.Env interface
+        # this is required to stay compatible with the gymnasium.Env interface
         self.metadata = {'render.modes': []}
-        """Only there to be compatible with gym.core.Env"""
+        """Only there to be compatible with gymnasium.core.Env"""
         self.reward_range = (-float('inf'), float('inf'))
-        """A tuple (reward min value, reward max value) to be compatible with gym.core.Env"""
+        """A tuple (reward min value, reward max value) to be compatible with gymnasium.core.Env"""
         self.spec = None
-        """Only there to be compatible with gym.core.Env"""
+        """Only there to be compatible with gymnasium.core.Env"""
 
         # last action and maze action, e.g. for recording purposes
         self.last_action = None

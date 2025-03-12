@@ -14,7 +14,7 @@ def test_terminated_trajectory():
     rollout_config = {
         "configuration": "test",
         "env": "gym_env",
-        "env.name": "CartPole-v0",
+        "env.name": "CartPole-v1",
         "policy": "random_policy",
         "runner": "sequential",
         "runner.n_episodes": 1,
@@ -64,7 +64,7 @@ def test_clip_terminated_false():
     rollout_config = {
         "configuration": "test",
         "env": "gym_env",
-        "env.name": "CartPole-v0",
+        "env.name": "CartPole-v1",
         "policy": "random_policy",
         "runner": "sequential",
         "runner.n_episodes": 1,

@@ -1,5 +1,5 @@
 """Contains utility functions for pre-processor tests."""
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment

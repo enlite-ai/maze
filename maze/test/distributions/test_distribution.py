@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 import torch
-from gym import spaces
+from gymnasium import spaces
 
 from maze.distributions.bernoulli import BernoulliProbabilityDistribution
 from maze.distributions.distribution import ProbabilityDistribution

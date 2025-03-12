@@ -1,6 +1,6 @@
 """Contains gym space helper functions. """
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 

@@ -1,7 +1,7 @@
 """Contains distribution tests."""
 import numpy as np
 import torch
-from gym import spaces
+from gymnasium import spaces
 
 from maze.distributions.bernoulli import BernoulliProbabilityDistribution
 from maze.distributions.beta import BetaProbabilityDistribution

@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from gym import spaces
+from gymnasium import spaces
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import StepKeyType

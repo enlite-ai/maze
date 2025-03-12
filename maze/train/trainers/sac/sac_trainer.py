@@ -6,7 +6,7 @@ from typing import Union, Optional, BinaryIO, Dict, Tuple, List
 import numpy as np
 import torch
 import torch.nn as nn
-from gym import spaces
+from gymnasium import spaces
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents

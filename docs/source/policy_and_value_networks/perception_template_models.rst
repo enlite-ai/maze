@@ -146,7 +146,7 @@ which process multiple observations and prediction multiple actions at the same 
 you can of course also compose models for simpler use cases.
 
 In this example we utilize the :ref:`ConcatModelBuilder <concat_model_builder>`
-to compose an actor-critic model for OpenAI Gym's `CartPole Env <https://gym.openai.com/envs/CartPole-v0/>`_.
+to compose an actor-critic model for OpenAI Gym's `CartPole Env <https://www.gymlibrary.dev/environments/classic_control/cart_pole/#cart-pole>`_.
 CartPole has an observation space with dimensionality four and a discrete action spaces with two options.
 
 The model config is defined as:

@@ -2,7 +2,7 @@
 from typing import Sequence
 
 import numpy as np
-import gym
+import gymnasium as gym
 import torch
 from torch.distributions import Normal, kl_divergence
 

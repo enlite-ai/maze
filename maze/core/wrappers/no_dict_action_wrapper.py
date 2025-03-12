@@ -1,7 +1,7 @@
 """Contains a dictionary-space removal action wrapper."""
 from typing import Dict, Union
 
-import gym
+import gymnasium as gym
 import numpy as np
 from maze.core.annotations import override
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin

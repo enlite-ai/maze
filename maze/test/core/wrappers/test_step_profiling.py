@@ -2,7 +2,7 @@ import os
 import time
 from typing import Dict, Union, Tuple, Any
 
-import gym
+import gymnasium as gym
 import numpy as np
 import pytest
 
@@ -40,7 +40,7 @@ class CustomGymCoreEnv(GymCoreEnv):
 class CustomGymMazeEnv(MazeEnv):
     """Wraps a Gym env into a Maze environment.
 
-    **Example**: *env = GymMazeEnv(env="CartPole-v0")*
+    **Example**: *env = GymMazeEnv(env="CartPole-v1")*
 
     :param env: The gym environment to wrap or the environment id.
     """
@@ -56,7 +56,7 @@ class CustomGymMazeEnv(MazeEnv):
 
 
 def test_profiling_events_recorded():
-    env, agent = GymMazeEnv("CartPole-v0"), DummyCartPolePolicy()
+    env, agent = GymMazeEnv("CartPole-v1", render_mode=None), DummyCartPolePolicy()
 
     env.seed(1234)
     agent.seed(1235)
@@ -77,7 +77,7 @@ def test_profiling_events_recorded():
 
 
 def test_profiling_events_recorded_core_env():
-    env, agent = CustomGymMazeEnv("CartPole-v0"), DummyCartPolePolicy()
+    env, agent = CustomGymMazeEnv("CartPole-v1"), DummyCartPolePolicy()
     register_log_stats_writer(LogStatsWriterLogger())
     env = LogStatsWrapper.wrap(env)
 

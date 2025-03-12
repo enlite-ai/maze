@@ -1,7 +1,7 @@
 """Contains perception unit tests."""
 from maze.perception.models.built_in.flatten_concat import FlattenConcatPolicyNet
 
-from gym import spaces
+from gymnasium import spaces
 import torch
 from maze.perception.perception_utils import convert_to_torch
 

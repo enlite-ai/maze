@@ -97,7 +97,7 @@ def test_observation_skipping_wrapper_sticky_flat():
     n_steps = 3
 
     # instantiate env
-    env = GymMazeEnv("CartPole-v0")
+    env = GymMazeEnv("CartPole-v1", render_mode=None)
     env = StepSkipWrapper.wrap(env, n_steps=n_steps, skip_mode='sticky')
     env = LogStatsWrapper.wrap(env)  # for accessing events from previous steps
 
@@ -139,7 +139,7 @@ def test_skipping_wrapper_clone_from():
     """ Step skipping unit test """
 
     def make_env():
-        env = GymMazeEnv("CartPole-v0")
+        env = GymMazeEnv("CartPole-v1", render_mode=None)
         env = StepSkipWrapper.wrap(env, n_steps=2, skip_mode="sticky")
         return env
 

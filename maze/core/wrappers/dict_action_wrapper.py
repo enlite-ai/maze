@@ -1,7 +1,7 @@
 """Contains a dictionary action space wrapper."""
 from typing import Dict, Tuple, Union
 
-import gym
+import gymnasium as gym
 import numpy as np
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv

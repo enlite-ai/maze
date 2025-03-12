@@ -7,7 +7,7 @@ from maze.utils.log_stats_utils import SimpleStatsLoggingSetup
 
 def test_observation_monitoring():
     """ Observation logging unit test """
-    env = GymMazeEnv(env="CartPole-v0")
+    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
 
     env = ObservationVisualizationWrapper.wrap(env, plot_function=None)
     env = LogStatsWrapper.wrap(env, logging_prefix="train")

@@ -2,7 +2,7 @@
 
 from typing import Dict, Sequence
 
-import gym
+import gymnasium as gym
 import torch
 import torch.nn as nn
 
@@ -30,11 +30,11 @@ from maze.utils.log_stats_utils import setup_logging
 def cartpole_env_factory():
     """ Env factory for the cartpole MazeEnv """
     # Registered gym environments can be instantiated first and then provided to GymMazeEnv:
-    cartpole_env = gym.make("CartPole-v0")
-    maze_env = GymMazeEnv(env=cartpole_env)
+    cartpole_env = gym.make("CartPole-v1", render_mode=None)
+    maze_env = GymMazeEnv(env=cartpole_env, render_mode=None)
 
     # Another possibility is to supply the gym env string to GymMazeEnv directly:
-    maze_env = GymMazeEnv(env="CartPole-v0")
+    maze_env = GymMazeEnv(env="CartPole-v1", render_mode=None)
 
     return maze_env
 

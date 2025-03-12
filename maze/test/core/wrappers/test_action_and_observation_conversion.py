@@ -14,7 +14,7 @@ unmodified.
 
 from typing import Any
 
-import gym
+import gymnasium as gym
 
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper

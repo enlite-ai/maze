@@ -1,7 +1,7 @@
 import pickle
 from typing import Any, Dict, Union, Tuple, List, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.env.maze_action import MazeActionType
@@ -225,7 +225,7 @@ def test_parallel_data_load_from_directory():
     rollout_config = {
         "configuration": "test",
         "env": "gym_env",
-        "env.name": "CartPole-v0",
+        "env.name": "CartPole-v1",
         "policy": "random_policy",
         "runner": "sequential",
         "runner.n_episodes": 5,
@@ -236,7 +236,7 @@ def test_parallel_data_load_from_directory():
 
     dataset = InMemoryDataset(
         n_workers=2,
-        conversion_env_factory=lambda: make_gym_maze_env("CartPole-v0"),
+        conversion_env_factory=lambda: make_gym_maze_env("CartPole-v1", render_mode=None),
         input_data="trajectory_data",
         trajectory_processor=IdentityTrajectoryProcessor(),
         deserialize_in_main_thread=False

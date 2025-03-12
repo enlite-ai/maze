@@ -1,6 +1,6 @@
 import torch
 import yaml
-from gym import spaces
+from gymnasium import spaces
 
 import docs.source.policy_and_value_networks.code_snippets as code_snippets
 from docs.source.policy_and_value_networks.code_snippets.custom_complex_critic_net import \

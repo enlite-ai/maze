@@ -1,6 +1,6 @@
 """Core environment interfaces.
 
-Core environments form the basis for actual RL trainable environments (e.g. gym.Envs). Instead of operating with
+Core environments form the basis for actual RL trainable environments (e.g. gymnasium.Envs). Instead of operating with
 observations and actions they operate with MazeStates (:mod:`~.maze_state`) and MazeActions
 (:mod:`~.maze_action`). This design choice give much more freedom when for example implementing
 heuristic policies for a specific environment (It is much easier to implement a heuristics

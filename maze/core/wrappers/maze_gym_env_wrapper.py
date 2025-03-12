@@ -2,10 +2,10 @@
 from copy import copy, deepcopy
 from typing import Tuple, Union, Any, Dict, Optional
 
-import gym
+import gymnasium as gym
 import numpy as np
-from gym.envs.classic_control import CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv
-from gym.wrappers import TimeLimit
+from gymnasium.envs.classic_control import CartPoleEnv, MountainCarEnv, Continuous_MountainCarEnv, PendulumEnv, AcrobotEnv
+from gymnasium.wrappers import TimeLimit
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionConversionInterface
 from maze.core.env.core_env import CoreEnv
@@ -19,7 +19,7 @@ from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
 
 try:
-    from gym.envs.atari import AtariEnv
+    from gymnasium.envs.atari import AtariEnv
 except (ImportError, gym.error.DependencyNotInstalled):
     AtariEnv = None
 
@@ -27,7 +27,7 @@ except (ImportError, gym.error.DependencyNotInstalled):
 class GymActionConversion(ActionConversionInterface):
     """A dummy conversion interface asserting that the action is packed into a dictionary space.
 
-    :param env: Gym environment.
+    :param env: Gymnasium environment.
     """
 
     def __init__(self, env: gym.Env):
@@ -89,7 +89,7 @@ class GymActionConversion(ActionConversionInterface):
 class GymObservationConversion(ObservationConversionInterface):
     """A dummy conversion interface asserting that the observation is packed into a dictionary space.
 
-    :param env: Gym environment.
+    :param env: Gymnasium environment.
     """
 
     def __init__(self, env: gym.Env):
@@ -125,7 +125,7 @@ class GymObservationConversion(ObservationConversionInterface):
 
 
 class GymRenderer(Renderer):
-    """A Maze-style Gym renderer.
+    """A Maze-style Gymnasium renderer.
 
     Note: Not yet compatible with Maze offline rendering tools (i.e., while gym envs can be rendered during a rollout,
     they do not support offline rendering, such as in the Trajectory Viewer notebook).
@@ -149,7 +149,7 @@ class GymRenderer(Renderer):
 
 
 class GymCoreEnv(CoreEnv):
-    """Wraps a Gym environment into a maze core environment.
+    """Wraps a Gymnasium environment into a maze core environment.
 
     :param env: The Gym environment.
     """
@@ -168,8 +168,13 @@ class GymCoreEnv(CoreEnv):
 
     def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
         """Intercept ``CoreEnv.step``"""
-        maze_state, rew, done, info = self.env.step(maze_action)
+        maze_state, rew, terminated, truncated, info = self.env.step(maze_action)
         self._maze_state = maze_state
+
+        info['step-terminated'] = terminated
+        info['step-truncated'] = truncated
+        done = np.logical_or(terminated, truncated)
+
         return maze_state, rew, done, info
 
     @override(CoreEnv)
@@ -195,7 +200,7 @@ class GymCoreEnv(CoreEnv):
     @override(CoreEnv)
     def reset(self) -> MazeStateType:
         """Intercept ``CoreEnv.reset``"""
-        maze_state = self.env.reset()
+        maze_state, _ = self.env.reset(seed=self._current_seed)
         self._maze_state = maze_state
         return maze_state
 
@@ -207,7 +212,6 @@ class GymCoreEnv(CoreEnv):
     def seed(self, seed: int) -> None:
         """Intercept ``CoreEnv.seed``"""
         self._current_seed = seed
-        self.env.seed(seed)
 
     @override(CoreEnv)
     def is_actor_done(self) -> bool:
@@ -274,16 +278,17 @@ class GymCoreEnv(CoreEnv):
 
 
 class GymMazeEnv(MazeEnv):
-    """Wraps a Gym env into a Maze environment.
+    """Wraps a Gymnasium env into a Maze environment.
 
-    **Example**: *env = GymMazeEnv(env="CartPole-v0")*
+    **Example**: *env = GymMazeEnv(env="CartPole-v1")*
 
-    :param env: The gym environment to wrap or the environment id.
+    :param env: The gymnasium environment to wrap or the environment id.
+    :param render_mode: The render mode to be used.
     """
 
-    def __init__(self, env: Union[str, gym.Env]):
+    def __init__(self, env: Union[str, gym.Env], render_mode: Union[str, None]):
         if not isinstance(env, gym.Env):
-            env = gym.make(env)
+            env = gym.make(env, render_mode=render_mode)
 
         super().__init__(
             core_env=GymCoreEnv(env),
@@ -291,10 +296,11 @@ class GymMazeEnv(MazeEnv):
             observation_conversion_dict={0: GymObservationConversion(env=env)})
 
 
-def make_gym_maze_env(name: str) -> GymMazeEnv:
-    """Initializes a :class:`~maze.core.wrappers.maze_gym_env_wrapper.GymMazeEnv` by registered Gym env name (id).
+def make_gym_maze_env(name: str, render_mode: Union[str, None]) -> GymMazeEnv:
+    """Initializes a :class:`~maze.core.wrappers.maze_gym_env_wrapper.GymMazeEnv` by registered Gymnasium env name (id).
 
-    :param name: The name (id) of a registered Gym environment.
+    :param name: The name (id) of a registered Gymnasium environment.
+    :param render_mode: The render mode to be used.
     :return: The instantiated environment.
     """
-    return GymMazeEnv(gym.make(name))
+    return GymMazeEnv(name, render_mode=render_mode)

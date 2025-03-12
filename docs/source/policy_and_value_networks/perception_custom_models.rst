@@ -72,7 +72,7 @@ Even though designed for more complex models that process multiple observations 
 same time you can also compose models for simpler use cases, of course.
 
 In this example we utilize the custom model composer in combination with the perception blocks to compose an
-actor-critic model for OpenAI Gym's `CartPole <https://gym.openai.com/envs/CartPole-v0/>`_
+actor-critic model for OpenAI Gym's `CartPole <https://www.gymlibrary.dev/environments/classic_control/cart_pole/#cart-pole>`_
 using a single dense block in each network.
 CartPole has an observation space with dimensionality four and a discrete action space with two options.
 
@@ -162,7 +162,7 @@ but not necessarily need to use them.
 
 **Important**: Your models have to use dictionaries with torch.Tensors as values for both inputs and outputs.
 
-For Gym's `CartPole <https://gym.openai.com/envs/CartPole-v0/>`_ the policy model could be defined like this:
+For Gym's `CartPole <https://www.gymlibrary.dev/environments/classic_control/cart_pole/#cart-pole>`_ the policy model could be defined like this:
 
 .. literalinclude:: code_snippets/custom_plain_cartpole_policy_net.py
   :language: PYTHON

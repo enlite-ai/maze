@@ -22,7 +22,7 @@ logger.setLevel(logging.INFO)
 class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     """
     A transparent environment Wrapper that works with any manifestation of :class:`~maze.core.env.base_env.BaseEnv`.
-    It is intended as drop-in replacement for gym.core.Wrapper.
+    It is intended as drop-in replacement for gymnasium.core.Wrapper.
 
     Gym Wrappers elegantly expose methods and attributes of all nested envs. However wrapping destroys the class
     hierarchy, querying the base classes is not straight-forward. This environment wrapper fixes the behaviour
@@ -31,7 +31,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     Suppose we want to check the base class:
 
 
-        class MyGymWrapper(Wrapper[gym.Env]):
+        class MyGymWrapper(Wrapper[gymnasium.Env]):
             ...
 
         # construct an env and wrap it
@@ -54,7 +54,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
     Note:
 
-    gym.core.Wrapper assumes the existence of certain attributes (action_space, observation_space, reward_range,
+    gymnasium.core.Wrapper assumes the existence of certain attributes (action_space, observation_space, reward_range,
     metadata) and duplicates these attributes. This behaviour is unnecessary, because __getattr__ makes these
     members of the inner environment transparently available anyway.
     """

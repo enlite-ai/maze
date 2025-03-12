@@ -3,12 +3,12 @@ Getting started example from:
 https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html
 """
 
-import gym
+import gymnasium as gym
 from stable_baselines3 import A2C
 
 # ENV INSTANTIATION
 # -----------------
-env = gym.make('CartPole-v0')
+env = gym.make('CartPole-v1')
 
 # TRAINING AND ROLLOUT
 # --------------------

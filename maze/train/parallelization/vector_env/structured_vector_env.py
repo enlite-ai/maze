@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Union, Optional, Callable, Any
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 from maze.core.annotations import override
