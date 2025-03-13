@@ -56,7 +56,8 @@ setup(name="maze-rl",
 
           "hydra-core",
 
-          "gymnasium",
+          "swig",
+          "gymnasium[all]",
 
           "pandas",
           "networkx",
