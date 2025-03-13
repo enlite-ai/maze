@@ -1,7 +1,5 @@
 ![Banner](https://github.com/enlite-ai/maze/raw/main/docs/source/logos/main_logo.png)  
-<a href="https://lgtm.com/projects/g/enlite-ai/maze/context:python">
-    <img src="https://img.shields.io/lgtm/grade/python/g/enlite-ai/maze.svg?logo=lgtm&logoWidth=18" alt="Language grade: Python" />
-</a>
+[![CodeQL](https://github.com/enlite-ai/maze/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/enlite-ai/maze/actions/workflows/codeql-analysis.yml)
 ![PyPI](https://img.shields.io/pypi/v/maze-rl)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/maze-rl)
 [![Maze Docker Image](https://github.com/enlite-ai/maze/actions/workflows/github-ci.yml/badge.svg)](https://github.com/enlite-ai/maze/actions/workflows/github-ci.yml)
