@@ -165,16 +165,20 @@ class GymCoreEnv(CoreEnv):
         self._maze_state: Optional[Dict] = None
 
         self._current_seed = None
+        self._need_seeding = True
 
     def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
         """Intercept ``CoreEnv.step``"""
         maze_state, rew, terminated, truncated, info = self.env.step(maze_action)
         self._maze_state = maze_state
 
-        info['step-terminated'] = terminated
-        info['step-truncated'] = truncated
-        done = np.logical_or(terminated, truncated)
+        if terminated:
+            info['TimeLimit.terminated'] = True
 
+        if truncated:
+            info['TimeLimit.truncated'] = True
+
+        done = np.logical_or(terminated, truncated)
         return maze_state, rew, done, info
 
     @override(CoreEnv)
@@ -200,8 +204,20 @@ class GymCoreEnv(CoreEnv):
     @override(CoreEnv)
     def reset(self) -> MazeStateType:
         """Intercept ``CoreEnv.reset``"""
-        maze_state, _ = self.env.reset(seed=self._current_seed)
+        # Newer versions of gymnasium (v0.26+) require setting the seed with env.reset(seed) the first time this seed is
+        # applied. Subsequent resets using the same seed only need an env.reset(seed=None).
+        # The previous workflow, where env.seed(seed) was followed by env.reset(), is not possible to use right out of
+        # the box anymore. Added the _need_seeding flag to keep track of the need to apply a seed and to allow/enable
+        # the old workflow.
+        seed = None
+        if self._need_seeding:
+            seed = self._current_seed
+
+        maze_state, _ = self.env.reset(seed=seed)
+
         self._maze_state = maze_state
+        self._need_seeding = False
+
         return maze_state
 
     def get_current_seed(self) -> int:
@@ -212,6 +228,7 @@ class GymCoreEnv(CoreEnv):
     def seed(self, seed: int) -> None:
         """Intercept ``CoreEnv.seed``"""
         self._current_seed = seed
+        self._need_seeding = True
 
     @override(CoreEnv)
     def is_actor_done(self) -> bool:

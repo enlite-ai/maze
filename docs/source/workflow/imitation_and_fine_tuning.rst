@@ -29,7 +29,7 @@ As the training trajectories might be already available (e.g., collected in prac
 this step is optional.
 
 As an example environment we pick the discrete version of the
-`LunarLander environment <https://www.gymlibrary.dev/environments/box2d/lunar_lander/>`_
+`LunarLander environment <https://gymnasium.farama.org/environments/box2d/lunar_lander/>`_
 as it already provides a heuristic policy which we can use to collect or training trajectories for imitation learning.
 
 .. image:: lunar_lander.png
