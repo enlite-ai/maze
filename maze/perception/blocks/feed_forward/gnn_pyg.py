@@ -63,7 +63,7 @@ class GNNLayerPyG(nn.Module):
 
         :param x: Note feature matrix, [n_nodes, in_features] or [B, n_nodes, in_features].
         :param edge_index: The graph connectivity in COO format, [2, E] or [B, 2, E].
-        :param edge_attr: The edge attributes, [E, D] or [B, E, D]. D is the dimension of edge attribute.
+        :param edge_attr: The edge attributes, [E, D] or [B, E, D]. D is the edge attribute dimension.
         :return: Output tensor.
         """
         if x.dim() == 2:  # Single graph (no batch)
@@ -192,7 +192,9 @@ class GNNBlockPyG(ShapeNormalizationBlock):
                 bias=self.bias,
                 gnn_type=self.gnn_type,
             )
-            layer_dict[f'activation_{layer_idx}_{self.non_lin.__name__}'] = self.non_lin()
+            # Add activation function only for intermediate layers
+            if layer_idx < len(self.hidden_features) - 1:
+                layer_dict[f'activation_{layer_idx}_{self.non_lin.__name__}'] = self.non_lin()
             in_feats = out_feats
 
         return layer_dict

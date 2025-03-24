@@ -45,7 +45,7 @@ def test_gnn_layer_forward(gnn_type, batch_size, bias):
     if batch_size is None:
         x = torch.randn(n_nodes, in_features)
         edge_index = torch.tensor([[0, 1, 2], [1, 2, 0]], dtype=torch.long)
-        edge_attr = torch.randn(edge_index.shape[1])  # (E,) for GCN or even random
+        edge_attr = torch.randn(edge_index.shape[1])  # (E,) for GCN
     else:
         x = torch.randn(batch_size, n_nodes, in_features)
         edge_index = []
@@ -70,7 +70,7 @@ def test_gnn_layer_forward(gnn_type, batch_size, bias):
 @pytest.mark.parametrize("gnn_type", SUPPORTED_GNNS)
 def test_gnn_block_forward(gnn_type: str):
     """
-    Test the forward pass of GNNBlockPyG with dummy data.
+    Test the forward pass of GNNBlockPyG.
     """
 
     batch_size = 2
@@ -91,7 +91,6 @@ def test_gnn_block_forward(gnn_type: str):
 
     node_feats = torch.randn(batch_size, n_nodes, in_features)
 
-    # Edge index shape expected: (batch_size, 2, E)  =>  E = 10 here
     edge_index = []
     edge_attr = []
     for _ in range(batch_size):
