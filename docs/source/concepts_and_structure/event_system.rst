@@ -33,7 +33,7 @@ interaction loop. For example, when the inventory is full in the example 2D cutt
 a piece will be discarded and the corresponding event will be fired:
 
 .. literalinclude:: code_snippets/example_event.py
-  :language: PYTHON
+  :language: python
 
 As can be seen above, events carry a descriptive name, encapsulate the details
 (like the dimensions of the discarded piece), and are part of a topic
@@ -88,7 +88,7 @@ register subscribers (which will then collect the dispatched events),
 and dispatch events themselves.
 
 .. literalinclude:: code_snippets/pubsub.py
-  :language: PYTHON
+  :language: python
 
 Note that the subscriber must implement the
 :class:`Subscriber <maze.core.events.pubsub.Subscriber>` interface and declare which
@@ -107,7 +107,7 @@ might be more lightweight than registering with the
 :class:`Pubsub <maze.core.events.pubsub.Pubsub>` message broker.
 
 .. literalinclude:: code_snippets/event_env.py
-  :language: PYTHON
+  :language: python
 
 To see the interface in action, you might want to check out the
 :class:`LogStatsWrapper <maze.core.wrappers.log_stats_wrapper.LogStatsWrapper>`, which

@@ -6,11 +6,6 @@ Environment Wrappers
 This page contains the reference documentation for environment wrappers.
 :ref:`Here <env_wrappers>` you can find a more extensive write up on how to work with these.
 
-.. contents:: Overview
-    :depth: 1
-    :local:
-    :backlinks: top
-
 Interfaces and Utilities
 ------------------------
 

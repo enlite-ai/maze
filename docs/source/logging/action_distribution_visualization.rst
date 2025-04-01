@@ -1,3 +1,11 @@
+.. |lunar_lander_continuous_v3| raw:: html
+
+   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander/" target="_blank">LunarLanderContinuous-v3</a>
+
+.. |lunar_lander_v3| raw:: html
+
+   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander/" target="_blank">LunarLander-v3</a>
+
 .. _act_logging:
 
 Action Distribution Visualization
@@ -22,7 +30,7 @@ To activate action logging you only have to add the
 :class:`~maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper`
 to your environment wrapper stack in your yaml config:
 
-.. code:: YAML
+.. code:: yaml
 
     # @package wrappers
     maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper:
@@ -39,8 +47,7 @@ Discrete and Multi Binary Actions
 
 Each :ref:`action space <action_spaces_and_distributions>` has a dedicated visualization assigned.
 Discrete and multi-binary action spaces are visualized via histograms.
-The example below shows an action sampling distribution for the discrete version of
-`LunarLander-v3 <https://gymnasium.farama.org/environments/box2d/lunar_lander/>`_.
+The example below shows an action sampling distribution for the discrete version of |lunar_lander_v3|.
 The indices on the x-axis correspond to the available actions:
 
 - Action :math:`a_0` - do nothing
@@ -49,7 +56,9 @@ The indices on the x-axis correspond to the available actions:
 - Action :math:`a_3` - fire right orientation engine
 
 .. image:: img/tb_discrete_action.png
-   :width: 100 %
+    :width: 100 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 We can see that action :math:`a_2` (fire main engine) is taken most often, which is reasonable for this environment.
 
@@ -57,8 +66,7 @@ Continuous Actions
 ------------------
 
 Continuous actions (Box spaces) are visualized via violin plots.
-The example below shows an action sampling distribution for
-`LunarLanderContinuous-v3 <https://gymnasium.farama.org/environments/box2d/lunar_lander/>`_.
+The example below shows an action sampling distribution for |lunar_lander_continuous_v3|.
 The indices on the x-axis correspond to the available actions:
 
 - Action :math:`a_1` - controls the main engine:
@@ -73,7 +81,9 @@ The indices on the x-axis correspond to the available actions:
     - :math:`a_2 \in (-0.5, 0.5)`: off
 
 .. image:: img/tb_continuous_action.png
-   :width: 100 %
+    :width: 100 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 For the first action, corresponding to the main engine, values closer to 1.0 are sampled more often which is similar
 to the discrete case above.

@@ -14,6 +14,8 @@ or for inspecting the policy behavior more closely using
 :ref:`trajectory viewers <collecting-rollouts>`.
 
 .. image:: rollouts.png
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 On this page:
 
@@ -32,9 +34,9 @@ Rollouts can be run from the command line, using the :code:`maze-run` command.
 Rollout configuration (:code:`conf_rollout`) is used by default. Hence, to run
 your first rollout, it suffices to execute:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run env=gym_env env.name=CartPole-v1
+    maze-run env=gym_env env.name=CartPole-v1
 
 This runs a rollout of a random policy on :code:`cartpole` environment. Statistics
 from the rollout are printed to the console, and trajectory data with event logs
@@ -43,9 +45,9 @@ are stored in the output directory automatically configured by Hydra.
 Alternatively, we might configure the rollouts to run just one episode in sequential mode
 and render the env (but more on that and other configuration options below):
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run env=gym_env env.name=CartPole-v1 runner=sequential runner.n_episodes=1 runner.render=true
+    maze-run env=gym_env env.name=CartPole-v1 runner=sequential runner.n_episodes=1 runner.render=true
 
 
 .. _rollouts-runner_config:
@@ -64,9 +66,9 @@ in the defaults), and are handled by the ParallelRolloutRunner.
 Alternatively, rollouts can be run sequentially in a single process by
 opting for the :code:`sequential` runner configuration:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run env=gym_env env.name=CartPole-v1 runner=sequential
+    maze-run env=gym_env env.name=CartPole-v1 runner=sequential
 
 This is mainly useful when running a single episode only or for debugging, as
 sequential rollouts are much slower.
@@ -102,10 +104,9 @@ These are the parameters for :code:`parallel` rollout runner:
 Using these parameters, we can modify the rollout to e.g. be run only in 3 processes,
 and be comprised of 100 episodes, each of max 50 steps:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run env=gym_env env.name=CartPole-v1 runner.n_processes=3 \
-    runner.n_episodes=100 runner.max_episode_steps=10
+    maze-run env=gym_env env.name=CartPole-v1 runner.n_processes=3 runner.n_episodes=100 runner.max_episode_steps=10
 
 (Alternatively, you can create your own configuration file that you will then
 supply to the :code:`maze-run` command as described in Hydra primer section).
@@ -134,17 +135,15 @@ For agents, there are the following example config files:
 
 Hence, after training a policy on the :ref:`tutorial Cutting 2D environment <env_from_scratch>`:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
 
 We can roll it out using:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run policy=torch_policy env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d \
-    model=tutorial_cutting_2d_struct_masked input_dir=outputs/[training-output-dir]
+    maze-run policy=torch_policy env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked input_dir=outputs/[training-output-dir]
 
 Note that for this to work, the ``training-output-dir`` parameter must be set to the output directory
 of the training run (the model state dict and other configuration will be loaded from there).
@@ -160,7 +159,7 @@ That being said, you can of course instantiate and use the runners directly in P
 if you have some special needs.
 
 .. literalinclude:: code_snippets/rollout.py
-  :language: PYTHON
+  :language: python
 
 Using the snippet above, you can run a rollout on any agent and environment directly from Python
 (parallel rollouts can be run similarly).

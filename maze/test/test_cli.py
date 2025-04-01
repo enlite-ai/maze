@@ -2,6 +2,9 @@
 import subprocess
 
 import pytest
+from hydra import initialize_config_module, compose
+
+from maze.maze_cli import maze_run
 
 
 def test_cli():
@@ -24,6 +27,35 @@ def test_nevergrad():
     """Simple test for the nevergrad hyper parameter optimizer."""
     result = subprocess.run(["maze-run", "-cn", "conf_train",
                              "configuration=test", "+experiment=nevergrad",
-                             "hydra.sweeper.optim.budget=2", "--multirun"],
+                             "hydra.sweeper.optim.budget=2", "--multirun",
+                             "hydra.job.chdir=True"],
                             capture_output=True)
     assert result.returncode == 0, result.stderr.decode("utf-8")
+
+    # def read_hydra_config_with_overrides(config_module: str, config_name: str, overrides: list[str]):
+    #     """Read and assemble a hydra config, given the config module, name, and overrides.
+    #
+    #     :param config_module: Python module path of the hydra configuration package
+    #     :param config_name: Name of the defaults configuration yaml file within `config_module`
+    #     :param overrides: Overrides as kwargs, e.g. env="cartpole", configuration="test"
+    #     :return: Hydra DictConfig instance, assembled according to the given module, name, and overrides.
+    #     """
+    #     with initialize_config_module(config_module):
+    #         cfg = compose(config_name, overrides=overrides)
+    #
+    #     return cfg
+    #
+    # cfg = read_hydra_config_with_overrides(
+    #     config_module='maze.conf',
+    #     config_name='conf_train',
+    #     overrides=[
+    #         'configuration=test',
+    #         '+experiment=nevergrad',
+    #         'hydra.sweeper.optim.budget=2',
+    #         'hydra.job.chdir=True',
+    #     ],
+    # )
+    #
+    # maze_run(cfg)
+    #
+    # print('')

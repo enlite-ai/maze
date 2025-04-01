@@ -17,6 +17,7 @@ In the remainder of this page we will go through the components in more detail.
 .. image:: img/logging_overview.png
    :width: 100 %
    :align: center
+   :class: padding-top-15 padding-bottom-15
 
 .. _event_kpi_log-events:
 
@@ -39,7 +40,7 @@ The code snipped below contains an example for an event called ``invalid_piece_s
 borrowed from the :ref:`cutting 2D tutorial <env_from_scratch-events>`.
 
 .. literalinclude:: code_snippets/event_stats.py
-  :language: PYTHON
+  :language: python
 
 The snippet defines the following statistics aggregation hierarchy:
 
@@ -66,6 +67,7 @@ these events get then logged in dedicated sections (e.g., as *CuttingEvents*).
 .. image:: img/logging_hierarchy.png
    :width: 100 %
    :align: center
+   :class: padding-top-15 padding-bottom-15
 
 .. _event_kpi_log-kpis:
 
@@ -99,7 +101,7 @@ In case you would like to test or run your logging setup directly from Python
 you can start with the snippet below.
 
 .. literalinclude:: code_snippets/log_stats_wrapper.py
-  :language: PYTHON
+  :language: python
 
 To get access to event and KPI logging we need to wrap the environment with the
 :class:`~maze.core.wrappers.log_stats_wrapper.LogStatsWrapper`.

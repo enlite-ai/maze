@@ -15,6 +15,8 @@ flow is inverted, with the environment querying the agent for
 an action, whenever it is ready.
 
 .. image:: agent_deployment.png
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 The catch here is that in the Gym environment model, the wrappers
 that modify the environment behavior are considered to be a part
@@ -39,13 +41,13 @@ an already-instantiated policy and environment (which may include
 a stack of wrappers):
 
 .. literalinclude:: code_snippets/agent_deployment_init_python.py
-  :language: PYTHON
+  :language: python
 
 Or, by providing configuration dictionary for the policy and environment
 (and, optionally, for wrappers) obtained from hydra or elsewhere:
 
 .. literalinclude:: code_snippets/agent_deployment_init_hydra.py
-  :language: PYTHON
+  :language: python
 
 (The configuration structure here is shared with rollouts. To better
 understand it, see :ref:`Rollouts<rollouts>`.)
@@ -58,7 +60,7 @@ the :code:`act` method:
 
 .. code-block:: python
 
-  maze_action = agent_deployment.act(maze_state, reward, done, info)
+    maze_action = agent_deployment.act(maze_state, reward, done, info)
 
 When the episode is done, you should close the agent deployment.
 At this point, the agent deployment resets the env to write out
@@ -82,7 +84,7 @@ to simulate an external production env (to obtain states from),
 looks like:
 
 .. literalinclude:: code_snippets/agent_deployment_full_example.py
-  :language: PYTHON
+  :language: python
 
 Notice that above, we are dealing with Maze states and
 Maze actions, i.e., in the format they come directly from
@@ -127,4 +129,3 @@ Where to Go Next
   and how they affect the execution flow, see :ref:`Maze Environment Hierarchy<env-hierarchy>`
 - Before deployment, you might want to :ref:`train your own policy<training>`
   and then evaluate it using :ref:`rollouts<rollouts>`.
-

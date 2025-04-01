@@ -1,3 +1,27 @@
+.. |hydra_basic_example| raw:: html
+
+   <a href="https://hydra.cc/docs/next/intro#basic-example/" target="_blank">basic example</a>
+
+.. |hydra_composition_example| raw:: html
+
+   <a href="https://hydra.cc/docs/next/intro#composition-example/" target="_blank">composition example</a>
+
+.. |hydra_basic_overrides| raw:: html
+
+   <a href="https://hydra.cc/docs/next/advanced/override_grammar/basic/" target="_blank">basic overrides</a>
+
+.. |hydra_extended_override_syntax| raw:: html
+
+   <a href="https://hydra.cc/docs/next/advanced/override_grammar/extended/" target="_blank">extended override syntax</a>
+
+.. |hydra_output_working_directory| raw:: html
+
+   <a href="https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory/" target="_blank">Output/Working directory</a>
+
+.. |hydra_customizing_working_directory_pattern| raw:: html
+
+   <a href="https://hydra.cc/docs/next/configure_hydra/workdir/" target="_blank">customizing working directory pattern</a>
+
 .. _hydra-overview:
 
 Hydra: Overview
@@ -38,24 +62,23 @@ Hydra is a configuration framework that, in short, allows you to:
 Ad (1): For illustrative purposes, this is an example of how your Hydra config structure can look like:
 
 .. image:: hydra_structure.png
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Ad (2): With the structure above, you could then launch your jobs with specified components
 (again, this is only for illustrative purposes):
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run runner=parallel
+    maze-run runner=parallel
 
 Or, you can even override any individual value anywhere in the config like this:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run runner=parallel runner.n_processes=10
+    maze-run runner=parallel runner.n_processes=10
 
-You can also review the `basic example`_ and `composition example`_ at Hydra docs.
-
-.. _`basic example`: https://hydra.cc/docs/next/intro#basic-example
-.. _`composition example`: https://hydra.cc/docs/next/intro#composition-example
+You can also review the |hydra_basic_example| and |hydra_composition_example| at Hydra docs.
 
 .. _hydra-overview-config_root:
 
@@ -127,11 +150,7 @@ values in the config:
   :language: shell
 
 There is also more advanced syntax for adding/removing config keys and other patterns --
-for this, you can consult Hydra docs regarding `basic overrides`_ and `extended override syntax`_.
-
-.. _`basic overrides`: https://hydra.cc/docs/next/advanced/override_grammar/basic
-.. _`extended override syntax`: https://hydra.cc/docs/next/advanced/override_grammar/extended
-
+for this, you can consult Hydra docs regarding |hydra_basic_overrides| and |hydra_extended_override_syntax|.
 
 .. _hydra-overview-output:
 
@@ -149,12 +168,8 @@ You can override the hydra output directory as follows:
 .. literalinclude:: code_snippets/overview_custom_output_dir.sh
   :language: shell
 
-More on the output directory setting can be found in Hydra docs: `output/working directory`_
-and `customizing working directory pattern`_.
-
-.. _`Output/Working directory`: https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory
-.. _`customizing working directory pattern`: //hydra.cc/docs/next/configure_hydra/workdir
-
+More on the output directory setting can be found in Hydra docs: |hydra_output_working_directory|
+and |hydra_customizing_working_directory_pattern|.
 
 .. _hydra-overview-runners:
 

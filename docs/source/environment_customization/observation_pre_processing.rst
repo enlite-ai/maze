@@ -8,7 +8,9 @@ or the one-hot encoding of a categorical observation such as the current month i
 Maze supports observation pre-processing via the :ref:`PreProcessingWrapper <observation_pre_processing_reference>`.
 
 .. image:: pre_processing_overview.png
-   :width: 600px
+    :width: 600px
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 This means to gain access to observation pre-processing and to the features listed below you simply have to add the
 :ref:`PreProcessingWrapper <observation_pre_processing_reference>` to your wrapper stack in your Hydra configuration.
@@ -36,7 +38,7 @@ This example adds pre-processing to two observations (*rgb_image* and *categoric
 observation space.
 
 .. literalinclude:: code_snippets/obs_pre_proc_specific.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -53,7 +55,7 @@ Example 2: Cascaded Pre-Processing
 This example shows how to apply multiple pre-processor in sequence to a single observation.
 
 .. literalinclude:: code_snippets/obs_pre_proc_cascaded.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -68,7 +70,7 @@ In case the built-in pre-processors provided with Maze are not sufficient for yo
 and add additional custom processors.
 
 .. literalinclude:: code_snippets/obs_pre_proc_new_processor.yaml
-  :language: YAML
+  :language: yaml
 
 When adding a new pre-processor you (1) have to implement the **PreProcessor** interface and
 (2) make sure that it is accessible within your Python path.
@@ -85,7 +87,7 @@ If you are not working with the Maze command line interface but still want to re
 directly within Python you can start with the code snippet below.
 
 .. literalinclude:: code_snippets/obs_pre_proc_from_python.py
-  :language: PYTHON
+  :language: python
 
 Built-in Pre-Processors
 -----------------------

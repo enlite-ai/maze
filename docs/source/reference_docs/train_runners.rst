@@ -5,11 +5,6 @@ Trainers and Training Runners
 
 This page contains the reference documentation for trainers and training runners:
 
-.. contents:: Overview
-    :depth: 2
-    :local:
-    :backlinks: top
-
 General
 -------
 

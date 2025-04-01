@@ -31,6 +31,8 @@ A template model supports the following features:
    between actor and critic.
 
 .. image:: template_model_builder.png
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 .. note::
     Maze so far does not support "end-to-end" default behaviour but instead provides config templates,
@@ -56,7 +58,9 @@ Before we describe the builder instances in more detail we provide some informat
 **ConcatModelBuilder** (:ref:`Reference Documentation <perception_builders_reference>`)
 
 .. image:: concat_model_builder.png
-  :width: 400px
+    :width: 400px
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 Model builder details:
 
@@ -88,7 +92,7 @@ Action Space:
 The model config is defined as:
 
 .. literalinclude:: code_snippets/ff_concat_model_builder.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -121,7 +125,7 @@ In this example we utilize the :ref:`ConcatModelBuilder <concat_model_builder>`
 to compose a recurrent actor-critic model for the :ref:`the previous example <template_feed_forward>`.
 
 .. literalinclude:: code_snippets/rnn_concat_model_builder.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -152,7 +156,7 @@ CartPole has an observation space with dimensionality four and a discrete action
 The model config is defined as:
 
 .. literalinclude:: code_snippets/cartpole_concat_model_builder.yaml
-  :language: YAML
+  :language: yaml
 
 The resulting inference graphs for an actor-critic model are shown below:
 
@@ -181,7 +185,7 @@ below.
 The model config is defined as:
 
 .. literalinclude:: code_snippets/ff_shared_embedding_concat_model_builder.yaml
-  :language: YAML
+  :language: yaml
 
 Now the output of the perception block `'latent'` will be used as the input to the critic network. The resulting
 inference graphs for an actor-critic model are shown below:

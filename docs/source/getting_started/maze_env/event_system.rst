@@ -1,10 +1,13 @@
+.. |tutorial_code_part_04| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part04_events/" target="_blank">can be found here</a>
+
 .. _env_from_scratch-events:
 
 Adding Events and KPIs
 ======================
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part04_events>`_
+The complete code for this part of the tutorial |tutorial_code_part_04|
 
 .. code:: bash
 
@@ -24,11 +27,6 @@ The complete code for this part of the tutorial
             - dict_action_conversion.py
             - dict_observation_conversion.py
         - conf ...
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 .. _env_from_scratch-events-events:
 
@@ -66,7 +64,7 @@ For more details on event decorators and the underlying working principles we re
 the dedicated section on :ref:`event and KPI logging <event_kpi_log>`.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part04_events/env/events.py
-  :language: PYTHON
+  :language: python
   :caption: env/events.py
 
 .. _env_from_scratch-events-kpi:
@@ -83,7 +81,7 @@ As you will see :ref:`below <env_from_scratch-events-main>` the logging system c
 and prints statistics of these along with the remaining *BaseEnvEvents*.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part04_events/env/kpi_calculator.py
-  :language: PYTHON
+  :language: python
   :caption: env/kpi_calculator.py
 
 Updating CoreEnv and Inventory
@@ -97,13 +95,13 @@ There are also a few changes we have to make in the CoreEnvironment:
   we can now trigger the respective events.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part04_events/env/core_env_snippet.py
-  :language: PYTHON
+  :language: python
   :caption: env/core_env.py
 
 For the inventory we proceed analogously and also trigger the respective events.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part04_events/env/inventory_snippet.py
-  :language: PYTHON
+  :language: python
   :caption: env/inventory.py
 
 .. _env_from_scratch-events-main:
@@ -119,7 +117,7 @@ To simplify the statistics logging setup we rely on the
 :class:`~maze.utils.log_stats_utils.SimpleStatsLoggingSetup` helper class.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part04_events/main.py
-  :language: PYTHON
+  :language: python
   :caption: main.py
 
 When running the script you will get an output as shown below.

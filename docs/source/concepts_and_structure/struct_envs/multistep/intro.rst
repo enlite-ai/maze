@@ -1,3 +1,15 @@
+.. |cutting_stock_problem| raw:: html
+
+   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem/" target="_blank">stock cutting problem</a>
+
+.. |auto_regressive_action_distributions| raw:: html
+
+   <a href="https://docs.ray.io/en/master/rllib-models.html#autoregressive-action-distributions/" target="_blank">auto-regressive action distributions (ARAD)</a>
+
+.. |grandmaster_level_in_starcraft_2_using_multi_agent_reinforcement_learning| raw:: html
+
+   <a href="https://www.nature.com/articles/s41586-019-1724-z/" target="_blank">Grandmaster level in StarCraft II using multi-agent reinforcement learning</a>
+
 .. _struct_env_multistep:
 
 Multi-Stepping
@@ -8,13 +20,13 @@ Multi-Stepping
         - :ref:`Control Flows with Structured Environments<control_flows_struct_envs>`.
         - :ref:`Flat Environments as a special case of structured environments<control_flows_struct_envs>`.
 
-We define multi-stepping as the execution of more than one action (or sub-step) in a single step. This is motivated by problem settings in which a certain sequence of actions is known a priori. In such cases incorporating this knowledge can significantly increase learning efficiency. The `stock cutting problem <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_ poses an example: It is known, independently from the specifics of the environment's state, that fulfilling a single customer order for a piece involves (a) picking a piece at least as big as the ordered item (b) cutting it to the correct size.
+We define multi-stepping as the execution of more than one action (or sub-step) in a single step. This is motivated by problem settings in which a certain sequence of actions is known a priori. In such cases incorporating this knowledge can significantly increase learning efficiency. The |cutting_stock_problem| poses an example: It is known, independently from the specifics of the environment's state, that fulfilling a single customer order for a piece involves (a) picking a piece at least as big as the ordered item (b) cutting it to the correct size.
 
 While it is not trivial to decide which items to pick for which orders and how to cut them, the sequence of piece selection before cutting is constant - there is no advantage to letting our agent figure it out by itself. Maze permits to incorporate this sort of domain knowledge by enabling to select and execute more than one action in a single step. This is done by utilizing the actor mechanism to execute multiple policies in a fixed sequence.
 
 In the case of the stock cutting problem two policies could be considered: "select" and "cut". The piece selection action might be provided to the environment at the beginning of each step, after which the cutting policy - conditioned on the current state with the already selected piece - can be queried to produce an appropriate cutting action.
 
-An implementation of a multi-stepping environment for the `stock cutting problem <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_ can be found :ref:`here<flat_to_structured>`.
+An implementation of a multi-stepping environment for the |cutting_stock_problem| can be found :ref:`here<flat_to_structured>`.
 
 Control Flow
 ------------
@@ -24,6 +36,7 @@ In general, the control flow for multi-stepping environments involve at least tw
 .. figure:: control_flow.png
     :width: 80 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
     Control flow within a multi-stepping scenario assuming a single agent. The environment keeps track of the active step and adjusts its policy key (via :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id`) accordingly. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 
@@ -38,7 +51,7 @@ Relation to Hierarchical RL
 Relation to Auto-Regressive Action Distributions
 ------------------------------------------------
 
-Multi-stepping is closely related to `auto-regressive action distributions (ARAD) <https://docs.ray.io/en/master/rllib-models.html#autoregressive-action-distributions>`_ as used in in DeepMind's `Grandmaster level in StarCraft II using multi-agent reinforcement learning <https://www.nature.com/articles/s41586-019-1724-z>`_. Both ARADs and multi-stepping are motivated by a lack of temporal coherency in the sequence of selected actions: if there is some necessary, recurring order of actions, it should be identified it as quickly as possible.
+Multi-stepping is closely related to |auto_regressive_action_distributions| as used in in DeepMind's |grandmaster_level_in_starcraft_2_using_multi_agent_reinforcement_learning|. Both ARADs and multi-stepping are motivated by a lack of temporal coherency in the sequence of selected actions: if there is some necessary, recurring order of actions, it should be identified it as quickly as possible.
 
 ARADs still execute one action per step, but condition it on the previous state and *action* instead of the state alone. This allows them to be more sensitive towards such recurring patterns of actions. Multi-stepping allows to incorporate domain knowledge about the correct order of actions or tasks without having to rely on learned autoregressive policies learning, but depends on the environment to incorporate it. ARAD policies do not presuppose (and cannot make use of) any such prior knowledge.
 

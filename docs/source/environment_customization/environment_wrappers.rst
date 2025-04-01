@@ -1,3 +1,7 @@
+.. |gymnasium_wrapper| raw:: html
+
+   <a href="https://gymnasium.farama.org/api/wrappers/" target="_blank">OpenAi's Gymnasium</a>
+
 .. _env_wrappers:
 
 Environment Wrappers
@@ -8,7 +12,9 @@ agent-environment interaction loop including observations, actions, the reward o
 any other internals of the environment itself.
 
 .. image:: environment_wrappers.png
-   :width: 90 %
+    :width: 90 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 To gain access to the functionality of Maze environment wrappers you simply have to add
 a wrapper stack in your hydra configuration.
@@ -16,7 +22,7 @@ To get started just copy one of our :ref:`hydra config snippets <env_wrappers-ex
 or :ref:`use it directly within Python <env_wrappers-example-python>`.
 
 .. note::
-    Wrappers have been already introduced in `OpenAi's Gym <https://github.com/openai/gym/tree/master/gym/wrappers/>`_
+    Wrappers have been already introduced in |gymnasium_wrapper|
     and elegantly expose methods and attributes of all nested envs. However, wrapping destroys the class hierarchy,
     querying the base classes is not straight-forward.
     Maze environment wrappers fix the behaviour of isinstance() for arbitrarily nested wrappers.
@@ -38,7 +44,7 @@ Example 1: Customizing Environments with Wrappers
 To make use of Maze environment wrappers just add a config snippet as listed below.
 
 .. literalinclude:: code_snippets/env_wrappers.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -53,7 +59,7 @@ In case the :ref:`built-in wrappers <env_wrappers-builtin>` provided with Maze a
 and add additional custom wrappers.
 
 .. literalinclude:: code_snippets/env_wrappers_custom.yaml
-  :language: YAML
+  :language: yaml
 
 When adding a new environment wrappers you (1) have to implement the **Wrapper** interface and
 (2) make sure that it is accessible within your Python path.
@@ -69,7 +75,7 @@ If you are not working with the Maze command line interface but still want to us
 you can start with the code snippet below.
 
 .. literalinclude:: code_snippets/env_wrappers_python.py
-  :language: PYTHON
+  :language: python
 
 .. _env_wrappers-builtin:
 

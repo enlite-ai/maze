@@ -1,56 +1,17 @@
-/* mobile view bar */
-.wy-nav-top {
-    background: #a12144;
+/* Disable dark mode */
+.theme-toggle-container {
+    visibility: hidden;
 }
 
-/* white menu background */
-.wy-side-nav-search {
-    background: white;
-}
-.wy-nav-side {
-    background: white;
-}
-.wy-menu-vertical {
-    background-color: white;
-}
-.wy-side-scroll {
-    background-color: white;
+/* Code highlight background */
+.highlight {
+    background: #f2f2f2;
 }
 
-/* insert "horizontal ruler" between search box and content */
-#rtd-search-form {
-    border-bottom: 1px solid lightgrey;
-    padding-bottom: 25px;
+.padding-top-15 {
+    padding-top: 15px;
 }
 
-div.wy-side-nav-search > a {
-    color: #404040;
+.padding-bottom-15 {
+    padding-bottom: 15px;
 }
-
-.wy-menu-vertical a {
-    color: #404040;
-}
-.wy-menu-vertical a:hover {
-    color: #a12144;
-    font-weight: 700;
-    background-color: white;
-}
-
-.wy-menu-vertical p.caption {
-    color: #107DA1;
-}
-
-/* separation line between menu and content */
-.wy-nav-content {
-    border-left: 1px solid lightgrey;
-    background: white;
-}
-
-a {
-    color: #107DA1;
-}
-
-a:hover {
-    color: #0D4354;
-}
-

@@ -1,10 +1,13 @@
+.. |tutorial_code_part_01| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part01_core_env/" target="_blank">can be found here</a>
+
 .. _env_from_scratch-core_env:
 
 Implementing the CoreEnv
 ========================
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part01_core_env>`_
+The complete code for this part of the tutorial |tutorial_code_part_01|
 
 
 .. code:: bash
@@ -17,11 +20,6 @@ The complete code for this part of the tutorial
             - inventory.py
             - maze_state.py
             - maze_action.py
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 .. _env_from_scratch-core_env-code:
 
@@ -45,7 +43,7 @@ We will start with the very basic components and add more and more features (com
 You can find the implementation of the basic version of the ``Cutting2DCoreEnvironment`` below.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part01_core_env/env/core_env.py
-  :language: PYTHON
+  :language: python
   :caption: env/core_env.py
 
 Environment Components
@@ -59,7 +57,7 @@ we introduces a dedicated ``Inventory`` class providing functionality for:
 - the cutting logic of the environment
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part01_core_env/env/inventory.py
-  :language: PYTHON
+  :language: python
   :caption: env/inventory.py
 
 MazeState and MazeAction
@@ -72,14 +70,14 @@ for interacting with an agent.
 For the present case this is a ``Cutting2DMazeState``
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part01_core_env/env/maze_state.py
-  :language: PYTHON
+  :language: python
   :caption: env/maze_state.py
 
 and a ``Cutting2DMazeAction`` defining which inventory piece
 to cut in which cutting order and orientation.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part01_core_env/env/maze_action.py
-  :language: PYTHON
+  :language: python
   :caption: env/maze_action.py
 
 These two classes are utilized in the :ref:`CoreEnv code above <env_from_scratch-core_env-code>`.
@@ -92,7 +90,7 @@ Test Script
 The following snippet will instantiate the environment and run it for 15 steps.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part01_core_env/main.py
-  :language: PYTHON
+  :language: python
   :caption: main.py
 
 When running the script you should get the following command line output:

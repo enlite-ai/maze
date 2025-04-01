@@ -1,3 +1,11 @@
+.. |pytorch_website| raw:: html
+
+   <a href="https://pytorch.org/" target="_blank">PyTorch</a>
+
+.. |nn_module| raw:: html
+
+   <a href="https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module/" target="_blank">nn.Module</a>
+
 .. _perception_module:
 
 Introducing the Perception Module
@@ -15,6 +23,8 @@ These representations are then utilized by the
 to yield policy as well as critic outputs.
 
 .. image:: perception_overview.png
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 This page provides a general introduction into the Perception Module (which we
 recommend to read, of course).
@@ -26,7 +36,7 @@ List of Features
 
 Below we list the key features and design choices of the perception module:
 
- - Based on `PyTorch <https://pytorch.org/>`_.
+ - Based on |pytorch_website|.
  - Supports dictionary observation spaces.
  - Provides a large variety of :ref:`neural network building blocks <perception_reference>`
    and model styles for customizing policy and value networks:
@@ -47,12 +57,14 @@ Below we list the key features and design choices of the perception module:
 Perception Blocks
 -----------------
 Perception blocks are components for composing models such as policy and value networks within Maze.
-They implement PyTorch's `nn.Module <https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module>`_
+They implement PyTorch's |nn_module|
 interface and encapsulate neural network functionality into distinct, reusable units.
 In order to handle all our requirements (listed in the motivation below),
 every perception block expects a tensor dictionary as input and produce a tensor dictionary again as an output.
 
 .. image:: perception_block.png
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 Maze already supports a number of :ref:`built-in neural network building blocks <perception_blocks_reference>`
 which are, like all other components, :ref:`easily extendable <perception_new_blocks>`.
@@ -70,6 +82,8 @@ support the following features:
    The figure below shows a few examples of such scenarios.
 
 .. image:: perception_dim_specification.png
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 .. _inference_graph_visualization:
 
@@ -84,7 +98,9 @@ which can be easily linked to an inference graph.
 The figure below shows a simple example of how such a graph can look like.
 
 .. image:: inference_graph_example.png
-  :width: 500px
+    :width: 500px
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 Details:
 
@@ -137,13 +153,15 @@ by implementing:
 The code-snippet below shows a simple toy-example block, wrapping a linear layer into a Maze perception block.
 
 .. literalinclude:: code_snippets/my_linear_block.py
-  :language: PYTHON
+  :language: python
 
 The Bigger Picture
 ------------------
 The figure below shows how the components introduced in the perception module relate to each other.
 
 .. image:: perception_bigger_picture.png
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 Where to Go Next
 ----------------

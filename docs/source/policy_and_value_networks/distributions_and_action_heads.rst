@@ -66,7 +66,7 @@ Adding the snippet below to your model config specifies the following:
  - All other action spaces behave as specified in the :ref:`defaults <action_spaces_and_distributions>`.
 
 .. literalinclude:: code_snippets/action_spaces_to_distributions.yaml
-  :language: YAML
+  :language: yaml
 
 Example 2: Mapping Actions to Distributions
 -------------------------------------------
@@ -78,7 +78,7 @@ Adding the snippet below to your model config specifies the following:
  - All other action spaces behave as specified in the :ref:`defaults <action_spaces_and_distributions>`.
 
 .. literalinclude:: code_snippets/action_heads_to_distributions.yaml
-  :language: YAML
+  :language: yaml
 
 When specifying custom behaviour for distinct action heads make sure to add them below the more general action space
 configurations (e.g. get more specific from top to bottom).
@@ -91,7 +91,7 @@ In case the probability distributions contained in Maze are not sufficient for y
 additional custom probability distributions.
 
 .. literalinclude:: code_snippets/new_distributions.yaml
-  :language: YAML
+  :language: yaml
 
 The example above defines to use a **CustomCategoricalProbabilityDistribution** for all discrete action spaces.
 When adding a new distribution you (1) have to implement the **ProbabilityDistribution** interface and
@@ -110,7 +110,7 @@ For completeness we also provide a code snippet in plain Python showing how to:
  - Instantiate the appropriate probability distribution and sample actions.
 
 .. literalinclude:: code_snippets/sampling_from_policy.py
-  :language: PYTHON
+  :language: python
 
 The Bigger Picture
 ------------------

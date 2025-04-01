@@ -17,8 +17,9 @@ For more references on the individual components or on how to write a new enviro
 from scratch, see the :ref:`Where to Go Next section<env_hierarchy-wtgn>` at the end.
 
 .. image:: ../environment_customization/observation_action_interfaces.png
-   :width: 70 %
-   :align: center
+    :width: 70 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 The following sections describe the main components:
 

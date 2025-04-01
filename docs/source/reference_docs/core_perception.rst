@@ -5,11 +5,6 @@ Perception Module
 
 This page contains the reference documentation of :ref:`Maze Perception Module <perception_module>`.
 
-.. contents:: Overview
-    :depth: 1
-    :local:
-    :backlinks: top
-
 .. _perception_blocks_reference:
 
 maze.perception.blocks

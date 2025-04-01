@@ -1,3 +1,19 @@
+.. |hydra_config_search_path| raw:: html
+
+   <a href="https://hydra.cc/docs/next/advanced/search_path/" target="_blank">Config Search Path</a>
+
+.. |hydra_search_path_plugins| raw:: html
+
+   <a href="https://hydra.cc/docs/next/advanced/plugins#searchpathplugin/" target="_blank">customizing working directory pattern</a>
+
+.. |hydra_built_in_experiment_configuration| raw:: html
+
+   <a href="https://hydra.cc/docs/next/patterns/configuring_experiments/" target="_blank">Hydra's built-in Experiment Configuration</a>
+
+.. |vector_obs| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/wrappers/vector_obs.yaml/" target="_blank">vector_obs</a>
+
 .. _hydra-custom:
 
 Hydra: Your Own Configuration Files
@@ -32,9 +48,9 @@ As a final step, you need to tell Hydra to look for your config files.
 This is can be done either by specifying your config directory along with each
 :code:`maze-run` command using the :code:`-cd` flag:
 
-.. code:: console
+.. code:: bash
 
-   $ maze-run -cd your_project/conf ...
+    maze-run -cd your_project/conf ...
 
 Or, to avoid specifying this with every command, you can add your config module
 to the Hydra search path by creating the following Hydra plugin
@@ -47,12 +63,8 @@ to the Hydra search path by creating the following Hydra plugin
 Now, you can add additional root config files as well as individual components into your
 config package.
 
-For more information on search path customization, check `Config Search Path`_ and `SearchPathPlugins`_
+For more information on search path customization, check |hydra_config_search_path| and |hydra_search_path_plugins|
 in Hydra docs.
-
-.. _`Config Search Path`: https://hydra.cc/docs/next/advanced/search_path
-.. _`SearchPathPlugins`: https://hydra.cc/docs/next/advanced/plugins#searchpathplugin
-
 
 .. _hydra-custom-components:
 
@@ -82,23 +94,22 @@ Step 2b: Experiment Config
 --------------------------
 
 Another convenient way to assemble and maintain different configurations of your experiments
-is `Hydra's built-in Experiment Configuration <https://hydra.cc/docs/next/patterns/configuring_experiments/>`_.
+is |hydra_built_in_experiment_configuration|.
 
 It allows you to customize experiments by only specifying the changes to the default (master) configuration.
 You can for example change the trainer to PPO, the learning rate to 0.0001
-and additionally activate the
-`vector_obs <https://github.com/enlite-ai/maze/blob/main/maze/conf/wrappers/vector_obs.yaml/>`_ wrapper stack
+and additionally activate the |vector_obs| wrapper stack
 by providing the following experiment configuration:
 
 .. literalinclude:: ../../../../maze/conf/experiment/cartpole_ppo_wrappers.yaml
-  :language: YAML
+  :language: yaml
   :caption: conf/experiment/cartpole_ppo_wrappers.yaml
 
 To start the experiment from this experiment config file, run:
 
-.. code:: console
+.. code:: bash
 
-   $ maze-run -cn conf_train +experiment=cartpole_ppo_wrappers
+    maze-run -cn conf_train +experiment=cartpole_ppo_wrappers
 
 For more details on experimenting we refer to the :ref:`experiment configuration docs <experimenting>`.
 
@@ -121,9 +132,9 @@ Once you create your root config file (let's say ``your_project/conf/my_own_conf
 it suffices to point Hydra to it via the argument ``-cn my_own_conf``, so your
 command would look like this (for illustrative purposes):
 
-.. code-block:: shell
+.. code-block:: bash
 
-  $ maze-run -cn my_own_conf
+    maze-run -cn my_own_conf
 
 Then, all the defaults and available components that Hydra will look for
 depend on what you specified in your new root config.

@@ -3,4 +3,4 @@ from maze.core.utils.factory import Factory
 
 env = Factory(MazeEnv).instantiate({
     "_target_": "maze.core.wrappers.maze_gym_env_wrapper.GymMazeEnv",
-}, env="CarRacing-v0")
+}, env="CarRacing-v1", render_mode=None)

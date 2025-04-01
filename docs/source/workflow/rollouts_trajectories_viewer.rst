@@ -13,6 +13,8 @@ With the Maze Trajectory Viewer, it is possible replay past episodes
 from collected trajectory data in a Jupyter Notebook.
 
 .. image:: trajectory_viewer-overview.png
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Requirements
 ------------
@@ -45,25 +47,23 @@ via CLI.
 To simply collect trajectory data of a heuristic policy on
 the :ref:`tutorial Cutting 2D environment <env_from_scratch>`, run:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run env=tutorial_cutting_2d_flat policy=tutorial_cutting_2d_greedy_policy
+    maze-run env=tutorial_cutting_2d_flat policy=tutorial_cutting_2d_greedy_policy
 
 Alternatively (and closer to a real training setting), you might want to first
 :ref:`train <training>` an RL policy on the tutorial 2D cutting environment:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
 
 and then :ref:`roll it out <rollouts>` to collect the trajectory data (make sure
 to substitute the ``input_dir`` value for your actual training output directory):
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run policy=torch_policy env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d \
-    model=tutorial_cutting_2d_struct_masked input_dir=outputs/[training-output-dir]
+    maze-run policy=torch_policy env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked input_dir=outputs/[training-output-dir]
 
 Once the rollout has run, take note of the outputs directory created by
 Hydra, where the trajectory data will be logged -- by default inside
@@ -89,6 +89,8 @@ Once an episode is selected and loaded, it is possible to skim back and forward 
 using the notebook widgets slider (controllable by mouse or keyboard).
 
 .. image:: trajectory_viewer-screen.png
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Where to Go Next
 ----------------

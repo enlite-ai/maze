@@ -1,3 +1,7 @@
+.. |gymnasium_environment| raw:: html
+
+   <a href="https://gymnasium.farama.org/api/env/" target="_blank">Gymnasium-style environment interfaces</a>
+
 .. _custom_core_maze_envs:
 
 Customizing Core and Maze Envs
@@ -5,7 +9,7 @@ Customizing Core and Maze Envs
 
 Whenever simulations reach a certain level of complexity or
 (ideally) already exist, but have been developed for other purposes than the RL scenario,
-the `Gym-style environment interfaces <https://gym.openai.com/docs/#environments/>`_
+the |gymnasium_environment|
 might not be sufficient anymore to meet all technical requirements
 (e.g., the state is too complex to be represented as a simple Gym-style numpy array).
 In case of existing simulations it probably was not even taken into account at all
@@ -18,8 +22,9 @@ components in a bit more detail. You can also find these components in the
 :ref:`reference documentation <environment_interfaces_reference>`.
 
 .. image:: observation_action_interfaces.png
-   :width: 70 %
-   :align: center
+    :width: 70 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 **Observation- and ActionConversionInterfaces:**
 
@@ -71,7 +76,7 @@ Example: Core- and MazeEnv Configuration
 The config snippet below shows an example environment configuration for the built-in cutting-2d environment.
 
 .. literalinclude:: code_snippets/env_a2e_s2o.yaml
-  :language: YAML
+  :language: yaml
 
 The config defines:
 

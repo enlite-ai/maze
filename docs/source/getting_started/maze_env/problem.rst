@@ -11,6 +11,7 @@ an online version of the *Guillotine 2D Cutting Stock Problem*.
 .. image:: problem_overview.png
     :width: 100 %
     :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 - In each step there is one new incoming customer order generated according to a certain demand pattern.
 - This customer order has to be fulfilled by cutting the exact x/y-dimensions
@@ -28,6 +29,7 @@ according to the agent-environment interaction loop shown below.
 .. image:: problem_mdp.png
     :width: 75 %
     :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 - The *State* contains the dimensions of the currently pending customer orders and all pieces on inventory.
 - The *Reward* is specified to discourage the usage of raw inventory pieces.
@@ -40,5 +42,6 @@ according to the agent-environment interaction loop shown below.
 .. image:: cutting_parameters.png
     :width: 100 %
     :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 Given this description of the problem we will now proceed with implementing a corresponding simulation.

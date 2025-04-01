@@ -1,10 +1,13 @@
+.. |tutorial_code_part_03| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part03_maze_env/" target="_blank">can be found here</a>
+
 .. _env_from_scratch-maze_env:
 
 Implementing the MazeEnv
 ========================
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part03_maze_env>`_
+The complete code for this part of the tutorial |tutorial_code_part_03|
 
 .. code:: bash
 
@@ -22,11 +25,6 @@ The complete code for this part of the tutorial
             - dict_action_conversion.py  # new
             - dict_observation_conversion.py  # new
 
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
-
 MazeEnv
 -------
 
@@ -41,7 +39,7 @@ In the remainder of this part of the tutorial we will implement the ``Cutting2DE
 as well as a :ref:`corresponding set of interfaces <env_from_scratch-maze_env-s2o>`.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part03_maze_env/env/maze_env.py
-  :language: PYTHON
+  :language: python
   :caption: env/maze_env.py
 
 The MazeEnv is instantiated with the underlying CoreEnv and the two interfaces for MazeStates and MazeActions.
@@ -63,7 +61,7 @@ In the present cases the observation is defined as a dictionary with the followi
 - *order*: 2d vector representing the customer order (current demand)
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part03_maze_env/space_interfaces/dict_observation_conversion.py
-  :language: PYTHON
+  :language: python
   :caption: space_interfaces/dict_observation_conversion.py
 
 ActionConversionInterface
@@ -79,7 +77,7 @@ In the present cases the action is defined as a dictionary with the following st
 - *order*: defines the cutting order (*xy* vs. *yx*)
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part03_maze_env/space_interfaces/dict_action_conversion.py
-  :language: PYTHON
+  :language: python
   :caption: space_interfaces/dict_action_conversion.py
 
 Updating the CoreEnv
@@ -95,7 +93,7 @@ The code below defines that the current version of the environment requires
 only **one actor** (id 0) with a **single policy** (id 0) that is **never done**.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part03_maze_env/env/core_env_snippet.py
-  :language: PYTHON
+  :language: python
   :caption: env/core_env.py
 
 Test Script
@@ -109,7 +107,7 @@ Note that (compared to the :ref:`previous example <env_from_scratch-core_env-mai
 -  able to sample actions from the action_space object
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part03_maze_env/main.py
-  :language: PYTHON
+  :language: python
   :caption: main.py
 
 .. code:: bash

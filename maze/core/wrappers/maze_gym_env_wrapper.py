@@ -297,7 +297,7 @@ class GymCoreEnv(CoreEnv):
 class GymMazeEnv(MazeEnv):
     """Wraps a Gymnasium env into a Maze environment.
 
-    **Example**: *env = GymMazeEnv(env="CartPole-v1")*
+    **Example**: *env = GymMazeEnv(env="CartPole-v1", render_mode=None)*
 
     :param env: The gymnasium environment to wrap or the environment id.
     :param render_mode: The render mode to be used.

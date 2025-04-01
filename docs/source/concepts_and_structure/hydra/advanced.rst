@@ -1,3 +1,15 @@
+.. |hydra_instantiation_functionality| raw:: html
+
+   <a href="https://hydra.cc/docs/patterns/instantiate_objects/overview/" target="_blank">Hydra's own instantiation functionality</a>
+
+.. |github_omegaconf| raw:: html
+
+   <a href="https://github.com/omry/omegaconf/" target="_blank">OmegaConf</a>
+
+.. |hydra_specializing_config| raw:: html
+
+   <a href="https://hydra.cc/docs/next/patterns/specializing_config/" target="_blank">in Hydra docs here</a>
+
 .. _hydra-advanced:
 
 Hydra: Advanced Concepts
@@ -21,11 +33,9 @@ Maze Factory
 ------------
 
 :class:`Factory<maze.core.utils.factory.Factory>` wraps around
-`Hydra's own instantiation functionality`_ and adds features like
+|hydra_instantiation_functionality| and adds features like
 type hinting and checking, collections, configuration structure checks,
 and ability to take in already instantiated objects.
-
-.. _`Hydra's own instantiation functionality`: https://hydra.cc/docs/patterns/instantiate_objects/overview
 
 Using the factory, classes can accept
 :class:`ConfigType<maze.core.utils.factory.ConfigType>` (or collections thereof,
@@ -64,9 +74,7 @@ both from YAML/dictionaries and by passing in already instantiated objects.
 Interpolation
 -------------
 
-Hydra is based on `OmegaConf`_ and supports interpolation.
-
-.. _`OmegaConf`: https://github.com/omry/omegaconf
+Hydra is based on |github_omegaconf| and supports interpolation.
 
 Interpolation allows us to reference and reuse a value defined elsewhere in the
 configuration, without repeating it. For example:
@@ -109,9 +117,7 @@ Hydra will look into the ``env_model`` directory for configuration named ``gym_p
 This allows you to capture the dependencies between these two components easily without
 having to specify more overrides.
 
-Specializations are well explained  `in Hydra docs here`_.
-
-.. _`in Hydra docs here`: https://hydra.cc/docs/next/patterns/specializing_config
+Specializations are well explained |hydra_specializing_config|.
 
 
 Where to Go Next

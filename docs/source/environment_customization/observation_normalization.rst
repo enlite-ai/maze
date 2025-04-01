@@ -9,7 +9,9 @@ normalizing the observations returned by the respective environments
 via the :ref:`ObservationNormalizationWrapper <observation_normalization_reference>`.
 
 .. image:: observation_normalization_overview.png
-   :width: 600px
+    :width: 600px
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 This means to gain access to observation normalization and to the features listed below you simply have to add the
 :ref:`ObservationNormalizationWrapper <observation_normalization_reference>`
@@ -43,7 +45,7 @@ This example applies default observation normalization to all observations
 with statistics automatically estimated via sampling.
 
 .. literalinclude:: code_snippets/obs_norm_estimate_stats.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -66,7 +68,7 @@ when working with RGB pixel observation spaces.
 However, it requires to know the normalization statistics beforehand.
 
 .. literalinclude:: code_snippets/obs_norm_manual_stats.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -109,7 +111,7 @@ In case the normalization strategies provided with Maze are not sufficient for y
 and add your own strategies.
 
 .. literalinclude:: code_snippets/obs_norm_custom_strategy.yaml
-  :language: YAML
+  :language: yaml
 
 When adding a new normalization strategy you (1) have to implement the **ObservationNormalizationStrategy** interface
 and (2) make sure that it is accessible within your Python path.
@@ -127,7 +129,7 @@ directly within Python you can start with the code snippet below. It shows how t
  - reuse the estimated statistics for normalization for subsequent tasks such as training or rollouts
 
 .. literalinclude:: code_snippets/obs_norm_from_python.py
-  :language: PYTHON
+  :language: python
 
 .. _normalization_strategies:
 
@@ -149,6 +151,8 @@ It is located in between the
 (which converts environment MazeStates into machine readable observations) and the agent.
 
 .. image:: observation_normalization.png
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 According to the *sampling_policy* specified in the config the wrapper collects observations from the
 interaction loop and uses these to estimate the normalization statistics given the provided

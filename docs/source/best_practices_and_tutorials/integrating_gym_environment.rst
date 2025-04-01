@@ -1,12 +1,24 @@
+.. |gymnasium_built_in_classic_control_environments| raw:: html
+
+   <a href="https://gymnasium.farama.org/environments/classic_control/" target="_blank">built-in Gymnasium environments</a>
+
+.. |gymnasium_environment_interface| raw:: html
+
+   <a href="https://gymnasium.farama.org/api/env/" target="_blank">Gymnasium environments interface</a>
+
+.. |maze_gym_env_yaml| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/env/gym_env.yaml/" target="_blank">gym_env</a>
+
 .. _tutorial_gym_env:
 
 Integrating an Existing Gym Environment
 =======================================
 
 Maze supports a seamless integration of existing OpenAI Gym environments.
-This holds for already registered, `built-in Gym environments <https://gym.openai.com/envs/#classic_control>`_
+This holds for already registered, |gymnasium_built_in_classic_control_environments|
 but also for any other custom environment following the
-`Gym environments interface <https://github.com/openai/gym/blob/master/gym/core.py>`_.
+|gymnasium_environment_interface|.
 
 To get full Maze feature support for Gym environments we first have to transform them into Maze environments.
 This page shows how this is easily accomplished via the :ref:`GymMazeEnv <env_wrappers_ref-gym_env>`.
@@ -14,6 +26,7 @@ This page shows how this is easily accomplished via the :ref:`GymMazeEnv <env_wr
 .. image:: gym_env_wrapper.png
     :width: 60 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
 In short, a Gym environment is transformed into a
 :class:`MazeEnv <maze.core.env.maze_env.MazeEnv>` by wrapping it with the
@@ -38,7 +51,7 @@ Instantiating a Gym Environment as a Maze Environment
 The config snippet below shows how to instantiate an existing, already registered Gym environment
 as a GymMazeEnv referenced by its environment name (here *CartPole-v1*).
 
-.. code-block:: YAML
+.. code-block:: yaml
 
     # @package env
     _target_: maze.core.wrappers.maze_gym_env_wrapper.make_gym_maze_env
@@ -46,7 +59,7 @@ as a GymMazeEnv referenced by its environment name (here *CartPole-v1*).
 
 To achieve the same result directly with plain Python you can start with the code snippet below.
 
-.. code-block:: PYTHON
+.. code-block:: python
 
     from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
     env = GymMazeEnv(env="CartPole-v1")
@@ -54,7 +67,7 @@ To achieve the same result directly with plain Python you can start with the cod
 In case your custom Gym environment is not yet registered with Gym,
 you can also explicitly instantiate the environment before passing it to the GymMazeEnv.
 
-.. code-block:: PYTHON
+.. code-block:: python
 
     from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
     custom_gym_env = CustomGymEnv()
@@ -71,7 +84,7 @@ First, make sure that your project is either installed or available in your :cod
 Second, add an environment factory function similar to the one shown in the snippet
 below to your project (e.g., :code:`my_project/env_factory.py`).
 
-.. code-block:: PYTHON
+.. code-block:: python
 
     from maze.core.env.maze_env import MazeEnv
     from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
@@ -82,16 +95,14 @@ below to your project (e.g., :code:`my_project/env_factory.py`).
 
 That's all we need to do. You can now start training an agent for your environment by running:
 
-.. code-block:: console
+.. code-block:: bash
 
-  $ maze-run -cn conf_train env._target_=my_project.env_factory.make_env
+    maze-run -cn conf_train env._target_=my_project.env_factory.make_env
 
-This basically updates the original
-`gym_env <https://github.com/enlite-ai/maze/blob/main/maze/conf/env/gym_env.yaml>`_ config
+This basically updates the original |maze_gym_env_yaml| config
 via :ref:`Hydra overrides <hydra-overview-overrides>`.
 
-Note that the argument :code:`name` is unused so far but is required to adhere to the
-`gym_env <https://github.com/enlite-ai/maze/blob/main/maze/conf/env/gym_env.yaml>`_ config signature.
+Note that the argument :code:`name` is unused so far but is required to adhere to the |maze_gym_env_yaml| config signature.
 When :ref:`creating your own config files <hydra-custom>` you can of course tailor this signature to your needs.
 
 Where to Go Next

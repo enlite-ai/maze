@@ -1,3 +1,8 @@
+.. |cutting_stock_problem| raw:: html
+
+   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem/" target="_blank">stock cutting problem</a>
+
+
 .. _struct_env_flat:
 
 Flat Environments
@@ -9,7 +14,7 @@ Flat Environments
 
 All instantiable environments in Maze are subclasses of :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>`. Structured environments are discussed in :ref:`Control Flows with Structured Environments<control_flows_struct_envs>`, which we recommend to read prior to this article. *Flat* environments in our terminology are those utilizing a single actor and a single policy, i. e. a single actor, and conducting one action per step. Within Maze, flat environments are a special case of structured environments.
 
-An exemplary implementation of a flat environment for the `stock cutting problem <https://en.wikipedia.org/wiki/Cutting_stock_problem>`_ can be found :ref:`here<env_from_scratch-problem>`.
+An exemplary implementation of a flat environment for the |cutting_stock_problem| can be found :ref:`here<env_from_scratch-problem>`.
 
 Control Flow
 ------------
@@ -19,6 +24,7 @@ Let's revisit a classic depiction of a RL control flow first:
 .. figure:: control_flow_simple.png
     :width: 80 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
     Simplified control flow within a flat scenario. The agent selects an action, the environment updates its state and computes the reward. There is no need to distinguish between different policies or agents since we only have one of each. :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id` should always return the same value.
 
@@ -28,6 +34,7 @@ The figure above collapses the concepts of policy, agent and actor into a single
 .. figure:: control_flow_complex.png
     :width: 80 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
     More accurate control flow for a flat environment in Maze, showing how the actor mechanism integrates agent and policy. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 

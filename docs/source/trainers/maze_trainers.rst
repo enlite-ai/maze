@@ -1,3 +1,35 @@
+.. |asynchronous_methods_for_deep_reinforcement_learning| raw:: html
+
+   <a href="https://arxiv.org/abs/1602.01783/" target="_blank">Asynchronous methods for deep reinforcement learning</a>
+
+.. |proximal_policy_optimization_algorithms| raw:: html
+
+   <a href="https://arxiv.org/abs/1707.06347/" target="_blank">Proximal policy optimization algorithms</a>
+
+.. |impala_scalable_distributed_deep_rl_with_importance_weighted_actor_learner_architectures| raw:: html
+
+   <a href="https://arxiv.org/abs/1802.01561/" target="_blank">Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures</a>
+
+.. |soft_actor_critic_off_policy_maximum_entropy_deep_reinforcement_learning_with_a_stochastic_actor| raw:: html
+
+   <a href="https://arxiv.org/abs/1801.01290/" target="_blank">Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor</a>
+
+.. |soft_actor_critic_algorithms_and_applications| raw:: html
+
+   <a href="https://arxiv.org/abs/1812.05905/" target="_blank">Soft Actor-Critic Algorithms and Applications</a>
+
+.. |soft_actor_critic_for_discrete_action_settings| raw:: html
+
+   <a href="https://arxiv.org/abs/1910.07207v2/" target="_blank">Soft actor-critic for discrete action settings</a>
+
+.. |imitation_learning_a_survey_of_learning_methods| raw:: html
+
+   <a href="https://dl.acm.org/doi/abs/10.1145/3054912/" target="_blank">Imitation learning: A survey of learning methods</a>
+
+.. |evolution_strategies_as_a_scalable_alternative_to_reinforcement_learning| raw:: html
+
+   <a href="https://arxiv.org/abs/1703.03864/" target="_blank">Evolution strategies as a scalable alternative to reinforcement learning</a>
+
 .. role:: raw-html(raw)
    :format: html
 
@@ -20,16 +52,13 @@ To be more specific, Trainers and TrainingRunners are responsible for the follow
 The figure below provides an overview of the currently supported Trainers.
 
 .. image:: maze_trainers_overview.png
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 This page gives a general (high-level) overview of the Trainers and corresponding algorithms supported by the Maze
 framework. For more details especially on the implementation please refer to the
 :ref:`API documentation on Trainers <trainers_ref>`. For more details on the training workflow and how to start trainings
 using the Hydra config system please refer to the :ref:`training section <training>`.
-
-.. contents:: Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 Supported Spaces
 ----------------
@@ -55,14 +84,14 @@ By setting the number of rollout steps as well as the number of parallel environ
 one can control the batch size used for updating the policy and value function in each iteration.
 
 Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T., Harley, T., Silver, D., & Kavukcuoglu, K. (2016).
-`Asynchronous methods for deep reinforcement learning. <http://proceedings.mlr.press/v48/mniha16.html>`_
+|asynchronous_methods_for_deep_reinforcement_learning|.
 In International conference on machine learning (pp. 1928-1937).
 
 **Example**
 
-.. code:: console
+.. code:: bash
 
-    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=a2c model=vector_obs critic=template_state
+    maze-run -cn conf_train env.name=CartPole-v1 algorithm=a2c model=vector_obs critic=template_state
 
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.a2c.a2c_algorithm_config.A2CAlgorithmConfig`
@@ -70,7 +99,7 @@ In International conference on machine learning (pp. 1928-1937).
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm/a2c.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm/a2c.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -79,14 +108,14 @@ In International conference on machine learning (pp. 1928-1937).
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/a2c-dev.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/a2c-dev.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/a2c-local.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/a2c-local.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -101,14 +130,14 @@ As such, it alternates between generating trajectory data via agent rollouts fro
 objective function by means of a stochastic mini-batch gradient ascent.
 
 Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017).
-`Proximal policy optimization algorithms. <https://arxiv.org/abs/1707.06347>`_
+|proximal_policy_optimization_algorithms|.
 arXiv preprint arXiv:1707.06347.
 
 **Example**
 
-.. code:: console
+.. code:: bash
 
-    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=ppo model=vector_obs critic=template_state
+    maze-run -cn conf_train env.name=CartPole-v1 algorithm=ppo model=vector_obs critic=template_state
 
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.ppo.ppo_algorithm_config.PPOAlgorithmConfig`
@@ -116,7 +145,7 @@ arXiv preprint arXiv:1707.06347.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm/ppo.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm/ppo.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -125,14 +154,14 @@ arXiv preprint arXiv:1707.06347.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/ppo-dev.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/ppo-dev.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/ppo-local.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/ppo-local.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -148,21 +177,21 @@ off-policy and asynchronous, making it very suitable for compute-intense environ
 
 
 Espeholt, L., Soyer, H., Munos, R., Simonyan, K., Mnih, V., Ward, T., Doron, Y., Firoiu, V., Harley, T., Dunning, I., Legg, S., & Kavukcuoglu, K. (2018).
-`Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures. <https://arxiv.org/abs/1802.01561>`_
+|impala_scalable_distributed_deep_rl_with_importance_weighted_actor_learner_architectures|.
 arXiv preprint arXiv:1802.01561.
 
 **Example**
 
-.. code:: console
+.. code:: bash
 
-    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=impala model=vector_obs critic=template_state
+    maze-run -cn conf_train env.name=CartPole-v1 algorithm=impala model=vector_obs critic=template_state
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.impala.impala_algorithm_config.ImpalaAlgorithmConfig`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm/impala.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm/impala.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -171,14 +200,14 @@ arXiv preprint arXiv:1802.01561.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/impala-dev.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/impala-dev.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/impala-local.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/impala-local.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -198,32 +227,30 @@ instead of sampling the initial transitions with the given sampling policy (per 
 Soft Actor-Critic from Demonstrations.
 
 Haarnoja, T., Zhou, A., Abbeel, P., Levine, S. (2018).
-`Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor.
-<https://arxiv.org/abs/1801.01290>`_ arXiv preprint arXiv:1801.01290.,
-Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., ... & Levine, S. (2018). `Soft Actor-Critic
-Algorithms and Applications. <https://arxiv.org/abs/1812.05905>`_ arXiv preprint arXiv:1812.05905.,
-Christodoulou, P. (2019). `Soft actor-critic for discrete action settings <https://arxiv.org/abs/1910.07207v2>`_ arXiv
+|soft_actor_critic_off_policy_maximum_entropy_deep_reinforcement_learning_with_a_stochastic_actor|. arXiv preprint arXiv:1801.01290.,
+Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., ... & Levine, S. (2018). |soft_actor_critic_algorithms_and_applications|. arXiv preprint arXiv:1812.05905.,
+Christodoulou, P. (2019). |soft_actor_critic_for_discrete_action_settings|. arXiv
 preprint arXiv:1910.07207.
 
 **Example SAC**
 
-.. code:: console
+.. code:: bash
 
-    $ maze-run -cn conf_train env.name=Pendulum-v0 algorithm=sac model=vector_obs critic=template_state_action
+    maze-run -cn conf_train env.name=Pendulum-v0 algorithm=sac model=vector_obs critic=template_state_action
 
 **Example SACfD**
 
-.. code:: console
+.. code:: bash
 
-    $ maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics runner.n_episodes=1000
-    $ maze-run -cn conf_train env.name=LunarLander-v3 algorithm=sacfd model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
+    maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics runner.n_episodes=1000
+    maze-run -cn conf_train env.name=LunarLander-v3 algorithm=sacfd model=flatten_concat critic=flatten_concat_state_action runner.initial_demonstration_trajectories.input_data=<absolute_experiment_path>/trajectory_data
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.sac.sac_algorithm_config.SACAlgorithmConfig`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm/sac.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm/sac.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -232,14 +259,14 @@ preprint arXiv:1910.07207.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sac-dev.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/sac-dev.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sac-local.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/sac-local.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -248,14 +275,14 @@ preprint arXiv:1910.07207.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfd-dev.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/sacfd-dev.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/sacfd-local.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/sacfd-local.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -270,7 +297,7 @@ imitating the actions produced for a given observation in a supervised learning 
 As such, it requires a set of training (example) trajectories collected prior to training.
 
 Hussein, A., Gaber, M. M., Elyan, E., & Jayne, C. (2017).
-`Imitation learning: A survey of learning methods. <https://dl.acm.org/doi/abs/10.1145/3054912>`_
+|imitation_learning_a_survey_of_learning_methods|.
 ACM Computing Surveys (CSUR), 50(2), 1-35.
 
 **Example:** :ref:`Imitation Learning and Fine-Tuning <imitation>`
@@ -280,7 +307,7 @@ ACM Computing Surveys (CSUR), 50(2), 1-35.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/bc.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm/bc.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -289,14 +316,14 @@ ACM Computing Surveys (CSUR), 50(2), 1-35.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/bc-dev.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/bc-dev.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/bc-local.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/bc-local.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -317,16 +344,16 @@ arXiv preprint arXiv:1703.03864.
 
 **Example**
 
-.. code:: console
+.. code:: bash
 
-    $ maze-run -cn conf_train env.name=CartPole-v1 algorithm=es model=vector_obs
+    maze-run -cn conf_train env.name=CartPole-v1 algorithm=es model=vector_obs
 
 **Algorithm Parameters** | :class:`~maze.train.trainers.es.es_algorithm_config.ESAlgorithmConfig`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/es.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm/es.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
@@ -335,14 +362,14 @@ arXiv preprint arXiv:1703.03864.
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/es-dev.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/es-dev.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 
 :raw-html:`<details><summary>Default parameters (maze/conf/algorithm_runner/es-local.yaml)</summary>`
 
 .. literalinclude:: ../../../maze/conf/algorithm_runner/es-local.yaml
-  :language: YAML
+  :language: yaml
 
 :raw-html:`</details>`
 

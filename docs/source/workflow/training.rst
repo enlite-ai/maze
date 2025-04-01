@@ -11,7 +11,9 @@ environments (using the tutorial Maze 2D-cutting environment as an example), mod
 The figure below shows a conceptual overview of the Maze training workflow.
 
 .. image:: training.png
-   :width: 90%
+    :width: 90%
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 On this page:
 
@@ -37,10 +39,9 @@ Example 1: Your First Training Run
 We can train a policy from scratch on the Cartpole environment
 with default settings using the command:
 
-.. code:: console
+.. code:: bash
 
-  $ maze-run -cn conf_train env=gym_env env.name=CartPole-v1
-
+    maze-run -cn conf_train env=gym_env env.name=CartPole-v1
 
 The ``-cn conf_train`` argument specifies that we would like to use
 ``conf_train.yaml`` as our root config file. This is
@@ -72,7 +73,7 @@ Such a training run consists of these main stages, loaded based on the default c
 As the job is running, you should see the statistics from the training and evaluation runs
 printed in your console, as mentioned in the 6. step:
 
-.. code-block:: console
+.. code-block:: bash
 
   ...
   ********** Iteration 3 **********
@@ -132,35 +133,32 @@ without writing any additional configuration files.
 By default, the ``gym_env`` configuration is used, which allows us to specify the Gym env
 that we would like to instantiate:
 
-.. code:: console
+.. code:: bash
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3
+  maze-run -cn conf_train env=gym_env env.name=LunarLander-v3
 
 
 With appropriate overrides, we can also include vector observation model and wrappers
 (providing normalization):
 
-.. code:: console
+.. code:: bash
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 wrappers=vector_obs model=vector_obs
+    maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 wrappers=vector_obs model=vector_obs
 
 Alternatively, we could use the :ref:`tutorial Cutting 2D environment <env_from_scratch>`:
 
-.. code:: console
+.. code:: bash
 
-    $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked \
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
 
 Further, by default, the algorithm used is Evolution Strategies (the implementation is provided by Maze).
 To use a different algorithm, e.g. PPO with a shared critic, we just need to add the appropriate overrides:
 
-.. code:: console
+.. code:: bash
 
-  $ maze-run -cn conf_train algorithm=ppo env=tutorial_cutting_2d_struct_masked \
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    maze-run -cn conf_train algorithm=ppo env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
 
 To see all the configuration files available out-of-the-box, check out the ``maze/conf`` package.
-
 
 .. _training-resume_run:
 
@@ -174,18 +172,18 @@ directory. Below you find a few examples where this might be useful.
 
 This is the initial training run:
 
-.. code:: console
+.. code:: bash
 
-  $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 algorithm=ppo
+    maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 algorithm=ppo
 
 We could also resume training with a refined learning rate:
 
-.. code:: console
+.. code:: bash
 
-      $ maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 algorithm=ppo \
-        algorithm.lr=0.0001 input_dir=outputs/<experiment-dir>
+    maze-run -cn conf_train env=gym_env env.name=LunarLander-v3 algorithm=ppo algorithm.lr=0.0001 input_dir=outputs/<experiment-dir>
 
 or even with a different (compatible) trainer such as a2c:
+
 
 .. _training-custom_run:
 
@@ -203,10 +201,9 @@ along with respective configuration files (see also :ref:`Hydra: Your Own Config
 Then, you can easily launch your environment by supplying your own configuration file
 (here we use one from the tutorial):
 
-.. code:: console
+.. code:: bash
 
-  $ maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked \
-    wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
+    maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked
 
 
 For links to more customization options (like building custom models with

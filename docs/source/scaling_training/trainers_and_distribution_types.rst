@@ -1,2 +1,0 @@
-Trainer and Distribution Types
-==============================

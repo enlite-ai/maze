@@ -16,11 +16,11 @@ Gym environments:
     def cartpole_env_factory():
         """ Env factory for the cartpole MazeEnv """
         # Registered gym environments can be instantiated first and then provided to GymMazeEnv:
-        cartpole_env = gym.make("CartPole-v1")
+        cartpole_env = gym.make("CartPole-v1", render_mode=None)
         maze_env = GymMazeEnv(env=cartpole_env)
 
         # Another possibility is to supply the gym env string to GymMazeEnv directly:
-        maze_env = GymMazeEnv(env="CartPole-v1")
+        maze_env = GymMazeEnv(env="CartPole-v1", render_mode=None)
 
         return maze_env
 
@@ -309,4 +309,4 @@ Full Python Code
 Here is the code without documentation for easier copy-pasting:
 
 .. literalinclude:: code_snippets/plain_python_training_low_level.py
-  :language: PYTHON
+  :language: python

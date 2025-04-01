@@ -1,3 +1,7 @@
+.. |tutorial_code_part_06| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env/" target="_blank">can be found here</a>
+
 .. _adding_masking:
 
 Adding Step-Conditional Action Masking
@@ -6,8 +10,7 @@ Adding Step-Conditional Action Masking
 In this part of the tutorial we will learn how to substantially increase the sample efficiency of our agents
 by adding *sub-step conditional action masking* to the structured environment.
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env>`_
+The complete code for this part of the tutorial |tutorial_code_part_06|
 
 .. code:: bash
 
@@ -16,11 +19,6 @@ The complete code for this part of the tutorial
         - main.py
         - env
             - struct_env_masked.py
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 In particular, we will add two different masks:
 
@@ -36,6 +34,7 @@ The figure below provides a sketch of the two masks.
 .. image:: cutting2d_masking.png
     :width: 100 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Only the first two inventory pieces are able to fit the customer order.
 The four rightmost inventory slots do not hold a piece at all and are also masked.
@@ -53,7 +52,7 @@ simply inherit from the initial version and extend it by the following changes:
   (e.g., ``_obs_selection_step`` and ``_obs_cutting_step``).
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part06_struct_env/env/struct_env_masked.py
-  :language: PYTHON
+  :language: python
   :caption: env/struct_env_masked.py
 
 

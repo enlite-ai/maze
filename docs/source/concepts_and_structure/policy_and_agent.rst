@@ -14,6 +14,7 @@ and relates them to compatible algorithm classes and trainers.
 .. image:: policy_critic_overview.png
     :width: 95 %
     :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 Note that all policy and critics are compatible with
 :ref:`Structured Environments <env_hierarchy-structured_envs>`.

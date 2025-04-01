@@ -1,3 +1,7 @@
+.. |tutorial_code_part_06| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env/" target="_blank">can be found here</a>
+
 .. _train_with_mask:
 
 Training with Action Masking
@@ -6,8 +10,7 @@ Training with Action Masking
 In this part of the tutorial we will retrain the environment with step-conditional action masking activated
 and benchmark it with the initial, unmasked version.
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env>`_
+The complete code for this part of the tutorial |tutorial_code_part_06|
 
 .. code:: bash
 
@@ -27,12 +30,6 @@ The complete code for this part of the tutorial
         - models
             - actor.py
             - critic.py
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
-
 
 Masked Policy Models
 --------------------
@@ -77,8 +74,7 @@ Retraining with Masking
 
 .. code:: bash
 
-    maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d \
-    model=tutorial_cutting_2d_struct_masked algorithm=ppo
+    maze-run -cn conf_train env=tutorial_cutting_2d_struct_masked wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct_masked algorithm=ppo
 
 Once training has finished we can again inspect the progress with Tensorboard.
 To get a better feeling for the effect of action masking we benchmark the following versions of the environment:
@@ -89,6 +85,8 @@ To get a better feeling for the effect of action masking we benchmark the follow
 
 .. image:: tb_imgs/tb_reward.png
     :width: 100 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 First of all we can observe a massive increase in learning speed when activating action masking.
 In fact the reward of the masked model starts at an much higher initial value.
@@ -103,6 +101,8 @@ to learn more about the learning progress and behaviour of the respective versio
 
 .. image:: tb_imgs/tb_events.png
     :width: 100 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 - When looking at the cutting events we see that the agent utilizing action masking only performs valid cutting attempts
   right from the beginning of the training process.

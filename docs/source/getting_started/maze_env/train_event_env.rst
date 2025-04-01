@@ -1,10 +1,17 @@
+.. |tutorial_code_part_04| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part04_events/" target="_blank">can be found here</a>
+
+.. |localhost| raw:: html
+
+   <a href="http://localhost:6006/" target="_blank">http://localhost:6006/</a>
+
 .. _train_events:
 
 Training with Events and KPIs
 =============================
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part04_events>`_
+The complete code for this part of the tutorial |tutorial_code_part_04|
 
 .. code:: bash
 
@@ -20,11 +27,6 @@ The complete code for this part of the tutorial
                 - tutorial_cutting_2d_events.yaml  # new
             - wrappers
                 - tutorial_cutting_2d_events.yaml  # new
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 Hydra Configuration
 -------------------
@@ -85,7 +87,7 @@ In addition to base events we now also get a statistics log of *CuttingEvents*, 
         6|train     BaseEnvEvents         kpi                   mean/raw_piece_usage..|               0.077
 
 Of course these changes are also reflected in the :ref:`Tensorboard log <logging>`
-which you can again view with your browser at http://localhost:6006/.
+which you can again view with your browser at |localhost|.
 
 .. code:: bash
 
@@ -96,6 +98,7 @@ As you can see we now have the two additional sections *train_CuttingEvents* and
 .. image:: tb_event_sections.png
     :width: 100 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
 A closer look at these events reveals that the agent actually starts to learn something meaning full as
 the number of invalid cuts decreases which of course implies that the number of valid cuts increases
@@ -104,3 +107,4 @@ and we are able to full fill the current customer demand.
 .. image:: tb_event_details.png
     :width: 100 %
     :align: center
+    :class: padding-top-15 padding-bottom-15

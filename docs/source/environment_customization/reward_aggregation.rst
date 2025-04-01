@@ -9,8 +9,10 @@ that maximizes the cumulative future reward over time.
 In case of a meaningful reward signal such a policy will be able to successfully address the decision problem at hand.
 
 .. image:: reward_aggregation.png
-   :width: 80 %
-   :align: center
+    :width: 80 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
+
 
 From a technical perspective, reward customization in Maze is based on the environment state
 in combination with the general :ref:`event system <event_system>`
@@ -53,7 +55,7 @@ For further details on the remaining entries of this config you can read up on h
 :ref:`customize Core- and MazeEnvs <custom_core_maze_envs>`.
 
 .. literalinclude:: code_snippets/env_a2e_s2o.yaml
-  :language: YAML
+  :language: yaml
 
 .. _reward_aggregation-example_custom_rwd:
 
@@ -78,7 +80,7 @@ When adding a new reward aggregator you (1) have to implement the
 
 Besides that you only have to provide the reference path of the :code:`reward_aggregator` to use:
 
-.. code-block:: YAML
+.. code-block:: yaml
 
     reward_aggregator:
         _target_: my_project.custom_reward.RawPieceUsageRewardAggregator

@@ -1,3 +1,8 @@
+.. |lunar_lander_env| raw:: html
+
+   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander/" target="_blank">LunarLander environment</a>
+
+
 .. _imitation:
 
 Imitation Learning and Fine-Tuning
@@ -12,14 +17,9 @@ to quick-start an actual training by interaction run
 or for settings where no training environment is available at all (e.g., offline RL).
 
 .. image:: imitation_workflow.png
-   :width: 100%
-   :align: center
-
-.. contents:: Overview:
-    :depth: 1
-    :local:
-    :backlinks: top
-
+    :width: 100%
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Collect Training Trajectory Data
 ---------------------------------
@@ -28,33 +28,32 @@ This section explains how to rollout a policy for collecting example trajectorie
 As the training trajectories might be already available (e.g., collected in practice)
 this step is optional.
 
-As an example environment we pick the discrete version of the
-`LunarLander environment <https://gymnasium.farama.org/environments/box2d/lunar_lander/>`_
+As an example environment we pick the discrete version of the |lunar_lander_env|
 as it already provides a heuristic policy which we can use to collect or training trajectories for imitation learning.
 
 .. image:: lunar_lander.png
-   :width: 40%
-   :align: center
+    :width: 40%
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 But first let's check if the policy actually does something meaningful by running a few rendering rollouts:
 
-.. code-block:: console
+.. code-block:: bash
 
-  maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics \
-  runner=sequential runner.render=true runner.n_episodes=3
+  maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics runner=sequential runner.render=true runner.n_episodes=3
 
 Hopefully this looks good and we can continue with actually collecting example trajectories for imitation learning.
 
 The command bellow performs 3 rollouts of the heuristic policy
 and records them to the output directory.
 
-.. code-block:: console
+.. code-block:: bash
 
   maze-run env.name=LunarLander-v3 policy=lunar_lander_heuristics runner.n_episodes=3
 
 You will get the following output summarizing the statistics of the rollouts.
 
-.. code-block:: console
+.. code-block:: bash
 
      step|path                                                                  |           value
     =====|======================================================================|================
@@ -71,7 +70,7 @@ You will get the following output summarizing the statistics of the rollouts.
 
 The trajectories will be dumped similar to the file structure shown below.
 
-.. code-block:: console
+.. code-block:: bash
 
     - outputs/<experiment_path>
         - maze_cli.log
@@ -94,13 +93,11 @@ we now train a policy with :ref:`behavioral cloning <maze_trainers-bc>`, a simpl
 
 To do so we simply provide the trajectory data as an argument and run:
 
-.. code-block:: console
+.. code-block:: bash
 
-    maze-run -cn conf_train env.name=LunarLander-v3 model=vector_obs wrappers=vector_obs \
-    algorithm=bc algorithm.validation_percentage=50 \
-    runner.dataset.dir_or_file=<absolute_experiment_path>/trajectory_data
+    maze-run -cn conf_train env.name=LunarLander-v3 model=vector_obs wrappers=vector_obs algorithm=bc algorithm.validation_percentage=50 runner.dataset.dir_or_file=<absolute_experiment_path>/trajectory_data
 
-.. code-block:: console
+.. code-block:: bash
 
     ...
     ********** Epoch 24: Iteration 1500 **********
@@ -121,22 +118,22 @@ To do so we simply provide the trajectory data as an argument and run:
 
 As with all trainers, we can watch the training progress with Tensorboard.
 
-.. code-block:: console
+.. code-block:: bash
 
     tensorboard --logdir outputs/
 
 .. image:: tb_imitation.png
-   :width: 100%
-   :align: center
+    :width: 100%
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Once training is complete we can check how the behaviourally cloned policy performs in action.
 
-.. code-block:: console
+.. code-block:: bash
 
-    maze-run env.name=LunarLander-v3 model=vector_obs wrappers=vector_obs \
-    policy=torch_policy input_dir=outputs/<imitation-learning-experiment>
+    maze-run env.name=LunarLander-v3 model=vector_obs wrappers=vector_obs policy=torch_policy input_dir=outputs/<imitation-learning-experiment>
 
-.. code-block:: console
+.. code-block:: bash
 
      step|path                                                                 |           value
     =====|=====================================================================|=================
@@ -163,9 +160,7 @@ It is basically a standard PPO training run initialized with the imitation learn
 
 .. code-block:: console
 
-    maze-run -cn conf_train env.name=LunarLander-v3 model=vector_obs critic=template_state wrappers=vector_obs \
-    algorithm=ppo runner.eval_repeats=100 runner.critic_burn_in_epochs=10 \
-    input_dir=outputs/<imitation-learning-experiment>
+    maze-run -cn conf_train env.name=LunarLander-v3 model=vector_obs critic=template_state wrappers=vector_obs algorithm=ppo runner.eval_repeats=100 runner.critic_burn_in_epochs=10 input_dir=outputs/<imitation-learning-experiment>
 
 
 Once training started we can observe the progress with Tensorboard
@@ -182,8 +177,9 @@ We also included training runs with a learning rate of 0.0 to get a feeling for 
 the initial performance of the two models (randomly initialized vs. pre-trained).
 
 .. image:: tb_reward_comparison.png
-   :width: 100%
-   :align: center
+    :width: 100%
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 As expected, we see that PPO fine-tuning of the pretrained model starts at an initially much higher reward level
 compared to the model trained entirely from scratch.

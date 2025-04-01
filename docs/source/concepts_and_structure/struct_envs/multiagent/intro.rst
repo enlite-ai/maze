@@ -1,3 +1,23 @@
+.. |multi_agent_reinforcement_learning| raw:: html
+
+   <a href="https://arxiv.org/abs/1911.10635/" target="_blank">Multi-agent reinforcement learning (MARL)</a>
+
+.. |vehicle_routing_problem| raw:: html
+
+   <a href="https://en.wikipedia.org/wiki/Vehicle_routing_problem/" target="_blank">vehicle routing problem</a>
+
+.. |games_like_starcraft| raw:: html
+
+   <a href="https://www.nature.com/articles/s41586-019-1724-z/" target="_blank">(video) games like Starcraft</a>
+
+.. |traffic_coordination| raw:: html
+
+   <a href="http://www.wiomax.com/team/xie/paper/ICAPS12.pdf/" target="_blank">traffic coordination</a>
+
+.. |power_systems_and_smart_grids| raw:: html
+
+   <a href="https://ieeexplore.ieee.org/abstract/document/7855760/" target="_blank">power systems and smart grids</a>
+
 .. _struct_env_multiagent:
 
 Multi-Agent RL
@@ -8,7 +28,7 @@ Multi-Agent RL
         - :ref:`Control Flows with Structured Environments<control_flows_struct_envs>`.
         - :ref:`Flat Environments as a special case of structured environments<control_flows_struct_envs>`.
 
-`Multi-agent reinforcment learning (MARL) <https://arxiv.org/abs/1911.10635>`_ describes a setup in which several collaborating or competing agents suggest actions for at least one of an environment's acting entitites [#]_ each. This introduces the additional complexity of emergent effects between those agents. Some problems require to or at least benefit from deviating from a single-agent formulation, such as the `vehicle routing problem <https://en.wikipedia.org/wiki/Vehicle_routing_problem>`_, `(video) games like Starcraft <https://www.nature.com/articles/s41586-019-1724-z>`_, `traffic coordination <http://www.wiomax.com/team/xie/paper/ICAPS12.pdf>`_, `power systems and smart grids <https://ieeexplore.ieee.org/abstract/document/7855760>`_ and many others.
+|multi_agent_reinforcement_learning| describes a setup in which several collaborating or competing agents suggest actions for at least one of an environment's acting entitites [#]_ each. This introduces the additional complexity of emergent effects between those agents. Some problems require to or at least benefit from deviating from a single-agent formulation, such as the |vehicle_routing_problem|, |games_like_starcraft|, |traffic_coordination|, |power_systems_and_smart_grids| and many others.
 
 Maze supports multi-agent learning via structured environment. In order to make a :class:`StructuredEnv <maze.core.env.structured_env.StructuredEnv>` compatible with such a setup, it needs to keep track of the activities of each agent internally. How this is done and the order in which sequence agents enacted their actions is entirely to the environment. As per customary for a structured environment, it is required to provide the ID of the active actor via :meth:`~maze.core.env.structured_env.StructuredEnv.actor_id` (see :ref:`here<control_flows_struct_envs>` for more information on the distinction between actor and agent). There are no further prequisites to use multiple agents with an environment.
 
@@ -20,6 +40,7 @@ It is easily possible, but not necessary, to include multiple policies in a mult
 .. figure:: control_flow.png
     :width: 80 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
     Control flow within a multi-agent scenario assuming a single policy. Dashed lines denote the exchange of information on demand as opposed to doing so passing it to or returning it from :meth:`~maze.core.env.maze_env.MazeEnv.step`.
 

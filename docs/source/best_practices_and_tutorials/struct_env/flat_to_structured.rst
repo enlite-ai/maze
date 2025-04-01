@@ -1,3 +1,7 @@
+.. |tutorial_code_part_06| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env/" target="_blank">can be found here</a>
+
 .. _flat_to_structured:
 
 Turning a “flat” MazeEnv into a StructuredEnv
@@ -6,8 +10,7 @@ Turning a “flat” MazeEnv into a StructuredEnv
 In this part of the tutorial we will learn how to reformulate an RL problem in order to
 turn it from a "flat" Gym-style environment into a structured environment.
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env>`_
+The complete code for this part of the tutorial |tutorial_code_part_06|
 
 .. code:: bash
 
@@ -16,11 +19,6 @@ The complete code for this part of the tutorial
         - main.py
         - env
             - struct_env.py
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 Analyzing the Problem Structure
 -------------------------------
@@ -37,6 +35,7 @@ consisting of the following components:
 .. image:: ../../getting_started/maze_env/cutting_parameters.png
     :width: 100 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
 **Analysis of Action Space and Problem**:
 
@@ -66,6 +65,7 @@ For the present example, reward is only granted once the cutting sub-step (i.e.,
 .. image:: sub_step_interaction.png
     :width: 100 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
 .. note::
     Conceptually structured environments and conditional sub-steps
@@ -75,7 +75,7 @@ For the present example, reward is only granted once the cutting sub-step (i.e.,
 The code for the ``StructuredCutting2DEnvironment`` below implements exactly this interaction pattern.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part06_struct_env/env/struct_env.py
-  :language: PYTHON
+  :language: python
   :caption: env/struct_env.py
 
 
@@ -88,7 +88,7 @@ The following snippet first instantiates the structured environment
 and then performs one cycle of the structured agent environment interaction loop.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part06_struct_env/main.py
-  :language: PYTHON
+  :language: python
   :caption: main.py
 
 Running the script will print the following output.

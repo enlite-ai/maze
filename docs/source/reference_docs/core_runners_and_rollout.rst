@@ -3,11 +3,6 @@ General and Rollout Runners
 
 This page contains the reference documentation for all kinds of runners.
 
-.. contents:: Overview
-    :depth: 1
-    :local:
-    :backlinks: top
-
 General Runners
 ---------------
 

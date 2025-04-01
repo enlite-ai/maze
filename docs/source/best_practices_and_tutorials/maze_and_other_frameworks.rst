@@ -1,16 +1,27 @@
+.. |stable_baselines_3_read_the_docs| raw:: html
+
+   <a href="https://stable-baselines3.readthedocs.io/en/master/index.html" target="_blank">stable-baselines3</a>
+
+.. |stable_baselines_3_quickstart| raw:: html
+
+   <a href="https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html" target="_blank">getting started<a>
+
+.. |stable_baselines_3_installation| raw:: html
+
+   <a href="https://stable-baselines3.readthedocs.io/en/master/guide/install.html" target="_blank">install stable-baselines3</a>
+
 .. _maze_and_others:
 
 Combining Maze with other RL Frameworks
 =======================================
 This tutorial explains how to use general Maze features in combination with existing RL frameworks.
 In particular, we will apply :ref:`observation normalization <observation_normalization>` before optimizing a policy
-with the `stable-baselines3 <https://stable-baselines3.readthedocs.io/en/master/index.html>`_ A2C trainer.
+with the |stable_baselines_3_read_the_docs| A2C trainer.
 When adding new features to Maze we put a strong emphasis on reusablity
 to allow you to make use of as much of these features as possible
 but still give you the opportunity to stick to the optimization framework you are most comfortable or familiar with.
 
-We rely on
-`stable-baselines3 <https://stable-baselines3.readthedocs.io/en/master/index.html>`_ for this tutorial.
+We rely on |stable_baselines_3_read_the_docs| for this tutorial.
 However, it is important to note that the examples below will also work with any other Python-based RL framework
 compatible with Gym environments.
 
@@ -29,16 +40,14 @@ where the second reproduces the Python example with a :ref:`Hydra configuration 
 Reusing Environment Customization Features
 ------------------------------------------
 
-The basis for this tutorial is the official
-`getting started <https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html>`_
+The basis for this tutorial is the official |stable_baselines_3_quickstart|
 snippet of stable-baselines showing how to train and run A2C on a CartPole environment.
 We added a few comments to make things a bit more explicit.
 
-If you would like to run this example yourself make sure to
-`install stable-baselines3 first <https://stable-baselines3.readthedocs.io/en/master/guide/install.html>`_.
+If you would like to run this example yourself make sure to |stable_baselines_3_installation| first.
 
 .. literalinclude:: code_snippets/stable_baselines_getting_started.py
-  :language: PYTHON
+  :language: python
 
 Below you find exactly the same example but with an observation normalized environment.
 The following modifications compared to the example above are required:
@@ -53,7 +62,7 @@ The wrapper also dumps the estimated statistics in a file (*statistics.pkl*)
 to reuse them later on for agent deployment.
 
 .. literalinclude:: code_snippets/maze_and_stable_baselines.py
-  :language: PYTHON
+  :language: python
 
 .. _maze_and_others-reuse_hydra:
 
@@ -64,12 +73,12 @@ This example is identical to the the previous one but instead of instantiated ev
 :ref:`directly from Python <maze_and_others-reuse_python>` it utilizes the :ref:`Hydra configuration system <hydra>`.
 
 .. literalinclude:: code_snippets/hydra_and_stable_baselines.py
-  :language: PYTHON
+  :language: python
 
 This is the corresponding hydra config:
 
 .. literalinclude:: code_snippets/conf/hydra_config.yaml
-  :language: YAML
+  :language: yaml
 
 Where to Go Next
 ----------------

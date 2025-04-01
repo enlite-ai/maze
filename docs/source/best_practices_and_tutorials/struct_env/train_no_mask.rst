@@ -1,3 +1,7 @@
+.. |tutorial_code_part_06| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env/" target="_blank">can be found here</a>
+
 .. _train_no_mask:
 
 Training the Structured Environment
@@ -7,8 +11,7 @@ In this part of the tutorial we will learn how to train an agent
 with a :ref:`Maze trainer<maze_trainers>` implicitly supporting a Structured Environment.
 We will also design a policy network architecture matching the task at hand.
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env>`_
+The complete code for this part of the tutorial |tutorial_code_part_06|
 
 .. code:: bash
 
@@ -27,11 +30,6 @@ The complete code for this part of the tutorial
             - actor.py
             - critic.py
 
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
-
 A Simple Problem Setting
 ------------------------
 
@@ -40,6 +38,8 @@ of the cutting 2d environment with the following properties:
 
 .. image:: simple_problem_sketch.png
     :width: 40 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Given the raw piece size and the items in the static demand (appear in an alternating fashion)
 we can cut six customer orders from one raw inventory piece.
@@ -110,8 +110,7 @@ To start training a cutting policy with the PPO trainer, run:
 
 .. code:: bash
 
-    maze-run -cn conf_train env=tutorial_cutting_2d_struct wrappers=tutorial_cutting_2d \
-    model=tutorial_cutting_2d_struct algorithm=ppo
+    maze-run -cn conf_train env=tutorial_cutting_2d_struct wrappers=tutorial_cutting_2d model=tutorial_cutting_2d_struct algorithm=ppo
 
 As usual, we can watch the training progress with Tensorboard.
 
@@ -121,6 +120,8 @@ As usual, we can watch the training progress with Tensorboard.
 
 .. image:: tb_imgs/tb_struct_reward.png
     :width: 100 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 We can see that the reward slowly approaches the optimum.
 Note that the performance of this agent is already much better

@@ -1,3 +1,7 @@
+.. |hydra_framework| raw:: html
+
+   <a href="https://hydra.cc/" target="_blank">Hydra configuration framework</a>
+
 .. _hydra:
 
 Configuration with Hydra
@@ -8,11 +12,9 @@ explain how to configure your environment and other
 components using YAML files, run your experiments via CLI, and customize
 the runs via CLI overrides.
 
-The Maze framework utilizes the `Hydra configuration framework`_. These pages aim to give
+The Maze framework utilizes the |hydra_framework|. These pages aim to give
 you a quick overview of how Maze uses Hydra and what its capabilities are, so that
 you can get up to speed quickly without prior Hydra knowledge:
-
-.. _`Hydra configuration framework`: https://hydra.cc/
 
 .. toctree::
    :maxdepth: 1

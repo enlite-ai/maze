@@ -1,10 +1,17 @@
+.. |tutorial_code_part_03| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part03_maze_env/" target="_blank">can be found here</a>
+
+.. |localhost| raw:: html
+
+   <a href="http://localhost:6006/" target="_blank">http://localhost:6006/</a>
+
 .. _train_maze_env:
 
 Training the MazeEnv
 ====================
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part03_maze_env>`_
+The complete code for this part of the tutorial |tutorial_code_part_03|
 
 .. code:: bash
 
@@ -23,11 +30,6 @@ The complete code for this part of the tutorial
 
 .. note::
     Hydra only accepts **.yaml** as file extension.
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 Hydra Configuration
 -------------------
@@ -100,11 +102,12 @@ To get a nicer view on these numbers we can also
 
     tensorboard --logdir outputs
 
-You can view it with your browser at http://localhost:6006/.
+You can view it with your browser at |localhost|.
 
 .. image:: tb_maze_env.png
     :width: 100 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
 For now we can only inspect standard metrics such as *reward statistics* or *mean_step_counts* per episode.
 Unfortunately, this is not too informative with respect to the cutting problem we are currently addressing.

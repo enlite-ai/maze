@@ -21,6 +21,7 @@ In particular, we will see how to evolve the performance of an RL agent by going
 .. image:: struct_env/tb_imgs/tb_reward_detail.png
     :width: 60 %
     :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Before diving into this tutorial we recommend to familiarize yourself with
 :ref:`Control Flows with Structured Environments <control_flows_struct_envs>` and the basic

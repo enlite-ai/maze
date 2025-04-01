@@ -1,9 +1,17 @@
+.. |tensorboard_website| raw:: html
+
+   <a href="https://www.tensorflow.org/tensorboard/" target="_blank">Tensorboard</a>
+
+.. |localhost| raw:: html
+
+   <a href="http://localhost:6006/" target="_blank">http://localhost:6006/</a>
+
 .. _logging:
 
 Tensorboard and Command Line Logging
 ====================================
 
-This page gives a brief overview of the `Tensorboard <https://www.tensorflow.org/tensorboard>`_
+This page gives a brief overview of the |tensorboard_website|
 and command line logging facilities of Maze. We will show examples based on the cutting-2D Maze environment
 to make things a bit more interesting.
 
@@ -19,12 +27,14 @@ To watch the training progress with Tensorboard start it by running:
 
     tensorboard --logdir outputs/
 
-and view it with your browser at http://localhost:6006/.
+and view it with your browser at |localhost|.
 
 You will get an output similar to the one shown in the image below.
 
 .. image:: img/tb_collapsed.png
    :width: 100 %
+   :align: center
+   :class: padding-top-15 padding-bottom-15
 
 To keep everything organized and avoid having to browse through tons of pages
 we group the contained items into semantically connected sections:

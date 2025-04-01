@@ -1,10 +1,13 @@
+.. |tutorial_code_part_05| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part05_reward/" target="_blank">can be found here</a>
+
 .. _tutorial-reward:
 
 Adding Reward Customization
 ===========================
 
-The complete code for this part of the tutorial
-`can be found here <https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part05_reward>`_
+The complete code for this part of the tutorial |tutorial_code_part_05|
 
 .. code:: bash
 
@@ -25,11 +28,6 @@ The complete code for this part of the tutorial
             - dict_observation_conversion.py
         - reward
             - default_reward.py  # new
-
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 Reward
 ------
@@ -57,7 +55,7 @@ that can be used for training. This gives a lot of flexibility in shaping reward
 actual implementation of the environment (:ref:`more on this topic <reward_aggregation>`).
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part05_reward/reward/default_reward.py
-  :language: PYTHON
+  :language: python
   :caption: reward/default_reward.py
 
 Updating the Core- and MazeEnv
@@ -70,14 +68,14 @@ We also have to make a few modifications in the ``CoreEnv``:
   at the end.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part05_reward/env/core_env_snippet.py
-  :language: PYTHON
+  :language: python
   :caption: env/core_env.py
 
 Finally, we update the ``maze_env_factory`` function for instantiating the trainable ``MazeEnv``
 and we are all set up for training with event based, customized rewards.
 
 .. literalinclude:: ../../../../tutorials/tutorial_maze_env/part05_reward/env/maze_env_snippet.py
-  :language: PYTHON
+  :language: python
   :caption: env/maze_env.py
 
 Where to Go Next

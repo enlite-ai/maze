@@ -1,12 +1,11 @@
-.. |email| image:: ../logos/mail.svg
+.. |email| image:: ../_static/logos/mail.svg
     :class: inline-figure
     :width: 20
     :target: mailto:office@enlite.ai
 
-.. |github_mark| image:: ../logos/GitHub-Mark-64px.png
-    :class: inline-figure
-    :width: 20
-    :target: https://github.com/enlite-ai/maze/discussions
+.. |github_mark| raw:: html
+
+   <a href="https://github.com/enlite-ai/maze/discussions/" target="_blank"><image class="inline-figure" src="../_static/logos/GitHub-Mark-64px.png" style="width: 20px;" /></a>
 
 .. |tick| image:: tick.png
     :class: inline-figure
@@ -29,11 +28,6 @@ Nonetheless, if you are stuck most of them are certainly worth to give a try!
     However, if you stumble upon something crucial
     that is missing from the list, which you would like to share with the
     RL community and us do not hesitate to get in touch and discuss with us! |email| |github_mark|
-
-.. contents:: Overview
-    :depth: 1
-    :local:
-    :backlinks: top
 
 Learning and Optimization
 -------------------------

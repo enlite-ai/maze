@@ -6,11 +6,6 @@ Observation Logging
 Maze provides the following options to monitor and inspect the observations presented to your policy and value networks
 throughout the training process:
 
-.. contents:: Page Overview
-    :depth: 1
-    :local:
-    :backlinks: top
-
 .. warning::
 
     Observation visualization and logging are supported as opt-in features via dedicated wrappers.
@@ -33,7 +28,7 @@ To activate observation logging you only have to add the
 :class:`~maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper`
 to your environment wrapper stack in your yaml config:
 
-.. code:: YAML
+.. code:: yaml
 
     # @package wrappers
     maze.core.wrappers.monitoring_wrapper.MazeEnvMonitoringWrapper:
@@ -43,7 +38,7 @@ to your environment wrapper stack in your yaml config:
 
 If you are using plain Python you can start with the code snippet below.
 
-.. code:: PYTHON
+.. code:: python
 
     from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
     from maze.core.wrappers.monitoring_wrapper import MazeEnvMonitoringWrapper
@@ -86,7 +81,7 @@ To activate observation visualization you only have to add the
 :class:`~maze.core.wrappers.observation_visualization_wrapper.ObservationVisualizationWrapper`
 to your environment wrapper stack in your yaml config:
 
-.. code:: YAML
+.. code:: yaml
 
     # @package wrappers
     maze.core.wrappers.observation_visualization_wrapper.ObservationVisualizationWrapper:
@@ -95,16 +90,16 @@ to your environment wrapper stack in your yaml config:
 and provide a reference to a custom plotting function (here, :code:`plot_1c_image_stack`).
 
 .. literalinclude:: code_snippets/plot_1c_image_stack.py
-  :language: PYTHON
+  :language: python
   :caption: my_project.visualization_functions.plot_1c_image_stack.py
 
 The function above visualizes the observation *observation-rgb2gray-resize_img* (a single-channel image stack)
 as a subplot containing three individual images:
 
 .. image:: img/tb_obs_visualization.png
-   :width: 75 %
-   :align: center
-
+    :width: 75 %
+    :align: center
+    :class: padding-top-15 padding-bottom-15
 
 Where to Go Next
 ----------------

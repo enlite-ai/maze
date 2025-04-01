@@ -1,10 +1,18 @@
+.. |nn_module| raw:: html
+
+   <a href="https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module/" target="_blank">nn.Module</a>
+
+.. |cartpole_website| raw:: html
+
+   <a href="https://gymnasium.farama.org/environments/classic_control/cart_pole/" target="_blank">CartPole</a>
+
 .. _custom_models:
 
 Working with Custom Models
 ==========================
 The Maze custom :ref:`model composer <model_composers>` enables us to explicitly specify application specific models
 directly in Python. Models can be either written with Maze perception blocks or with plain PyTorch as long as they
-inherit from Pytorch’s `nn.Model <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_.
+inherit from Pytorch’s |nn_module|.
 
 As such models can be easily created, and even existing models from previous work or well known papers can be easily
 reused with minor adjustments. However, we recommend to create models using the predefined perception blocks in order
@@ -32,6 +40,8 @@ The custom model composer supports the following features:
  - Custom shared embedding between actor and critic.
 
 .. image:: perception_custom_model_composer.png
+    :align: center
+    :class: .padding-top-15 padding-bottom-15
 
 .. _custom_models_signature:
 
@@ -40,7 +50,7 @@ The Custom Models Signature
 
 The constraints we impose on any model used in conjunction with the custom model composer are threefold:
 fist, the network class has to adhere to PyTorch's
-`nn.Model <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_ and implement the *forward* method.
+|nn_module| and implement the *forward* method.
 Second, a custom network class requires specified constructor arguments depending on the type of network
 (policy, state critic, ...). And lastly the model has to return a dictionary when calling the forward method.
 
@@ -52,14 +62,14 @@ Similarly *action_logits_shapes* is a dictionary that maps action names to their
 corresponding :ref:`action logits shapes <action_spaces_and_distributions_module>`.
 Both, observation and action logits shapes are automatically inferred in the model composer.
 
-    - implement `nn.Model <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
+    - implement |nn_module|
     - constructor arguments: *obs_shapes* and *action_logits_shapes*
     - return type of forward method: Here the forward method has to return a dict, where the keys correspond to the
       actions of the environment.
 
 **State Critic Networks** require only the constructor argument *obs_shapes*.
 
-    - implement `nn.Model <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_
+    - implement |nn_module|
     - constructor arguments: *obs_shapes*
     - return type of forward method: The critic networks also have to return a dict, where the key is 'value'.
 
@@ -72,24 +82,24 @@ Even though designed for more complex models that process multiple observations 
 same time you can also compose models for simpler use cases, of course.
 
 In this example we utilize the custom model composer in combination with the perception blocks to compose an
-actor-critic model for OpenAI Gym's `CartPole <https://gymnasium.farama.org/environments/classic_control/cart_pole/>`_
+actor-critic model for OpenAI Gym's |cartpole_website|
 using a single dense block in each network.
 CartPole has an observation space with dimensionality four and a discrete action space with two options.
 
 The policy model can then be defined as:
 
 .. literalinclude:: code_snippets/custom_cartpole_policy_net.py
-  :language: PYTHON
+  :language: python
 
 And the critic model as:
 
 .. literalinclude:: code_snippets/custom_cartpole_critic_net.py
-  :language: PYTHON
+  :language: python
 
 An example config for the model composer could then look like this:
 
 .. literalinclude:: code_snippets/custom_cartpole_net.yaml
-  :language: YAML
+  :language: yaml
 
 Details:
 
@@ -126,22 +136,22 @@ Since we will build a policy and state critic network, where both networks shoul
 structure we can create a common *base* or *latent space* network:
 
 .. literalinclude:: code_snippets/custom_complex_latent_net.py
-  :language: PYTHON
+  :language: python
 
 Given this base class we can now create the policy network:
 
 .. literalinclude:: code_snippets/custom_complex_policy_net.py
-  :language: PYTHON
+  :language: python
 
 ... and the critic network:
 
 .. literalinclude:: code_snippets/custom_complex_critic_net.py
-  :language: PYTHON
+  :language: python
 
 An example config for the model composer could then look like this:
 
 .. literalinclude:: code_snippets/custom_complex_net.yaml
-  :language: YAML
+  :language: yaml
 
 The resulting inference graphs for a recurrent actor-critic model are shown below. Note that the models are identical
 except for the output layers due to the shared base model.
@@ -162,20 +172,20 @@ but not necessarily need to use them.
 
 **Important**: Your models have to use dictionaries with torch.Tensors as values for both inputs and outputs.
 
-For Gym's `CartPole <https://gymnasium.farama.org/environments/classic_control/cart_pole/>`_ the policy model could be defined like this:
+For Gym's |cartpole_website| the policy model could be defined like this:
 
 .. literalinclude:: code_snippets/custom_plain_cartpole_policy_net.py
-  :language: PYTHON
+  :language: python
 
 And the critic model as:
 
 .. literalinclude:: code_snippets/custom_plain_cartpole_critic_net.py
-  :language: PYTHON
+  :language: python
 
 An example config for the model composer could then look like this:
 
 .. literalinclude:: code_snippets/custom_plain_cartpole_net.yaml
-  :language: YAML
+  :language: yaml
 
 .. note::
     Since we do not use the :ref:`inference block <inference_graph_visualization>` in this example, no visual
@@ -194,18 +204,18 @@ Here the policy will look very similar to :ref:`Example 2: <custom_example_2>`, 
 difference here is that we specify an additional *out_key* when creating the inference block:
 
 .. literalinclude:: code_snippets/custom_shared_complex_policy_net.py
-  :language: PYTHON
+  :language: python
 
 Now for the critic, we already get the specified additional *out_key* as part of the obs_shapes dict and can therefore
 be used as such:
 
 .. literalinclude:: code_snippets/custom_shared_complex_critic_net.py
-  :language: PYTHON
+  :language: python
 
 The yaml file would look the same as for :ref:`Example 2: <custom_example_2>`, we only specify different networks.
 
 .. literalinclude:: code_snippets/custom_shared_complex_net.yaml
-  :language: YAML
+  :language: yaml
 
 The resulting inference graphs for a recurrent shared actor-critic model are shown below.
 
@@ -213,7 +223,6 @@ The resulting inference graphs for a recurrent shared actor-critic model are sho
     :width: 49 %
 .. image:: perception_custom_complex_shared_critic_graph.png
     :width: 49 %
-
 
 
 Where to Go Next
