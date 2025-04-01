@@ -1,11 +1,11 @@
-""" Contains a gnn block that uses Pytorch Geometric to support different types of GNNs"""
+"""Contains a gnn block that uses Pytorch Geometric to support different types of GNNs"""
 from collections import OrderedDict
 from typing import Sequence, Callable
 
 import torch
 from torch import nn as nn
 
-from torch_geometric.nn import GCNConv, SAGEConv
+from torch_geometric.nn import GCNConv, SAGEConv, GraphConv
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
@@ -14,7 +14,7 @@ from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 def _dummy_edge_index_factory(shape: Sequence[int], n_nodes: int) -> Callable[[], torch.Tensor]:
     """
-    Factory for creating a dummpy edge index tensor
+    Factory for creating a dummy edge index tensor.
 
     :param shape: The shape of the edge tensor.
     :param n_nodes: The number of nodes in the edge tensor
@@ -30,7 +30,7 @@ def _dummy_edge_index_factory(shape: Sequence[int], n_nodes: int) -> Callable[[]
     return create_dummy_edge_index_tensor
 
 
-SUPPORTED_GNNS = ['gcn', 'sage']
+SUPPORTED_GNNS = ['gcn', 'sage', 'graph_conv']
 
 class GNNLayerPyG(nn.Module):
     """Simple graph convolution layer.
@@ -52,6 +52,8 @@ class GNNLayerPyG(nn.Module):
             self.gnn_layer = GCNConv(in_features, out_features, bias=bias)
         elif gnn_type.lower() == 'sage':
             self.gnn_layer = SAGEConv(in_features, out_features, bias=bias)
+        elif gnn_type.lower() == 'graph_conv':
+            self.gnn_layer = GraphConv(in_features, out_features, bias=bias)
         else:
             raise ValueError(f'Unsupported GNN type: {gnn_type}. Supported GNNs are {SUPPORTED_GNNS}')
 
@@ -59,17 +61,20 @@ class GNNLayerPyG(nn.Module):
 
     @override(nn.Module)
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor, edge_attr: torch.Tensor) -> torch.Tensor:
-        """Compute the forward pass.
+        """
+        Compute the forward pass.
 
-        :param x: Note feature matrix, [n_nodes, in_features] or [B, n_nodes, in_features].
+        :param x: Node feature matrix, [n_nodes, in_features] or [B, n_nodes, in_features].
         :param edge_index: The graph connectivity in COO format, [2, E] or [B, 2, E].
         :param edge_attr: The edge attributes, [E, D] or [B, E, D]. D is the edge attribute dimension.
         :return: Output tensor.
         """
         if x.dim() == 2:  # Single graph (no batch)
-            if self.gnn_type == 'gcn':
+            if self.gnn_type in ['gcn', 'graph_conv']:
                 return self.gnn_layer(x, edge_index, edge_weight=edge_attr if edge_attr.dim() == 1 else None)
-            return self.gnn_layer(x, edge_index)  # SAGEConv does not use edge_attr
+            else:
+                # SAGEConv does not use edge_attr
+                return self.gnn_layer(x, edge_index)
 
         elif x.dim() == 3:  # Batched graphs
             batch_size, num_nodes, in_features = x.shape
@@ -80,9 +85,11 @@ class GNNLayerPyG(nn.Module):
             edge_attr_flat = torch.cat([edge_attr[b] for b in range(batch_size)],
                                        dim=0) if edge_attr is not None else None
 
-            if self.gnn_type == 'gcn':
-                out = self.gnn_layer(x_flat, edge_index_flat,
-                                edge_weight=edge_attr_flat if edge_attr_flat.dim() == 1 else None)
+            if self.gnn_type in ['gcn', 'graph_conv']:
+                out = self.gnn_layer(
+                    x_flat, edge_index_flat,
+                    edge_weight=edge_attr_flat if (edge_attr_flat is not None and edge_attr_flat.dim() == 1) else None
+                )
             else:
                 out = self.gnn_layer(x_flat, edge_index_flat)
 
@@ -90,7 +97,6 @@ class GNNLayerPyG(nn.Module):
 
         else:
             raise ValueError(f"Unexpected x shape: {x.shape}, expected 2D or 3D.")
-
 
     @override(nn.Module)
     def __repr__(self):
@@ -126,7 +132,7 @@ class GNNBlockPyG(ShapeNormalizationBlock):
         self.bias = bias
 
         assert len(self.in_keys) == 3, \
-            'There should be three input keys, node feature matrix, graph edge_index and the edge attributes.'
+            'There should be three input keys: node feature matrix, graph edge_index, and edge attributes.'
 
         # Specify dummy dict creation function for edge_index:
         self.dummy_dict_creators[1] = _dummy_edge_index_factory(self.in_shapes[1], self.in_shapes[0][0])
@@ -146,9 +152,8 @@ class GNNBlockPyG(ShapeNormalizationBlock):
 
     @override(ShapeNormalizationBlock)
     def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
-        # check input tensor
+        """Implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface."""
+        # Check input tensors
         node_feat = block_input[self.in_keys[0]]
         edge_index = block_input[self.in_keys[1]]
         edge_attr = block_input[self.in_keys[2]]
@@ -157,9 +162,10 @@ class GNNBlockPyG(ShapeNormalizationBlock):
         assert edge_index.ndim == self.in_num_dims[1]
         assert edge_attr.ndim == self.in_num_dims[2]
 
-        assert node_feat.shape[-1] == self.input_features, f'Feature dimension should fit: {node_feat.shape[-1]} ' \
-                                                             f'vs {self.input_features}'
-        assert edge_index.shape[-1] == edge_attr.shape[-2], 'Number of edges must be consistent'
+        assert node_feat.shape[-1] == self.input_features, \
+            f"Feature dimension should fit: {node_feat.shape[-1]} vs {self.input_features}"
+        assert edge_index.shape[-1] == edge_attr.shape[-2], \
+            "Number of edges must be consistent"
 
         # forward pass
         x = node_feat
@@ -170,8 +176,10 @@ class GNNBlockPyG(ShapeNormalizationBlock):
                 x = layer(x)
 
         # check output tensor
-        assert x.ndim == self.out_num_dims[0], f'The output number of dimensions {x.ndim} must be {self.out_num_dims[0]}'
-        assert x.shape[-1] == self.output_features, f'The output feature dimension size {x.shape[-1]} must be {self.output_features}'
+        assert x.ndim == self.out_num_dims[0], \
+            f"The output number of dimensions {x.ndim} must be {self.out_num_dims[0]}"
+        assert x.shape[-1] == self.output_features, \
+            f"The output feature dimension size {x.shape[-1]} must be {self.output_features}"
 
         return {self.out_keys[0]: x}
 
