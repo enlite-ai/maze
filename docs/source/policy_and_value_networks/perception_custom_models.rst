@@ -1,10 +1,10 @@
 .. |nn_module| raw:: html
 
-   <a href="https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module/" target="_blank">nn.Module</a>
+   <a href="https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module" target="_blank">nn.Module</a>
 
 .. |cartpole_website| raw:: html
 
-   <a href="https://gymnasium.farama.org/environments/classic_control/cart_pole/" target="_blank">CartPole</a>
+   <a href="https://gymnasium.farama.org/environments/classic_control/cart_pole" target="_blank">CartPole</a>
 
 .. _custom_models:
 

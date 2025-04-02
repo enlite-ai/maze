@@ -1,14 +1,14 @@
 .. |hydra_instantiation_functionality| raw:: html
 
-   <a href="https://hydra.cc/docs/patterns/instantiate_objects/overview/" target="_blank">Hydra's own instantiation functionality</a>
+   <a href="https://hydra.cc/docs/advanced/instantiate_objects/overview" target="_blank">Hydra's own instantiation functionality</a>
 
 .. |github_omegaconf| raw:: html
 
-   <a href="https://github.com/omry/omegaconf/" target="_blank">OmegaConf</a>
+   <a href="https://github.com/omry/omegaconf" target="_blank">OmegaConf</a>
 
 .. |hydra_specializing_config| raw:: html
 
-   <a href="https://hydra.cc/docs/next/patterns/specializing_config/" target="_blank">in Hydra docs here</a>
+   <a href="https://hydra.cc/docs/patterns/specializing_config" target="_blank">in Hydra docs here</a>
 
 .. _hydra-advanced:
 

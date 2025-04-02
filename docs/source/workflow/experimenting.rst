@@ -1,34 +1,34 @@
 .. |maze_cartpole_template| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze-cartpole/" target="_blank">project template</a>
+   <a href="https://github.com/enlite-ai/maze-cartpole" target="_blank">project template</a>
 
 .. |conf_train| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/conf_train.yaml/" target="_blank">conf_train</a>
+   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/conf_train.yaml" target="_blank">conf_train</a>
 
 .. |hydra_build_in_experiment_config| raw:: html
 
-   <a href="https://hydra.cc/docs/next/patterns/configuring_experiments/" target="_blank">Hydra's built-in Experiment Configuration</a>
+   <a href="https://hydra.cc/docs/patterns/configuring_experiments/" target="_blank">Hydra's built-in Experiment Configuration</a>
 
 .. |vector_obs| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/wrappers/vector_obs.yaml/" target="_blank">vector_obs</a>
+   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/wrappers/vector_obs.yaml" target="_blank">vector_obs</a>
 
 .. |hydra_sweeper| raw:: html
 
-   <a href="https://hydra.cc/docs/0.11/advanced/plugins#sweeper/" target="_blank">Hydra's Sweeper</a>
+   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper" target="_blank">Hydra's Sweeper</a>
 
 .. |hydra_rq_launcher| raw:: html
 
-   <a href="https://hydra.cc/docs/next/plugins/rq_launcher/" target="_blank">scalable options</a>
+   <a href="https://hydra.cc/docs/plugins/rq_launcher" target="_blank">scalable options</a>
 
 .. |hydra_nevergrad_sweeper| raw:: html
 
-   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper/" target="_blank">Nevergrad</a>
+   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper" target="_blank">Nevergrad</a>
 
 .. |hydra_nevergrad_sweeper_defining_target_params_example| raw:: html
 
-   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper#defining-the-parameters/" target="_blank">Hydra docs</a>
+   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper/#defining-the-parameters" target="_blank">Hydra docs</a>
 
 .. |hydra_nevergrad_sweeper_example| raw:: html
 

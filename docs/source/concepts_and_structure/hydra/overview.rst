@@ -1,26 +1,26 @@
 .. |hydra_basic_example| raw:: html
 
-   <a href="https://hydra.cc/docs/next/intro#basic-example/" target="_blank">basic example</a>
+   <a href="https://hydra.cc/docs/intro#basic-example" target="_blank">basic example</a>
 
 .. |hydra_composition_example| raw:: html
 
-   <a href="https://hydra.cc/docs/next/intro#composition-example/" target="_blank">composition example</a>
+   <a href="https://hydra.cc/docs/intro#composition-example" target="_blank">composition example</a>
 
 .. |hydra_basic_overrides| raw:: html
 
-   <a href="https://hydra.cc/docs/next/advanced/override_grammar/basic/" target="_blank">basic overrides</a>
+   <a href="https://hydra.cc/docs/advanced/override_grammar/basic/#basic-override-syntax" target="_blank">basic overrides</a>
 
 .. |hydra_extended_override_syntax| raw:: html
 
-   <a href="https://hydra.cc/docs/next/advanced/override_grammar/extended/" target="_blank">extended override syntax</a>
+   <a href="https://hydra.cc/docs/advanced/override_grammar/extended/#extended-override-syntax" target="_blank">extended override syntax</a>
 
 .. |hydra_output_working_directory| raw:: html
 
-   <a href="https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory/" target="_blank">Output/Working directory</a>
+   <a href="https://hydra.cc/docs/tutorials/basic/running_your_app/working_directory" target="_blank">Output/Working directory</a>
 
 .. |hydra_customizing_working_directory_pattern| raw:: html
 
-   <a href="https://hydra.cc/docs/next/configure_hydra/workdir/" target="_blank">customizing working directory pattern</a>
+   <a href="https://hydra.cc/docs/configure_hydra/workdir" target="_blank">customizing working directory pattern</a>
 
 .. _hydra-overview:
 

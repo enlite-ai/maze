@@ -1,18 +1,18 @@
 .. |hydra_config_search_path| raw:: html
 
-   <a href="https://hydra.cc/docs/next/advanced/search_path/" target="_blank">Config Search Path</a>
+   <a href="https://hydra.cc/docs/advanced/search_path" target="_blank">Config Search Path</a>
 
 .. |hydra_search_path_plugins| raw:: html
 
-   <a href="https://hydra.cc/docs/next/advanced/plugins#searchpathplugin/" target="_blank">customizing working directory pattern</a>
+   <a href="https://hydra.cc/docs/advanced/search_path" target="_blank">customizing working directory pattern</a>
 
 .. |hydra_built_in_experiment_configuration| raw:: html
 
-   <a href="https://hydra.cc/docs/next/patterns/configuring_experiments/" target="_blank">Hydra's built-in Experiment Configuration</a>
+   <a href="https://hydra.cc/docs/patterns/configuring_experiments" target="_blank">Hydra's built-in Experiment Configuration</a>
 
 .. |vector_obs| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/wrappers/vector_obs.yaml/" target="_blank">vector_obs</a>
+   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/wrappers/vector_obs.yaml" target="_blank">vector_obs</a>
 
 .. _hydra-custom:
 

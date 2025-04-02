@@ -1,6 +1,6 @@
 .. |cutting_stock_problem| raw:: html
 
-   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem/" target="_blank">stock cutting problem</a>
+   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem" target="_blank">stock cutting problem</a>
 
 
 .. _struct_env_flat:

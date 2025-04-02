@@ -1,10 +1,10 @@
 .. |tutorial_code_part_02| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part02_renderer/" target="_blank">can be found here</a>
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part02_renderer" target="_blank">can be found here</a>
 
 .. |matplotlib| raw:: html
 
-   <a href="https://matplotlib.org/" target="_blank">matplotlib</a>
+   <a href="https://matplotlib.org" target="_blank">matplotlib</a>
 
 .. _env_from_scratch-renderer:
 

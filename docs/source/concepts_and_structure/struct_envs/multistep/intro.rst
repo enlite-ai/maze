@@ -1,14 +1,14 @@
 .. |cutting_stock_problem| raw:: html
 
-   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem/" target="_blank">stock cutting problem</a>
+   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem" target="_blank">stock cutting problem</a>
 
 .. |auto_regressive_action_distributions| raw:: html
 
-   <a href="https://docs.ray.io/en/master/rllib-models.html#autoregressive-action-distributions/" target="_blank">auto-regressive action distributions (ARAD)</a>
+   <a href="https://docs.ray.io/en/latest/rllib/rl-modules.html#auto-regressive-action-distributions" target="_blank">auto-regressive action distributions (ARAD)</a>
 
 .. |grandmaster_level_in_starcraft_2_using_multi_agent_reinforcement_learning| raw:: html
 
-   <a href="https://www.nature.com/articles/s41586-019-1724-z/" target="_blank">Grandmaster level in StarCraft II using multi-agent reinforcement learning</a>
+   <a href="https://www.nature.com/articles/s41586-019-1724-z" target="_blank">Grandmaster level in StarCraft II using multi-agent reinforcement learning</a>
 
 .. _struct_env_multistep:
 

@@ -1,6 +1,6 @@
 .. |tutorial_code_part_05| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part05_reward/" target="_blank">can be found here</a>
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part05_reward" target="_blank">can be found here</a>
 
 .. _tutorial-reward:
 

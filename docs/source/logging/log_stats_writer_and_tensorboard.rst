@@ -1,6 +1,6 @@
 .. |tensorboard_website| raw:: html
 
-   <a href="https://www.tensorflow.org/tensorboard/" target="_blank">Tensorboard</a>
+   <a href="https://www.tensorflow.org/tensorboard" target="_blank">Tensorboard</a>
 
 .. |localhost| raw:: html
 

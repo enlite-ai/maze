@@ -13,23 +13,23 @@
 
 .. |hydra| raw:: html
 
-   <a href="https://hydra.cc/" target="_blank"><image class="inline-figure" src="_static/logos/logo-hydra.png" style="width: 35px;" /></a>
+   <a href="https://hydra.cc" target="_blank"><image class="inline-figure" src="_static/logos/logo-hydra.png" style="width: 35px;" /></a>
 
 .. |kubernetes| raw:: html
 
-   <a href="https://kubernetes.io/" target="_blank"><image class="inline-figure" src="_static/logos/logo-kubernetes.png" style="width: 20px;" /></a>
+   <a href="https://kubernetes.io" target="_blank"><image class="inline-figure" src="_static/logos/logo-kubernetes.png" style="width: 20px;" /></a>
 
 .. |ray| raw:: html
 
-   <a href="https://ray.io/" target="_blank"><image class="inline-figure" src="_static/logos/logo-ray.png" style="width: 50px;" /></a>
+   <a href="https://ray.io" target="_blank"><image class="inline-figure" src="_static/logos/logo-ray.png" style="width: 50px;" /></a>
 
 .. |gym| raw:: html
 
-   <a href="https://gymnasium.farama.org/" target="_blank"><image class="inline-figure" src="_static/logos/logo-gymnasium.png" style="width: 20px;" /></a>
+   <a href="https://gymnasium.farama.org" target="_blank"><image class="inline-figure" src="_static/logos/logo-gymnasium.png" style="width: 20px;" /></a>
 
 .. |enlite| raw:: html
 
-   <a href="https://www.enlite.ai/" target="_blank"><image class="inline-figure" src="_static/logos/EnliteAI_noclaim_rgb.svg" style="width: 100px; bottom: 0px;" /></a>
+   <a href="https://www.enlite.ai" target="_blank"><image class="inline-figure" src="_static/logos/EnliteAI_noclaim_rgb.svg" style="width: 100px; bottom: 0px;" /></a>
 
 .. |github_mark| raw:: html
 

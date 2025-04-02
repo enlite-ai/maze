@@ -1,22 +1,22 @@
 .. |multi_agent_reinforcement_learning| raw:: html
 
-   <a href="https://arxiv.org/abs/1911.10635/" target="_blank">Multi-agent reinforcement learning (MARL)</a>
+   <a href="https://arxiv.org/abs/1911.10635" target="_blank">Multi-agent reinforcement learning (MARL)</a>
 
 .. |vehicle_routing_problem| raw:: html
 
-   <a href="https://en.wikipedia.org/wiki/Vehicle_routing_problem/" target="_blank">vehicle routing problem</a>
+   <a href="https://en.wikipedia.org/wiki/Vehicle_routing_problem" target="_blank">vehicle routing problem</a>
 
 .. |games_like_starcraft| raw:: html
 
-   <a href="https://www.nature.com/articles/s41586-019-1724-z/" target="_blank">(video) games like Starcraft</a>
+   <a href="https://www.nature.com/articles/s41586-019-1724-z" target="_blank">(video) games like Starcraft</a>
 
 .. |traffic_coordination| raw:: html
 
-   <a href="http://www.wiomax.com/team/xie/paper/ICAPS12.pdf/" target="_blank">traffic coordination</a>
+   <a href="http://www.wiomax.com/team/xie/paper/ICAPS12.pdf" target="_blank">traffic coordination</a>
 
 .. |power_systems_and_smart_grids| raw:: html
 
-   <a href="https://ieeexplore.ieee.org/abstract/document/7855760/" target="_blank">power systems and smart grids</a>
+   <a href="https://ieeexplore.ieee.org/abstract/document/7855760" target="_blank">power systems and smart grids</a>
 
 .. _struct_env_multiagent:
 

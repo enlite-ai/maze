@@ -1,6 +1,6 @@
 .. |tutorial_code_part_01| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part01_core_env/" target="_blank">can be found here</a>
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part01_core_env" target="_blank">can be found here</a>
 
 .. _env_from_scratch-core_env:
 

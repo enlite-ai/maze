@@ -5,7 +5,7 @@
 
 .. |github_mark| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze/discussions/" target="_blank"><image class="inline-figure" src="../_static/logos/GitHub-Mark-64px.png" style="width: 20px;" /></a>
+   <a href="https://github.com/enlite-ai/maze/discussions" target="_blank"><image class="inline-figure" src="../_static/logos/GitHub-Mark-64px.png" style="width: 20px;" /></a>
 
 .. |tick| image:: tick.png
     :class: inline-figure

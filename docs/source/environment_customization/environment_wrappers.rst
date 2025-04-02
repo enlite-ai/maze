@@ -1,6 +1,6 @@
 .. |gymnasium_wrapper| raw:: html
 
-   <a href="https://gymnasium.farama.org/api/wrappers/" target="_blank">OpenAi's Gymnasium</a>
+   <a href="https://gymnasium.farama.org/api/wrappers" target="_blank">OpenAi's Gymnasium</a>
 
 .. _env_wrappers:
 

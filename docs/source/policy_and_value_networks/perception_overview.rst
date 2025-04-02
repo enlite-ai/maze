@@ -1,10 +1,10 @@
 .. |pytorch_website| raw:: html
 
-   <a href="https://pytorch.org/" target="_blank">PyTorch</a>
+   <a href="https://pytorch.org" target="_blank">PyTorch</a>
 
 .. |nn_module| raw:: html
 
-   <a href="https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module/" target="_blank">nn.Module</a>
+   <a href="https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module" target="_blank">nn.Module</a>
 
 .. _perception_module:
 

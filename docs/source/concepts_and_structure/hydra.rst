@@ -1,6 +1,6 @@
 .. |hydra_framework| raw:: html
 
-   <a href="https://hydra.cc/" target="_blank">Hydra configuration framework</a>
+   <a href="https://hydra.cc" target="_blank">Hydra configuration framework</a>
 
 .. _hydra:
 

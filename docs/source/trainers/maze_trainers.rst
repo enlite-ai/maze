@@ -1,34 +1,34 @@
 .. |asynchronous_methods_for_deep_reinforcement_learning| raw:: html
 
-   <a href="https://arxiv.org/abs/1602.01783/" target="_blank">Asynchronous methods for deep reinforcement learning</a>
+   <a href="https://arxiv.org/abs/1602.01783" target="_blank">Asynchronous methods for deep reinforcement learning</a>
 
 .. |proximal_policy_optimization_algorithms| raw:: html
 
-   <a href="https://arxiv.org/abs/1707.06347/" target="_blank">Proximal policy optimization algorithms</a>
+   <a href="https://arxiv.org/abs/1707.06347" target="_blank">Proximal policy optimization algorithms</a>
 
 .. |impala_scalable_distributed_deep_rl_with_importance_weighted_actor_learner_architectures| raw:: html
 
-   <a href="https://arxiv.org/abs/1802.01561/" target="_blank">Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures</a>
+   <a href="https://arxiv.org/abs/1802.01561" target="_blank">Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures</a>
 
 .. |soft_actor_critic_off_policy_maximum_entropy_deep_reinforcement_learning_with_a_stochastic_actor| raw:: html
 
-   <a href="https://arxiv.org/abs/1801.01290/" target="_blank">Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor</a>
+   <a href="https://arxiv.org/abs/1801.01290" target="_blank">Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor</a>
 
 .. |soft_actor_critic_algorithms_and_applications| raw:: html
 
-   <a href="https://arxiv.org/abs/1812.05905/" target="_blank">Soft Actor-Critic Algorithms and Applications</a>
+   <a href="https://arxiv.org/abs/1812.05905" target="_blank">Soft Actor-Critic Algorithms and Applications</a>
 
 .. |soft_actor_critic_for_discrete_action_settings| raw:: html
 
-   <a href="https://arxiv.org/abs/1910.07207v2/" target="_blank">Soft actor-critic for discrete action settings</a>
+   <a href="https://arxiv.org/abs/1910.07207v2" target="_blank">Soft actor-critic for discrete action settings</a>
 
 .. |imitation_learning_a_survey_of_learning_methods| raw:: html
 
-   <a href="https://dl.acm.org/doi/abs/10.1145/3054912/" target="_blank">Imitation learning: A survey of learning methods</a>
+   <a href="https://dl.acm.org/doi/abs/10.1145/3054912" target="_blank">Imitation learning: A survey of learning methods</a>
 
 .. |evolution_strategies_as_a_scalable_alternative_to_reinforcement_learning| raw:: html
 
-   <a href="https://arxiv.org/abs/1703.03864/" target="_blank">Evolution strategies as a scalable alternative to reinforcement learning</a>
+   <a href="https://arxiv.org/abs/1703.03864" target="_blank">Evolution strategies as a scalable alternative to reinforcement learning</a>
 
 .. role:: raw-html(raw)
    :format: html

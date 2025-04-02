@@ -1,14 +1,14 @@
 .. |gymnasium_built_in_classic_control_environments| raw:: html
 
-   <a href="https://gymnasium.farama.org/environments/classic_control/" target="_blank">built-in Gymnasium environments</a>
+   <a href="https://gymnasium.farama.org/environments/classic_control" target="_blank">built-in Gymnasium environments</a>
 
 .. |gymnasium_environment_interface| raw:: html
 
-   <a href="https://gymnasium.farama.org/api/env/" target="_blank">Gymnasium environments interface</a>
+   <a href="https://gymnasium.farama.org/api/env" target="_blank">Gymnasium environments interface</a>
 
 .. |maze_gym_env_yaml| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/env/gym_env.yaml/" target="_blank">gym_env</a>
+   <a href="https://github.com/enlite-ai/maze/blob/main/maze/conf/env/gym_env.yaml" target="_blank">gym_env</a>
 
 .. _tutorial_gym_env:
 

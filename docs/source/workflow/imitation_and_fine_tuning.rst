@@ -1,6 +1,6 @@
 .. |lunar_lander_env| raw:: html
 
-   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander/" target="_blank">LunarLander environment</a>
+   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander" target="_blank">LunarLander environment</a>
 
 
 .. _imitation:

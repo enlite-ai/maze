@@ -1,6 +1,6 @@
 .. |tutorial_code_part_06| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env/" target="_blank">can be found here</a>
+   <a href="https://github.com/enlite-ai/maze-examples/tree/main/tutorial_maze_env/part06_struct_env" target="_blank">can be found here</a>
 
 .. _flat_to_structured:
 

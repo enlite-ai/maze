@@ -1,10 +1,10 @@
 .. |lunar_lander_continuous_v3| raw:: html
 
-   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander/" target="_blank">LunarLanderContinuous-v3</a>
+   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander" target="_blank">LunarLanderContinuous-v3</a>
 
 .. |lunar_lander_v3| raw:: html
 
-   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander/" target="_blank">LunarLander-v3</a>
+   <a href="https://gymnasium.farama.org/environments/box2d/lunar_lander" target="_blank">LunarLander-v3</a>
 
 .. _act_logging:
 

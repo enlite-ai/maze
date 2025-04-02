@@ -1,42 +1,42 @@
 .. |pip| raw:: html
 
-   <a href="https://pypi.org/project/maze-rl/" target="_blank"><image class="inline-figure" src="../_static/logos/python-pip_logo.png" style="width: 28px;" /></a>
+   <a href="https://pypi.org/project/maze-rl" target="_blank"><image class="inline-figure" src="../_static/logos/python-pip_logo.png" style="width: 28px;" /></a>
 
 .. |github| raw:: html
 
-   <a href="https://github.com/enlite-ai/maze/" target="_blank"><image class="inline-figure" src="../_static/logos/logo-github-light-mode.png" style="width: 55px;" /></a>
+   <a href="https://github.com/enlite-ai/maze" target="_blank"><image class="inline-figure" src="../_static/logos/logo-github-light-mode.png" style="width: 55px;" /></a>
 
 .. |conda| raw:: html
 
-   <a href="https://docs.conda.io/projects/conda/en/latest/" target="_blank"><image class="inline-figure" src="../_static/logos/conda_logo.png" style="width: 20px;" /></a>
+   <a href="https://docs.conda.io/projects/conda/en/latest" target="_blank"><image class="inline-figure" src="../_static/logos/conda_logo.png" style="width: 20px;" /></a>
 
 .. |install_pytorch| raw:: html
 
-   <a href="https://pytorch.org/get-started/locally/" target="_blank">install PyTorch</a>
+   <a href="https://pytorch.org/get-started/locally" target="_blank">install PyTorch</a>
 
 .. |install_torch_scatter| raw:: html
 
-   <a href="https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels/" target="_blank">the instructions here</a>
+   <a href="https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels" target="_blank">the instructions here</a>
 
 .. |install_pygraphviz| raw:: html
 
-   <a href="https://pygraphviz.github.io/" target="_blank">this page</a>
+   <a href="https://pygraphviz.github.io" target="_blank">this page</a>
 
 .. |open_ai_issue| raw:: html
 
-   <a href="https://github.com/openai/gym/issues/2138/" target="_blank">this OpenAI gym issue </a>
+   <a href="https://github.com/openai/gym/issues/2138" target="_blank">this OpenAI gym issue </a>
 
 .. |building_pillow| raw:: html
 
-   <a href="https://pillow.readthedocs.io/en/stable/installation.html#building-on-linux/" target="_blank">building pillow</a>
+   <a href="https://pillow.readthedocs.io/en/stable/installation.html#building-on-linux" target="_blank">building pillow</a>
 
 .. |install_swig| raw:: html
 
-   <a href="https://www.swig.org/" target="_blank">swig</a>
+   <a href="https://www.swig.org" target="_blank">swig</a>
 
 .. |install_box2d_py| raw:: html
 
-   <a href="https://pypi.org/project/box2d-py/" target="_blank">box2d-py</a>
+   <a href="https://pypi.org/project/box2d-py" target="_blank">box2d-py</a>
 
 .. role:: raw-html(raw)
    :format: html

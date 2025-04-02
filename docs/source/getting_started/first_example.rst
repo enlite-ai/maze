@@ -1,10 +1,10 @@
 .. |cartpole_website| raw:: html
 
-   <a href="https://gymnasium.farama.org/environments/classic_control/cart_pole/" target="_blank">CartPole</a>
+   <a href="https://gymnasium.farama.org/environments/classic_control/cart_pole" target="_blank">CartPole</a>
 
 .. |pygraphviz_website| raw:: html
 
-   <a href="https://pygraphviz.github.io/" target="_blank">on this page</a>
+   <a href="https://pygraphviz.github.io" target="_blank">on this page</a>
 
 .. |localhost| raw:: html
 

@@ -1,6 +1,6 @@
 .. |gymnasium_environment| raw:: html
 
-   <a href="https://gymnasium.farama.org/api/env/" target="_blank">Gymnasium-style environment interfaces</a>
+   <a href="https://gymnasium.farama.org/api/env" target="_blank">Gymnasium-style environment interfaces</a>
 
 .. _custom_core_maze_envs:
 

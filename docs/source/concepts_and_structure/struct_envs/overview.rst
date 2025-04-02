@@ -1,18 +1,18 @@
 .. |vehicle_routing_problem| raw:: html
 
-   <a href="https://en.wikipedia.org/wiki/Vehicle_routing_problem/" target="_blank">optimizing delivery with a fleet of vehicles</a>
+   <a href="https://en.wikipedia.org/wiki/Vehicle_routing_problem" target="_blank">optimizing delivery with a fleet of vehicles</a>
 
 .. |cutting_stock_problem| raw:: html
 
-   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem/" target="_blank">cutting raw material according to customer specifications with as little waste as possible</a>
+   <a href="https://en.wikipedia.org/wiki/Cutting_stock_problem" target="_blank">cutting raw material according to customer specifications with as little waste as possible</a>
 
 .. |what_is_a_pick_and_place_robot| raw:: html
 
-   <a href="https://6river.com/what-is-a-pick-and-place-robot/" target="_blank">pick and place robots</a>
+   <a href="https://6river.com/what-is-a-pick-and-place-robot" target="_blank">pick and place robots</a>
 
 .. |starcraft_2_a_new_challenge_for_reinforcement_learning| raw:: html
 
-   <a href="https://arxiv.org/abs/1708.04782/" target="_blank">StarCraft II: A New Challenge for Reinforcement Learning</a>
+   <a href="https://arxiv.org/abs/1708.04782" target="_blank">StarCraft II: A New Challenge for Reinforcement Learning</a>
 
 .. _control_flows_struct_envs:
 
