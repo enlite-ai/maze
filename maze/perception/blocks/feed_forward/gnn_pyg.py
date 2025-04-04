@@ -1,11 +1,11 @@
-"""Contains a gnn block that uses Pytorch Geometric to support different types of GNNs"""
+""" Contains a gnn block that uses Pytorch Geometric to support different types of GNNs"""
 from collections import OrderedDict
-from typing import Sequence, Callable
+from typing import Sequence, Callable, Any
 
 import torch
 from torch import nn as nn
 
-from torch_geometric.nn import GCNConv, SAGEConv, GraphConv
+from torch_geometric.nn import GCNConv, SAGEConv, GraphConv, GATConv
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
@@ -30,34 +30,58 @@ def _dummy_edge_index_factory(shape: Sequence[int], n_nodes: int) -> Callable[[]
     return create_dummy_edge_index_tensor
 
 
-SUPPORTED_GNNS = ['gcn', 'sage', 'graph_conv']
+SUPPORTED_GNNS = ['gcn', 'sage', 'graph_conv', 'gat']
 
 class GNNLayerPyG(nn.Module):
-    """Simple graph convolution layer.
+    """Simple graph neural network layer.
 
     :param in_features: The number of input features.
     :param out_features: The number of output features.
-    :param bias: Whether to include bias in the PyG layer.
     :param gnn_type: The type of GNN layer.
+    :param gnn_kwargs:   Additional keyword arguments passed to the underlying PyG layer.
     """
 
-    def __init__(self, in_features: int, out_features: int, bias: bool, gnn_type: str) -> None:
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        gnn_type: str,
+        gnn_kwargs: dict[str, Any] | None
+    ) -> None:
         super().__init__()
 
         self.in_features = in_features
         self.out_features = out_features
-        self.bias = bias
+        self.gnn_type = gnn_type.lower()
+        self.gnn_kwargs = gnn_kwargs if gnn_kwargs is not None else {}
 
-        if gnn_type.lower() == 'gcn':
-            self.gnn_layer = GCNConv(in_features, out_features, bias=bias)
-        elif gnn_type.lower() == 'sage':
-            self.gnn_layer = SAGEConv(in_features, out_features, bias=bias)
-        elif gnn_type.lower() == 'graph_conv':
-            self.gnn_layer = GraphConv(in_features, out_features, bias=bias)
+        if self.gnn_type == 'gcn':
+            self.gnn_layer = GCNConv(
+                in_channels=in_features,
+                out_channels=out_features,
+                **self.gnn_kwargs
+            )
+        elif self.gnn_type == 'sage':
+            self.gnn_layer = SAGEConv(
+                in_channels=in_features,
+                out_channels=out_features,
+                **self.gnn_kwargs
+            )
+        elif self.gnn_type == 'graph_conv':
+            self.gnn_layer = GraphConv(
+                in_channels=in_features,
+                out_channels=out_features,
+                **self.gnn_kwargs
+            )
+        elif self.gnn_type == 'gat':
+            # For GAT with edge attributes, set "edge_dim" in gnn_kwargs.
+            self.gnn_layer = GATConv(
+                in_channels=in_features,
+                out_channels=out_features,
+                **self.gnn_kwargs
+            )
         else:
             raise ValueError(f'Unsupported GNN type: {gnn_type}. Supported GNNs are {SUPPORTED_GNNS}')
-
-        self.gnn_type = gnn_type
 
     @override(nn.Module)
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor, edge_attr: torch.Tensor) -> torch.Tensor:
@@ -69,39 +93,66 @@ class GNNLayerPyG(nn.Module):
         :param edge_attr: The edge attributes, [E, D] or [B, E, D]. D is the edge attribute dimension.
         :return: Output tensor.
         """
-        if x.dim() == 2:  # Single graph (no batch)
-            if self.gnn_type in ['gcn', 'graph_conv']:
-                return self.gnn_layer(x, edge_index, edge_weight=edge_attr if edge_attr.dim() == 1 else None)
-            else:
-                # SAGEConv does not use edge_attr
-                return self.gnn_layer(x, edge_index)
 
-        elif x.dim() == 3:  # Batched graphs
-            batch_size, num_nodes, in_features = x.shape
+        reshaped = False
+        if x.dim() == 2:
+            x = x.unsqueeze(0)
+            edge_index = edge_index.unsqueeze(0)
+            edge_attr = edge_attr.unsqueeze(0)
+            reshaped = True
 
-            # Flatten batch for efficient processing
-            x_flat = x.view(-1, in_features)  # [B*N, in_features]
-            edge_index_flat = torch.cat([edge_index[b] + b * num_nodes for b in range(batch_size)], dim=1)
-            edge_attr_flat = torch.cat([edge_attr[b] for b in range(batch_size)],
-                                       dim=0) if edge_attr is not None else None
+        # Expect x with shape [B, n_nodes, in_features].
+        batch_size, n_nodes, in_features = x.shape
 
-            if self.gnn_type in ['gcn', 'graph_conv']:
-                out = self.gnn_layer(
-                    x_flat, edge_index_flat,
-                    edge_weight=edge_attr_flat if (edge_attr_flat is not None and edge_attr_flat.dim() == 1) else None
-                )
-            else:
-                out = self.gnn_layer(x_flat, edge_index_flat)
+        # Flatten the batch for node features: (B*n_nodes, in_features)
+        x_flat = x.view(-1, in_features)
 
-            return out.view(batch_size, num_nodes, -1)  # Reshape back
+        # Flatten the batch for edges
+        edge_index_list = []
+        edge_attr_list = []
+        for b in range(batch_size):
+            offset = b * n_nodes
+            edge_index_batch = edge_index[b] + offset  # (2, E)
+            edge_index_list.append(edge_index_batch)
+            if edge_attr is not None:
+                edge_attr_list.append(edge_attr[b])  # (E, D) or (E,)
 
+        edge_index_flat = torch.cat(edge_index_list, dim=1)  # => (2, sum(E_b))
+        edge_attr_flat = torch.cat(edge_attr_list, dim=0) if edge_attr_list else None
+
+        if self.gnn_type in ['gcn', 'graph_conv']:
+            # Interpret 1D edge_attr as edge_weight if provided
+            edge_weight = None
+            if edge_attr_flat is not None and edge_attr_flat.dim() == 1:
+                edge_weight = edge_attr_flat
+
+            out_flat = self.gnn_layer(x_flat, edge_index_flat, edge_weight=edge_weight)
+
+        elif self.gnn_type == 'sage':
+            out_flat = self.gnn_layer(x_flat, edge_index_flat)
+
+        elif self.gnn_type == 'gat':
+            # GATConv can use edge_attr if "edge_dim" is provided in gnn_kwargs
+            if self.gnn_layer.edge_dim is not None:
+                assert edge_attr_flat.shape[-1] == self.gnn_layer.edge_dim, \
+                    f'The edge feature size: {edge_attr_flat.shape[-1]} must match the edge_dim: {self.gnn_layer.edge_dim}'
+            out_flat = self.gnn_layer(x_flat, edge_index_flat, edge_attr=edge_attr_flat)
         else:
-            raise ValueError(f"Unexpected x shape: {x.shape}, expected 2D or 3D.")
+            raise ValueError(f"Unsupported GNN type: {self.gnn_type}")
+
+        # Reshape back to (B, n_nodes, out_features)
+        out = out_flat.view(batch_size, n_nodes, -1)
+
+        # Reshape back if we had inserted a batch dimension of size 1
+        if reshaped:
+            out = out.squeeze(0)  # => (n_nodes, out_features)
+
+        return out
 
     @override(nn.Module)
     def __repr__(self):
         txt = f'{self.gnn_type}: ({self.in_features} -> {self.out_features})'
-        txt += ' (with bias)' if self.bias else ' (without bias)'
+        txt += f', kwargs={self.gnn_kwargs}'
         return txt
 
 
@@ -113,8 +164,8 @@ class GNNBlockPyG(ShapeNormalizationBlock):
     :param in_shapes: List of input shapes.
     :param hidden_features: List containing the number of hidden features for hidden layers.
     :param non_lin: The non-linearity to apply after each layer.
-    :param bias: Whether to include bias in the GNN layers.
-    :param gnn_type: The type of GNN layer.
+    :param gnn_type: The type of GNN layer
+    :param gnn_kwargs: Extra kwargs to pass to the GNN layers.
     """
 
     def __init__(
@@ -122,32 +173,35 @@ class GNNBlockPyG(ShapeNormalizationBlock):
         in_shapes: Sequence[int] | list[Sequence[int]],
         hidden_features: list[int],
         non_lin: str | nn.Module,
-        bias: bool,
         gnn_type: str,
+        gnn_kwargs: dict[str, Any] | None
     ):
 
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3]*3, out_num_dims=3)
 
         self.gnn_type = gnn_type
-        self.bias = bias
+        self.gnn_kwargs = gnn_kwargs if gnn_kwargs is not None else {}
 
         assert len(self.in_keys) == 3, \
-            'There should be three input keys: node feature matrix, graph edge_index, and edge attributes.'
+            f"Expected three input keys, got {len(self.in_keys)}: {self.in_keys}"
 
         # Specify dummy dict creation function for edge_index:
         self.dummy_dict_creators[1] = _dummy_edge_index_factory(self.in_shapes[1], self.in_shapes[0][0])
 
-        # Init class objects
         self.input_features = self.in_shapes[0][-1]
+
+        if (gnn_type == 'gat' and gnn_kwargs is not None and 'heads' in gnn_kwargs
+                and ('concat' not in gnn_kwargs or gnn_kwargs['concat'])):
+            self.output_features = hidden_features[-1] * gnn_kwargs['heads']
+        else:
+            self.output_features = hidden_features[-1]
+
         self.hidden_features = hidden_features
-        self.output_features = self.hidden_features[-1]
 
         self.non_lin: type[nn.Module] = Factory(base_type=nn.Module).type_from_name(non_lin)
 
-        # Form layers dictionary
+        # Create the GNN layers
         layer_dict = self.build_layer_dict()
-
-        # Compile network
         self.net = nn.Sequential(layer_dict)
 
     @override(ShapeNormalizationBlock)
@@ -163,11 +217,12 @@ class GNNBlockPyG(ShapeNormalizationBlock):
         assert edge_attr.ndim == self.in_num_dims[2]
 
         assert node_feat.shape[-1] == self.input_features, \
-            f"Feature dimension should fit: {node_feat.shape[-1]} vs {self.input_features}"
+            f"Mismatch in node feature dimension: {node_feat.shape[-1]} vs expected {self.input_features}"
         assert edge_index.shape[-1] == edge_attr.shape[-2], \
-            "Number of edges must be consistent"
+            (f"Number of edges (E) must be consistent between edge_index: {edge_index.shape[-1]} "
+             f"and edge_attr: {edge_attr.shape[-2]}")
 
-        # forward pass
+        # Forward pass
         x = node_feat
         for layer in self.net:
             if isinstance(layer, GNNLayerPyG):
@@ -185,32 +240,37 @@ class GNNBlockPyG(ShapeNormalizationBlock):
 
     def build_layer_dict(self) -> OrderedDict:
         """Compiles a block-specific dictionary of network layers.
-
-        This could be overwritten by derived layers (e.g. to get a 'BatchNormalizedConvolutionBlock').
-
-        :return: Ordered dictionary of torch modules [str, nn.Module].
+        :return: Ordered dictionary of torch modules
         """
         layer_dict = OrderedDict()
         in_feats = self.input_features
 
         for layer_idx, out_feats in enumerate(self.hidden_features):
+
             layer_dict[f'{self.gnn_type}_{layer_idx}'] = GNNLayerPyG(
                 in_features=in_feats,
                 out_features=out_feats,
-                bias=self.bias,
                 gnn_type=self.gnn_type,
+                gnn_kwargs=self.gnn_kwargs
             )
-            # Add activation function only for intermediate layers
+            # Insert activation function after each hidden layer except the last
             if layer_idx < len(self.hidden_features) - 1:
-                layer_dict[f'activation_{layer_idx}_{self.non_lin.__name__}'] = self.non_lin()
-            in_feats = out_feats
+                layer_name = f'activation_{layer_idx}_{self.non_lin.__name__}'
+                layer_dict[layer_name] = self.non_lin()
+
+            if self.gnn_type == 'gat' and 'heads' in self.gnn_kwargs and \
+                    ('concat' not in self.gnn_kwargs or self.gnn_kwargs['concat']):
+                in_feats = out_feats * self.gnn_kwargs['heads']
+            else:
+                in_feats = out_feats
 
         return layer_dict
 
     def __repr__(self):
-        txt = f'{self.__class__.__name__}'
-        txt += f'({self.non_lin.__name__})'
-        txt += '\n\t' + f'({self.input_features}->' + '->'.join([f'{h}' for h in self.hidden_features]) + ')'
-        txt += f'\n\tBias: {self.bias}'
-        txt += f'\n\tOut Shapes: {self.out_shapes()}'
+        txt = (
+            f"{self.__class__.__name__}({self.non_lin.__name__})\n"
+            f"\t({self.input_features}->" + "->".join([f"{h}" for h in self.hidden_features]) + ")\n"
+        )
+        txt += f"\n\tGNN kwargs: {self.gnn_kwargs}"
+        txt += f"\n\tOut Shapes: {self.out_shapes()}"
         return txt
