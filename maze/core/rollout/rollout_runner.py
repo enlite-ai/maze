@@ -1,10 +1,11 @@
 """Abstract class for rollout runners."""
+import os
 import time
 from abc import ABC, abstractmethod
 from typing import Callable, Optional, List, Any
 
 import numpy as np
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
@@ -63,7 +64,6 @@ class RolloutRunner(Runner, ABC):
         :param cfg: DictConfig defining components to initialize.
         """
 
-        self._cfg = cfg
         self.input_dir = cfg.input_dir
 
         # Generate a random state used for sampling random seeds for the envs and agents
@@ -73,6 +73,30 @@ class RolloutRunner(Runner, ABC):
                                         explicit_env_seeds=cfg.seeding.explicit_env_seeds,
                                         explicit_agent_seeds=cfg.seeding.explicit_agent_seeds,
                                         shuffle_seeds=cfg.seeding.shuffle_seeds)
+
+
+        # Use the configs from an input directory (used for training)
+        if 'use_input_dir_config' in cfg and cfg['use_input_dir_config'] is not None:
+            config_path = os.path.join(self.input_dir, 'hydra_config.yaml')
+            if os.path.isfile(config_path):
+                with open(config_path, 'r') as f:
+                    input_dir_config = OmegaConf.load(f)
+
+                # Override the env config
+                if 'use_input_dir_env' in cfg['use_input_dir_config'] and cfg['use_input_dir_config']['use_input_dir_env']:
+                    cfg.env = input_dir_config.env
+
+                # Override the wrappers config
+                if 'use_input_dir_wrappers' in cfg['use_input_dir_config'] and cfg['use_input_dir_config']['use_input_dir_wrappers']:
+                    cfg.wrappers = input_dir_config.wrappers
+
+                cfg.model = input_dir_config.model
+                cfg.policy.model = input_dir_config.model
+
+            else:
+                raise FileNotFoundError(f'Config file {config_path} not found')
+
+        self._cfg = cfg
 
     @override(Runner)
     def run(self) -> None:
