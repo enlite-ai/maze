@@ -269,6 +269,7 @@ class GNNBlockPyG(ShapeNormalizationBlock):
     def __repr__(self):
         txt = (
             f"{self.__class__.__name__}({self.non_lin.__name__})\n"
+            f"{self.gnn_type}\n"
             f"\t({self.input_features}->" + "->".join([f"{h}" for h in self.hidden_features]) + ")\n"
         )
         txt += f"\n\tGNN kwargs: {self.gnn_kwargs}"
