@@ -12,6 +12,7 @@ from typing.io import BinaryIO
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
+from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.structured_env import ActorID
 from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
 from maze.core.rollout.rollout_generator import RolloutGenerator
@@ -116,7 +117,7 @@ class ActorCritic(Trainer, ABC):
                 if epoch > 0:
                     prev_metric = stopping_metric
                     try:
-                        stopping_metric = self.rollout_generator.get_stats_value(ActorCriticEvents.critic_value,
+                        stopping_metric = self.rollout_generator.get_stats_value(BaseEnvEvents.reward,
                                                                                  LogStatsLevel.EPOCH, name="mean")
                     except:
                         stopping_metric = prev_metric
