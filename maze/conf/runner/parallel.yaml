@@ -20,4 +20,12 @@ record_trajectory: false
 # If true, event logs will be recorded and stored in `event_logs_directory
 record_event_logs: true
 
+# If provided, the config of the model and policy config from the input_dir will be used.
+# Optionally the environment or/and the wrappers config can be used from the input_dir.
+# Example for using the environment config from the input_dir:
+#use_input_dir_config:
+#  use_input_dir_env: True
+#  use_input_dir_wrappers: False
+use_input_dir_config: ~
+
 # (Note that the default output directory is handled by Hydra)
