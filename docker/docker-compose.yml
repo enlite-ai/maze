@@ -1,0 +1,34 @@
+services:
+  # Maze Core Env
+  # This service builds the base Maze Core Env image from source.
+  # It is intended to be used as a dependency for other builds,
+  # such as the maze-core and maze image, which uses this as its base.
+  maze-core-env:
+    build:
+      context: ../
+      dockerfile: docker/maze-core-env.dockerfile
+    image: "${MAZE_CORE_ENV_IMAGE}"
+
+  # Maze Core
+  # This service builds the base Maze Core image from source.
+  maze-core:
+    build:
+      context: ../
+      dockerfile: docker/maze-core.dockerfile
+      args:
+        MAZE_CORE_ENV: "${MAZE_CORE_ENV_IMAGE}"
+    image: "${MAZE_CORE_IMAGE}"
+    depends_on:
+      - maze-core-env
+
+  # Maze
+  # This service builds the base Maze image from source.
+  maze:
+    build:
+      context: ../../
+      dockerfile: deployment/maze.dockerfile
+      args:
+        MAZE_CORE_ENV: "${MAZE_CORE_ENV_IMAGE}"
+    image: "${MAZE_IMAGE}"
+    depends_on:
+      - maze-core-env
