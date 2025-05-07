@@ -10,6 +10,7 @@ dependencies:
   - cudatoolkit
   - pytorch=2.3.0
   - pygraphviz
+  - scipy
   - pip
   - pandas
   - numpy>=1.21.0

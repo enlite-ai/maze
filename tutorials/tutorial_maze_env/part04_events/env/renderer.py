@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 import numpy as np
 import matplotlib.patches as patches
@@ -19,13 +19,14 @@ class Cutting2DRenderer(Renderer):
     """
 
     @override(Renderer)
-    def render(self, maze_state: Cutting2DMazeState, maze_action: Optional[Cutting2DMazeAction], events: StepEventLog) -> None:
+    def render(self, maze_state: Cutting2DMazeState, maze_action: Optional[Cutting2DMazeAction], events: StepEventLog) -> Union[None, np.ndarray]:
         """
         Render maze_state and maze_action of the cutting 2D env.
 
         :param maze_state: MazeState to render
         :param maze_action: MazeAction to render
         :param events: Events logged during the step (not used)
+        :return: None as the state is rendered.
         """
 
         plt.figure("Cutting 2D", figsize=(8, 4))

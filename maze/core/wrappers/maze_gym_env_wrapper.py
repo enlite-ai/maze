@@ -135,11 +135,15 @@ class GymRenderer(Renderer):
         self.env = env
 
     @override(Renderer)
-    def render(self, maze_state: MazeStateType, maze_action: Optional[MazeActionType], events: StepEventLog, **kwargs) -> None:
-        """Render the current state of the environment."""
+    def render(self, maze_state: MazeStateType, maze_action: Optional[MazeActionType], events: StepEventLog, **kwargs) -> \
+            Union[None, np.ndarray]:
+        """Render the current state of the environment.
+
+        :return: None or the rendered state.
+        """
         assert self.env is not None, "'GymMazeEnv' renderer is not yet fully compatible with the Maze suite of " \
                                      "rendering tools."
-        self.env.render()
+        return self.env.render()
 
     def __getstate__(self) -> dict:
         """Skip env when pickling this class (this renderer is not yet compatible with Maze offline rendering tools)"""

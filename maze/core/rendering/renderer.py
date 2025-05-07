@@ -1,7 +1,9 @@
 """Renderer is the main interface for renderer classes that render current state of an env."""
 
 from abc import abstractmethod, ABC
-from typing import List, Optional
+from typing import List, Optional, Union
+
+import numpy as np
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
@@ -39,7 +41,7 @@ class Renderer(ABC):
 
     @abstractmethod
     def render(self, maze_state: MazeStateType, maze_action: Optional[MazeActionType], events: StepEventLog,
-               **kwargs) -> None:
+               **kwargs) -> Union[None, np.ndarray]:
         """Render the current state as a matplotlib figure.
 
         Note that the maze_action is optional -- it is None for the last (terminal) state in the episode!
@@ -49,5 +51,7 @@ class Renderer(ABC):
                             (provided above)
         :param events: Events dispatched by the env during the last step (i.e. when the given state was produced)
         :param kwargs: Any additional arguments that the renderer accepts and exposes
+
+        :return: The rendered state, if available, otherwise None.
         """
         raise NotImplementedError
