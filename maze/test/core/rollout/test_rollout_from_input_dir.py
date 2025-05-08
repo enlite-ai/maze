@@ -29,7 +29,8 @@ def experiment_out_dir():
 
 @pytest.mark.parametrize("use_input_dir_env", [True, False])
 @pytest.mark.parametrize("use_input_dir_wrappers", [True, False])
-def test_train_and_rollout(experiment_out_dir, use_input_dir_env, use_input_dir_wrappers):
+@pytest.mark.parametrize("use_input_dir_model", [True, False])
+def test_train_and_rollout(experiment_out_dir, use_input_dir_env, use_input_dir_wrappers, use_input_dir_model):
     """Test loading config from the experiment output directory in the rollout run"""
     rollout_hydra_overrides = {
         "runner": "sequential",
@@ -37,6 +38,7 @@ def test_train_and_rollout(experiment_out_dir, use_input_dir_env, use_input_dir_
         "policy": "torch_policy",
         "+use_input_dir_config.use_input_dir_env": use_input_dir_env,
         "+use_input_dir_config.use_input_dir_wrappers": use_input_dir_wrappers,
+        "+use_input_dir_config.use_input_dir_model": use_input_dir_model,
         "input_dir": experiment_out_dir,
     }
 

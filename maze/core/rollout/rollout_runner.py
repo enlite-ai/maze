@@ -90,8 +90,9 @@ class RolloutRunner(Runner, ABC):
                 if 'use_input_dir_wrappers' in cfg['use_input_dir_config'] and cfg['use_input_dir_config']['use_input_dir_wrappers']:
                     cfg.wrappers = input_dir_config.wrappers
 
-                cfg.model = input_dir_config.model
-                cfg.policy.model = input_dir_config.model
+                if 'use_input_dir_model' in cfg['use_input_dir_config'] and cfg['use_input_dir_config']['use_input_dir_model']:
+                    cfg.model = input_dir_config.model
+                    cfg.policy.model = input_dir_config.model
 
             else:
                 raise FileNotFoundError(f'Config file {config_path} not found')

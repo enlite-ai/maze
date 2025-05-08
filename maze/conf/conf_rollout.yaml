@@ -42,6 +42,7 @@ seeding:
 # Optionally the environment or/and the wrappers config can be used from the input_dir.
 # Example for using the environment config from the input_dir:
 #use_input_dir_config:
+#  use_input_dir_model: True
 #  use_input_dir_env: True
 #  use_input_dir_wrappers: False
 use_input_dir_config: ~
