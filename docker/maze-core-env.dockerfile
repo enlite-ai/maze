@@ -35,3 +35,4 @@ RUN apt-get update && \
 ENV CONDA_ENVS_PATH=/
 ENV PATH /env/bin:$PATH
 COPY --from=maze_core_env_build /env /env
+COPY --from=maze_core_env_build /root/.bashrc /root/
