@@ -1,0 +1,105 @@
+# pyproject.toml for maze
+[build-system]
+requires = ['setuptools>=61.0', 'wheel']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'maze-rl'
+# If the version is updated here, it also needs an update in the __init__.py file in maze
+version = '0.2.1'
+description = 'MazeRL is a development framework for building applied reinforcement learning systems, addressing real-world decision problems. It supports the complete development life cycle of RL applications, ranging from simulation engineering up to agent development, training and deployment.'
+readme = { file = 'README.md', content-type = 'text/markdown' }
+authors = [{ name = 'enliteAI GmbH', email = 'office@enlite.ai' }]
+urls = { Homepage = 'https://enlite.ai', Repository = 'https://github.com/enlite-ai/maze' }
+requires-python = '>=3.9,<3.11'
+license = { text = 'MazeRL Software License (Research, Non-Commercial)' }
+classifiers = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    'Development Status :: 3 - Alpha',
+
+    # Indicate who your project is intended for
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'Intended Audience :: Education',
+
+    'Topic :: Scientific/Engineering :: Artificial Intelligence',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+
+    'License :: Other/Proprietary License',
+
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10'
+]
+keywords = [
+    'applied-reinforcement-learning',
+    'reinforcement-learning',
+    'machine-learning',
+    'deep-learning',
+    'distributed',
+    'optimization'
+]
+dependencies = [
+    'tensorboard',
+    'pyyaml',
+    'requests',
+    'pillow',
+
+    'hydra-core',
+
+    'gymnasium',
+
+    'pandas',
+    'networkx',
+    'matplotlib',
+    'seaborn',
+    'tqdm',
+    'imageio',
+
+    # train
+    'redis',
+    'cloudpickle',
+
+    # testing
+    'pytest',
+    'pytest-timeout',
+    'pytest-redis'
+]
+
+[project.optional-dependencies]
+testing = [
+    'pytest',
+    'pytest-redis'
+]
+
+[project.scripts]
+maze-run = 'maze.maze_cli:maze_run'
+maze-hyper-opt = 'maze.maze_hyper_opt:maze_hyper_opt'
+
+[tool.setuptools.packages.find]
+# Start package search from the current directory
+where = ['.']
+# Use patterns
+include = ['maze', 'maze.*', 'hydra_plugins']
+# Enable namespace discovery (similar to find_namespace_packages)
+namespaces = true
+
+[tool.setuptools]
+include-package-data = true
+license-files = ['LICENSE.txt']
+
+[tool.pytest.ini_options]
+markers = [
+    'longrun: mark test as longrun.'
+]
+log_cli = true
+log_cli_level = 'INFO'
+timeout = 0
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.flake8]
+max-line-length = 120

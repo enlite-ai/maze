@@ -3,6 +3,7 @@ import os
 
 from maze.utils.bcolors import BColors
 
+# If the version is updated here, it also needs an update in the project.toml file
 __version__ = "0.2.1"
 
 # fixes this issue (https://github.com/pytorch/pytorch/issues/37377) when using conda
