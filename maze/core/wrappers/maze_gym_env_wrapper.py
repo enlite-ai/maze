@@ -102,6 +102,8 @@ class GymObservationConversion(ObservationConversionInterface):
         """Converts core environment state to agent observation.
         """
         if not self._original_space_is_dict:
+            if not isinstance(maze_state, np.ndarray):
+                maze_state = np.array(maze_state)
             maze_state = {"observation": maze_state.astype(np.float32)}
         return maze_state
 
