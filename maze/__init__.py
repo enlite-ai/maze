@@ -1,10 +1,15 @@
 """ MazeRL init """
 import os
 
+from importlib.metadata import version, PackageNotFoundError
 from maze.utils.bcolors import BColors
 
-# If the version is updated here, it also needs an update in the project.toml file
-__version__ = "0.2.1"
+
+# pull version number from installed package
+try:
+    __version__ = version("maze-rl")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 # fixes this issue (https://github.com/pytorch/pytorch/issues/37377) when using conda
 if "MKL_THREADING_LAYER" not in os.environ or os.environ['MKL_THREADING_LAYER'] != 'GNU':
