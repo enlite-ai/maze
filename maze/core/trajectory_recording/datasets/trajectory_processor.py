@@ -4,12 +4,15 @@ import dataclasses
 from abc import abstractmethod
 from typing import List, Optional, Union, Dict
 
+from omegaconf import ListConfig
+
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.trajectory_recording.datasets.utils import retrieve_done_info
 from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
+from maze.core.utils.factory import Factory
 
 
 class TrajectoryProcessor:
@@ -253,4 +256,26 @@ class FilterTrajectoryWithSmallerKSubStepsProcessor(TrajectoryProcessor):
         if any([len(sr.substep_records) < self.clip_k for sr in trajectory.step_records]):
             trajectory.step_records = list()
 
+        return trajectory
+
+@dataclasses.dataclass
+class StackTrajectoryProcessor(TrajectoryProcessor):
+    """Combines multiple TrajectoryRecords during pre-processing.
+        Note: Order may make a difference.
+
+    :param traj_preprocessors: List of trajectory preprocessors.
+    """
+
+    def __init__(self, traj_preprocessors: ListConfig | List[TrajectoryProcessor]):
+        factory = Factory(TrajectoryProcessor)
+        self.traj_preprocessors = [factory.instantiate(tp) for tp in traj_preprocessors]
+
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
+        """Iterates through the multiple preprocessors for the filtering.
+
+        :param trajectory: The trajectory to preprocess.
+        :return: The pre-processed trajectory or a list of multiple pre-processed trajectories.
+        """
+        for preprocessor in self.traj_preprocessors:
+            trajectory = preprocessor.pre_process(trajectory)
         return trajectory
