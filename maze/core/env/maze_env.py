@@ -87,16 +87,22 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         # create event topics
         self.reward_events = self.core_env.context.event_service.create_event_topic(RewardEvents)
 
-        # Check if the underlying core env has only single sub-step
-        agent_counts = self.core_env.agent_counts_dict
-        self.is_single_substep_env = len(agent_counts) == 1 and sum(agent_counts.values()) == 1
-
         # Initial env time: Env time this episode started at
         self.initial_env_time = None
 
         # Dictionary to hold the profiling times for the different components of the maze env. These will always be
         # reset at the beginning of the step function and are logged as events in the logger base class after the step.
         self.profiling_times = {'core_env': 0.0, 'observation_conversion': 0.0, 'action_conversion': 0.0}
+
+    @property
+    def is_single_substep_env(self) -> bool:
+        """Checks whether this env is a single sub-step environment.
+
+        :return: [bool] True if there is a single agent in the environment.
+        """
+        # Check if the underlying core env has only single sub-step
+        agent_counts = self.core_env.agent_counts_dict
+        return len(agent_counts) == 1 and sum(agent_counts.values()) == 1
 
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
