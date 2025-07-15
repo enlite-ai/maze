@@ -27,7 +27,7 @@ def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], Lis
 
 
 def create_categorical_plot(
-    value: Union[List[Tuple[int, int]], List[int], List[float], List[np.integer], List[np.floating]], **kwargs
+    value: Union[List[Tuple[int, int]], List[int], List[float], np.ndarray], **kwargs
 ) -> plt.Figure:
     """Checks the type of value and calls the correct plotting function accordingly.
 

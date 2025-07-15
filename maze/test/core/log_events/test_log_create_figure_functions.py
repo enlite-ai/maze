@@ -15,18 +15,23 @@ def test_create_histogram():
 
 
 def test_create_categorical_plot():
-    """ unit test """
+    """ Test creation of categorical plot with integer, tuples and float. """
+
+    # test with integer
     values = [int(i) for i in np.random.randint(low=0, high=10, size=100)]
     fig = create_categorical_plot(values)
     plt.close(fig)
 
+    # test with tuples
     values = [(v, 10) for v in np.random.randint(low=0, high=10, size=100)]
     fig = create_categorical_plot(values)
     plt.close(fig)
 
-    with raises(NotImplementedError):
-        values = np.random.random(100)
-        create_categorical_plot(values)
+    # test with np.float
+    values = np.random.random(100)
+    create_categorical_plot(values)
+    plt.close(fig)
+
 
 
 def test_create_multi_binary_plot():
