@@ -26,10 +26,12 @@ def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], Lis
     return fig
 
 
-def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[float]], **kwargs) -> plt.Figure:
-    """ Checks the type of value and calls the correct plotting function accordingly.
+def create_categorical_plot(
+    value: Union[List[Tuple[int, int]], List[int], List[float], List[np.integer], List[np.floating]], **kwargs
+) -> plt.Figure:
+    """Checks the type of value and calls the correct plotting function accordingly.
 
-    :param value: Output of an reducer function
+    :param value: Output of a reducer function
     :param kwargs: Additional plotting relevant arguments.
     :return: plt.figure that contains a bar plot
     """
@@ -39,7 +41,7 @@ def create_categorical_plot(value: Union[List[Tuple[int, int]], List[int], List[
     if isinstance(value[0], tuple):
         # in this case, we have the discrete action events and need the relative bar plot for plotting
         fig = create_relative_bar_plot(value)
-    elif isinstance(value[0], int):
+    elif isinstance(value[0], (int, float, np.integer, np.floating)):
         fig = create_histogram(value)
     elif isinstance(value[0], str):
         fig = create_full_histogram(value)
