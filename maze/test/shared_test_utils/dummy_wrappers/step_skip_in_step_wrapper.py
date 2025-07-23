@@ -44,7 +44,7 @@ class ConfigurableStepSkipInStepWrapper(Wrapper[MazeEnv]):
         step_val = None
 
         # Step for all agents
-        self._step_events.sub_step(sub_step_is_skipped=False)
+        self._step_events.sub_step(sub_step_is_skipped=False, substep_id=self.cur_idx)
         for _ in range(self.n_agents):
             step_val = self.env.step(self.env.action_space.sample())
 
@@ -57,7 +57,7 @@ class ConfigurableStepSkipInStepWrapper(Wrapper[MazeEnv]):
 
         # Iterate the skipp-able consecutive sub steps
         while self.cur_idx < self.n_sub_steps and self.skip_sequence[self.cur_idx]:
-            self._step_events.sub_step(sub_step_is_skipped=True)
+            self._step_events.sub_step(sub_step_is_skipped=True, substep_id=self.cur_idx)
             for _ in range(self.n_agents):
                 step_val = self.env.step(self.env.action_space.sample())
 
