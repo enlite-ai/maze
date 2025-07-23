@@ -29,6 +29,9 @@ class SkipEvent(ABC):
     @define_step_stats(sum, input_name='sub_step_is_skipped', output_name='sum')
     def sub_step(self, substep_id: int, sub_step_is_skipped: bool):
         """Event tracker to count the skipped sub steps.
+            Note: substep_id is not used for the reduction of the stats but is dumped in the event file and might be
+                   helpful for future analysis and aggregation with other events.
+
         :param substep_id: substep_id skipped.
         :param sub_step_is_skipped: Boolean that is true if the sub step is skipped
         """
