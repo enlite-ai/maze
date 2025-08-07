@@ -92,12 +92,16 @@ def _run_multirun_job(cfg: DictConfig) -> float:
     # if run is BC then use mean discrete accuracy
     if 'imitation.bc_runners' in cfg['runner']['_target_']:
         # compute max avg discrete accuracy
-        max_mean_optimised_metric = np.max(np.asarray(
-            events_df.loc['eval-validation_ImitationEvents/mean_step_discrete_accuracy']))
-        metrics = [('eval-validation_ImitationEvents/mean_step_discrete_accuracy', max_mean_optimised_metric, 'max')]
+
+        # set mask to search for the prefix (disregard the step_key naming)
+        prefix = "eval-validation_ImitationEvents/mean_step_discrete_accuracy"
+        # get the boolean mask for df entries
+        mask = [tup[0].startswith(prefix) for tup in events_df.index]
+        max_mean_optimised_metric = np.max(events_df[mask])
+        metrics = [(prefix, max_mean_optimised_metric, 'max')]
     else:
         # compute maximum mean reward
-        max_mean_optimised_metric = np.max(np.asarray(events_df.loc["train_BaseEnvEvents/reward/mean"]))
+        max_mean_optimised_metric = np.max(events_df.loc["train_BaseEnvEvents/reward/mean"])
         # Add hparams logging to tensorboard
         metrics = [('train_BaseEnvEvents/reward/mean', max_mean_optimised_metric, 'max')]
 
