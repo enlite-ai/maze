@@ -155,8 +155,8 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
             if skipping_cum_time > self._last_profiling_time:
                 skipping_cum_time = 0
 
-        total_time = self._last_profiling_time - skipping_cum_time
-        assert total_time >= 0
+        # Total time with fallback for extrem fast envs
+        total_time = max(self._last_profiling_time - skipping_cum_time, 1e-6)
         self.__profiling_events.full_env_step_time(total_time)
 
         # Record the profiling time for each of the wrappers used.
