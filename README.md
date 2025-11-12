@@ -33,7 +33,6 @@ Below we list a few selected Maze features.
    You can of course work with existing [Gym-compatible environments](https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/integrating_gym_environment.html).
  - Use the provided [Maze trainers](https://maze-rl.readthedocs.io/en/latest/trainers/maze_trainers.html) (A2C, PPO, Impala, SAC, Evolution Strategies), 
    which are supporting dictionary action and observation spaces as well as multi-step (auto-regressive policies) training. 
-   Or stick to your favorite tools and trainers by [combining Maze with other RL frameworks](todo/best_practices_and_tutorials/maze_and_other_frameworks.html).
  - Out of the box support for advanced training workflows such as [imitation learning from teacher policies and 
    policy fine-tuning](https://maze-rl.readthedocs.io/en/latest/workflow/imitation_and_fine_tuning.html). 
  - Keep even complex application and experiment configuration manageable with the [Hydra Config System](https://maze-rl.readthedocs.io/en/latest/concepts_and_structure/hydra.html).
@@ -47,10 +46,9 @@ Below we list a few selected Maze features.
   [Read more about other options](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html) like the installation of the latest 
   development version.  
 
-  :zap:  We encourage you to start with **Python 3.7**, as many popular environments like Atari or Box2D can not easily 
-  be installed in newer Python environments. Maze itself supports newer Python versions, but for Python 3.9 you might have to
-  [install additional binary dependencies manually](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html)
-* Alternatively you can work with Maze in a <img alt="Docker" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Docker_%28container_engine%29_logo.svg/1280px-Docker_%28container_engine%29_logo.svg.png" width="100" height="22" /> container with pre-installed Jupyter lab: Run `docker run -p 8888:8888 enliteai/maze:playground` and open `localhost:8888` in your browser. This loads Jupyter 
+  :zap: Maze is compatible with Python 3.9 to 3.10. We encourage you to start with **Python 3.10**. 
+  If you intend to use popular environments like Atari or Box2D you might need to [install additional binary dependencies manually](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html).
+* Alternatively you can work with Maze in a <img alt="Docker" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Docker_%28container_engine%29_logo.svg/1280px-Docker_%28container_engine%29_logo.svg.png" width="100" height="22" /> container with pre-installed Jupyter lab: Run `docker run -p 8888:8888 enliteai/maze:playground` and open `localhost:8888` in your browser.
 * To see Maze in action, check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
 * [Try your own Gym env](https://maze-rl.readthedocs.io/en/latest/best_practices_and_tutorials/integrating_gym_environment.html)
   or visit our [Maze step-by-step tutorial](https://maze-rl.readthedocs.io/en/latest/getting_started/step_by_step_tutorial.html).
@@ -74,12 +72,12 @@ Below we list a few selected Maze features.
     </a></td>
 </tr></tbody></table>
 
-* Clone this [project template repo](https://github.com/enlite-ai/maze-cartpole>) to start your own Maze project.
+* Clone this [project template repo](https://github.com/enlite-ai/maze-cartpole) to start your own Maze project.
 
 ## Learn more about Maze
 
 The [documentation](https://maze-rl.readthedocs.io/en/latest/index.html#documentation-overview) is the starting point to learn more about
-  the underlying concepts, but most importantly also provides code snippets and minimum working examples to 
+  the underlying concepts, but most importantly, also provides code snippets and minimum working examples to 
   get you started quickly.
 
 * The *Workflow* section guides you through typical tasks in a RL project
