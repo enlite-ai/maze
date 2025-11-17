@@ -71,17 +71,17 @@ Installation
 
     .. code-block:: bash
 
-            sudo apt install libjpeg8-dev zlib1g-dev
+            apt install libjpeg8-dev zlib1g-dev
 
     more info on |building_pillow|.
 
 .. note::
     Using Box2D environments such as `LunarLander`, additionally require the installation of |install_swig|
-    and |install_box2d_py|. This can be done simply via pip with
+    and |install_box2d_py|. For Debian systems this can be simply done with
 
     .. code-block:: bash
 
-            pip install swig
+            apt install swig
             pip install gymnasium[box2d]
 
 :raw-html:`</br>`
