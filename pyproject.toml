@@ -1,6 +1,6 @@
 # pyproject.toml for maze
 [build-system]
-requires = ['setuptools>=61.0', 'wheel']
+requires = ['setuptools>=80.0', 'wheel']
 build-backend = 'setuptools.build_meta'
 
 [project]
