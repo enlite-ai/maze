@@ -189,7 +189,3 @@ def plot_env_profiling(cur_dir: str) -> None:
             title_txt=(f'CoreEnv (Sub-) step mean time: {time_core_env.sum() / sub_step_count:.4f}s '
                        f'[{per_core_env * 100:.3f}% of flat step] over: {sub_step_count} steps'),
             output_file_path=f'{cur_dir}/core_env_profiling.png')
-
-
-if __name__ == '__main__':
-    plot_env_profiling('/home/anton/maze_runs/homepod/outputs/2024-08-27/13-41-00')

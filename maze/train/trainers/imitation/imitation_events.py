@@ -195,7 +195,7 @@ class CriticImitationEvents(ABC):
     @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
     @define_stats_grouping('substep_key',)
     def mean_step_value_original(self, substep_key: int, mean: float, min: float, max: float):
-        """Predicted value of the step critics across all the actors.."""
+        """Predicted value of the step critics across all the actors."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('substep_key', 'agent_id')
@@ -275,7 +275,7 @@ class CriticImitationEvents(ABC):
     @define_epoch_stats(np.nanmean, input_name='value', output_name="mean")
     @define_stats_grouping('substep_key')
     def mean_step_per_estimation_error_greater_01(self, substep_key: int, value: float):
-        """Avg. step ercent of sampled value with an error > 1 percent."""
+        """Avg. step percent of sampled value with an error > 1 percent."""
 
     @define_epoch_stats(np.nanmean)
     def training_iterations(self, value: int):
