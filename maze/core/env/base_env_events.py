@@ -1,5 +1,6 @@
 """Generic event interfaces"""
 from abc import ABC
+from typing import Union
 
 import numpy as np
 
@@ -43,7 +44,7 @@ class BaseEnvEvents(ABC):
     @define_episode_stats(None)
     @define_step_stats(None)
     @define_stats_grouping("name")
-    def kpi(self, name: str, value: float | str):
+    def kpi(self, name: str, value: Union[float, str]):
         """Event representing a KPI metric (Key Performance Indicator).
 
         KPI metrics are expected to be calculated at the end of the episode. Only one KPI value

@@ -266,7 +266,7 @@ class StackTrajectoryProcessor(TrajectoryProcessor):
     :param traj_preprocessors: List of trajectory preprocessors.
     """
 
-    def __init__(self, traj_preprocessors: ListConfig | List[TrajectoryProcessor]):
+    def __init__(self, traj_preprocessors: Union[ListConfig, List[TrajectoryProcessor]]):
         factory = Factory(TrajectoryProcessor)
         self.traj_preprocessors = [factory.instantiate(tp) for tp in traj_preprocessors]
 
