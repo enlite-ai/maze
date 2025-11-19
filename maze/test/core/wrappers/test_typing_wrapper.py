@@ -1,3 +1,4 @@
+"""File contains tests regarding the typing of wrappers."""
 from abc import ABC
 from typing import Any
 

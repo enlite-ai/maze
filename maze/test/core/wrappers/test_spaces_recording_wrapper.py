@@ -1,3 +1,4 @@
+"""File contains tests for the spaces-recording-wrapper. """
 import os
 import pickle
 
