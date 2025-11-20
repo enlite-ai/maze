@@ -1,4 +1,4 @@
-![Banner](https://github.com/enlite-ai/maze/raw/main/docs/source/logos/main_logo.png)  
+![Banner](https://github.com/enlite-ai/maze/raw/main/docs/source/_static/logos/logo-mazerl-light-mode-wbg.png)  
 [![CodeQL](https://github.com/enlite-ai/maze/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/enlite-ai/maze/actions/workflows/codeql-analysis.yml)
 ![PyPI](https://img.shields.io/pypi/v/maze-rl)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/maze-rl)

@@ -1,4 +1,4 @@
-# Contributing to <img align="center" src="https://github.com/enlite-ai/maze/raw/main/docs/source/logos/main_logo.png" alt="Maze" width=250 height="80">
+# Contributing to <img align="center" src="https://github.com/enlite-ai/maze/raw/main/docs/source/_static/logos/logo-mazerl-light-mode-wbg.png" alt="Maze" width=250 height="80">
 
 We welcome and encourage all community contributions to Maze. If you're reading this, you might be interested in participating - thank you! 
 
