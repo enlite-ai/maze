@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: 'MazeRL: Applied Reinforcement Learning with Python'
+message: >-
+  If you use MazeRL in your research or applications, please
+  cite it using the metadata below.
+type: software
+authors:
+  - name: enliteAI
+repository-code: 'https://github.com/enlite-ai/maze'
+url: 'https://enlite.ai'
+abstract: 'MazeRL is an application-oriented Deep Reinforcement Learning framework, covering the full lifecycle of real-world RL applications—from simulation engineering to agent development, training, and deployment. It provides advanced environment structures, training workflows, perception modules, and integration with PyTorch and Hydra.'
+keywords:
+  - reinforcement learning
+  - deep reinforcement learning
+  - machine learning
+  - python
+  - pytorch
+  - simulation
+  - multi-agent systems
+  - rl training
+  - rl environment
+version: 0.2.2
+date-released: '2025-11-20'
