@@ -77,11 +77,18 @@ Installation
 
 .. note::
     Using Box2D environments such as `LunarLander`, additionally require the installation of |install_swig|
-    and |install_box2d_py|. For Debian systems this can be simply done with
+    and |install_box2d_py|.
+
+    For Debian systems this can be simply done with
 
     .. code-block:: bash
 
             apt install swig
+
+    and
+
+    .. code-block:: bash
+
             pip install gymnasium[box2d]
 
 :raw-html:`</br>`
