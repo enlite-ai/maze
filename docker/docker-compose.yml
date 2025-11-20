@@ -1,3 +1,8 @@
+# Docker Compose does not enforce build order automatically. To avoid parallel builds and ensure correct dependency
+# resolution, build these images sequentially in the order listed here:
+#   1. docker compose build maze-core-env
+#   2. docker compose build maze-core
+
 services:
   # Maze Core Env
   # This service builds the base Maze Core Env image from source.
@@ -18,17 +23,3 @@ services:
       args:
         MAZE_CORE_ENV: "${MAZE_CORE_ENV_IMAGE}"
     image: "${MAZE_CORE_IMAGE}"
-    depends_on:
-      - maze-core-env
-
-  # Maze
-  # This service builds the base Maze image from source.
-  maze:
-    build:
-      context: ../../
-      dockerfile: deployment/maze.dockerfile
-      args:
-        MAZE_CORE_ENV: "${MAZE_CORE_ENV_IMAGE}"
-    image: "${MAZE_IMAGE}"
-    depends_on:
-      - maze-core-env
