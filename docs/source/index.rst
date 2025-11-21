@@ -91,8 +91,7 @@ Getting Started
    getting_started/api_contents.rst
 
 - For installing Maze just follow the :ref:`installation instructions <installation>`.
-- To see Maze in action check out :ref:`a first example <first_example>`
-  and our |getting_started_notebooks_link|.
+- To see Maze in action check out :ref:`a first example <first_example>`.
 - :ref:`Try your own Gymnasium env <tutorial_gym_env>` or visit our :ref:`Maze step-by-step tutorial <env_from_scratch>`.
 - Clone this |project_template_repo_link| to start your own Maze project.
 
