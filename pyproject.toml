@@ -5,7 +5,7 @@ build-backend = 'setuptools.build_meta'
 
 [project]
 name = 'maze-rl'
-version = '0.2.2'
+version = '0.2.4'
 description = 'MazeRL is a development framework for building applied reinforcement learning systems, addressing real-world decision problems. It supports the complete development life cycle of RL applications, ranging from simulation engineering up to agent development, training and deployment.'
 readme = { file = 'README.md', content-type = 'text/markdown' }
 authors = [{ name = 'enliteAI GmbH', email = 'office@enlite.ai' }]
