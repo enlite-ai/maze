@@ -115,18 +115,18 @@ class ActorCritic(Trainer, ABC):
             else:
                 if epoch > 0:
                     prev_metric = stopping_metric
-                    stopping_metric_reward = None
                     try:
-                        stopping_metric_reward = self.rollout_generator.get_stats_value(BaseEnvEvents.reward,
-                                                                                 LogStatsLevel.EPOCH, name="mean")
-                        stopping_metric_critic = self.rollout_generator.get_stats_value(ActorCriticEvents.critic_value,
-                                                                                 LogStatsLevel.EPOCH, name="mean")
-                        stopping_metric = stopping_metric_reward - stopping_metric_critic
+                        if len(self.model.critic.networks) == 1:
+                            stopping_metric = self.rollout_generator.env.epoch_stats.last_stats[
+                                (ActorCriticEvents.critic_value, None, (0,))]
+                        else:
+                            stopping_metric = self.rollout_generator.get_stats_value(BaseEnvEvents.reward,
+                                                                                     LogStatsLevel.EPOCH, name="mean")
+                            print(f'Could not retrieve critic value for model dumping, using reward instead.')
+
                     except Exception as e:
                         print(f'Could not retrieve statistic for model selection due to error: {e}. Please check this.')
                         stopping_metric = prev_metric
-                        if stopping_metric_reward is not None:
-                            stopping_metric = stopping_metric_reward
 
                 self.model_selection.update(stopping_metric)
 
