@@ -2,13 +2,12 @@
 import sys
 import time
 from abc import ABC, abstractmethod
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, BinaryIO
 
 import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from typing.io import BinaryIO
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
@@ -112,15 +111,22 @@ class ActorCritic(Trainer, ABC):
             stopping_metric = -np.inf
             if self.evaluator:
                 self.evaluate()
-            # take training reward and notify best model selection manually
+            # take critic value if possible, otherwise reward
             else:
                 if epoch > 0:
                     prev_metric = stopping_metric
+                    stopping_metric_reward = None
                     try:
-                        stopping_metric = self.rollout_generator.get_stats_value(BaseEnvEvents.reward,
+                        stopping_metric_reward = self.rollout_generator.get_stats_value(BaseEnvEvents.reward,
                                                                                  LogStatsLevel.EPOCH, name="mean")
-                    except:
+                        stopping_metric_critic = self.rollout_generator.get_stats_value(ActorCriticEvents.critic_value,
+                                                                                 LogStatsLevel.EPOCH, name="mean")
+                        stopping_metric = stopping_metric_reward - stopping_metric_critic
+                    except Exception as e:
+                        print(f'Could not retrieve statistic for model selection due to error: {e}. Please check this.')
                         stopping_metric = prev_metric
+                        if stopping_metric_reward is not None:
+                            stopping_metric = stopping_metric_reward
 
                 self.model_selection.update(stopping_metric)
 

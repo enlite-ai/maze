@@ -16,6 +16,7 @@ from maze.core.agent.serialized_torch_policy import SerializedTorchPolicy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
 from maze.core.wrappers.wrapper_factory import WrapperFactory
+from maze.train.utils.seed_wrapper import SeedWrapper
 from maze.utils.bcolors import BColors
 
 
@@ -81,6 +82,24 @@ def random_x_seeds(nb_seeds: int, repetitions: int) -> Sequence:
     seeds = [rng.randint(np.iinfo(np.int32).max) for _ in range(nb_seeds)] * repetitions
     rng.shuffle(seeds)
     return seeds
+
+
+def random_x_seeds_wrapped(nb_seeds: int, repetitions: int) -> Sequence:
+    """Simple seeds generator which can be used in Hydra yaml configs.
+
+    :param nb_seeds: Number of seeds to generate.
+    :param repetitions: Number of repetitions of each seed.
+
+    :return: A sequence of random seeds (nb_seeds x repetitions).
+    """
+    rng = np.random.RandomState(1234)
+    seeds = [rng.randint(np.iinfo(np.int32).max) for _ in range(nb_seeds)]
+    wrapped_seeds = []
+    for seed in seeds:
+        for ii in range(repetitions):
+            wrapped_seeds.append(SeedWrapper(seed, ii))
+    rng.shuffle(wrapped_seeds)
+    return wrapped_seeds
 
 
 def explicit_seed(seed: int, nb_seeds: int) -> Sequence[int]:

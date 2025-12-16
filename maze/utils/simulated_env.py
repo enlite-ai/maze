@@ -37,6 +37,7 @@ def prepare_simulated_env(exclude_wrappers: Optional[List[str]], main_env: MazeE
 
     # instantiate env
     simulated_env = Factory(base_type=MazeEnv).instantiate(simulated_env)
+    simulated_env._is_cloned = True
     simulated_env.seed(MazeSeeding.generate_seed_from_random_state(policy_rng))
 
     # set normalization statistics

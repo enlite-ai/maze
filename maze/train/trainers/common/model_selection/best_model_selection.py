@@ -23,7 +23,7 @@ class BestModelSelection(ModelSelectionBase):
                  dump_file: Optional[str],
                  model: Optional[TorchModel],
                  dump_interval: Optional[int] = None,
-                 verbose: bool = False):
+                 verbose: bool = False, logger_str: Optional[str] = None) -> None:
         self.dump_file = dump_file
         self.model = model
         self.dump_interval = dump_interval
@@ -33,6 +33,7 @@ class BestModelSelection(ModelSelectionBase):
         self.best_reward = -np.inf
         self.best_state_dict = None
         self.update_count = 0
+        self.logger_str = logger_str if logger_str is not None else ''
 
     @override(ModelSelectionBase)
     def update(self, reward: float) -> None:
@@ -41,10 +42,13 @@ class BestModelSelection(ModelSelectionBase):
         :param reward: Reward (score) used for best model selection.
         """
         self.last_improvement += 1
+        prefix = f"> {self.logger_str} " if self.logger_str != "" else ""
 
         if reward > self.best_reward:
             if self.verbose:
-                BColors.print_colored(f"-> new overall best model {reward:.5f}!", color=BColors.OKBLUE)
+                BColors.print_colored(f"{prefix} -> new overall best model {reward}! "
+                                      f"overwriting last improvement: {self.last_improvement} steps ago",
+                                      color=BColors.OKBLUE)
             self.best_reward = reward
             self.last_improvement = 0
 
@@ -57,6 +61,11 @@ class BestModelSelection(ModelSelectionBase):
                 if self.verbose:
                     BColors.print_colored(f"-> dumping new best model to {self.dump_file}!", color=BColors.OKBLUE)
                 torch.save(self.best_state_dict, self.dump_file)
+        elif self.verbose:
+            BColors.print_colored(f"{prefix} -> {reward}! < best ({self.best_reward}) "
+                                  f"no improvement since: {self.last_improvement} steps ago",
+                                  color=BColors.OKCYAN)
+
 
         # regularly dump model
         if self.dump_interval and self.update_count % self.dump_interval == 0:

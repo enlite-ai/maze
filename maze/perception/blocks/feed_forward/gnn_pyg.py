@@ -104,6 +104,8 @@ class GNNLayerPyG(nn.Module):
         # Expect x with shape [B, n_nodes, in_features].
         batch_size, n_nodes, in_features = x.shape
 
+        edge_index = edge_index.to(int)
+
         # Flatten the batch for node features: (B*n_nodes, in_features)
         x_flat = x.view(-1, in_features)
 
