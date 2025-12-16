@@ -9,7 +9,8 @@ from maze.maze_cli import maze_run
 
 def test_cli():
     """Simple blackbox test, run default training for 2 epochs"""
-    result = subprocess.run(["maze-run", "-cn", "conf_train", "algorithm.n_epochs=2"], capture_output=True)
+    result = subprocess.run(["maze-run", "-cn", "conf_train", "algorithm.n_epochs=2",
+                             'seeding.env_base_seed=1234', 'seeding.agent_base_seed=1234'], capture_output=True)
     assert result.returncode == 0, result.stderr.decode("utf-8")
 
 
