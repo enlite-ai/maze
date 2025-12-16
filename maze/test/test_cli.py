@@ -17,13 +17,15 @@ def test_cli():
 def test_grid_search():
     """Simple test for the multirun flag used e.g. to run a grid search."""
     result = subprocess.run(
-        ["maze-run", "-cn", "conf_train", "configuration=test", "algorithm=ppo",
-         "algorithm.lr=0.0001,0.0005", "+experiment=grid_search", "--multirun"],
+        ["maze-run", "-cn", "conf_train", "configuration=test", "algorithm=ppo", 'seeding.env_base_seed=1234',
+         'seeding.agent_base_seed=1234', "algorithm.lr=0.0001,0.0005", "+experiment=grid_search", "--multirun"],
         capture_output=True)
     assert result.returncode == 0, result.stderr.decode("utf-8")
 
 
 pytest.importorskip("torch_scatter", reason="No module named 'torch_scatter'")
+
+
 def test_nevergrad():
     """Simple test for the nevergrad hyper parameter optimizer."""
     result = subprocess.run(["maze-run", "-cn", "conf_train", 'seeding.env_base_seed=1234',
