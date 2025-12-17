@@ -76,7 +76,6 @@ class ObservationNormalizationWrapper(ObservationWrapper[MazeEnv]):
         self.manual_config = manual_config
         self.sampling_policy: Policy = \
             Factory(Policy).instantiate(sampling_policy, action_spaces_dict=env.action_spaces_dict)
-        self.sampling_policy.seed(1234)
 
         # initialize observation collection and statistics
         self._original_observation_spaces_dict = copy.deepcopy(env.observation_spaces_dict)
