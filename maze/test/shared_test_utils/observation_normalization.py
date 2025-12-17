@@ -110,7 +110,6 @@ def init_env_with_observation_normalization(env_factory: Callable[[], Structured
     # initialize the env
     wrapped_env = ObservationNormalizationWrapper.wrap(env_factory(), **normalization_config)
     wrapped_env.seed(42)
-    wrapped_env.sampling_policy.seed(42)
 
     # estimate normalization statistics
     wrapped_env = estimate_normalization_statistics(wrapped_env)
