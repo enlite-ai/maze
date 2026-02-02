@@ -31,6 +31,7 @@ from maze.train.trainers.common.replay_buffer.replay_buffer import BaseReplayBuf
 from maze.train.trainers.common.replay_buffer.uniform_replay_buffer import UniformReplayBuffer
 from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.sac.sac_trainer import SAC
+from maze.utils.bcolors import BColors
 from maze.utils.process import query_cpu
 
 
@@ -85,10 +86,17 @@ class SACRunner(TrainingRunner):
         # initialize the env and enable statistics collection
         evaluator = None
         if cfg.algorithm.rollout_evaluator.n_episodes > 0:
+
+            if self.eval_concurrency > cfg.algorithm.rollout_evaluator.n_episodes:
+                self.eval_concurrency = min(self.eval_concurrency, cfg.algorithm.rollout_evaluator.n_episodes)
+                BColors.print_colored("SACRunner: number of parallel evaluation environments exceeds "
+                                      "the number of evaluation episodes. "
+                                      f"Setting eval_concurrency to {self.eval_concurrency}.", BColors.WARNING)
+
             eval_env = self.create_distributed_eval_env(self.env_factory, self.eval_concurrency,
                                                         logging_prefix="eval")
             eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
-                                       range(self.eval_concurrency)]
+                                       range(cfg.algorithm.rollout_evaluator.n_episodes)]
             eval_env.seed(eval_env_instance_seeds)
 
             # initialize rollout evaluator
