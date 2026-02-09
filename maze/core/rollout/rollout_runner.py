@@ -150,7 +150,7 @@ class RolloutRunner(Runner, ABC):
             env = EnvFactory(env_config, wrappers_config)()
             if not isinstance(env, TimeLimitWrapper):
                 env = TimeLimitWrapper.wrap(env)
-            env.set_max_episode_steps(max_episode_steps)
+                env.set_max_episode_steps(max_episode_steps)
 
         return env, agent
 
