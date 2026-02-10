@@ -148,9 +148,14 @@ class RolloutRunner(Runner, ABC):
             agent = Factory(base_type=Policy).instantiate(agent_config)
 
             env = EnvFactory(env_config, wrappers_config)()
+            # if a time wrapper is defined, its max_episode_steps value will be respected, and if the
+            # max_episode_steps is also defined in the runner.max_episode_steps, the latter will be ignored.
             if not isinstance(env, TimeLimitWrapper):
                 env = TimeLimitWrapper.wrap(env)
                 env.set_max_episode_steps(max_episode_steps)
+            elif max_episode_steps != 0:
+                BColors.print_colored("TimeLimitWrapper already applied to the environment! "
+                                      "Ignoring runner.max_episode_steps.", BColors.WARNING)
 
         return env, agent
 
