@@ -18,6 +18,7 @@ from maze.train.parallelization.vector_env.subproc_vector_env import SubprocVect
 from maze.train.trainers.common.actor_critic.actor_critic_trainer import ActorCritic
 from maze.train.trainers.common.model_selection.best_model_selection import BestModelSelection
 from maze.train.trainers.common.training_runner import TrainingRunner
+from maze.utils.bcolors import BColors
 from maze.utils.process import query_cpu
 
 
@@ -70,8 +71,15 @@ class ACRunner(TrainingRunner):
         # initialize the env and enable statistics collection
         evaluator = None
         if cfg.algorithm.rollout_evaluator.n_episodes > 0:
+
+            if self.eval_concurrency > cfg.algorithm.rollout_evaluator.n_episodes:
+                self.eval_concurrency = min(self.eval_concurrency, cfg.algorithm.rollout_evaluator.n_episodes)
+                BColors.print_colored("ACRunner: number of parallel evaluation environments exceeds "
+                                      "the number of evaluation episodes. "
+                                      f"Setting eval_concurrency to {self.eval_concurrency}.", BColors.WARNING)
+
             eval_env = self.create_distributed_env(self.env_factory, self.eval_concurrency, logging_prefix="eval")
-            eval_env_instance_seeds = self.maze_seeding.get_explicit_env_eval_seeds(self.eval_concurrency)
+            eval_env_instance_seeds = self.maze_seeding.get_explicit_env_eval_seeds(cfg.algorithm.rollout_evaluator.n_episodes)
             eval_env.seed(eval_env_instance_seeds)
 
             # initialize rollout evaluator
