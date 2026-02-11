@@ -71,9 +71,7 @@ class ACRunner(TrainingRunner):
         evaluator = None
         if cfg.algorithm.rollout_evaluator.n_episodes > 0:
             eval_env = self.create_distributed_env(self.env_factory, self.eval_concurrency, logging_prefix="eval")
-            print(cfg.algorithm.rollout_evaluator.n_episodes, self.concurrency, self.eval_concurrency)
-            #eval_env_instance_seeds = self.maze_seeding.get_explicit_env_eval_seeds(cfg.algorithm.rollout_evaluator.n_episodes)
-            eval_env_instance_seeds = self.maze_seeding.get_explicit_env_eval_seeds(self.eval_concurrency)
+            eval_env_instance_seeds = self.maze_seeding.get_explicit_env_eval_seeds(cfg.algorithm.rollout_evaluator.n_episodes)
             eval_env.seed(eval_env_instance_seeds)
 
             # initialize rollout evaluator
