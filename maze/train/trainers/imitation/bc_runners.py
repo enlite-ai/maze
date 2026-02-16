@@ -28,6 +28,7 @@ from maze.train.trainers.common.training_runner import TrainingRunner
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.bc_trainer import BCTrainer
 from maze.train.trainers.imitation.bc_validation_evaluator import BCValidationEvaluator
+from maze.utils.bcolors import BColors
 from maze.utils.get_size_of_objects import getsize
 from maze.utils.process import query_cpu
 
@@ -128,6 +129,14 @@ class BCRunner(TrainingRunner):
 
         # if evaluation episodes are set, perform additional evaluation by policy rollout
         if cfg.algorithm.n_eval_episodes > 0:
+
+            if self.eval_concurrency > cfg.algorithm.n_eval_episodes:
+                self.eval_concurrency = min(self.eval_concurrency, cfg.algorithm.n_eval_episodes)
+                BColors.print_colored("BCRunner: number of parallel evaluation environments exceeds "
+                                      "the number of evaluation episodes. "
+                                      f"Setting eval_concurrency to {self.eval_concurrency}.", BColors.WARNING)
+
+
             eval_env = self.create_distributed_eval_env(self.env_factory, self.eval_concurrency,
                                                         logging_prefix="bc-eval-rollout")
             eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in

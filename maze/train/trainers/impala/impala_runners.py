@@ -71,11 +71,18 @@ class ImpalaRunner(TrainingRunner):
         # initialize the env and enable statistics collection
         evaluator = None
         if cfg.algorithm.rollout_evaluator.n_episodes > 0:
+
+            if self.eval_concurrency > cfg.algorithm.rollout_evaluator.n_episodes:
+                self.eval_concurrency = min(self.eval_concurrency, cfg.algorithm.rollout_evaluator.n_episodes)
+                BColors.print_colored("IMPALARunner: number of parallel evaluation environments exceeds "
+                                      "the number of evaluation episodes. "
+                                      f"Setting eval_concurrency to {self.eval_concurrency}.", BColors.WARNING)
+
             eval_env = self.create_distributed_eval_env(self.env_factory,
                                                         self.eval_concurrency,
                                                         logging_prefix="eval")
             eval_env_instance_seeds = [self.maze_seeding.generate_env_instance_seed() for _ in
-                                       range(self.eval_concurrency)]
+                                       range(cfg.algorithm.rollout_evaluator.n_episodes)]
             eval_env.seed(eval_env_instance_seeds)
 
             # initialize rollout evaluator
