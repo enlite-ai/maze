@@ -58,17 +58,3 @@ class FlattenDictObservationWrapper(ObservationWrapper[Union[EnvType, Structured
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self.env.clone_from(env)
 
-    @override(BaseEnv)
-    def reset(self) -> Any:
-        """
-        Override the reset method to flatten the observation.
-        """
-        observation = self.env.reset()
-        return self.observation(observation)
-
-    def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
-        """
-        Override the step method to flatten the observation.
-        """
-        observation, reward, done, info = self.env.step(action)
-        return self.observation(observation), reward, done, info
