@@ -36,7 +36,8 @@ class ActionRecordWorker(ParallelRolloutWorker):
             record_trajectory: bool,
             input_directory: str,
             reporting_queue: Queue,
-            seeding_queue: Queue) -> None:
+            seeding_queue: Queue,
+            serialize_renderer: bool) -> None:
         """Build the environment and run the rollout for the specified number of episodes.
 
         :param env_config: Hydra configuration of the environment to instantiate.
@@ -49,6 +50,7 @@ class ActionRecordWorker(ParallelRolloutWorker):
         :param input_directory: Directory to load the model from.
         :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode.
         :param seeding_queue: Queue for retrieving seeds.
+        :param serialize_renderer: Whether to serialize renderer state after every step
         """
         env_seed, agent_seed = None, None
         try:
@@ -62,7 +64,7 @@ class ActionRecordWorker(ParallelRolloutWorker):
                                       color=BColors.WARNING)
                 env = SpacesRecordingWrapper.wrap(env)
 
-            env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
+            env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory, serialize_renderer)
 
             first_episode = True
             while True:
@@ -136,9 +138,11 @@ class ActionRecordRolloutRunner(ParallelRolloutRunner):
                  action_record_path: str,
                  normalization_samples: int,
                  n_processes: int,
-                 verbose: bool):
+                 verbose: bool,
+                 serialize_renderer: bool = False):
         super().__init__(n_episodes=0, max_episode_steps=max_episode_steps, deterministic=deterministic,
-                         record_trajectory=False, record_event_logs=False, n_processes=n_processes)
+                         record_trajectory=False, record_event_logs=False, n_processes=n_processes,
+                         serialize_renderer=serialize_renderer)
         self.verbose = verbose
 
         self.action_record_paths = glob.glob(os.path.join(action_record_path, "*.pkl"))

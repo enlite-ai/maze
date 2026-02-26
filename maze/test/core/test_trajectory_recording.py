@@ -116,7 +116,8 @@ def test_records_maze_states_and_actions():
         action_conversion=[DictActionConversion()],
         observation_conversion=[observation_conversion]
     )
-    env = TrajectoryRecordingWrapper.wrap(env)
+    # serialize_renderer set to True as test explicitly checks if the renderer has been saved
+    env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=True)
 
     policy = DummyGreedyPolicy()
     states = []  # Observe changes in states over time.
@@ -169,7 +170,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
     TrajectoryWriterRegistry.writers = []  # Ensure there is no other writer
     TrajectoryWriterRegistry.register_writer(writer)
 
-    env = TrajectoryRecordingWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=True)
     for _ in range(5):
         env.reset()
         for i in range(10):
@@ -209,7 +210,7 @@ def _assert_recording_two_steps(env: TrajectoryRecordingWrapper) -> None:
 
 def test_handles_flat_case():
     env = build_dummy_maze_env()
-    env = TrajectoryRecordingWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=True)
 
     _assert_recording_two_steps(env)
 
@@ -217,7 +218,7 @@ def test_handles_flat_case():
 def test_handles_step_skipping_in_reset():
     env = build_dummy_maze_env()
     env = StepSkipInResetWrapper.wrap(env)
-    env = TrajectoryRecordingWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=False)
 
     _assert_recording_two_steps(env)
 
@@ -225,6 +226,6 @@ def test_handles_step_skipping_in_reset():
 def test_handles_step_skipping_in_step():
     env = build_dummy_maze_env()
     env = StepSkipInStepWrapper.wrap(env)
-    env = TrajectoryRecordingWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=False)
 
     _assert_recording_two_steps(env)

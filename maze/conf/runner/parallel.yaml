@@ -20,4 +20,6 @@ record_trajectory: false
 # If true, event logs will be recorded and stored in `event_logs_directory
 record_event_logs: true
 
+# If true, renderer state will be serialized after every step
+serialize_renderer: false
 # (Note that the default output directory is handled by Hydra)

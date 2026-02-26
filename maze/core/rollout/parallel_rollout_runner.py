@@ -76,7 +76,8 @@ class ParallelRolloutWorker:
             record_trajectory: bool,
             input_directory: str,
             reporting_queue: Queue,
-            seeding_queue: Queue) -> None:
+            seeding_queue: Queue,
+            serialize_renderer: bool) -> None:
         """Build the environment and run the rollout for the specified number of episodes.
 
         :param env_config: Hydra configuration of the environment to instantiate.
@@ -89,6 +90,7 @@ class ParallelRolloutWorker:
         :param input_directory: Directory to load the model from.
         :param reporting_queue: Queue for passing the stats and event logs back to the main process after each episode.
         :param seeding_queue: Queue for retrieving seeds.
+        :param serialize_renderer: Whether to serialize renderer state after every step
         """
         if seeding_queue.empty():
             return
@@ -98,7 +100,7 @@ class ParallelRolloutWorker:
         try:
             env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
                                                           agent_config, input_directory)
-            env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory)
+            env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory, serialize_renderer)
 
             first_episode = True
             while True:
@@ -155,7 +157,7 @@ class ParallelRolloutWorker:
             f"\n{traceback.format_exc()}")
 
     @staticmethod
-    def _setup_monitoring(env: StructuredEnv, record_trajectory: bool) -> Tuple[StructuredEnv, EpisodeRecorder]:
+    def _setup_monitoring(env: StructuredEnv, record_trajectory: bool, serialize_renderer: bool) -> Tuple[StructuredEnv, EpisodeRecorder]:
         """Set up monitoring wrappers.
 
         Stats and event logs are collected in the episode recorder, so that they can be shipped to the main
@@ -172,7 +174,7 @@ class ParallelRolloutWorker:
         if record_trajectory:
             TrajectoryWriterRegistry.register_writer(TrajectoryWriterFile(log_dir="./trajectory_data"))
             if not isinstance(env, TrajectoryRecordingWrapper):
-                env = TrajectoryRecordingWrapper.wrap(env)
+                env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=serialize_renderer)
 
         return env, episode_recorder
 
@@ -202,6 +204,7 @@ class ParallelRolloutRunner(RolloutRunner):
     :param n_processes: Count of processes to spread the rollout across.
     :param record_trajectory: Whether to record trajectory data.
     :param record_event_logs: Whether to record event logs.
+    :param serialize_renderer: Whether to serialize renderer state after every step
     """
 
     def __init__(self,
@@ -210,13 +213,15 @@ class ParallelRolloutRunner(RolloutRunner):
                  deterministic: bool,
                  n_processes: int,
                  record_trajectory: bool,
-                 record_event_logs: bool):
+                 record_event_logs: bool,
+                 serialize_renderer: bool):
         super().__init__(n_episodes=n_episodes, max_episode_steps=max_episode_steps, deterministic=deterministic,
                          record_trajectory=record_trajectory, record_event_logs=record_event_logs)
         self.n_processes = n_processes
         self.epoch_stats_aggregator = None
         self.reporting_queue = None
         self.seeding_queue = None
+        self.serialize_renderer = serialize_renderer
 
     @override(RolloutRunner)
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType):
@@ -261,7 +266,7 @@ class ParallelRolloutRunner(RolloutRunner):
                 args=(env, wrappers, agent,
                       self.deterministic, self.max_episode_steps,
                       self.record_trajectory, self.input_dir, self.reporting_queue,
-                      self.seeding_queue),
+                      self.seeding_queue, self.serialize_renderer),
                 daemon=True
             )
             p.start()

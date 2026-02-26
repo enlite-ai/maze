@@ -28,6 +28,8 @@ class SequentialRolloutRunner(RolloutRunner):
     :param deterministic: Deterministic or stochastic action sampling.
     :param record_trajectory: Whether to record trajectory data
     :param record_event_logs: Whether to record event logs
+    :param render: Whether to render the environment
+    :param serialize_renderer: Whether to serialize renderer state after every step
     """
 
     def __init__(self,
@@ -36,7 +38,8 @@ class SequentialRolloutRunner(RolloutRunner):
                  deterministic: bool,
                  record_trajectory: bool,
                  record_event_logs: bool,
-                 render: bool):
+                 render: bool,
+                 serialize_renderer: bool):
         super().__init__(n_episodes=n_episodes, max_episode_steps=max_episode_steps, deterministic=deterministic,
                          record_trajectory=record_trajectory, record_event_logs=record_event_logs)
         if render:
@@ -44,6 +47,7 @@ class SequentialRolloutRunner(RolloutRunner):
 
         self.render = render
         self.progress_bar = None
+        self.serialize_renderer = serialize_renderer
 
     @override(RolloutRunner)
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType):
@@ -63,7 +67,7 @@ class SequentialRolloutRunner(RolloutRunner):
         if self.record_trajectory:
             TrajectoryWriterRegistry.register_writer(TrajectoryWriterFile(log_dir="./trajectory_data"))
             if not isinstance(env, TrajectoryRecordingWrapper):
-                env = TrajectoryRecordingWrapper.wrap(env)
+                env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=self.serialize_renderer)
 
         actual_number_of_episodes = min(len(env_seeds), self.n_episodes)
         if actual_number_of_episodes < self.n_episodes:

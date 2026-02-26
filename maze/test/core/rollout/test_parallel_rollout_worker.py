@@ -90,7 +90,8 @@ def _run_test_rollout(env: MazeEnv, n_episodes: int = 5):
         record_trajectory=False,
         input_directory=None,
         reporting_queue=reporting_queue,
-        seeding_queue=seeding_queue
+        seeding_queue=seeding_queue,
+        serialize_renderer=True
     )
 
     assert len(reporting_queue.items) == n_episodes

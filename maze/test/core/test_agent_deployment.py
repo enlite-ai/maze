@@ -84,7 +84,7 @@ def test_supports_trajectory_recording_wrapper():
 
     agent_deployment = AgentDeployment(
         policy=DummyGreedyPolicy(),
-        env=TrajectoryRecordingWrapper.wrap(build_dummy_maze_env()),
+        env=TrajectoryRecordingWrapper.wrap(build_dummy_maze_env(), serialize_renderer=False),
     )
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions

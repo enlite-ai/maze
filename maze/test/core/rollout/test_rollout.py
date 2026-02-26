@@ -42,7 +42,8 @@ def test_rollouts_from_python():
         deterministic=False,
         record_trajectory=False,
         record_event_logs=False,
-        render=False)
+        render=False,
+        serialize_renderer=False)
     sequential.maze_seeding = MazeSeeding(env_seed=1234, agent_seed=4321, cudnn_determinism_flag=False,
                                           explicit_env_seeds=None, explicit_env_eval_seeds=None,
                                           explicit_agent_seeds=None, shuffle_seeds=False)
@@ -54,7 +55,8 @@ def test_rollouts_from_python():
         deterministic=False,
         record_trajectory=False,
         record_event_logs=False,
-        n_processes=2)
+        n_processes=2,
+        serialize_renderer=False)
     parallel.maze_seeding = MazeSeeding(env_seed=1234, agent_seed=4321, cudnn_determinism_flag=False,
                                         explicit_env_seeds=None, explicit_env_eval_seeds=None,
                                         explicit_agent_seeds=None, shuffle_seeds=False)
@@ -75,7 +77,9 @@ def test_sequential_rollout_with_rendering():
         deterministic=False,
         record_trajectory=True,
         record_event_logs=False,
-        render=True)
+        render=True,
+        serialize_renderer=False
+    )
     sequential.maze_seeding = MazeSeeding(env_seed=1234, agent_seed=4321, cudnn_determinism_flag=False,
                                           explicit_env_seeds=None, explicit_env_eval_seeds=None,
                                           explicit_agent_seeds=None, shuffle_seeds=False)

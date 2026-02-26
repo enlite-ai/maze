@@ -62,7 +62,7 @@ def _build_env():
     env = _DummyRewardWrapper.wrap(env)
     env = TimeLimitWrapper.wrap(env)
     env = LogStatsWrapper.wrap(env)
-    env = TrajectoryRecordingWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=False)
 
     return env
 

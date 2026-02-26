@@ -19,4 +19,7 @@ max_episode_steps: 0
 # Deterministic or stochastic action sampling
 deterministic: true
 
+# If true, renderer state will be serialized after every step
+serialize_renderer: false
+
 # (Note that the default output directory is handled by Hydra)

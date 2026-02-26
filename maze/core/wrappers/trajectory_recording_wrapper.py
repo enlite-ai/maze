@@ -17,7 +17,6 @@ from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.keyboard_controlled_trajectory_viewer import KeyboardControlledTrajectoryViewer
-from maze.core.trajectory_recording.records.raw_maze_state import RawState, RawMazeAction
 from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
@@ -30,12 +29,15 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
     and RecordableEnvMixin for access to MazeState and MazeExecution objects.
 
     :param env: the environment to wrap.
+    :param serialize_renderer: Whether to serialize renderer state after every step
     """
 
-    def __init__(self, env: MazeEnv):
+    def __init__(self, env: MazeEnv, serialize_renderer: bool):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
         # BaseEnv is a subset of gymnasium.Env
         super().__init__(env)
+
+        self.serialize_renderer = serialize_renderer
 
         self.episode_record: Optional[StateTrajectoryRecord] = None
 
@@ -119,6 +121,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             return
 
         assert len(self.episode_record.step_records) > 0, "There are no step records to render (yet?)"
+
         renderer = self.env.get_renderer()
 
         if interactive:
@@ -170,7 +173,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         """Build a new episode record with episode ID from the env (if provided) or generated one (if not provided)."""
         if isinstance(self.env, RecordableEnvMixin):
             episode_id = self.env.get_episode_id()
-            renderer = self.env.get_renderer()
+            renderer = self.env.get_renderer() if self.serialize_renderer else None
         else:
             episode_id = str(uuid.uuid4())
             renderer = None

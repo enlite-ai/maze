@@ -46,7 +46,7 @@ def test_matches_episode_ids_with_event_logs():
 
     # Test run
     env = build_dummy_maze_env()
-    env = TrajectoryRecordingWrapper.wrap(env)
+    env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=False)
     env = LogStatsWrapper.wrap(env)
     for _ in range(5):
         env.reset()

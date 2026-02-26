@@ -36,7 +36,7 @@ class MonitoringSetup:
 
         # Wrap the env to enable stats, events, and trajectory data logging
         self.env = LogStatsWrapper.wrap(self.env, logging_prefix="eval")
-        self.env = TrajectoryRecordingWrapper.wrap(self.env)
+        self.env = TrajectoryRecordingWrapper.wrap(self.env, serialize_renderer=True)
 
     def __enter__(self) -> T:
         """Register data writers."""

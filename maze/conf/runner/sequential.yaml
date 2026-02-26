@@ -20,4 +20,7 @@ record_event_logs: true
 # If true, will render the environment state after each step of the rollout
 render: false
 
+# If true, renderer state will be serialized after every step
+serialize_renderer: false
+
 # (Note that the default output directory is handled by Hydra)
