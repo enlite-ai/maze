@@ -217,6 +217,10 @@ class ParallelRolloutRunner(RolloutRunner):
                  serialize_renderer: bool):
         super().__init__(n_episodes=n_episodes, max_episode_steps=max_episode_steps, deterministic=deterministic,
                          record_trajectory=record_trajectory, record_event_logs=record_event_logs)
+
+        if not record_trajectory and serialize_renderer:
+            raise ValueError("Renderer serialization is not possible when trajectory recording is disabled.")
+
         self.n_processes = n_processes
         self.epoch_stats_aggregator = None
         self.reporting_queue = None

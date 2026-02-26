@@ -45,6 +45,9 @@ class SequentialRolloutRunner(RolloutRunner):
         if render:
             assert record_trajectory, "Rendering is supported only when trajectory recording is enabled."
 
+        if not record_trajectory and serialize_renderer:
+            raise ValueError("Renderer serialization is not possible when trajectory recording is disabled.")
+
         self.render = render
         self.progress_bar = None
         self.serialize_renderer = serialize_renderer
