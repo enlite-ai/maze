@@ -10,6 +10,12 @@ from maze.core.wrappers.flatten_observation_wrapper import FlattenDictObservatio
 from unittest.mock import MagicMock
 
 def _expected_flat_dim(obs_space: spaces.Space) -> int:
+    """
+    Returns the expected flattened dimension of the observation space
+
+    :param obs_space: The observation space
+    :return: The expected flattened dimension of the observation space
+    """
     return space_utils.flatdim(obs_space)
 
 
@@ -39,8 +45,14 @@ def test_flat_obs_space_is_box():
 # Dict observation space
 # ---------------------------------------------------------------------------
 
-def _make_mock_dict_env(obs_space: spaces.Space):
-    """Create a minimal mock environment with the given observation space."""
+def _make_mock_dict_env(obs_space: spaces.Space) -> SimulatedEnvMixin:
+    """
+    Create a minimal mock environment with the given observation space.
+
+    :param obs_space: The observation space
+    :return: A mock environment with the given observation space
+    """
+
     env = MagicMock(spec=SimulatedEnvMixin)
     env.observation_space = obs_space
     env.observation_spaces_dict = {0: obs_space}
@@ -79,6 +91,9 @@ def test_dict_obs_flat_dim():
 
 
 def test_observation_spaces_dict_values_are_flat_boxes():
+    """
+    Test if the observation spaces in the observation_spaces_dict are flat Boxes.
+    """
     obs_space = spaces.Dict({
         "z_last": spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
         "a_first": spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
@@ -127,6 +142,15 @@ def test_sorted_keys_determine_flat_order():
 
     assert flat[0] == pytest.approx(-99.5)
     assert flat[1] == pytest.approx(99.5)
+
+    obs = {"z_last": np.array([99.5], dtype=np.float32),
+           "a_first": np.array([-99.5], dtype=np.float32),}
+
+    flat = env.observation(obs)
+
+    assert flat[0] == pytest.approx(-99.5)
+    assert flat[1] == pytest.approx(99.5)
+
 
 def test_nested_dict_obs_flattening_correctness():
     """
