@@ -23,6 +23,7 @@ from maze.train.trainers.es.es_events import ESEvents
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 from maze.train.trainers.es.es_utils import get_flat_parameters
 from maze.train.trainers.es.optimizers.base_optimizer import Optimizer
+from maze.utils.bcolors import BColors
 
 logger = logging.getLogger(__name__)
 
@@ -159,11 +160,17 @@ class ESTrainer(Trainer):
         if self.model_selection:
             eval_stats = self.eval_stats.reduce()
             train_stats = self.train_stats.reduce()
-            if len(eval_stats):
-                reward = eval_stats[(BaseEnvEvents.reward, "mean", None)]
+            reward = eval_stats.get((BaseEnvEvents.reward, "mean", None))
+
+            if reward is None:
+                reward = train_stats.get((BaseEnvEvents.reward, "mean", None))
+
+            if reward is not None:
+                self.model_selection.update(reward)
             else:
-                reward = train_stats[(BaseEnvEvents.reward, "mean", None)]
-            self.model_selection.update(reward)
+                BColors.print_colored("ES Trainer: updating model selection skipped due to the lack of reward.",
+                                      BColors.WARNING)
+
 
         # prepare returns, reshape the positive/negative antithetic estimation as (rollouts, 2)
         returns_n2 = np.array(
