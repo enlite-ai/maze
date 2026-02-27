@@ -160,10 +160,10 @@ class ESTrainer(Trainer):
         if self.model_selection:
             eval_stats = self.eval_stats.reduce()
             train_stats = self.train_stats.reduce()
-            reward = eval_stats.get((BaseEnvEvents.reward, "mean", None))
+            reward = eval_stats.get((BaseEnvEvents.reward, "mean", None), None)
 
             if reward is None:
-                reward = train_stats.get((BaseEnvEvents.reward, "mean", None))
+                reward = train_stats.get((BaseEnvEvents.reward, "mean", None), None)
 
             if reward is not None:
                 self.model_selection.update(reward)
