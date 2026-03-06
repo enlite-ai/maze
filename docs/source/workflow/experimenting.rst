@@ -16,23 +16,23 @@
 
 .. |hydra_sweeper| raw:: html
 
-   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper" target="_blank">Hydra's Sweeper</a>
+   <a href="https://hydra.cc/docs/plugins/optuna_sweeper/" target="_blank">Hydra's Sweeper</a>
 
 .. |hydra_rq_launcher| raw:: html
 
    <a href="https://hydra.cc/docs/plugins/rq_launcher" target="_blank">scalable options</a>
 
-.. |hydra_nevergrad_sweeper| raw:: html
+.. |hydra_optuna_sweeper| raw:: html
 
-   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper" target="_blank">Nevergrad</a>
+   <a href="https://hydra.cc/docs/plugins/optuna_sweeper/" target="_blank">optuna</a>
 
-.. |hydra_nevergrad_sweeper_defining_target_params_example| raw:: html
+.. |hydra_optuna_sweeper_defining_target_params_example| raw:: html
 
-   <a href="https://hydra.cc/docs/plugins/nevergrad_sweeper/#defining-the-parameters" target="_blank">Hydra docs</a>
+   <a href="https://hydra.cc/docs/plugins/optuna_sweeper//#defining-the-parameters" target="_blank">Hydra docs</a>
 
-.. |hydra_nevergrad_sweeper_example| raw:: html
+.. |hydra_optuna_sweeper_example| raw:: html
 
-   <a href="https://github.com/facebookresearch/hydra/blob/master/plugins/hydra_nevergrad_sweeper/example/config.yaml/" target="_blank">example</a>
+   <a href="https://github.com/facebookresearch/hydra/blob/master/plugins/hydra_optuna_sweeper/example/config.yaml/" target="_blank">example</a>
 
 .. _experimenting:
 
@@ -138,21 +138,21 @@ Hyperparameter Optimization
 ----------------------------
 
 Maze also support hyper parameter optimization beyond vanilla grid search via
-|hydra_nevergrad_sweeper| (in case you have enough resources available).
+|hydra_optuna_sweeper| (in case you have enough resources available).
 
 You can start with the experiment template below and adopt it to your needs
-(for details on how to define the search space we refer to the |hydra_nevergrad_sweeper_defining_target_params_example|
-and this |hydra_nevergrad_sweeper_example|).
+(for details on how to define the search space we refer to the |hydra_optuna_sweeper_defining_target_params_example|
+and this |hydra_optuna_sweeper_example|).
 
-.. literalinclude:: ../../../maze/conf/experiment/nevergrad.yaml
+.. literalinclude:: ../../../maze/conf/experiment/optuna.yaml
   :language: yaml
-  :caption: conf/experiment/nevergrad.yaml
+  :caption: conf/experiment/optuna.yaml
 
 To start a hyper parameter optimization, run:
 
 .. code:: bash
 
-    maze-run -cn conf_train env.name=Pendulum-v0 algorithm.n_epochs=5 +experiment=nevergrad --multirun
+    maze-run -cn conf_train env.name=Pendulum-v0 algorithm.n_epochs=5 +experiment=optuna --multirun
 
 
 Where to Go Next

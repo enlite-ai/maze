@@ -135,7 +135,7 @@ def maze_run(cfg: DictConfig) -> Optional[float]:
             logger.exception(f'{traceback.format_exc()}')
             raise
 
-    # multirun (e.g., gird search, nevergrad, ...)
+    # multirun (e.g., gird search, optuna, ...)
     else:
         max_mean_reward = _run_multirun_job(cfg)
         return max_mean_reward

@@ -19,14 +19,13 @@ def test_grid_search():
         capture_output=True)
     assert result.returncode == 0, result.stderr.decode("utf-8")
 
-
 # pytest.importorskip("torch_scatter", reason="No module named 'torch_scatter'")
 
-
 def test_optuna():
-    """Simple test for the nevergrad hyper parameter optimizer."""
-    result = subprocess.run(["maze-run", "-cn", "conf_train", 'seeding.env_base_seed=1234',
-                             'seeding.agent_base_seed=1234', "configuration=test", "+experiment=optuna",
+    """Simple test for the optuna hyper parameter optimizer."""
+    result = subprocess.run(["maze-run", "-cn", "conf_train", "algorithm.n_epochs=2",
+                             "configuration=test", "+experiment=optuna", "hydra.sweeper.sampler.n_startup_trials=0",
+                             "hydra.sweeper.n_trials=4",
                              "hydra.sweeper.sampler.seed=1234", "--multirun"],
                             capture_output=True)
     assert result.returncode == 0, result.stderr.decode("utf-8")
