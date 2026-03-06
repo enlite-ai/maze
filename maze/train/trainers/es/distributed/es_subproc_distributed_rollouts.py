@@ -37,7 +37,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
 
         self.ctx = self._get_multiprocessing_context(start_method)
         self.worker_output_queue = self.ctx.Queue()
-        self.broadcasting_container = self._create_broadcasting_container()
+        self.broadcasting_container = self._create_broadcasting_container(self.ctx)
         self._workers_started = False
 
     @override(ESDistributedRollouts)
@@ -87,7 +87,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
                 broadcasting_container=self.broadcasting_container,
                 env_seed=self.env_seeds[worker_id],
                 agent_seed=self.agent_seed,
-                is_eval_worker=worker_id < self.n_eval_workers
+                is_eval_worker=worker_id < self.n_eval_workers,
             ))
             self.workers.append(process)
             process.start()
@@ -107,12 +107,12 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
         return multiprocessing.get_context(start_method)
 
     @staticmethod
-    def _create_broadcasting_container() -> BroadcastingContainer:
+    def _create_broadcasting_container(context: BaseContext) -> BroadcastingContainer:
         BroadcastingManager.register('BroadcastingContainer', BroadcastingContainer)
-        manager = BroadcastingManager()
+        manager = BroadcastingManager(ctx=context)
         manager.start()
 
-        return manager.BroadcastingContainer()
+        return manager.BroadcastingContainer(context=context)
 
     def __del__(self):
         """Set the stop flag and join workers."""

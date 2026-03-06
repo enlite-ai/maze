@@ -1,5 +1,6 @@
 """Runner implementations for Evolution Strategies"""
 import dataclasses
+import multiprocessing
 from abc import abstractmethod, ABC
 from typing import Union, Optional
 
@@ -43,7 +44,15 @@ class ESMasterRunner(TrainingRunner, ABC):
 
         # --- init the shared noise table ---
         print("********** Init Shared Noise Table **********")
-        self.shared_noise = SharedNoiseTable(count=self.shared_noise_table_size)
+
+        # select either forkserver or spawn as the start method ofr multiprocessing (based on whats available)
+        start_method = getattr(self, "start_method", None)
+        if start_method is None:
+            forkserver_available = 'forkserver' in multiprocessing.get_all_start_methods()
+            start_method = 'forkserver' if forkserver_available else 'spawn'
+        ctx = multiprocessing.get_context(start_method)
+
+        self.shared_noise = SharedNoiseTable(count=self.shared_noise_table_size, context=ctx)
 
         # --- initialize policies ---
 

@@ -15,12 +15,24 @@ class SharedNoiseTable(object):
     :param count: Number of float values in the fixed length table (250.000.000 x 32bit floats = 1GB)
     """
 
-    def __init__(self, count: int = 250_000_000):
+    def __init__(self, count: int = 250_000_000, context=None):
         seed = 123
         # default is 1 gigabyte of 32-bit numbers
         print('Sampling {} random numbers with seed {}'.format(count, seed))
-        self._shared_mem = multiprocessing.Array(ctypes.c_float, count)
-        self.noise = np.ctypeslib.as_array(self._shared_mem.get_obj())
+
+        # We use lock=False to avoid the SemLock error in Python 3.12
+        if context is None:
+            self._shared_mem = multiprocessing.Array(ctypes.c_float, count, lock=False)
+        else:
+            self._shared_mem = context.Array(ctypes.c_float, count, lock=False)
+
+        # Check if the object has 'get_obj' (it won't if lock=False)
+        if hasattr(self._shared_mem, 'get_obj'):
+            self.noise = np.ctypeslib.as_array(self._shared_mem.get_obj())
+        else:
+            # It's already the raw array
+            self.noise = np.ctypeslib.as_array(self._shared_mem)
+
         assert self.noise.dtype == np.float32
 
         # split into smaller chunks, allocation of all at once would need 3 times the memory of the table

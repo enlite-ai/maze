@@ -53,9 +53,9 @@ class SubprocDistributedActors(DistributedActors):
         self.actor_output_queue = ctx.Queue(maxsize=self.max_queue_size)
 
         BroadcastingManager.register('BroadcastingContainer', BroadcastingContainer)
-        manager = BroadcastingManager()
+        manager = BroadcastingManager(ctx=ctx)
         manager.start()
-        self.broadcasting_container = manager.BroadcastingContainer()
+        self.broadcasting_container = manager.BroadcastingContainer(context=ctx)
 
         self.actors = []
         for env_seed, agent_seed in zip(actor_env_seeds, actor_agent_seeds):

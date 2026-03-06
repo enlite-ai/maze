@@ -13,14 +13,21 @@ class BroadcastingContainer:
 
     The BroadcastingContainer object can be read by all workers in order to update their policy, and it can be
     accessed by the main thread to write the updated policy from the learner into it.
+
+    :param context: The multiprocessing context to use
     """
 
-    def __init__(self):
+    def __init__(self, context=None):
         self._policy_version_counter = 0
         self._pickled_policy_state_dict = None
         self._stop_flag = False
         self._aux_data = None
-        self._lock = RLock()
+
+        # make sure we are in the correct context
+        if context is None:
+            self._lock = RLock()
+        else:
+            self._lock = context.RLock()
 
     def stop_flag(self) -> bool:
         """True if workers should exit."""
