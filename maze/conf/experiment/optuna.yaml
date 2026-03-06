@@ -1,0 +1,34 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - override /algorithm: ppo
+  - override /hydra/sweeper: optuna
+  - override /hydra/launcher: local
+  - override /runner: local
+
+runner:
+  concurrency: 0
+
+hydra:
+  sweeper:
+    sampler:
+      _target_: optuna.samplers.TPESampler
+      seed: 123
+      n_startup_trials: 10
+
+    # total number of evaluations
+    n_trials: 100
+
+    # parallel workers
+    n_jobs: 4
+
+    # maximize reward
+    direction: maximize
+
+    # search space
+    params:
+      algorithm.lr: tag(log, interval(0.00001, 0.001))
+      algorithm.entropy_coef: tag(log, interval(0.0000025, 0.025))
+
+# Hint: make sure that runner.concurrency * hydra.sweeper.optim.n_jobs <= CPUs

@@ -10,7 +10,7 @@ from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from typing.io import BinaryIO
+from typing import BinaryIO
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override

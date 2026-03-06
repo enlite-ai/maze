@@ -6,7 +6,7 @@ from typing import Optional, Iterable, Generator, Tuple, Union, Dict
 
 import numpy as np
 import torch
-from typing.io import BinaryIO
+from typing import BinaryIO
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_model import TorchModel

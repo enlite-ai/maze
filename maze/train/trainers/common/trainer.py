@@ -4,7 +4,7 @@ from typing import Union, Optional, TypeVar, Dict
 
 from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.common.config_classes import AlgorithmConfig
-from typing.io import BinaryIO
+from typing import BinaryIO
 
 
 class Trainer(ABC):

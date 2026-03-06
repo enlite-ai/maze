@@ -1,6 +1,6 @@
 # pyproject.toml for maze
 [build-system]
-requires = ['setuptools>=80.0', 'wheel']
+requires = ['setuptools>=82.0', 'wheel']
 build-backend = 'setuptools.build_meta'
 
 [project]
@@ -10,7 +10,7 @@ description = 'MazeRL is a development framework for building applied reinforcem
 readme = { file = 'README.md', content-type = 'text/markdown' }
 authors = [{ name = 'enliteAI GmbH', email = 'office@enlite.ai' }]
 urls = { Homepage = 'https://enlite.ai', Repository = 'https://github.com/enlite-ai/maze' }
-requires-python = '>=3.9,<3.11'
+requires-python = '>=3.9'
 license = 'LicenseRef-Proprietary'
 license-files = ['LICENSE.txt']
 classifiers = [
