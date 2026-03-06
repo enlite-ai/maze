@@ -15,10 +15,6 @@ dependencies:
   # swig is needed for Box2D, box2d-py but does not work with the pip installer
   - swig
   - pip:
-      # you can find more info on how to install torch-scatter for your specific cuda version here:
-      # https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels
-      - torch-scatter
-      # needed by torch
       - fsspec
       - jupyterlab
       - pyyaml

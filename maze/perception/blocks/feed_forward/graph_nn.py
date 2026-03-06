@@ -4,12 +4,64 @@ from typing import Any, List, Tuple, Union, Sequence, Dict
 import numpy as np
 import torch
 from torch import nn
-from torch_scatter import scatter
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
+def scatter_native(src, index, dim, dim_size, reduce):
+    """
+    Pytorch native scatter implementation with support for sum, mean, max, min, mul reductions.
+
+    :param src: Source tensor.
+    :param index: Index tensor.
+    :param dim: Dimension to scatter.
+    :param dim_size: Size of the dimension to scatter.
+    :param reduce: Reduction function to use.
+    """
+    dim = dim if dim >= 0 else src.dim() + dim
+
+    out_shape = list(src.shape)
+    out_shape[dim] = dim_size
+
+    # Expand index to src shape regardless of whether it's 1D or already full-shape
+    if index.dim() == 1:
+        # 1D index: length must equal src.shape[dim]
+        view_shape = [1] * src.dim()
+        view_shape[dim] = -1
+        index_expanded = index.view(view_shape).expand_as(src)
+    else:
+        # Already same ndim as src (possibly same shape), just expand
+        index_expanded = index.expand_as(src)
+
+    if reduce in ("sum", "add"):
+        out = src.new_zeros(out_shape)
+        return out.scatter_add_(dim, index_expanded, src)
+
+    if reduce == "mean":
+        out = src.new_zeros(out_shape)
+        out.scatter_add_(dim, index_expanded, src)
+        counts = src.new_zeros(out_shape)
+        counts.scatter_add_(dim, index_expanded, torch.ones_like(src))
+        return out / counts.clamp_min(1)
+
+    if reduce == "max":
+        out = src.new_full(out_shape, float('-inf'))
+        out = out.scatter_reduce_(dim, index_expanded, src, reduce="amax", include_self=True)
+        out = torch.where(out == float('-inf'), src.new_zeros(out_shape), out)
+        return out
+
+    if reduce == "min":
+        out = src.new_full(out_shape, float('inf'))
+        out = out.scatter_reduce_(dim, index_expanded, src, reduce="amin", include_self=True)
+        out = torch.where(out == float('inf'), src.new_zeros(out_shape), out)
+        return out
+
+    if reduce == "mul":
+        out = src.new_ones(out_shape)
+        return out.scatter_reduce_(dim, index_expanded, src, reduce="prod", include_self=True)
+
+    raise ValueError(f"Unsupported reduce: {reduce}")
 
 class AggregationLayer(nn.Module):
     """Aggregation layer for message passing withing GNN.
@@ -32,7 +84,7 @@ class AggregationLayer(nn.Module):
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
         """
         row, col = self.edges.to(t.device)
-        aggr = scatter(src=t[:, row], index=col, dim=-2, dim_size=self.pooling_mask.shape[1],
+        aggr = scatter_native(src=t[:, row], index=col, dim=-2, dim_size=self.pooling_mask.shape[1],
                        reduce=self.aggregate_str)
 
         # kept for debugging purposes

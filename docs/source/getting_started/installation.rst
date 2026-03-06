@@ -14,10 +14,6 @@
 
    <a href="https://pytorch.org/get-started/locally" target="_blank">install PyTorch</a>
 
-.. |install_torch_scatter| raw:: html
-
-   <a href="https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html#installation-via-pip-wheels" target="_blank">the instructions here</a>
-
 .. |install_pygraphviz| raw:: html
 
    <a href="https://pygraphviz.github.io" target="_blank">this page</a>
