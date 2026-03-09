@@ -53,9 +53,6 @@ Installation
     available in your Python environment.
 
 .. note::
-    For the graph neural network perception blocks you also need to install **torch_scatter** by following |install_torch_scatter|.
-
-.. note::
     The graphical representation of models requires **pygraphviz** to be installed, see |install_pygraphviz| for
     detailed information on the installation instructions.
 

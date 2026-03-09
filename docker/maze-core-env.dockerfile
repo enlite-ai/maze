@@ -11,7 +11,7 @@ ARG BASE_IMAGE=condaforge/mambaforge:4.11.0-0
 FROM ${BUILD_IMAGE} as maze_core_env_build
 
 # Install system dependencies (necessary for installing torch scatter in the conda env).
-RUN apt-get update && apt-get install -y build-essential g++
+# RUN apt-get update && apt-get install -y build-essential g++
 
 # Install environment.
 COPY maze-core-environment.yml .
