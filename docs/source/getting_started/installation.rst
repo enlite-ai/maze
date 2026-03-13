@@ -57,7 +57,7 @@ Installation
     detailed information on the installation instructions.
 
 .. note::
-    Maze is compatible with Python 3.9 to 3.10. We encourage you to start with **Python 3.10**. If you intend to use popular
+    Maze is compatible with Python 3.9 to 3.13. We encourage you to start with **Python 3.10**. If you intend to use popular
     environments like Atari or Box2D you might need to install a few additional dependencies because of |open_ai_issue|.
 
     For Debian systems
