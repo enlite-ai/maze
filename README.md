@@ -46,7 +46,7 @@ Below we list a few selected Maze features.
   [Read more about other options](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html) like the installation of the latest 
   development version.  
 
-  :zap: Maze is compatible with Python 3.9 to 3.13. We encourage you to start with **Python 3.10**. 
+  :zap: Maze is compatible with Python 3.10 to 3.13. We encourage you to start with **Python 3.10**. 
   If you intend to use popular environments like Atari or Box2D you might need to [install additional binary dependencies manually](https://maze-rl.readthedocs.io/en/latest/getting_started/installation.html).
 * Alternatively you can work with Maze in a <img alt="Docker" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Docker_%28container_engine%29_logo.svg/1280px-Docker_%28container_engine%29_logo.svg.png" width="100" height="22" /> container with pre-installed Jupyter lab: Run `docker run -p 8888:8888 enliteai/maze:playground` and open `localhost:8888` in your browser.
 * To see Maze in action, check out a [first example](https://maze-rl.readthedocs.io/en/latest/getting_started/first_example.html).
