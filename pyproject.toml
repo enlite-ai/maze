@@ -79,7 +79,6 @@ testing = [
 
 [project.scripts]
 maze-run = 'maze.maze_cli:maze_run'
-maze-hyper-opt = 'maze.maze_hyper_opt:maze_hyper_opt'
 
 [tool.setuptools.packages.find]
 # Start package search from the current directory
