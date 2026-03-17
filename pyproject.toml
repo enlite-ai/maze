@@ -10,7 +10,7 @@ description = 'MazeRL is a development framework for building applied reinforcem
 readme = { file = 'README.md', content-type = 'text/markdown' }
 authors = [{ name = 'enliteAI GmbH', email = 'office@enlite.ai' }]
 urls = { Homepage = 'https://enlite.ai', Repository = 'https://github.com/enlite-ai/maze' }
-requires-python = '>=3.10, <=3.14'
+requires-python = '>=3.10, <3.14'
 license = 'LicenseRef-Proprietary'
 license-files = ['LICENSE.txt']
 classifiers = [
