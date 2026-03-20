@@ -59,10 +59,10 @@ hydra:
     # directory. See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/
     chdir: true
   run:
-    # Output directory for local rollouts. The directory name is composed of the active config choices (env, model,
-    # runner) and a microsecond-precision timestamp (%f) to make it extremely unlikely that simultaneously started runs
-    # accidentally write to the same output directory.
-    dir: ${log_base_dir}/${hydra:runtime.choices.env}-${hydra:runtime.choices.model}-${hydra:runtime.choices.runner}/${now:%Y-%m-%d_%H-%M-%f}
+    # Output directory for local rollouts. The directory name is composed of the active config choices (env, runner) and
+    # a microsecond-precision timestamp (%f) to make it extremely unlikely that simultaneously started runs accidentally
+    # write to the same output directory.
+    dir: ${log_base_dir}/${hydra:runtime.choices.env}-${hydra:runtime.choices.runner}/${now:%Y-%m-%d_%H-%M-%f}
   sweep:
     # Output directory for rollouts launched through a launcher (e.g. kubernetes-based)
     # Uses a shared sweep directory with a timestamped subdirectory
