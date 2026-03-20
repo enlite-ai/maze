@@ -1,8 +1,9 @@
 """Utility methods used throughout the code base"""
 import functools
 import os
+import sys
 from pathlib import Path
-from typing import Mapping, Union, Sequence
+from typing import Mapping, Union, Sequence, IO, cast, Callable, Any
 
 import hydra
 import numpy as np
@@ -141,50 +142,131 @@ def make_env(env: ConfigType, wrappers: CollectionOfConfigType) -> MazeEnv:
     return env_factory()
 
 
-def get_hydra_version_base() -> dict[str, str]:
+class TeeOutput:
+    """A file-like object that duplicates writes to multiple output streams simultaneously similarly to the Unix 'tee'
+    command. Useful for writing to both stdout and a log file at the same time.
+
+    :param files: One or more file-like objects to write to simultaneously.
+    """
+
+    def __init__(self, *files: IO[str]) -> None:
+        self.files: tuple[IO[str], ...] = files
+
+    def write(self, obj: str) -> None:
+        """Write the given string to all registered file-like objects.
+
+        :param obj: The string to write to all outputs.
+        """
+        for f in self.files:
+            f.write(obj)
+            f.flush()
+
+    def flush(self) -> None:
+        """Flush all registered file-like objects."""
+        for f in self.files:
+            f.flush()
+
+
+def get_hydra_version_base() -> dict[str, str | None]:
     """Return hydra version base to use.
 
-    :return: Hydra version base.
+    The version_base parameter was introduced in Hydra 1.3 to explicitly control backwards-incompatible behavior
+    changes. Passing None adopts the current hydra version's default behavior, rather than locking to a specific
+    version's behavior. This requires any behavioral changes (such as chdir) to be explicitly configured in the hydra
+    config instead.
+
+    See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for chdir changes.
+
+    :return: Empty dict for Hydra < 1.3 (version_base parameter did not exist yet), otherwise {'version_base': None} to
+             adopt current hydra version defaults.
     """
     hydra_version = Version(hydra.__version__)
     assert hydra_version.major >= 1, f'Hydra major version must be at least >= 1; It is: {hydra_version}'
 
     if hydra_version.minor < 3:
+        # version_base parameter was not yet available before Hydra 1.3
         return {}
 
-    return {'version_base': '1.1'}
+    # Pass None to adopt the current Hydra version's default behavior.
+    return {'version_base': None}
 
 
-def version_based_hydra_main(config_path: str, config_name: str):
+def version_based_hydra_main(config_path: str, config_name: str) -> Callable:
     """Extend the hydra.main decorator >>@hydra.main(config_path="conf", config_name="conf_rollout")<< to add
-    version_base if hydra version is above 1.2.xx.
+    version_base if hydra version is above 1.2.xx, and tee stdout to the Hydra log file for all versions.
+
+    This decorator handles three concerns on top of the standard hydra.main:
+      1. version_base: Added for Hydra >= 1.3 to suppress deprecation warnings and adopt current defaults.
+      2. stdout tee: Redirects stdout to both the terminal and the Hydra log file. This is always needed since the
+                     logging FileHandler only captures logging calls, not print() statements.
+      3. Hydra config saving: When called outside the Hydra launcher (e.g. via run_maze_job), the .hydra config files
+                              are saved manually since the launcher never ran.
 
     :param config_path: Path of the config file.
     :param config_name: Name of the config file.
-    :return: The extended hydra.main decorator iff the hydra version is above 1.2.xx, otherwise the standard hydra.main
-             deccorator.
+    :return: The extended hydra.main decorator.
     """
-    def decorator(func):
-        """Decorator that wraps a method.
+    hydra_version_base: dict[str, str | None] = get_hydra_version_base()
 
-        :param func: Method to wrap.
+    def decorator(func: Callable) -> Callable:
+        """Wrap the decorated function with the hydra.main decorator and stdout tee.
+
+        :param func: The function to wrap.
+        :return: Wrapped function.
         """
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            """The wrapper function that is called instead of the original function.
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            """Outer wrapper that sets up the hydra.main context.
 
             :param args: Arguments passed to the original function.
             :param kwargs: Keyword arguments passed to the original function.
-            :return: Wrapped function.
+            :return: Return value of the original function.
             """
-            # Add additional hydra version base to hydra.main decorator
-            hydra_version_base = get_hydra_version_base()
+
+            @functools.wraps(func)
+            def tee_stdout_to_hydra_log(*args: Any, **kwargs: Any) -> Any:
+                """Inner wrapper that runs inside the Hydra context. Saves the Hydra config files if running outside
+                the launcher (e.g. via run_maze_job), and tees stdout to the Hydra log file.
+
+                :param args: Arguments passed to the original function, where args[0] is the Hydra DictConfig.
+                :param kwargs: Keyword arguments passed to the original function.
+                :return: Return value of the original function.
+                """
+                cfg = cast(DictConfig, cast(object, HydraConfig.get()))
+
+                if OmegaConf.select(cfg.runtime, 'output_dir') is None:
+                    # Running outside the Hydra launcher (e.g. via run_maze_job). The launcher normally saves these
+                    # files, so it's done manually here.
+                    hydra_dir = Path('.hydra')
+                    hydra_dir.mkdir(parents=True, exist_ok=True)
+
+                    # Save the run config without the hydra key
+                    (hydra_dir / 'config.yaml').write_text(OmegaConf.to_yaml(args[0]))
+
+                    # Save the hydra config
+                    (hydra_dir / 'hydra.yaml').write_text(OmegaConf.to_yaml(cfg))
+
+                    # Save the overrides
+                    overrides = OmegaConf.create(list(cfg.overrides.task))
+                    (hydra_dir / 'overrides.yaml').write_text(OmegaConf.to_yaml(overrides))
+
+                # Tee stdout to the Hydra log file. This is always needed since the logging FileHandler only captures
+                # logging calls, not print() statements or subprocess output.
+                log_file = open('maze_cli.log', 'a+')
+                sys.stdout = TeeOutput(sys.__stdout__, log_file)
+                try:
+                    return func(*args, **kwargs)
+                finally:
+                    # Always restore stdout and close the log file, even if func() raises an exception
+                    sys.stdout = sys.__stdout__
+                    log_file.close()
+
             return hydra.main(
                 config_path=config_path,
                 config_name=config_name,
                 **hydra_version_base
-            )(func)(*args, **kwargs)
+            )(tee_stdout_to_hydra_log)(*args, **kwargs)
 
         return wrapper
 

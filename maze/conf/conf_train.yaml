@@ -27,9 +27,6 @@ project:
 
 # --- Hydra output directory specifications ---
 
-# Base directory where to output logs
-log_base_dir: outputs
-
 # Hydra is by default configured to create a fresh output directory for each run.
 # However, to ensure model states, normalization stats and else are loaded from expected
 # locations, we will change the dir back to the original working dir for the initialization
@@ -55,13 +52,23 @@ seeding:
   # Specify whether the explicit sequence of seeds should be shuffled (based on the env/agent _base_seed).
   shuffle_seeds: false
 
+# Base directory where to output logs
+# Uses the HOME environment variable to ensure the path is absolute and user-specific
+log_base_dir: ${oc.env:HOME}/maze-runs/train
+
 # Configuration for Hydra
 hydra:
-  # Local trainings
+  job:
+    # Preserve pre-1.2 behavior of changing the working directory to the job's output directory at runtime. Without
+    # this, relative paths in the code will resolve to the original working directory instead of the job's output
+    # directory. See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/
+    chdir: true
   run:
-    # note that the directory name is based on microseconds (%f) to make it extremely unlikely that simultaneously
-    # started runs do not accidentally write to the same output directory
+    # Output directory for local rollouts. The directory name is composed of the active config choices (env, model,
+    # algorithm, runner) and a microsecond-precision timestamp (%f) to make it extremely unlikely that simultaneously
+    # started runs accidentally write to the same output directory.
     dir: ${log_base_dir}/${hydra:runtime.choices.env}-${hydra:runtime.choices.model}-${hydra:runtime.choices.algorithm}-${hydra:runtime.choices.runner}/${now:%Y-%m-%d_%H-%M-%f}
-  # Training launched through launchers (i.e. kubernetes-based)
   sweep:
+    # Output directory for rollouts launched through a launcher (e.g. kubernetes-based)
+    # Uses a shared sweep directory with a timestamped subdirectory
     dir: ${log_base_dir}/sweep/${now:%Y-%m-%d_%H-%M-%f}

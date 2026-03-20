@@ -46,3 +46,24 @@ seeding:
 #  use_input_dir_env: True
 #  use_input_dir_wrappers: False
 use_input_dir_config: ~
+
+# Base directory where to output logs
+# Uses the HOME environment variable to ensure the path is absolute and user-specific
+log_base_dir: ${oc.env:HOME}/maze-runs/rollout
+
+# Configuration for Hydra
+hydra:
+  job:
+    # Preserve pre-1.2 behavior of changing the working directory to the job's output directory at runtime. Without
+    # this, relative paths in the code will resolve to the original working directory instead of the job's output
+    # directory. See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/
+    chdir: true
+  run:
+    # Output directory for local rollouts. The directory name is composed of the active config choices (env, model,
+    # runner) and a microsecond-precision timestamp (%f) to make it extremely unlikely that simultaneously started runs
+    # accidentally write to the same output directory.
+    dir: ${log_base_dir}/${hydra:runtime.choices.env}-${hydra:runtime.choices.model}-${hydra:runtime.choices.runner}/${now:%Y-%m-%d_%H-%M-%f}
+  sweep:
+    # Output directory for rollouts launched through a launcher (e.g. kubernetes-based)
+    # Uses a shared sweep directory with a timestamped subdirectory
+    dir: ${log_base_dir}/sweep/${now:%Y-%m-%d_%H-%M-%f}

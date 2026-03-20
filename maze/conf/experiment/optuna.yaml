@@ -10,6 +10,11 @@ defaults:
 runner:
   concurrency: 0
 
+# set base seeding for environment and agent
+seeding:
+  env_base_seed: 123456
+  agent_base_seed: 123456
+
 hydra:
   sweeper:
     sampler:

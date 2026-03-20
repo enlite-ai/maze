@@ -22,6 +22,7 @@ def test_clip_truncated_true():
         "runner.max_episode_steps": 9,
         "seeding.env_base_seed": 12345,
         "seeding.agent_base_seed": 12345,
+        "hydra.run.dir": ".",
     }
     run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
@@ -72,6 +73,7 @@ def test_clip_truncated_false():
         "runner.max_episode_steps": 100,
         "seeding.env_base_seed": 12345,
         "seeding.agent_base_seed": 12345,
+        "hydra.run.dir": ".",
     }
     run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 

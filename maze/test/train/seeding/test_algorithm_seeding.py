@@ -28,6 +28,7 @@ trainings = [
 
 @pytest.mark.parametrize("hydra_overrides", trainings)
 def test_algorithm_seeding_trainings(hydra_overrides: Dict[str, str]):
+    hydra_overrides["hydra.run.dir"] = "."
     perform_algorithm_seeding_test(hydra_overrides)
 
 

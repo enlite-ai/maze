@@ -116,7 +116,7 @@ heuristic_rollouts = [
 
 # Ensure we are running test configuration and no wrappers (as we do not have the stats
 # to initialize observation normalization with)
-heuristic_rollouts_defaults = dict(env="gym_env", configuration="test")
+heuristic_rollouts_defaults = {"env": "gym_env", "configuration": "test", "hydra.run.dir": "."}
 heuristic_rollouts = [pytest.param({**heuristic_rollouts_defaults, **r}, id=r['runner']) for r in heuristic_rollouts]
 
 

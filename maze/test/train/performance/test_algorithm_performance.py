@@ -32,6 +32,8 @@ trainings = [
 @pytest.mark.longrun
 @pytest.mark.parametrize("target_reward, hydra_overrides", trainings)
 def test_train(hydra_overrides: Dict[str, str], target_reward: float):
+    hydra_overrides["hydra.run.dir"] = "."
+
     # run training
     with Timeout(seconds=300):
         run_maze_job(hydra_overrides, config_module="maze.conf", config_name="conf_train")

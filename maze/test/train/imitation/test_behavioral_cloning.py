@@ -9,16 +9,25 @@ def run_behavioral_cloning(env: str, teacher_policy: str, bc_runner: str, bc_wra
     Runs a rollout with the given teacher_policy, then runs behavioral cloning on the collected trajectory data.
     """
     # Heuristics rollout
-    rollout_config = dict(configuration="test",
-                          env=env,
-                          policy=teacher_policy,
-                          runner="sequential")
-    rollout_config["runner.record_trajectory"] = True
+    rollout_config = dict(
+        configuration="test",
+        env=env,
+        policy=teacher_policy,
+        runner="sequential",
+    )
+    rollout_config["runner.record_trajectory"] = "true"
+    rollout_config["hydra.run.dir"] = "."
     run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
     # Behavioral cloning on top of the heuristic rollout trajectories
-    train_config = dict(configuration="test", env=env, wrappers=bc_wrappers,
-                        model=bc_model, algorithm="bc", runner=bc_runner)
+    train_config = dict(
+        configuration="test",
+        env=env,
+        wrappers=bc_wrappers,
+        algorithm="bc",
+        runner=bc_runner,
+    )
+    train_config["hydra.run.dir"] = "."
     run_maze_job(train_config, config_module="maze.conf", config_name="conf_train")
 
     # Note: The log might output statistics multiple times -- this is caused by stats log writers being

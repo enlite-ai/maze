@@ -230,7 +230,8 @@ def test_parallel_data_load_from_directory():
         "runner": "sequential",
         "runner.n_episodes": 5,
         "runner.max_episode_steps": 3,
-        "runner.record_trajectory": True
+        "runner.record_trajectory": True,
+        "hydra.run.dir": ".",
     }
     run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
 
