@@ -206,8 +206,6 @@ def version_based_hydra_main(config_path: str, config_name: str) -> Callable:
     :param config_name: Name of the config file.
     :return: The extended hydra.main decorator.
     """
-    hydra_version_base: dict[str, str | None] = get_hydra_version_base()
-
     def decorator(func: Callable) -> Callable:
         """Wrap the decorated function with the hydra.main decorator and stdout tee.
 
@@ -223,6 +221,7 @@ def version_based_hydra_main(config_path: str, config_name: str) -> Callable:
             :param kwargs: Keyword arguments passed to the original function.
             :return: Return value of the original function.
             """
+            hydra_version_base: dict[str, str | None] = get_hydra_version_base()
 
             @functools.wraps(func)
             def tee_stdout_to_hydra_log(*args: Any, **kwargs: Any) -> Any:

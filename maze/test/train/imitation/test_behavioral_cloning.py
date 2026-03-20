@@ -24,6 +24,7 @@ def run_behavioral_cloning(env: str, teacher_policy: str, bc_runner: str, bc_wra
         configuration="test",
         env=env,
         wrappers=bc_wrappers,
+        model=bc_model,
         algorithm="bc",
         runner=bc_runner,
     )
