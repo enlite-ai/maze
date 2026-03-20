@@ -17,7 +17,7 @@ def test_dummy_maze_env():
 
     for _ in range(10):
         action = env.action_space.sample()
-        observation, _, _, _ = env.step(action)
+        observation, _, _, _, _ = env.step(action)
 
     # check if actor is done
     assert not env.is_actor_done()
@@ -38,7 +38,7 @@ def test_dummy_struct_env():
 
     for i in range(10):
         action = env.action_spaces_dict[env.actor_id()[0]].sample()
-        observation, _, _, _ = env.step(action)
+        observation, _, _, _, _ = env.step(action)
 
     env.close()
 
@@ -50,6 +50,6 @@ def test_dummy_struct_core_env():
     for i in range(10):
         assert env.actor_id()[1] == i % 2
         action = env.action_space.sample()
-        observation, _, _, _ = env.step(action)
+        observation, _, _, _, _ = env.step(action)
 
     env.close()

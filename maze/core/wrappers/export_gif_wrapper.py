@@ -44,15 +44,15 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         self._is_gym_env = isinstance(self.env, gym.Env)
 
     @override(BaseEnv)
-    def step(self, action: MazeActionType) -> Tuple[ObservationType, Any, bool, Dict[Any, Any]]:
+    def step(self, action: MazeActionType) -> Tuple[ObservationType, Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
 
         if self._export:
             self._events.env_time += 1
             self._render()
 
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
     def reset(self) -> MazeActionType:

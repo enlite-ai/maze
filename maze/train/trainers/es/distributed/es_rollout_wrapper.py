@@ -73,9 +73,9 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
                     env=self if policy.needs_env() else None,
                     deterministic=False)
 
-            observation, reward, done, _ = self.step(convert_to_numpy(action, cast=None, in_place=False))
+            observation, reward, terminated, truncated, _ = self.step(convert_to_numpy(action, cast=None, in_place=False))
 
-            if done:
+            if terminated or truncated:
                 break
 
         # reset makes the episode stats available

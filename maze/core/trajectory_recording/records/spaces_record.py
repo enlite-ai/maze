@@ -30,8 +30,11 @@ class SpacesRecord:
     reward: Optional[Union[float, np.ndarray, torch.Tensor]] = None
     """Reward recorded during the step."""
 
-    done: Optional[Union[bool, np.ndarray, torch.Tensor]] = None
-    """Done flag recorded during the step."""
+    terminated: Optional[Union[bool, np.ndarray, torch.Tensor]] = None
+    """Terminated flag recorded during the step."""
+
+    truncated: Optional[Union[bool, np.ndarray, torch.Tensor]] = None
+    """Truncated flag recorded during the step."""
 
     info: Optional[Dict] = None
     """Info dictionary recorded during the step."""
@@ -53,7 +56,7 @@ class SpacesRecord:
 
     env_time: Optional[int] = None
     """The env time (t) of the env when recording the observation such that:
-       (s_t, a_t, v_t) -> env step -> (r_t, done_t, info_t) is recorded.
+       (s_t, a_t, v_t) -> env step -> (r_t, terminated_t, truncated_t, info_t) is recorded.
     """
 
     @classmethod
@@ -75,7 +78,8 @@ class SpacesRecord:
             observation=stack_numpy_dict_list([r.observation for r in records]),
             action=stack_numpy_dict_list([r.action for r in records]),
             reward=np.stack([r.reward for r in records]),
-            done=np.stack([r.done for r in records])
+            terminated=np.stack([r.terminated for r in records]),
+            truncated=np.stack([r.truncated for r in records])
         )
 
         if records[0].next_observation:
@@ -103,12 +107,18 @@ class SpacesRecord:
         """Sub-step key (i.e., the second part of the Actor ID) for this step."""
         return self.actor_id.agent_id
 
+    @property
+    def finished(self) -> bool:
+        """Whether the step is finished (i.e., terminated or truncated)."""
+        return self.terminated | self.truncated
+
     def to_numpy(self) -> 'SpacesRecord':
         """Convert the record to numpy."""
         self.observation = convert_to_numpy(self.observation, cast=None, in_place=True)
         self.action = convert_to_numpy(self.action, cast=None, in_place=True)
         self.reward = self.reward.cpu().numpy()
-        self.done = self.done.cpu().numpy()
+        self.terminated = self.terminated.cpu().numpy()
+        self.truncated = self.truncated.cpu().numpy()
 
         if self.next_observation is not None:
             self.next_observation = convert_to_numpy(self.next_observation, cast=None, in_place=True)
@@ -126,7 +136,8 @@ class SpacesRecord:
         self.observation = convert_to_torch(self.observation, device=device, cast=None, in_place=True)
         self.action = convert_to_torch(self.action, device=device, cast=None, in_place=True)
         self.reward = torch.from_numpy(np.asarray(self.reward)).to(device)
-        self.done = torch.from_numpy(np.asarray(self.done)).to(device)
+        self.terminated = torch.from_numpy(np.asarray(self.terminated)).to(device)
+        self.truncated = torch.from_numpy(np.asarray(self.truncated)).to(device)
 
         if self.next_observation is not None:
             self.next_observation = convert_to_torch(self.next_observation, device=device, cast=None, in_place=True)

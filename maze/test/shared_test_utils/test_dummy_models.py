@@ -42,7 +42,7 @@ def test_dummy_model_with_dummy_network():
         prob_dist = distribution_mapper.logits_dict_to_distribution(logits_dict=logits_dict, temperature=1.0)
         sampled_actions = prob_dist.sample()
 
-        obs_np, _, _, _ = maze_env.step(sampled_actions)
+        obs_np, _, _, _, _ = maze_env.step(sampled_actions)
         obs = {k: torch.from_numpy(v) for k, v in obs_np.items()}
 
         _ = dummy_critic(obs)

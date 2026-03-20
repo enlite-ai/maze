@@ -22,15 +22,19 @@ from maze.test.shared_test_utils.config_testing_utils import load_env_config
 
 
 def random_env_steps(env: ObservationNormalizationWrapper, steps: int) -> np.ndarray:
-    """Randomly interact with environment"""
+    """Randomly interact with the environment"""
     observations = []
     obs = env.reset()
     observations.append(obs["observation"])
     for _ in range(steps):
         action = env.sampling_policy.compute_action(obs, maze_state=None, env=env, actor_id=ActorID(0, 0), deterministic=False)
-        obs, rew, done, info = env.step(action)
-        if not done:
+        obs, rew, terminated, truncated, info = env.step(action)
+        observations.append(obs["observation"])
+
+        if terminated or truncated:
+            obs = env.reset()
             observations.append(obs["observation"])
+
     return np.vstack(observations)
 
 
@@ -384,9 +388,9 @@ def test_observation_statistics_logging():
             action = env.action_space.sample()
 
             # take step in env and trigger log stats writing
-            _, _, done, _ = env.step(action)
+            _, _, terminated, truncated, _ = env.step(action)
 
-            if done:
+            if terminated or truncated:
                 break
 
         increment_log_step()

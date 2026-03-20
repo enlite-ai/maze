@@ -51,29 +51,29 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             assert self._step_actions[step_key] is not None, \
                 'noop action not defined in the action_conversion interface'
 
-    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
 
         # record the actions given until one flat step finished
         self._record_action(action)
         # execute step
         self._steps_done += 1
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
         # prepare reward accumulation
         acc_reward = reward
         internal_rewards = [reward]
 
         # skipping is finished if the env is done
-        if done or self._steps_done >= self.n_steps:
+        if terminated or truncated or self._steps_done >= self.n_steps:
             self._reset_recording()
             info['skipping.internal_rewards'] = internal_rewards
             info['skipping.resulting_env_time'] = self.env.get_env_time()
-            return observation, acc_reward, done, info
+            return observation, acc_reward, terminated, truncated, info
 
         # check if all sub-steps have been executed once
         if self.actor_id()[0] != 0:
             # skipping not yet possible, proceed to next sub-step
-            return observation, acc_reward, done, info
+            return observation, acc_reward, terminated, truncated, info
 
         # continue with replay
         while self._steps_done < self.n_steps:
@@ -82,18 +82,18 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             # actual skipping: replay recorded actions
             step_key = self.actor_id()[0]
             action = self._step_actions[step_key]
-            observation, reward, done, info = self.env.step(action)
+            observation, reward, terminated, truncated, info = self.env.step(action)
             # accumulate reward and collect events
             acc_reward += reward
             internal_rewards.append(reward)
-            if done:
+            if terminated or truncated:
                 break
 
         # skipping finished
         self._reset_recording()
         info['skipping.internal_rewards'] = internal_rewards
         info['skipping.resulting_env_time'] = self.env.get_env_time()
-        return observation, acc_reward, done, info
+        return observation, acc_reward, terminated, truncated, info
 
     def _reset_recording(self) -> None:
         """reset the action recording"""

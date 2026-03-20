@@ -22,12 +22,12 @@ from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 
 class CustomGymCoreEnv(GymCoreEnv):
 
-    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
+    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, bool, Dict[Any, Any]]:
         """Intercept ``CoreEnv.step``"""
         self._investigate_step_function_parts = {'main_part': 0, 'other_part': 0}
 
         cur_time = time.time()
-        maze_state, rew, done, info = super().step(maze_action)
+        maze_state, rew, terminated, truncated, info = super().step(maze_action)
         self._investigate_step_function_parts['main_part'] += time.time() - cur_time
         cur_time = time.time()
 
@@ -35,7 +35,7 @@ class CustomGymCoreEnv(GymCoreEnv):
         time.sleep(0.1)
         self._investigate_step_function_parts['other_part'] += time.time() - cur_time
 
-        return maze_state, rew, done, info
+        return maze_state, rew, terminated, truncated, info
 
 
 class CustomGymMazeEnv(MazeEnv):

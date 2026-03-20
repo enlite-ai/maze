@@ -237,8 +237,8 @@ def test_step_skipping_in_step_with_structured_env_and_events():
     env.reset()
     dones = []
     for _ in range(9):
-        _, _, done, _ = env.step(env.action_space.sample())
-        dones.append(done)
+        _, _, terminated, truncated, _ = env.step(env.action_space.sample())
+        dones.append(terminated or truncated)
     assert len(dones) == 9
     assert sum(dones) == 3
 
@@ -280,8 +280,8 @@ def test_step_skipping_in_step_with_structured_env_and_events():
     env.reset()
     dones = []
     for _ in range(9):
-        _, _, done, _ = env.step(env.action_space.sample())
-        dones.append(done)
+        _, _, terminated, truncated, _ = env.step(env.action_space.sample())
+        dones.append(terminated or truncated)
     assert len(dones) == 9
     assert sum(dones) == 4
 
@@ -308,8 +308,8 @@ def test_step_skipping_in_step_with_structured_env_and_events():
     env.reset()
     dones = []
     for _ in range(9):
-        _, _, done, _ = env.step(env.action_space.sample())
-        dones.append(done)
+        _, _, terminated, truncated, _ = env.step(env.action_space.sample())
+        dones.append(terminated or truncated)
     assert len(dones) == 9
     assert sum(dones) == 9
 

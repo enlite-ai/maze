@@ -19,7 +19,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
     Creates a simple wrapper for multiple environments, calling each environment in sequence on the current
     Python process. This is useful for computationally simple environment such as ``cartpole-v1``, as the overhead of
     multiprocess or multi-thread outweighs the environment computation time. This can also be used for RL methods that
-    require a vectorized environment, but that you want a single environments to train with.
+    require a vectorized environment, but that you want a single environment to train with.
 
     :param env_factories: A list of functions that will create the environments
     """
@@ -36,19 +36,19 @@ class SequentialVectorEnv(StructuredVectorEnv):
             logging_prefix=logging_prefix
         )
 
-    def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
         :return: observations, rewards, dones, information-dicts all in env-aggregated form.
         """
         actions = unstack_numpy_list_dict(actions)
-        observations, rewards, env_dones, infos, actor_dones, actor_ids = [], [], [], [], [], []
+        observations, rewards, env_terminated_rec, env_truncated_rec, infos, actor_dones, actor_ids = [], [], [], [], [], [], []
 
         for i, env in enumerate(self.envs):
-            o, r, env_done, i = env.step(actions[i])
-            if env_done:
-                i['terminal_observation'] = o
+            obs, rew, env_terminated, env_truncated, i = env.step(actions[i])
+            if env_terminated or env_truncated:
+                i['terminal_observation'] = obs
                 env.seed(self.get_next_seed())
                 o = env.reset()
                 # collect the episode statistics for finished environments
@@ -56,20 +56,25 @@ class SequentialVectorEnv(StructuredVectorEnv):
 
             actor_dones.append(env.is_actor_done())
             actor_ids.append(env.actor_id())
-            observations.append(o)
-            rewards.append(r)
-            env_dones.append(env_done)
+            observations.append(obs)
+            rewards.append(rew)
+            env_terminated_rec.append(env_terminated)
+            env_truncated_rec.append(env_truncated)
             infos.append(i)
 
         obs = stack_numpy_dict_list(observations)
         rewards = np.hstack(rewards).astype(np.float32)
-        env_dones = np.hstack(env_dones)
+        env_terminated_rec = np.hstack(env_terminated_rec)
+        env_truncated_rec = np.hstack(env_truncated_rec)
+
 
         self._env_times = np.array([env.get_env_time() for env in self.envs])
         self._actor_dones = np.hstack(actor_dones)
         self._actor_ids = actor_ids
+        self._actor_terminated = np.array(env_terminated_rec)
+        self._actor_truncated = np.array(env_truncated_rec)
 
-        return obs, rewards, env_dones, infos
+        return obs, rewards, env_terminated_rec, env_truncated_rec, infos
 
     @override(StructuredVectorEnv)
     def get_actor_rewards(self) -> Optional[np.ndarray]:

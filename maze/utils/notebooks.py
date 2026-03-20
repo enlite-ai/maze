@@ -54,13 +54,13 @@ def rollout(
             # Initialize MonitoringSetup for rendering support.
             with MonitoringSetup(env, log_dir=log_dir) as monitored_env:
                 obs = monitored_env.reset()
-                done = False
+                terminated, truncated = False
 
-                while not done and i < n_max_steps:
+                while not (terminated or truncated) and i < n_max_steps:
                     action = agent.compute_action(obs,
                                                   maze_state=monitored_env.get_maze_state(),
                                                   actor_id=monitored_env.actor_id())
-                    obs, reward, done, _ = monitored_env.step(action)
+                    obs, reward, terminated, truncated, _ = monitored_env.step(action)
                     cumulative_reward += reward
 
                     if render:

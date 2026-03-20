@@ -77,10 +77,10 @@ class NoDictSpacesWrapper(Wrapper[Union[EnvType, StructuredEnvSpacesMixin]]):
         observation = self.env.reset()
         return self.observation(observation)
 
-    def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
-        observation, reward, done, info = self.env.step(self.action(action))
-        return self.observation(observation), reward, done, info
+        observation, reward, terminated, truncated, info = self.env.step(self.action(action))
+        return self.observation(observation), reward, terminated, truncated, info
 
     @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType], maze_action: Optional[MazeActionType],

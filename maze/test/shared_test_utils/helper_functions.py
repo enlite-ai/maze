@@ -34,9 +34,9 @@ def build_dummy_base_env() -> BaseEnv:
         """
 
         @override(BaseEnv)
-        def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+        def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
             """ override of BaseEnv """
-            return None, None, False, {}
+            return None, None, False, False, {}
 
         @override(BaseEnv)
         def reset(self) -> Any:

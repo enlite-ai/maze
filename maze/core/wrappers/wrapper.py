@@ -448,10 +448,10 @@ class ObservationWrapper(Wrapper[EnvType], ABC):
         observation = self.env.reset()
         return self.observation(observation)
 
-    def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
-        observation, reward, done, info = self.env.step(action)
-        return self.observation(observation), reward, done, info
+        observation, reward, terminated, truncated, info = self.env.step(action)
+        return self.observation(observation), reward, terminated, truncated, info
 
     @abstractmethod
     def observation(self, observation: Any) -> Any:
@@ -473,7 +473,7 @@ class ActionWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the agents action."""
 
     @override(BaseEnv)
-    def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map action."""
         return self.env.step(self.action(action))
 
@@ -500,10 +500,10 @@ class ActionWrapper(Wrapper[EnvType], ABC):
 class RewardWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the reward before passed to the agent."""
 
-    def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map rewards."""
-        observation, reward, done, info = self.env.step(action)
-        return observation, self.reward(reward), done, info
+        observation, reward, terminated, truncated, info = self.env.step(action)
+        return observation, self.reward(reward), terminated, truncated, info
 
     @abstractmethod
     def reward(self, reward: Any) -> Any:

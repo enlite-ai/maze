@@ -1,4 +1,4 @@
-...
+from maze.core.env.core_env import CoreEnv
 from maze.core.events.pubsub import Pubsub
 from .events import CuttingEvents, InventoryEvents
 from .kpi_calculator import Cutting2dKpiCalculator
@@ -32,7 +32,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
         3. Replenish a fresh piece if needed and return an appropriate reward
 
         :param maze_action: Cutting MazeAction to take.
-        :return: maze_state, reward, done, info
+        :return: maze_state, reward, terminated, truncated, info
         """
 
         info, reward = {}, 0
@@ -68,7 +68,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
         # compile env state
         maze_state = self.get_maze_state()
 
-        return maze_state, reward, False, info
+        return maze_state, reward, False, False, info
 
     def get_kpi_calculator(self) -> Cutting2dKpiCalculator:
         """KPIs are supported."""

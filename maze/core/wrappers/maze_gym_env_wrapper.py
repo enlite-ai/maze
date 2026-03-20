@@ -153,7 +153,6 @@ class GymRenderer(Renderer):
         obj_dict.pop("env", None)
         return obj_dict
 
-
 class GymCoreEnv(CoreEnv):
     """Wraps a Gymnasium environment into a maze core environment.
 
@@ -173,19 +172,12 @@ class GymCoreEnv(CoreEnv):
         self._current_seed = None
         self._need_seeding = True
 
-    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
+    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, bool, Dict[Any, Any]]:
         """Intercept ``CoreEnv.step``"""
         maze_state, rew, terminated, truncated, info = self.env.step(maze_action)
         self._maze_state = maze_state
 
-        if terminated:
-            info['TimeLimit.terminated'] = True
-
-        if truncated:
-            info['TimeLimit.truncated'] = True
-
-        done = np.logical_or(terminated, truncated)
-        return maze_state, rew, done, info
+        return maze_state, rew, terminated, truncated, info
 
     @override(CoreEnv)
     def get_renderer(self) -> Renderer:

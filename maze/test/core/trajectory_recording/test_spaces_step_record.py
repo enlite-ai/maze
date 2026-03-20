@@ -13,28 +13,31 @@ def _mock_spaces_record(
         keys: List[str],
         value: Union[int, List[int]],
         reward: int = 1,
-        done: bool = False):
+        terminated: bool = False,
+        truncated: bool = False,
+):
 
     return SpacesRecord(
         actor_id=actor_id,
         observation={k: np.array(value) for k in keys},
         action={"action": np.array(value)},
         reward=reward,
-        done=done
+        terminated=terminated,
+        truncated=truncated
     )
 
 
-def _mock_structured_spaces_record(step_no: int, done: bool = False):
+def _mock_structured_spaces_record(step_no: int, terminated: bool = False):
     return StructuredSpacesRecord(substep_records=[
         _mock_spaces_record(actor_id=ActorID(0, 0), keys=["x", "y"], value=[step_no * 10, step_no * 10], reward=step_no),
-        _mock_spaces_record(actor_id=ActorID(1, 0), keys=["z"], value=[step_no * 10 + 1], reward=step_no, done=done),
+        _mock_spaces_record(actor_id=ActorID(1, 0), keys=["z"], value=[step_no * 10 + 1], reward=step_no, terminated=terminated),
     ])
 
 
 def test_record_stacking():
     r1 = _mock_structured_spaces_record(1)
     r2 = _mock_structured_spaces_record(2)
-    r3 = _mock_structured_spaces_record(3, done=True)
+    r3 = _mock_structured_spaces_record(3, terminated=True)
 
     stacked = StructuredSpacesRecord.stack_records([r1, r2, r3])
 
@@ -57,7 +60,7 @@ def test_record_stacking():
     # Check a couple of other values
 
     assert np.all(stacked.rewards_dict[0] == [1, 2, 3])
-    assert np.all(stacked.dones_dict[1] == [False, False, True])
+    assert np.all(stacked.terminated_dict[1] == [False, False, True])
     assert stacked.actions_dict[0]["action"].shape == (3, 2)
 
 

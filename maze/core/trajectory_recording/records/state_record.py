@@ -19,7 +19,8 @@ class StateRecord:
     :param maze_action: Last MazeAction taken by the agent.
     :param step_event_log: Log of events dispatched by the env during the last step.
     :param reward: Reward as returned by the environment (either scalar or distributed reward)
-    :param done: Dictionary indicating whether the environment or particular agents are done
+    :param terminated: Dictionary indicating whether the environment or particular agents are terminated
+    :param truncated: Dictionary indicating whether the environment or particular agents are truncated
     :param info: Dictionary with any other supplementary information provided by the env
     :param serializable_components: dict of all serializable components as provided by the env
         - e.g. { "demand_generator" : demand_generator_object }
@@ -31,7 +32,8 @@ class StateRecord:
                  maze_action: Optional[MazeActionType],
                  step_event_log: Optional[StepEventLog] = None,
                  reward: Optional[Union[float, np.ndarray, Any]] = None,
-                 done: Optional[bool] = None,
+                 terminated: Optional[bool] = None,
+                 truncated: Optional[bool] = None,
                  info: Optional[Dict] = None,
                  serializable_components: Optional[Dict[str, Any]] = None):
         self.env_time = env_time
@@ -39,6 +41,7 @@ class StateRecord:
         self.maze_action = maze_action
         self.step_event_log = step_event_log
         self.reward = reward
-        self.done = done
+        self.terminated = terminated
+        self.truncated = truncated
         self.info = info
         self.serializable_components = serializable_components

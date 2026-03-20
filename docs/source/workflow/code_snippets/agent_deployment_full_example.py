@@ -16,11 +16,11 @@ agent_deployment = AgentDeployment(
 external_env = gym.make("CartPole-v1", render_mode=None)
 
 maze_state = external_env.reset()
-reward, done, info = 0, False, {}
+reward, terminated, truncated, info = 0, False, False,{}
 
 for i in range(10):
     # Query the agent deployment for maze action, then step the environment with it
-    maze_action = agent_deployment.act(maze_state, reward, done, info)
-    maze_state, reward, done, info = external_env.step(maze_action)
+    maze_action = agent_deployment.act(maze_state, reward, terminated, truncated, info)
+    maze_state, reward, terminated, truncated, info = external_env.step(maze_action)
 
-agent_deployment.close(maze_state, reward, done, info)
+agent_deployment.close(maze_state, reward, terminated, truncated, info)

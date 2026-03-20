@@ -37,7 +37,7 @@ def test_flat_obs_space_is_box():
         f"reset obs {obs} not contained in {env.observation_space}"
 
     action = env.action_space.sample()
-    obs, reward, done, info = env.step(action)
+    obs, reward, terminated, truncated, info = env.step(action)
 
     assert env.observation_space.contains(obs)
 

@@ -27,7 +27,7 @@ def train(env):
                 action = env.action_space.sample()
 
                 # take step in env and trigger log stats writing
-                _, _, _, _ = env.step(action)
+                env.step(action)
 
     # test accessing stats
     env.get_stats(LogStatsLevel.EPOCH)

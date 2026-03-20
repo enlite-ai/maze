@@ -15,4 +15,4 @@ with SimpleStatsLoggingSetup(env):
     obs = env.reset()
     for i in range(15):
         action = env.action_space.sample()
-        obs, reward, done, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)

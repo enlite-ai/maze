@@ -60,12 +60,12 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             self._maze_action_recorded = True
 
     @override(BaseEnv)
-    def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Record available step-level data."""
         assert self.episode_record is not None, "Environment must be reset before stepping."
 
         self._maze_action_recorded = False
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
 
         # Recording of event logs and stats happens:
         #  - for TimeEnvs:   Only if the env time changed, so that we record once per time step
@@ -84,7 +84,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
                                       maze_state=self.last_maze_state,
                                       maze_action=self._last_maze_action_before_skipping,
                                       step_event_log=step_event_log,
-                                      reward=reward, done=done, info=info,
+                                      reward=reward, terminated=terminated, truncated=truncated, info=info,
                                       serializable_components=self.last_serializable_components)
             self.episode_record.step_records.append(step_record)
 
@@ -93,7 +93,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             self.last_env_time = self.env.get_env_time() if isinstance(self.env,
                                                                        TimeEnvMixin) else self.last_env_time + 1
 
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
     def reset(self) -> Any:
@@ -161,7 +161,8 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             maze_action=None,
             step_event_log=step_event_log,
             reward=None,
-            done=None,
+            terminated=None,
+            truncated=None,
             info=None,
             serializable_components=self.last_serializable_components)
         self.episode_record.step_records.append(final_step_record)

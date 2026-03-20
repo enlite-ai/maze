@@ -115,8 +115,8 @@ def check_random_sampling(config_module: str, config: str, overrides: Dict[str, 
         action = env.action_space.sample()
 
         # take env step
-        state, reward, done, info = env.step(action)
-        if done:
+        state, reward, terminated, truncated, info = env.step(action)
+        if terminated or truncated:
             env.reset()
 
 

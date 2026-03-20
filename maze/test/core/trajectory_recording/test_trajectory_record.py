@@ -14,7 +14,8 @@ def _mock_space_record(value: int):
         observation=dict(observation=np.array(value)),
         action=dict(action=np.array(value)),
         reward=value,
-        done=value > 0
+        terminated=value > 0,
+        truncated=False,
     )
 
     return StructuredSpacesRecord(substep_records=[substep_record])

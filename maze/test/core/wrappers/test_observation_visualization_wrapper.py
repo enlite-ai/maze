@@ -12,8 +12,8 @@ def test_observation_monitoring():
     env = ObservationVisualizationWrapper.wrap(env, plot_function=None)
     env = LogStatsWrapper.wrap(env, logging_prefix="train")
 
+    terminated, truncated = False, False
     with SimpleStatsLoggingSetup(env, log_dir="."):
         env.reset()
-        done = False
-        while not done:
-            obs, rew, done, info = env.step(env.action_space.sample())
+        while not (terminated or truncated):
+            obs, rew, terminated, truncated, info = env.step(env.action_space.sample())

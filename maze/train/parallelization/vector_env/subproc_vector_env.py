@@ -39,17 +39,19 @@ def _worker(remote, parent_remote, env_fn_wrapper):
         try:
             cmd, data = remote.recv()
             if cmd == 'step':
-                observation, reward, env_done, info = env.step(data)
+                # Gym v26 returns: obs, reward, terminated, truncated, info
+                observation, reward, terminated, truncated, info = env.step(data)
+
                 actor_done = env.is_actor_done()
                 actor_id = env.actor_id()
 
                 episode_stats = None
-                if env_done:
-                    # save final observation where user can get it, then reset
+                if terminated or truncated:
+                    # save the final observation where the user can get it, then reset
                     info['terminal_observation'] = observation
-                    remote.send((None, reward, env_done, info, None, None, None, None))
+                    remote.send((None, reward, terminated, truncated, info, None, None, None, None))
                 else:
-                    remote.send((observation, reward, env_done, info, actor_done, actor_id, episode_stats,
+                    remote.send((observation, reward, terminated, truncated, info, actor_done, actor_id, episode_stats,
                                  env.get_env_time()))
             elif cmd == 'seed':
                 env.seed(data)
@@ -172,11 +174,11 @@ class SubprocVectorEnv(StructuredVectorEnv):
         rewards = np.stack(rewards, axis=1).astype(np.float32)
         return rewards
 
-    def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
-        :return: observations, rewards, dones, information-dicts all in env-aggregated form.
+        :return: observations, rewards, terminated list, truncated list, information-dicts all in env-aggregated form.
         """
         actions = unstack_numpy_list_dict(actions)
         self._step_async(actions)
@@ -238,29 +240,37 @@ class SubprocVectorEnv(StructuredVectorEnv):
             remote.send(('step', action))
         self.waiting = True
 
-    def _step_wait(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def _step_wait(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """
         Wait for the step taken with step_async().
 
-        :return: ([int] or [float], [float], [bool], dict) observation, reward, done, information
+        :return: ([int] or [float], [float], [bool], [bool], dict) observation, reward, terminated, truncated, information
         """
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
 
-        done_envs = [idx for idx, rr in enumerate(results) if rr[2]]
-        for done_env_idx in done_envs:
-            assert results[done_env_idx][2]
-            self.remotes[done_env_idx].send(('reset', self.get_next_seed()))
+        # Auto-reset on either terminated or truncated
+        finished_envs_indexes = [idx for idx, res in enumerate(results) if res[2] or res[3]]
 
-        new_results = [self.remotes[remote_idx].recv() for remote_idx in done_envs]
+        for finished_env_idx in finished_envs_indexes:
+            assert results[finished_env_idx][2] or results[finished_env_idx][3]
+            self.remotes[finished_env_idx].send(('reset', self.get_next_seed()))
 
-        for org_idx, new_result in zip(done_envs, new_results):
-            # Preserve the reward of previous step, the done, and the info. Otherwise, give the information for the
-            # next step (e.g., observation).
-            results[org_idx] = (new_result[0], results[org_idx][1], True, results[org_idx][3], new_result[1],
-                                new_result[2], new_result[3], new_result[4])
+        new_results = [self.remotes[remote_idx].recv() for remote_idx in finished_envs_indexes]
 
-        obs, rews, env_dones, infos, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
+        for org_idx, new_result in zip(finished_envs_indexes, new_results):
+            results[org_idx] = (new_result[0],  # fresh obs from reset
+                                results[org_idx][1],  # rew (from finished step)
+                                results[org_idx][2],  # terminated (from finished step)
+                                results[org_idx][3],  # truncated (from finished step)
+                                results[org_idx][4],  # infos (from finished step)
+                                new_result[1],  # actor_dones (from reset)
+                                new_result[2],  # actor_ids (from reset)
+                                new_result[3],  # episode_stats (from finished step)
+                                new_result[4]) # env_times (from finished step)
+
+        obs, rews, env_terminated, env_truncated, infos, actor_dones, actor_ids, episode_stats, env_times = zip(
+            *results)
 
         self._env_times = np.stack(env_times)
         self._actor_dones = np.stack(actor_dones)
@@ -271,4 +281,4 @@ class SubprocVectorEnv(StructuredVectorEnv):
             if stat is not None:
                 self.epoch_stats.receive(stat)
 
-        return stack_numpy_dict_list(obs), np.stack(rews), np.stack(env_dones), infos
+        return stack_numpy_dict_list(obs), np.stack(rews), np.stack(env_terminated), np.stack(env_truncated), infos

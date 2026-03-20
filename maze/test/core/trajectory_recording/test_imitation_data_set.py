@@ -62,7 +62,7 @@ def _mock_state_trajectory_record(step_count: int):
             maze_action=i if i < step_count - 1 else None,  # maze_action is not available in the last step
             step_event_log=StepEventLog(i),
             reward=0,
-            done=i == step_count - 1,
+            terminated=i == step_count - 1,
             info=None,
             serializable_components={}
         ))
@@ -80,7 +80,7 @@ def _mock_spaces_trajectory_record(step_count: int):
             observation=dict(observation=np.array(i)),
             action=dict(action=np.array(i)),
             reward=0,
-            done=i == step_count - 1
+            terminated=i == step_count - 1
         )
         episode_record.step_records.append(StructuredSpacesRecord(substep_records=[substep_record]))
 

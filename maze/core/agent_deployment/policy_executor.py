@@ -53,11 +53,11 @@ class PolicyExecutor:
                     actor_id=actor_id,
                     deterministic=True)
 
-                observation, _, done, _ = self.env.step(action)
+                observation, _, terminated, truncated, _ = self.env.step(action)
             # Final reset required to notify all wrappers.
             self.env.reset()
 
-            # Notify stats logging about epoch end if available
+            # Notify stats logging about the epoch end if available
             if isinstance(self.env, LogStatsEnv):
                 self.env.write_epoch_stats()
 

@@ -393,17 +393,19 @@ class SAC(Trainer):
 
             # TODO: Take into account all rewards, not just from the last sub-step
             last_rewards = list(worker_output.rewards_dict.values())[-1]
-            last_dones = list(worker_output.dones_dict.values())[-1]
+            last_terminated = list(worker_output.terminated_dict.values())[-1]
+            last_truncated = list(worker_output.truncated_dict.values())[-1]
+            last_finished = last_terminated | last_truncated
 
             for step_key, next_q_value_per_step in next_q_values.items():
                 if self.learner_model.critic.only_discrete_spaces[step_key]:
                     assert isinstance(next_q_value_per_step, dict)
-                    target_q_values[step_key] = {action_key: (last_rewards + (~last_dones).float() *
+                    target_q_values[step_key] = {action_key: (last_rewards + (~last_finished).float() *
                                                               self.algorithm_config.gamma * next_action_q_value)
                                                  for action_key, next_action_q_value in next_q_value_per_step.items()}
                 else:
                     assert isinstance(next_q_value_per_step, torch.Tensor)
-                    target_q_values[step_key] = (last_rewards + (~last_dones).float() * self.algorithm_config.gamma *
+                    target_q_values[step_key] = (last_rewards + (~last_finished).float() * self.algorithm_config.gamma *
                                                  next_q_value_per_step)
 
         q_losses = dict()

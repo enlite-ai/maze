@@ -23,7 +23,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
         3. Replenish a fresh piece if needed and return an appropriate reward
 
         :param maze_action: Cutting maze_action to take.
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
 
         info = {}
@@ -60,4 +60,4 @@ class Cutting2DCoreEnvironment(CoreEnv):
         # aggregate reward from events
         reward = self.reward_aggregator.summarize_reward(maze_state)
 
-        return maze_state, reward, False, info
+        return maze_state, reward, False, False, info

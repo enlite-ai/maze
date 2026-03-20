@@ -49,7 +49,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         self._action_space: Optional[spaces.Dict] = None
 
     @override(BaseEnv)
-    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, bool, Dict[Any, Any]]:
         """Triggers logging events for observations, actions and reward.
         """
 
@@ -57,7 +57,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         agent_name = self._get_agent_name()
 
         # take wrapped env step
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, terminated, truncated, info = self.env.step(action)
 
         if self.action_logging:
             self._log_action(substep_name, agent_name, action)
@@ -71,7 +71,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         # update action space
         self._action_space = self.env.action_space
 
-        return obs, rew, done, info
+        return obs, rew, terminated, truncated, info
 
     @override(BaseEnv)
     def reset(self) -> ObservationType:

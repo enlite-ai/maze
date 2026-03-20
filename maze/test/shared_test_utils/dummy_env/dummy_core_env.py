@@ -35,16 +35,16 @@ class DummyCoreEnvironment(CoreEnv):
         # initialize rendering
         self.renderer = DummyMatplotlibRenderer()
 
-    def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
+    def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, bool, Optional[Dict]]:
         """
         :param maze_action: Environment MazeAction to take.
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
 
         self.dummy_core_events.twice_per_step(3)
         self.dummy_core_events.twice_per_step(7)
 
-        return self.get_maze_state(), self.reward_aggregator.summarize_reward(), False, {}
+        return self.get_maze_state(), self.reward_aggregator.summarize_reward(), False, False, {}
 
     def get_maze_state(self) -> Dict[str, np.ndarray]:
         """

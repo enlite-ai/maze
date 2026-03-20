@@ -1,10 +1,10 @@
 """Core environment interfaces.
 
 Core environments form the basis for actual RL trainable environments (e.g. gymnasium.Envs). Instead of operating with
-observations and actions they operate with MazeStates (:mod:`~.maze_state`) and MazeActions
-(:mod:`~.maze_action`). This design choice give much more freedom when for example implementing
-heuristic policies for a specific environment (It is much easier to implement a heuristics
-given a clean state representation compared to a dictionary action space of machine readable arrays).
+observations and actions, they operate with MazeStates (:mod:`~.maze_state`) and MazeActions
+(:mod:`~.maze_action`). This design choice gives much more freedom when, for example, implementing
+heuristic policies for a specific environment. (It is much easier to implement a heuristic
+given a clean state representation compared to a dictionary action space of machine-readable arrays.)
 """
 from abc import ABC, abstractmethod
 from typing import Tuple, Any, Dict, Union, Iterable, Optional
@@ -36,15 +36,15 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
     @abstractmethod
     @override(StructuredEnv)
     def step(self, maze_action: MazeActionType) -> \
-            Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
+            Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, bool, Dict[Any, Any]]:
         """Environment step function.
 
-        Note: If your core environment is structured, you should call
-        :func:`maze.core.env.environment_context.EnvironmentContext.increment_env_step()`
-        once the structured step is done, so that the env time is incremented and events/stats cleared.
+        Note: If your core environment is structured, you should call:
+                 func:`maze.core.env.environment_context.EnvironmentContext.increment_env_step()`
+        once the structured step is terminated or truncated, so that the env time is incremented and events/stats cleared.
 
         :param maze_action: Environment MazeAction to take.
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
 
     @abstractmethod
@@ -101,7 +101,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
 
     @abstractmethod
     def get_renderer(self) -> Renderer:
-        """Return renderer instance that can be used to render the env.
+        """Return a renderer instance that can be used to render the env.
 
         :return Renderer instance
         """
@@ -112,7 +112,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
         """Returns the currently executed actor. The id is unique only with
         respect to the policies (every policy has its own agent 0).
 
-        Note that identities of done actors can not be reused in the same rollout.
+        Note that identities of done actors cannot be reused in the same rollout.
 
         :return: The current actor, as a named tuple holding step_key and agent_id.
         """

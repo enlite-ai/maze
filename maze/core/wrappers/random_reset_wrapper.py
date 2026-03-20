@@ -57,9 +57,9 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         # skip steps
         for _ in range(skip_steps):
             action = self.action_space.sample()
-            obs, rew, done, info = self.env.step(action)
-            assert not done, "Your environment was done during random resetting. This should not happen! " \
-                             "Make sure you set a valid number of skipping steps."
+            obs, rew, terminated, truncated, info = self.env.step(action)
+            assert not (terminated or truncated), ("Your environment was done during random resetting. "
+                                                   "This should not happen! Make sure you set a valid number of skipping steps.")
 
         return obs
 

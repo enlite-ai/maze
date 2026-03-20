@@ -47,14 +47,14 @@ class Cutting2DCoreEnvironment(CoreEnv):
         self.inventory.replenish_piece()
 
     def step(self, maze_action: Cutting2DMazeAction) \
-            -> Tuple[Cutting2DMazeState, np.array, bool, Dict[Any, Any]]:
+            -> Tuple[Cutting2DMazeState, np.array, bool, bool, Dict[Any, Any]]:
         """Summary of the step (simplified, not necessarily respecting the actual order in the code):
         1. Check if the selected piece to cut is valid (i.e. in inventory, large enough etc.)
         2. Attempt the cutting
         3. Replenish a fresh piece if needed and return an appropriate reward
 
         :param maze_action: Cutting MazeAction to take.
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
 
         info, reward = {}, 0
@@ -85,7 +85,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
         # compile env state
         maze_state = self.get_maze_state()
 
-        return maze_state, reward, False, info
+        return maze_state, reward, False, False, info
 
     def get_maze_state(self) -> Cutting2DMazeState:
         """Returns the current Cutting2DMazeState of the environment."""

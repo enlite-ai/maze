@@ -3,7 +3,6 @@ import os
 import pickle
 
 import numpy as np
-import pytest
 
 from maze.core.env.structured_env import ActorID
 from maze.core.trajectory_recording.records.action_record import ActionRecord
@@ -24,7 +23,7 @@ def test_records_episode_with_correct_data():
     for _ in range(5):
         action = env.action_space.sample()
         actions.append(action)
-        observation, rew, _, _ = env.step(action)
+        observation, rew, _, _, _ = env.step(action)
         cum_reward += rew
 
     episode_id = env.get_episode_id()

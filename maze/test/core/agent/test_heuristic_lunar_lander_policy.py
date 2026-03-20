@@ -10,4 +10,4 @@ def test_heuristic_lunar_lander_policy():
 
     obs = env.reset()
     action = policy.compute_action(obs)
-    obs, _, _, _ = env.step(action)
+    obs, _, _, _, _ = env.step(action)

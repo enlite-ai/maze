@@ -27,7 +27,7 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         self._current_seed = None
 
     @override(CoreEnv)
-    def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, Optional[Dict]]:
+    def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, bool, Optional[Dict]]:
         """Switch agents, increment env step after the second agent"""
         self.current_agent += 1
         action_hash = hash(tuple([tt if isinstance(tt, (int, np.int64)) else tuple(tt) for tt in maze_action.values()]))
@@ -36,9 +36,9 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         if self.current_agent % self.n_agents == 0:
             self.current_agent = 0
             self.context.increment_env_step()
-            return self.get_maze_state(), 2, False, {}
+            return self.get_maze_state(), 2, False, False, {}
 
-        return self.get_maze_state(), 0, False, {}
+        return self.get_maze_state(), 0, False, False, {}
 
     @override(CoreEnv)
     def get_maze_state(self) -> Dict[str, np.ndarray]:

@@ -16,8 +16,8 @@ def main():
         action = env.action_space.sample()
 
         # take actual environment step
-        obs, reward, done, info = env.step(action)
-        print(f"reward {reward} | done {done} | info {info}")
+        maze_state, reward, terminated, truncated, info = env.step(action)
+        print(f"reward {reward} | terminated {terminated} | truncated {truncated}| info {info}")
 
 
 if __name__ == "__main__":

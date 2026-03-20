@@ -105,17 +105,17 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return len(agent_counts) == 1 and sum(agent_counts.values()) == 1
 
     @override(BaseEnv)
-    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, bool, Dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
 
         :param action: the action the agent wants to take.
-        :return: observation, reward, done, info
+        :return: observation, reward, terminated, truncated, info
         """
         self.profiling_times = {'core_env': 0.0, 'observation_conversion': 0.0, 'action_conversion': 0.0}
         assert self.initial_env_time is not None, "Environment must be reset before stepping."
 
         # first, take step without observation
-        reward, done, info = self._step_core_env(action)
+        reward, terminated, truncated, info = self._step_core_env(action)
 
         # convert state to observation
         maze_state = self.core_env.get_maze_state()
@@ -123,7 +123,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
         self.profiling_times['observation_conversion'] = time.time() - start_time
 
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
     def reset(self) -> ObservationType:
@@ -317,11 +317,11 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         self.initial_env_time = env.initial_env_time
 
-    def _step_core_env(self, action: ActionType) -> Tuple[float, bool, Dict[Any, Any]]:
+    def _step_core_env(self, action: ActionType) -> Tuple[float, bool, bool, Dict[Any, Any]]:
         """Take environment step without converting the state into and observation.
 
         :param action: the action the agent wants to take.
-        :return: reward, done, info.
+        :return: reward, terminated, truncated, info.
         """
         last_env_time = self.get_env_time()
 
@@ -336,7 +336,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         start_time = time.time()
         # take environment step
-        maze_state, reward, done, info = self.core_env.step(maze_action)
+        maze_state, reward, terminated, truncated, info = self.core_env.step(maze_action)
         # record step time.
         self.profiling_times['core_env'] = time.time() - start_time
 
@@ -355,7 +355,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
             # ensure that all reward aggregator are cleared
             self.core_env.context.event_service.clear_pubsub()
 
-        return reward, done, info
+        return reward, terminated, truncated, info
 
     def set_core_env(self, core_env: CoreEnv) -> None:
         """Helper method for setting the core env to a new, different core env
@@ -371,21 +371,3 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.core_env = core_env
         self.env = self.core_env
 
-    @staticmethod
-    def get_done_info(done: bool, info: Dict[str, str]) -> Tuple[bool, bool]:
-        """Distinguish the end of episode between terminated and truncated by looking into the info dict.
-
-        :param done: The done information from the last env.
-        :param info: The info of the last env step.
-        :return: Return a tuple, first the terminated information and second the truncated information.
-        """
-        # If the env is not done return false for both.
-        if not done:
-            return False, False
-
-        # If the env is done and the env was truncated due to a timelimit return False, True
-        if 'TimeLimit.truncated' in info and info['TimeLimit.truncated']:
-            return False, True
-
-        # Otherwise the env was done due to termination.
-        return True, False

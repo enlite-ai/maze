@@ -45,7 +45,7 @@ class StructuredEnv(BaseEnv):
         action = sample_from_policy(observation, sub_step_key, actor_id)
 
         # step the env
-        observation, reward, done, info = env.step(action)
+        observation, reward, terminated, truncated, info = env.step(action)
 
         # optionally use is_actor_done() to find out if the actor was terminated (relevant during training)
     """

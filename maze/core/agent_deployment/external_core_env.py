@@ -73,14 +73,14 @@ class ExternalCoreEnv(CoreEnv):
         """
         # If the external env has been declared done, just return the last state again (as no more states are available)
         if not self.rollout_done_event.is_set():
-            self.last_maze_state, _, _, _, events = self.state_queue.get()
+            self.last_maze_state, _, _, _, _, events = self.state_queue.get()
             self._replay_events(events)
 
         return self.last_maze_state
 
     @override(CoreEnv)
     def step(self, maze_action: MazeActionType) -> Tuple[
-        MazeStateType, Union[float, np.ndarray, Any], bool, Dict[Any, Any]]:
+        MazeStateType, Union[float, np.ndarray, Any], bool, bool, Dict[Any, Any]]:
         """Relays the execution back to the agent deployment. Then suspends thread execution until
         the next state is provided by agent deployment."""
         self.maze_action_queue.put(maze_action)
@@ -88,14 +88,14 @@ class ExternalCoreEnv(CoreEnv):
         # Here, thread execution is suspended until the next state object is put in the queue by AIW.
         # (This happens when the external env controlling the AIW queries it for the next execution.)
 
-        state, reward, done, info, events = self.state_queue.get()
+        state, reward, terminated, truncated, info, events = self.state_queue.get()
         self.last_maze_state = state
         self._replay_events(events)
 
         # Increment step and clear events - structured core environments are not supported
         self.context.increment_env_step()
 
-        return state, reward, done, info
+        return state, reward, terminated, truncated, info
 
     # --- Structured env methods and setters ---
 

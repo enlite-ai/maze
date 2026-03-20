@@ -47,7 +47,7 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
         return self.last_observation
 
     @override(BaseEnv)
-    def step(self, action: ActionType) -> Tuple[ObservationType, Any, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> Tuple[ObservationType, Any, bool, bool, Dict[Any, Any]]:
         """Record available step-level data."""
         assert self.episode_record is not None, "Environment must be reset before stepping."
 
@@ -57,10 +57,10 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
             self.last_env_time = self.env.get_env_time()
 
         actor_id = self.env.actor_id()  # Get actor Id before the step, so it corresponds to the action taken
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
 
         # store the terminal observation in info
-        if done:
+        if terminated or truncated:
             info["terminal_observation"] = observation
 
         # Record the spaces of the current (sub)step
@@ -69,12 +69,13 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
             observation=self.last_observation,
             action=action,
             reward=reward,
-            done=done,
+            terminated=terminated,
+            truncated=truncated,
             info=info
         ))
 
         self.last_observation = observation
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
     def write_episode_record(self) -> None:
         """Serializes the episode record, if available."""

@@ -23,9 +23,9 @@ def estimate_normalization_statistics(env: ObservationNormalizationWrapper) -> O
     env.reset()
     for _ in range(100):
         action = env.action_space.sample()
-        _, _, done, _ = env.step(action)
+        _, _, terminated, truncated, _ = env.step(action)
 
-        if done:
+        if terminated or truncated:
             break
 
     env.estimate_statistics()
@@ -48,13 +48,13 @@ def conduct_observation_normalization_test(env: ObservationNormalizationWrapper,
     act_conv_space: gym.spaces.space = env.action_conversion.space()
 
     for step in range(n_steps):
-        observation, _, done, _ = env.step(act_conv_space.sample())
+        observation, _, terminated, truncated, _ = env.step(act_conv_space.sample())
         for obs_key in observation:
             if obs_key not in env.exclude:
                 assert validation_callback(observation[obs_key]), \
                     f"validation_callback not True for observation '{obs_key}'"
 
-        if done:
+        if terminated or truncated:
             break
 
 

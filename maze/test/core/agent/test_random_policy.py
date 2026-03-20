@@ -52,7 +52,7 @@ def test_masked_random_policy_equality_without_masking():
         action = policy.compute_action(observation=obs, maze_state=None)
         action_m = policy_m.compute_action(observation=obs, maze_state=None)
 
-        obs, rew, done, info = env.step(action)
+        obs, rew, term, trun, info = env.step(action)
         obs = create_random_action_mask(obs, rng, mask_nothing=True)
         for key in action.keys():
             assert np.all(np.isclose(action[key], action_m[key]))
@@ -74,7 +74,7 @@ def test_masked_random_policy_equality_with_masking():
         action = policy.compute_action(observation=obs, maze_state=None)
         action_m = policy_m.compute_action(observation=obs, maze_state=None)
 
-        obs, rew, done, info = env.step(action)
+        obs, rew, term, trun, info = env.step(action)
         obs = create_random_action_mask(obs, rng, mask_nothing=False)
         for key in action.keys():
             all_same = all_same and np.all(np.isclose(action[key], action_m[key]))
@@ -110,13 +110,13 @@ def test_masked_random_policy():
                                                                 actor_id=env.actor_id())
         check_sampled_action(actions, env, obs)
 
-        obs, rew, done, info = env.step(actions[0])
+        obs, rew, terminated, truncated, info = env.step(actions[0])
         obs = create_random_action_mask(obs, rng, mask_nothing=False)
         actions, probs = policy_m.compute_top_action_candidates(observation=obs, num_candidates=2, maze_state=None,
                                                                 env=None,
                                                                 actor_id=env.actor_id())
         check_sampled_action(actions, env, obs)
-        obs, rew, done, info = env.step(actions[0])
+        obs, rew, term, trun, info = env.step(actions[0])
         obs = create_random_action_mask(obs, rng, mask_nothing=False)
 
 

@@ -92,10 +92,10 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         self._sub_step_index = 0
         return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0'])
 
-    def step(self, action) -> Tuple[Dict, float, bool, Optional[Dict]]:
+    def step(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict]]:
         """Generic sub-step function.
 
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
 
         sub_step_result = None
@@ -160,20 +160,20 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         """
         Returns the first action
 
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
         # Only the second sub step actually steps the underlying core env
-        return filter_dict_starts_with(self.last_obs, ['action_1', 'observation_1']), 1, False, {}
+        return filter_dict_starts_with(self.last_obs, ['action_1', 'observation_1']), 1, False, False, {}
 
-    def _action1(self, action) -> Tuple[Dict, float, bool, Optional[Dict[str, np.ndarray]]]:
+    def _action1(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict[str, np.ndarray]]]:
         """
         Returns the second action
 
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
         # Only the second sub step actually steps the underlying core env
-        self.last_obs, _, _, _ = self.maze_env.step(action)
-        return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0']), 2, False, {}
+        self.last_obs, _, _, _, _ = self.maze_env.step(action)
+        return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0']), 2, False, False, {}
 
     def clone_from(self, env: 'DummyStructuredEnvironment') -> None:
         self.maze_env.clone_from(env.maze_env)

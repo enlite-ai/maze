@@ -16,11 +16,11 @@ def test_replay_recorded_actions_policy():
 
     env.seed(1234)
     obs = env.reset()
-    done = False
+    terminated, truncated = False, False
     cum_reward_teacher = 0
-    while not done:
+    while not (terminated or truncated):
         action = teacher_policy.compute_action(obs)
-        obs, rew, done, info = env.step(action)
+        obs, rew, terminated, truncated, info = env.step(action)
         cum_reward_teacher += rew
 
     env.dump()
@@ -31,11 +31,11 @@ def test_replay_recorded_actions_policy():
 
     env.seed(1234)
     obs = env.reset()
-    done = False
+    terminated, truncated = False, False
     cum_reward_replay = 0
-    while not done:
+    while not (terminated or truncated):
         action = replay_policy.compute_action(obs, maze_state=env.get_maze_state(), env=env)
-        obs, rew, done, info = env.step(action)
+        obs, rew, terminated, truncated, info = env.step(action)
         cum_reward_replay += rew
 
     assert cum_reward_teacher == cum_reward_replay

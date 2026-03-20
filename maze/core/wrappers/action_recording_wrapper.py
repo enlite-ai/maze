@@ -36,7 +36,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         self.output_dir = Path(output_dir)
 
     @override(ObservationWrapper)
-    def step(self, action) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``ObservationWrapper.step`` and map observation."""
 
         # get current actor id
@@ -44,7 +44,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         curr_env_time = self.env.get_env_time()
 
         # take actual step
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
         self._cum_reward += reward
 
         # record action taken
@@ -55,7 +55,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         if self.record_actions:
             self.action_record.set_agent_action(curr_env_time, actor_id=actor_id, action=action)
 
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
     @override(CoreEnv)
     def seed(self, seed: int) -> None:

@@ -17,8 +17,8 @@ def main():
         core_env.renderer.render(maze_state, maze_action, None)
 
         # take actual environment step
-        maze_state, reward, done, info = core_env.step(maze_action)
-        print(f"reward {reward} | done {done} | info {info}")
+        maze_state, reward, terminated, truncated, info = core_env.step(maze_action)
+        print(f"reward {reward} | terminated {terminated} | truncated {truncated}| info {info}")
 
 
 if __name__ == "__main__":

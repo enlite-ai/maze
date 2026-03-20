@@ -58,11 +58,11 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
         return self._max_episode_steps
 
     @override(BaseEnv)
-    def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Override BaseEnv.step and set done if the step limit is reached.
         """
         assert self._elapsed_steps is not None, "Cannot call env.step() before calling reset()"
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
 
         # load time from the environment or increment own step count it the environment does not manage
         # its own time
@@ -71,11 +71,11 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
         else:
             self._elapsed_steps += 1
 
-        if self._max_episode_steps and self._elapsed_steps >= self._max_episode_steps:
-            info['TimeLimit.truncated'] = not done
-            info['done_solved'] = not done
-            done = True
-        return observation, reward, done, info
+        if self._max_episode_steps and self._elapsed_steps >= self._max_episode_steps and not terminated:
+            truncated = True
+            info['TimeLimit.truncated'] = True
+
+        return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
     def reset(self) -> Any:

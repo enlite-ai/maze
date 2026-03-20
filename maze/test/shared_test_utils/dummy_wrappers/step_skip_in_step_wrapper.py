@@ -66,7 +66,7 @@ class ConfigurableStepSkipInStepWrapper(Wrapper[MazeEnv]):
         # Check for flat step
         if self.cur_idx == self.n_sub_steps:
             # Mimic env done
-            step_val = (step_val[0], step_val[1], True, step_val[3])
+            step_val = (step_val[0], step_val[1], True, False, step_val[3])
 
             # Check for flat step skip
             if sum(self.skip_sequence) == self.n_sub_steps:

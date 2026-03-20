@@ -10,15 +10,15 @@ from maze.core.env.observation_conversion import ObservationType
 
 
 class VectorEnv(BaseEnv, ABC):
-    """Abstract base class for vectorised environments.
+    """Abstract base class for vectorized environments.
 
     An instance of this class encapsulates multiple environments under the hood and steps them synchronously.
 
     Note that actions and observations are handled and returned in a stacked form, i.e. not as a list,
     but as a single action/observation dict where the items have an additional dimension corresponding
-    to the number of encapsulated environments (as such setting is more convenient when working with
+    to the number of encapsulated environments (as such a setting is more convenient when working with
     Torch policies). To convert these to/from a list, use the training helpers such as
-    :func:`maze.train.utils.train_utils.stack_numpy_dict_list` and
+    func:`maze.train.utils.train_utils.stack_numpy_dict_list` and
     :func:`maze.train.utils.train_utils.unstack_numpy_list_dict`.
 
     Also note that in structured scenarios, only synchronous environments are supported -- i.e., in each
@@ -32,11 +32,11 @@ class VectorEnv(BaseEnv, ABC):
 
     @abstractmethod
     def step(self, actions: ActionType
-             ) -> Tuple[ObservationType, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+             ) -> Tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
-        :return: observations, rewards, dones, information-dicts all in env-aggregated form.
+        :return: observations, rewards, terminated list, truncated list, information-dicts all in env-aggregated form.
         """
 
     @abstractmethod

@@ -14,9 +14,9 @@ def test_time_limit_wrapper():
     env.seed(1234)
     env.reset()
     for i in range(5):
-        obs, rew, done, info = env.step(env.action_space.sample())
+        obs, rew, terminated, truncated, info = env.step(env.action_space.sample())
         if i >= 4:
-            assert done
+            assert truncated
     env.close()
 
 
@@ -36,9 +36,9 @@ def test_time_limit_wrapper_with_spec():
     env.seed(1234)
     env.reset()
     for i in range(5):
-        obs, rew, done, info = env.step(env.action_space.sample())
+        obs, rew, terminated, truncated, info = env.step(None)
         if i >= 4:
-            assert done
+            assert truncated
     env.close()
 
 
@@ -50,9 +50,9 @@ def test_time_limit_wrapper_time_env():
     env.seed(1234)
     env.reset()
     for i in range(5):
-        obs, rew, done, info = env.step(None)
+        obs, rew, terminated, truncated, info = env.step(None)
         if i >= 4:
-            assert done
+            assert truncated
     env.close()
 
 

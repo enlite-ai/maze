@@ -127,7 +127,7 @@ def test_records_maze_states_and_actions():
         for _ in range(10):
             maze_state = env.get_maze_state()
             states.append(deepcopy(maze_state))
-            obs, _, _, _ = env.step(policy.compute_action(observation=obs, maze_state=maze_state, deterministic=True))
+            obs, _, _, _, _ = env.step(policy.compute_action(observation=obs, maze_state=maze_state, deterministic=True))
 
     # final env reset required
     env.reset()

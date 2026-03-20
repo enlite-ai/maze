@@ -50,9 +50,10 @@ class RolloutEvaluator(Evaluator):
             # Sample action and take the step
             sampled_action = policy.compute_action(observations, actor_id=self.eval_env.actor_id(), maze_state=None,
                                                    deterministic=self.deterministic)
-            observations, rewards, dones, infos = self.eval_env.step(sampled_action)
+            observations, rewards, terminated_lst, truncated_lst, infos = self.eval_env.step(sampled_action)
 
             # Count done episodes
+            dones = np.logical_or(terminated_lst, truncated_lst)
             n_done_episodes += np.count_nonzero(dones)
 
         # Enforce the epoch stats calculation (without calling increment_log_step() -- this is up to the trainer)

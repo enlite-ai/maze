@@ -48,7 +48,7 @@ def assertion_routine(env: StepSkipWrapper) -> None:
         # sample action
         action = env.action_space.sample()
         # take env step
-        obs, rew, done, info = env.step(action)
+        obs, rew, terminated, truncated, info = env.step(action)
 
         if idx == 0:
             assert rew == 1
@@ -106,7 +106,7 @@ def test_observation_skipping_wrapper_sticky_flat():
     cum_rew = 0
     for i in range(2):
         action = env.action_space.sample()
-        obs, reward, done, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)
         cum_rew += reward
 
         assert len(env.get_last_step_events(query=RewardEvents.reward_original)) == 1
@@ -130,7 +130,7 @@ def test_skipping_wrapper_and_reward_aggregation():
     env.reset()
     for _ in range(4):
         action = env.action_space.sample()
-        obs, reward, done, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)
 
         assert(reward == n_steps*10)
 

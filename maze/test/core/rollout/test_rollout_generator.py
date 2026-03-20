@@ -101,11 +101,11 @@ class _FiveSubstepsLimitWrapper(TimeLimitWrapper):
         super().__init__(env)
         self.elapsed_sub_steps = 0
 
-    def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Return done after 5 sub-steps"""
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
         self.elapsed_sub_steps += 1
-        return observation, reward, done or self.elapsed_sub_steps >= 5, info
+        return observation, reward, terminated, truncated or self.elapsed_sub_steps >= 5, info
 
     def reset(self) -> Any:
         """Reset substep counter"""
@@ -127,7 +127,8 @@ def test_handles_done_in_substep_with_recorded_episode_stats():
     # The done step records should have data for the first sub-step only
     dones = 0
     for step_record in trajectory.step_records:
-        if step_record.is_done():
+        episode_done = step_record.is_terminated() or step_record.is_truncated()
+        if episode_done:
             assert [0] == list(step_record.observations_dict.keys())
             dones += 1
             assert step_record.episode_stats is not None
@@ -140,7 +141,7 @@ def test_handles_done_in_substep_with_recorded_episode_stats():
     rollout_generator = RolloutGenerator(env=env, terminate_on_done=True)
     trajectory = rollout_generator.rollout(policy, n_steps=10)
     assert len(trajectory) == 3
-    assert trajectory.is_done()
+    assert trajectory.is_finished()
     assert [0] == list(trajectory.step_records[-1].observations_dict.keys())
 
 

@@ -101,7 +101,8 @@ class AgentDeployment:
     def act(self,
             maze_state: MazeStateType,
             reward: Union[None, float, np.ndarray, Any],
-            done: bool,
+            terminated: bool,
+            truncated: bool,
             info: Union[None, Dict[Any, Any]],
             events: Optional[List[EventRecord]] = None,
             actor_id: ActorID = ActorID(0, 0)) -> MazeActionType:
@@ -112,7 +113,8 @@ class AgentDeployment:
 
         :param maze_state: Current state of the environment.
         :param reward: Reward for the previous step (can be null in initial step)
-        :param done: Whether the external environment is done
+        :param terminated: Whether the external environment is terminated
+        :param truncated: Whether the external environment is truncated
         :param info: Info dictionary
         :param events: List of events to be recorded for this step (mainly useful for statistics and event logs)
         :param actor_id: Optional ID of the actor to run next (comprised of policy_id and agent_id)
@@ -123,7 +125,7 @@ class AgentDeployment:
                                "a new episode.")
 
         self.external_core_env.set_actor_id(actor_id)
-        self.state_queue.put((maze_state, reward, done, info, events))
+        self.state_queue.put((maze_state, reward, terminated, truncated, info, events))
         # Here, the MazeAction is suspended until the agent on the second thread runs another step and the MazeAction
         # is passed back through the MazeAction queue.
         maze_action = self.maze_action_queue.get()
@@ -138,7 +140,8 @@ class AgentDeployment:
     def close(self,
               maze_state: MazeStateType,
               reward: Union[float, np.ndarray, Any],
-              done: bool,
+              terminated: bool,
+              truncated: bool,
               info: Dict[Any, Any],
               events: Optional[List[EventRecord]] = None):
         """
@@ -148,11 +151,12 @@ class AgentDeployment:
 
         :param maze_state: Final state of the rollout
         :param reward: Reward for the previous step (can be null in initial step)
-        :param done: Whether the external environment is done
+        :param terminated: Whether the external environment is terminated
+        :param truncated: Whether the external environment is truncated
         :param info: Info dictionary
         :param events: List of events to be recorded for this step (mainly useful for statistics and event logs)
         """
         self.rollout_done = True
         self.rollout_done_event.set()
-        self.state_queue.put((maze_state, reward, done, info, events))
+        self.state_queue.put((maze_state, reward, terminated, truncated, info, events))
         self.policy_thread.join()

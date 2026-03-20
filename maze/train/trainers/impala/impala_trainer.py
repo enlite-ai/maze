@@ -81,7 +81,7 @@ class IMPALA(ActorCritic):
 
         # TODO: Take into account all rewards, not just from the last sub-step
         last_rewards = record.rewards[-1]
-        discounts = (~record.dones[-1]).float() * self.algorithm_config.gamma
+        discounts = (~(record.terminated[-1] | record.truncated[-1])).float() * self.algorithm_config.gamma
         # START: Loss computation --------------------------------------------------------------------------------------
 
         vtrace_returns = impala_vtrace.from_logits(

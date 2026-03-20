@@ -25,7 +25,8 @@ class A2C(ActorCritic):
                                                               gae_lambda=self.algorithm_config.gae_lambda,
                                                               rewards=record.rewards,
                                                               values=critic_output.detached_values,
-                                                              dones=record.dones[-1])
+                                                              terminated=record.terminated[-1],
+                                                              truncated=record.truncated[-1])
 
         # compute entropies
         entropies = [entropy.mean() for entropy in policy_output.entropies]

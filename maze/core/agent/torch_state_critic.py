@@ -109,7 +109,8 @@ class TorchStateCritic(TorchModel, StateCritic):
                                   gae_lambda: float,
                                   rewards: List[torch.Tensor],
                                   values: List[torch.Tensor],
-                                  dones: torch.Tensor,
+                                  terminated: torch.Tensor,
+                                  truncated: torch.Tensor,
                                   ) -> List[torch.Tensor]:
         """Compute bootstrapped return for the whole structured step (i.e., all sub-steps).
 
@@ -117,7 +118,8 @@ class TorchStateCritic(TorchModel, StateCritic):
         :param gae_lambda: Bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
         :param rewards: List of sub-step rewards, each with shape (n_steps, n_workers)
         :param values: List of sub-step detached values, each with shape (n_steps, n_workers)
-        :param dones: Step dones with shape (n_steps, n_workers)
+        :param terminated: Step terminated flags with shape (n_steps, n_workers)
+        :param truncated: Step truncated flags with shape (n_steps, n_workers)
         :return: List of per-time sub-step returns
         """
 
@@ -126,7 +128,8 @@ class TorchStateCritic(TorchModel, StateCritic):
                        gae_lambda: float,
                        rewards: torch.Tensor,
                        values: torch.Tensor,
-                       dones: torch.Tensor,
+                       terminated: torch.Tensor,
+                       truncated: torch.Tensor,
                        deltas: torch.Tensor = None,
                        ) -> torch.Tensor:
         """Compute bootstrapped return from rewards and estimated values.
@@ -135,18 +138,20 @@ class TorchStateCritic(TorchModel, StateCritic):
         :param gae_lambda: Bias vs variance trade of factor for Generalized Advantage Estimator (GAE)
         :param rewards: Step rewards with shape (n_steps, n_workers)
         :param values: Predicted values with shape (n_steps, n_workers)
-        :param dones: Step dones with shape (n_steps, n_workers)
+        :param terminated: Step terminated flags with shape (n_steps, n_workers)
+        :param truncated: Step truncated flags with shape (n_steps, n_workers)
         :param deltas: Predicted value deltas to previous sub-step with shape (n_steps, n_workers)
         :return: Per time step returns.
         """
         assert rewards.shape == values.shape, f'{rewards.shape} vs {values.shape}'
-        assert rewards.shape == dones.shape, f'{rewards.shape} vs {dones.shape}'
+        assert rewards.shape == terminated.shape, f'{rewards.shape} vs {terminated.shape}'
+        assert rewards.shape == truncated.shape, f'{rewards.shape} vs {truncated.shape}'
 
         # initialize returns
         returns = torch.zeros((rewards.shape[0], rewards.shape[1]), dtype=torch.float32, device=self.device)
 
         # prepare end-of-episode mask
-        mask = (~dones).float()
+        mask = (~(terminated | truncated)).float()
 
         # traverse time steps in reverse order
         gae = torch.zeros(rewards.shape[1], dtype=torch.float32, device=self.device)
@@ -226,7 +231,8 @@ class TorchSharedStateCritic(TorchStateCritic):
                                   gae_lambda: float,
                                   rewards: List[torch.Tensor],
                                   values: List[torch.Tensor],
-                                  dones: torch.Tensor,
+                                  terminated: torch.Tensor,
+                                  truncated: torch.Tensor,
                                   ) -> List[torch.Tensor]:
         """Compute return based on shared reward (summing the reward across all sub-steps)"""
         # Sum rewards across all sub-steps into a shared reward
@@ -234,7 +240,8 @@ class TorchSharedStateCritic(TorchStateCritic):
 
         # Note: With shared critic, values are the same for each sub-step --> just take the last one here
         sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                              rewards=shared_rewards, values=values[-1], dones=dones)
+                                              rewards=shared_rewards, values=values[-1],
+                                              terminated=terminated, truncated=truncated)
 
         # The same shared return for each sub-step
         return [sub_step_return for _ in values]
@@ -271,13 +278,15 @@ class TorchStepStateCritic(TorchStateCritic):
                                   gae_lambda: float,
                                   rewards: List[torch.Tensor],
                                   values: List[torch.Tensor],
-                                  dones: torch.Tensor,
+                                  terminated: torch.Tensor,
+                                  truncated: torch.Tensor,
                                   ) -> List[torch.Tensor]:
         """Compute returns for each sub-step separately"""
         returns = []
         for substep_rewards, substep_values in zip(rewards, values):
             sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                                  rewards=substep_rewards, values=substep_values, dones=dones)
+                                                  rewards=substep_rewards, values=substep_values,
+                                                  terminated=terminated, truncated=truncated)
             returns.append(sub_step_return)
 
         return returns
@@ -333,13 +342,15 @@ class TorchDeltaStateCritic(TorchStateCritic):
                                   gae_lambda: float,
                                   rewards: List[torch.Tensor],
                                   values: List[torch.Tensor],
-                                  dones: torch.Tensor,
+                                  terminated: torch.Tensor,
+                                  truncated: torch.Tensor,
                                   ) -> List[torch.Tensor]:
         """Compute return based on shared reward (summing the reward across all sub-steps)"""
         # Sum rewards across all sub-steps into a shared reward
         shared_rewards = torch.stack(rewards).sum(dim=0)
         sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                              rewards=shared_rewards, values=values[-1], dones=dones)
+                                              rewards=shared_rewards, values=values[-1],
+                                              terminated=terminated, truncated=truncated)
 
         # The same shared return for each sub-step
         return [sub_step_return for _ in values]

@@ -60,7 +60,7 @@ the :code:`act` method:
 
 .. code-block:: python
 
-    maze_action = agent_deployment.act(maze_state, reward, done, info)
+    maze_action = agent_deployment.act(maze_state, reward, terminated, truncated, info)
 
 When the episode is done, you should close the agent deployment.
 At this point, the agent deployment resets the env to write out

@@ -38,7 +38,8 @@ class PPO(ActorCritic):
                                                                   gae_lambda=self.algorithm_config.gae_lambda,
                                                                   rewards=record.rewards,
                                                                   values=critic_output_old.detached_values,
-                                                                  dones=record.dones[-1])
+                                                                  terminated=record.terminated[-1],
+                                                                  truncated=record.truncated[-1])
             action_log_probs_old = policy_output_old.log_probs_for_actions(record.actions)
             # manually empty GPU cache
             torch.cuda.empty_cache()

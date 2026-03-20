@@ -111,13 +111,13 @@ class RolloutGenerator:
                 record = self._record_sub_step(policy=policy)
                 step_record.append(record)
                 # note that this also handles the special case of a done env after the first step
-                if np.all(record.done):
+                if np.all(record.finished):
                     break
 
             if self.record_step_stats:
                 step_record.step_stats = self.env.get_stats(LogStatsLevel.STEP).last_stats
 
-            if self.record_episode_stats and not self.is_vectorized and step_record.is_done():
+            if self.record_episode_stats and not self.is_vectorized and (step_record.is_finished()):
                 step_record.episode_stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
 
             # Redistribute actor rewards, if available
@@ -135,7 +135,7 @@ class RolloutGenerator:
                 break
 
             # End prematurely on env done if desired
-            if self.terminate_on_done and not self.is_vectorized and step_record.is_done():
+            if self.terminate_on_done and not self.is_vectorized and (step_record.is_terminated() or step_record.is_truncated()):
                 break
 
         return trajectory_record
@@ -177,14 +177,14 @@ class RolloutGenerator:
         record.policy_record = policy.write_policy_record()
 
         # Take the step
-        self.last_observation, record.reward, record.done, record.info = self.env.step(action)
+        self.last_observation, record.reward, record.terminated, record.truncated, record.info = self.env.step(action)
 
         # Record the resulting observation if requested
         if self.record_next_observations:
             record.next_observation = self.last_observation
 
         # Reset the env if done and keep the terminal observation
-        if not self.is_vectorized and record.done:
+        if not self.is_vectorized and (record.terminated or record.truncated):
             record.info["terminal_observation"] = deepcopy(self.last_observation)
             self.last_observation = self.env.reset()
 

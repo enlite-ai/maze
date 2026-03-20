@@ -47,6 +47,11 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
         self._actor_dones = None
         self._env_times = None
 
+        # to help determine done in Gym 26
+        self._actor_terminated = None
+        self._actor_truncated = None
+
+
         self.seeds = None
         self._next_seed_idx = 0
 
@@ -75,8 +80,16 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
 
     @override(StructuredEnv)
     def is_actor_done(self) -> np.ndarray:
-        """Return the done flags of all actors in a list."""
-        return self._actor_dones
+        """Return the done flags (terminated or truncated) of all actors in a list."""
+        return self._actor_terminated | self._actor_truncated
+
+    def is_actor_terminated(self) -> bool:
+        """Return the terminated flags of all actors in a list."""
+        return self._actor_terminated
+
+    def is_actor_truncated(self) -> bool:
+        """Return the truncated flags of all actors in a list."""
+        return self._actor_truncated
 
     @abstractmethod
     @override(StructuredEnv)

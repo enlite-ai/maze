@@ -106,10 +106,12 @@ class StructuredSpacesRecord:
             observation=obs[substep_key],
             action=action[substep_key],
             reward=None,
-            done=None
+            terminated=None,
+            truncated=None,
         ) for substep_key in obs.keys()]
 
-        substep_records[-1].done = state_record.done
+        substep_records[-1].terminated = state_record.terminated
+        substep_records[-1].truncated = state_record.truncated
         substep_records[-1].reward = state_record.reward
 
         return StructuredSpacesRecord(substep_records=substep_records)
@@ -150,13 +152,20 @@ class StructuredSpacesRecord:
         """Return whether this record is batched or not."""
         return self.substep_records[0].batch_shape
 
-    def is_done(self) -> bool:
-        """Return true if the episode ended during this structured step.
-
-        :return: true if the episode ended during this structured step
-        """
+    def is_terminated(self) -> bool:
+        """Return true if the episode ended during this structured step."""
         assert not self.is_batched(), "cannot determine done state for batched trajectory."
-        return self.substep_records[-1].done
+        return self.substep_records[-1].terminated
+
+    def is_truncated(self) -> bool:
+        """Return true if the episode was truncated during this structured step."""
+        assert not self.is_batched(), "cannot determine done state for batched trajectory."
+        return self.substep_records[-1].truncated
+
+    def is_finished(self):
+        """Return true if the episode ended during this structured step, either terminated or truncated"""
+        assert not self.is_batched(), "cannot determine done state for batched trajectory."
+        return self.substep_records[-1].truncated or self.substep_records[-1].terminated
 
     @property
     def actor_ids(self) -> List[ActorID]:
@@ -184,9 +193,14 @@ class StructuredSpacesRecord:
         return [r.reward for r in self.substep_records]
 
     @property
-    def dones(self) -> List[Union[bool, torch.Tensor]]:
-        """List of dones from the individual sub-steps."""
-        return [r.done for r in self.substep_records]
+    def terminated(self) -> List[Union[bool, torch.Tensor]]:
+        """List of terminated flags from the individual sub-steps."""
+        return [r.terminated for r in self.substep_records]
+
+    @property
+    def truncated(self) -> List[Union[bool, torch.Tensor]]:
+        """List of truncated flags from the individual sub-steps."""
+        return [r.truncated for r in self.substep_records]
 
     @property
     def next_observations(self) -> List[Union[ObservationType, TorchObservationType]]:
@@ -225,9 +239,14 @@ class StructuredSpacesRecord:
         return {r.substep_key: r.reward for r in self.substep_records}
 
     @property
-    def dones_dict(self) -> Dict[StepKeyType, Union[bool, torch.Tensor]]:
-        """Dict of dones from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
-        return {r.substep_key: r.done for r in self.substep_records}
+    def terminated_dict(self) -> Dict[StepKeyType, Union[bool, torch.Tensor]]:
+        """Dict of terminating from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.terminated for r in self.substep_records}
+
+    @property
+    def truncated_dict(self) -> Dict[StepKeyType, Union[bool, torch.Tensor]]:
+        """Dict of truncated flags from the sub-steps, keyed by the sub-step ID (not suitable in multi-agent scenarios)."""
+        return {r.substep_key: r.truncated for r in self.substep_records}
 
     @property
     def next_observations_dict(self) -> Dict[StepKeyType, Union[ObservationType, TorchObservationType]]:

@@ -17,7 +17,7 @@ def main():
 
     # take first env step
     action_1 = struct_env.action_space.sample()
-    obs_step2, rew, done, info = struct_env.step(action=action_1)
+    obs_step2, rew, terminated, truncated, info = struct_env.step(action=action_1)
 
     print("action_space 2:     ", struct_env.action_space)
     print("observation_space 2:", struct_env.observation_space)

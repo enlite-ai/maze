@@ -8,7 +8,7 @@ from omegaconf import ListConfig
 
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
-from maze.core.trajectory_recording.datasets.utils import retrieve_done_info
+from maze.core.trajectory_recording.datasets.utils import retrieve_episode_end_info
 from maze.core.trajectory_recording.records.state_record import StateRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
@@ -111,7 +111,7 @@ class BaseClippingTrajectoryProcessor(TrajectoryProcessor):
         if self.clip_k == 0 or len(trajectory) == 0:
             return trajectory
 
-        done_terminated, done_truncated, info = retrieve_done_info(trajectory)
+        done_terminated, done_truncated, info = retrieve_episode_end_info(trajectory)
 
         # Check whether the given trajectory should be clipped.
         if self.test_for_trajectory_clipping(done_terminated, done_truncated, info):

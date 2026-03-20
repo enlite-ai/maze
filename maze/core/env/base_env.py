@@ -9,11 +9,11 @@ class BaseEnv(ABC):
     """
 
     @abstractmethod
-    def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Environment step function.
 
         :param action: the selected action to take.
-        :return: state, reward, done, info
+        :return: state, reward, terminated, truncated, info
         """
 
     @abstractmethod

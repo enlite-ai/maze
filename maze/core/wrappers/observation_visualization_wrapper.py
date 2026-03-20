@@ -75,7 +75,7 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
             ObservationVisualizationEvents.observation_to_visualize.tensorboard_render_figure_dict[None] = function
 
     @override(BaseEnv)
-    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, bool, Dict[Any, Any]]:
         """Triggers logging events for observations, actions and reward.
         """
 
@@ -84,14 +84,14 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
         substep_name = f"step_key_{substep_id}" if substep_id is not None else None
 
         # take wrapped env step
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, terminated, truncated, info = self.env.step(action)
 
         # log processed observations
         for observation_name, observation_value in obs.items():
             self.observation_events.observation_to_visualize(
                 step_key=substep_name, name=observation_name, value=observation_value)
 
-        return obs, rew, done, info
+        return obs, rew, terminated, truncated, info
 
     @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],

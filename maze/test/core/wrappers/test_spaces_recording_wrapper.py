@@ -23,7 +23,7 @@ def test_records_episode_with_correct_data():
         observations.append(observation)
         action = env.action_space.sample()
         actions.append(action)
-        observation, _, _, _ = env.step(action)
+        observation, _, _, _, _ = env.step(action)
 
     episode_id = env.get_episode_id()
     expected_file_path = str(episode_id) + ".pkl"

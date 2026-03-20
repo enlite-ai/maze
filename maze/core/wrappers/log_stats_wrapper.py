@@ -80,7 +80,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         return instance
 
     @override(BaseEnv)
-    def step(self, action: Any) -> Tuple[Any, Any, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Collect the rewards for the logging statistics
         """
 
@@ -88,14 +88,14 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         substep_id, _ = self.env.actor_id() if isinstance(self.env, StructuredEnv) else (None, None)
 
         # take core env step
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, terminated, truncated, info = self.env.step(action)
 
         # record the reward
         self.reward_events.append(EventRecord(BaseEnvEvents, BaseEnvEvents.reward, dict(value=rew)))
 
         # Stats are recorded with the post step callbacks
 
-        return obs, rew, done, info
+        return obs, rew, terminated, truncated, info
 
     def _record_stats_if_ready(self) -> None:
         """Checks if stats are ready to record based on env time (for structured envs, we wait till the end
