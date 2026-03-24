@@ -55,6 +55,46 @@ def build_dummy_base_env() -> BaseEnv:
 
     return SomeBaseEnv()
 
+def build_dummy_base_env_with_fixed_episode_length(episode_length: int) -> BaseEnv:
+    """ helper function creating a DummyBaseEnv for unit testing with predefined episode length.
+    When the episode end is reached, a terminated flag is set to True.
+    :param episode_length: Maximum length of the episode.
+    :return: A Dummy Base Env.
+    """
+
+    class SomeBaseEnvWithFixedEpLength(BaseEnv):
+        """
+        A dummy base env for unit testing.
+        """
+        def __init__(self):
+            super().__init__()
+            self.step_counter = 0
+            self.episode_length = episode_length
+
+        @override(BaseEnv)
+        def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+            """ override of BaseEnv """
+            self.step_counter += 1
+            return None, None, self.step_counter >= self.episode_length, False, {}
+
+        @override(BaseEnv)
+        def reset(self) -> Any:
+            self.step_counter = 0
+            """ override of BaseEnv """
+            return None
+
+        @override(BaseEnv)
+        def seed(self, seed: int) -> None:
+            """ override of BaseEnv """
+            pass
+
+        @override(BaseEnv)
+        def close(self) -> None:
+            """ override of BaseEnv """
+            pass
+
+    return SomeBaseEnvWithFixedEpLength()
+
 
 def build_dummy_maze_env() -> DummyEnvironment:
     """

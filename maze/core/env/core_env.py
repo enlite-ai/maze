@@ -120,7 +120,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
     @abstractmethod
     @override(StructuredEnv)
     def is_actor_done(self) -> bool:
-        """Returns True if the just stepped actor is done, which is different to the done flag of the environment.
+        """Returns True if the just stepped actor is done, which is different to the terminated or truncated flag of the environment.
 
         :return: True if the actor is done.
         """

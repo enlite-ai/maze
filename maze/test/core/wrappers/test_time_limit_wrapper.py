@@ -1,7 +1,8 @@
 """ Contains tests for the time limit wrapper. """
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
-from maze.test.shared_test_utils.helper_functions import build_dummy_base_env, build_dummy_maze_env
+from maze.test.shared_test_utils.helper_functions import build_dummy_base_env, build_dummy_maze_env, \
+    build_dummy_base_env_with_fixed_episode_length
 from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
 
@@ -52,9 +53,22 @@ def test_time_limit_wrapper_time_env():
     for i in range(5):
         obs, rew, terminated, truncated, info = env.step(None)
         if i >= 4:
-            assert truncated
+            assert truncated and not terminated
     env.close()
 
+def test_time_limit_wrapper_time_env_terminated_on_step():
+    """ time limit wrapper unit tests that check weather time limit respects an original termination flag """
+    env = build_dummy_base_env_with_fixed_episode_length(episode_length=10)
+    env = TimeLimitWrapper.wrap(env, max_episode_steps=10)
+
+    env.seed(1234)
+    env.reset()
+    for i in range(20):
+        obs, rew, terminated, truncated, info = env.step(None)
+
+        if i >= 10:
+            assert terminated and not truncated
+    env.close()
 
 def test_time_limit_wrapper_clone_from():
     """ time limit wrapper unit tests """

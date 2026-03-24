@@ -63,6 +63,7 @@ def _mock_state_trajectory_record(step_count: int):
             step_event_log=StepEventLog(i),
             reward=0,
             terminated=i == step_count - 1,
+            truncated=False,
             info=None,
             serializable_components={}
         ))
@@ -80,7 +81,8 @@ def _mock_spaces_trajectory_record(step_count: int):
             observation=dict(observation=np.array(i)),
             action=dict(action=np.array(i)),
             reward=0,
-            terminated=i == step_count - 1
+            terminated=i == step_count - 1,
+            truncated=False,
         )
         episode_record.step_records.append(StructuredSpacesRecord(substep_records=[substep_record]))
 
