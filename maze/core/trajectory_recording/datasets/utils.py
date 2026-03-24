@@ -18,8 +18,8 @@ def retrieve_terminated_truncated_and_last_info(trajectory: TrajectoryRecord) ->
     if isinstance(last_record, StateRecord):
         if last_record.maze_state is None or last_record.maze_action is None:
             trajectory.step_records = trajectory.step_records[:-1]
-        is_terminated = trajectory.step_records[-1].done_terminated
-        is_truncated = trajectory.step_records[-1].done_truncated
+        is_terminated = trajectory.step_records[-1].terminated
+        is_truncated = trajectory.step_records[-1].truncated
         info = trajectory.step_records[-1].info
 
     elif isinstance(last_record, StructuredSpacesRecord):
