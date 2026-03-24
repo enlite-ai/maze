@@ -111,13 +111,13 @@ class RolloutGenerator:
                 record = self._record_sub_step(policy=policy)
                 step_record.append(record)
                 # note that this also handles the special case of a done env after the first step
-                if np.all(record.finished):
+                if np.all(record.done):
                     break
 
             if self.record_step_stats:
                 step_record.step_stats = self.env.get_stats(LogStatsLevel.STEP).last_stats
 
-            if self.record_episode_stats and not self.is_vectorized and (step_record.is_finished()):
+            if self.record_episode_stats and not self.is_vectorized and (step_record.is_done()):
                 step_record.episode_stats = self.env.get_stats(LogStatsLevel.EPISODE).last_stats
 
             # Redistribute actor rewards, if available

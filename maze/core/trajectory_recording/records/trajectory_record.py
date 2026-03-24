@@ -97,7 +97,7 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         """
         return [step_record.actions for step_record in self.step_records]
 
-    def is_finished(self) -> bool:
+    def is_done(self) -> bool:
         """Convenience method for checking whether the end of this trajectory represents also the end of an episode."""
         if len(self) == 0:
             return False

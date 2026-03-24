@@ -108,8 +108,8 @@ class SpacesRecord:
         return self.actor_id.agent_id
 
     @property
-    def finished(self) -> bool:
-        """Whether the step is finished (i.e., terminated or truncated)."""
+    def done(self) -> bool:
+        """Whether the step is done (i.e., terminated or truncated)."""
         return self.terminated | self.truncated
 
     def to_numpy(self) -> 'SpacesRecord':

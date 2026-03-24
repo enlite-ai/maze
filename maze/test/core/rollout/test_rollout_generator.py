@@ -141,7 +141,7 @@ def test_handles_done_in_substep_with_recorded_episode_stats():
     rollout_generator = RolloutGenerator(env=env, terminate_on_done=True)
     trajectory = rollout_generator.rollout(policy, n_steps=10)
     assert len(trajectory) == 3
-    assert trajectory.is_finished()
+    assert trajectory.is_done()
     assert [0] == list(trajectory.step_records[-1].observations_dict.keys())
 
 

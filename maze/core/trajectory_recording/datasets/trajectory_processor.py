@@ -111,10 +111,10 @@ class BaseClippingTrajectoryProcessor(TrajectoryProcessor):
         if self.clip_k == 0 or len(trajectory) == 0:
             return trajectory
 
-        finished_terminated, finished_truncated, info = retrieve_episode_end_info(trajectory)
+        done_terminated, done_truncated, info = retrieve_episode_end_info(trajectory)
 
         # Check whether the given trajectory should be clipped.
-        if self.test_for_trajectory_clipping(finished_terminated, finished_truncated, info):
+        if self.test_for_trajectory_clipping(done_terminated, done_truncated, info):
             # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
             if len(trajectory) > self.clip_k:
                 trajectory.step_records = trajectory.step_records[:-self.clip_k]

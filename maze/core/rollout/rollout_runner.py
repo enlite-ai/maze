@@ -172,8 +172,8 @@ class RolloutRunner(Runner, ABC):
         :param render: Whether to render the environment after every step.
         """
 
-        episode_finished = False
-        while not episode_finished:
+        episode_done = False
+        while not episode_done:
             # inject the MazeEnv state if desired by the policy
             action = agent.compute_action(observation=obs,
                                           actor_id=env.actor_id(),
@@ -182,7 +182,7 @@ class RolloutRunner(Runner, ABC):
                                           deterministic=deterministic)
 
             obs, rew, terminated, truncated, info = env.step(action)
-            episode_finished = terminated or truncated
+            episode_done = terminated or truncated
 
             if render:
                 assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \

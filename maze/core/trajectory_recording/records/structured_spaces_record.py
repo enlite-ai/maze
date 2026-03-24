@@ -162,7 +162,7 @@ class StructuredSpacesRecord:
         assert not self.is_batched(), "cannot determine done state for batched trajectory."
         return self.substep_records[-1].truncated
 
-    def is_finished(self):
+    def is_done(self):
         """Return true if the episode ended during this structured step, either terminated or truncated"""
         assert not self.is_batched(), "cannot determine done state for batched trajectory."
         return self.substep_records[-1].truncated or self.substep_records[-1].terminated
