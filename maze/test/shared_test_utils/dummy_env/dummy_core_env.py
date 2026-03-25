@@ -52,12 +52,12 @@ class DummyCoreEnvironment(CoreEnv):
         """
         return self.observation_space.sample()
 
-    def reset(self) -> Dict[str, np.ndarray]:
+    def reset(self) -> Tuple[Dict[str, np.ndarray], dict]:
         """
         Does nothing
-        :return: The environment state
+        :return: The environment state and empty info dict
         """
-        return self.get_maze_state()
+        return self.get_maze_state(), {}
 
     def render(self, mode='human'):
         """

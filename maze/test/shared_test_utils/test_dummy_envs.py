@@ -13,7 +13,7 @@ def test_dummy_maze_env():
     Unit test for the DummyEnvironment
     """
     env = build_dummy_maze_env()
-    _ = env.reset()
+    env.reset()
 
     for _ in range(10):
         action = env.action_space.sample()

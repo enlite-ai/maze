@@ -96,14 +96,14 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Record the final state and ship the episode record, reset underlying env and start a new episode record."""
         self._write_episode_record()
-        observation = self.env.reset()
+        observation, info = self.env.reset()
         self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else 0
         self._collect_state_and_components()
         self.episode_record = self._build_episode_record()
-        return observation
+        return observation, info
 
     def render(self, interactive: bool = False, **kwargs) -> None:
         """Render the trajectory data collected during the last step, i.e. MazeState before the last step and

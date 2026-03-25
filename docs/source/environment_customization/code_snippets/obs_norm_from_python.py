@@ -42,4 +42,4 @@ training_env = ObservationNormalizationWrapper.wrap(training_env, **normalizatio
 training_env.set_normalization_statistics(normalization_statistics)
 
 # after this step the training env yields normalized observations
-normalized_obs = training_env.reset()
+normalized_obs, _ = training_env.reset()

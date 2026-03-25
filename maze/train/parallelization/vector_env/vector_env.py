@@ -40,10 +40,10 @@ class VectorEnv(BaseEnv, ABC):
         """
 
     @abstractmethod
-    def reset(self):
-        """Reset all the environments and return respective observations in env-aggregated form.
+    def reset(self) -> Tuple[Any, dict]:
+        """Reset all the environments and return respective observations and info dicts in env-aggregated form.
 
-        :return: observations in env-aggregated form.
+        :return: observations and info dicts in env-aggregated form.
         """
 
     @abstractmethod

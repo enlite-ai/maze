@@ -67,7 +67,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         self.env.seed(seed)
 
     @override(ObservationWrapper)
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Intercept ``ObservationWrapper.reset`` and map observation."""
 
         # dump previous trajectory
@@ -76,7 +76,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
             self.action_record = ActionRecord(seed=self._current_seed)
         else:
             self.action_record = ActionRecord(seed=None)
-        obs = self.env.reset()
+        obs, info = self.env.reset()
         self._cum_reward = 0.0
 
         self._episode_id = self.env.get_episode_id()
@@ -84,7 +84,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         # clear seed to make sure that the next episode is again seeded properly
         self._current_seed = None
 
-        return obs
+        return obs, info
 
     def dump(self) -> None:
         """Dump recorded trajectory to file.

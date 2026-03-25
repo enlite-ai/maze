@@ -55,11 +55,11 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> MazeActionType:
+    def reset(self) -> Tuple[MazeActionType, dict]:
         """Intercept ``BaseEnv.reset`` and map observation."""
 
         # reset wrapped env
-        observation = self.env.reset()
+        observation, info = self.env.reset()
 
         if self._export:
             # close previous writer
@@ -75,7 +75,7 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
             self._events = StepEventLog(env_time=0)
             self._render()
 
-        return observation
+        return observation, info
 
     def _render(self) -> None:
         """Render state to rgb image and append image stack.

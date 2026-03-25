@@ -24,7 +24,7 @@ from maze.test.shared_test_utils.config_testing_utils import load_env_config
 def random_env_steps(env: ObservationNormalizationWrapper, steps: int) -> np.ndarray:
     """Randomly interact with the environment"""
     observations = []
-    obs = env.reset()
+    obs, _ = env.reset()
     observations.append(obs["observation"])
     for _ in range(steps):
         action = env.sampling_policy.compute_action(obs, maze_state=None, env=env, actor_id=ActorID(0, 0), deterministic=False)
@@ -32,7 +32,7 @@ def random_env_steps(env: ObservationNormalizationWrapper, steps: int) -> np.nda
         observations.append(obs["observation"])
 
         if terminated or truncated:
-            obs = env.reset()
+            obs, _ = env.reset()
             observations.append(obs["observation"])
 
     return np.vstack(observations)
@@ -382,7 +382,7 @@ def test_observation_statistics_logging():
     n_episodes = 10
     n_steps_per_episode = 100
     for episode in range(n_episodes):
-        _ = env.reset()
+        env.reset()
         for step in range(n_steps_per_episode):
             # take random action
             action = env.action_space.sample()

@@ -15,5 +15,6 @@ def test_no_dict_action_wrapper():
 
     assert isinstance(env.observation_space.sample(), np.ndarray)
     assert env.observation_space.contains(env.observation_space.sample())
-    assert env.observation_space.contains(env.reset())
+    obs, _ = env.reset()
+    assert env.observation_space.contains(obs)
 

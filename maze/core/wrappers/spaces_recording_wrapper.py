@@ -36,15 +36,15 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
         self.output_dir = Path(output_dir)
 
     @override(BaseEnv)
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Write the episode record and initialize a new one."""
         self.write_episode_record()
 
-        self.last_observation = self.env.reset()
+        self.last_observation, info = self.env.reset()
         self.last_env_time = None
         self.episode_record = SpacesTrajectoryRecord(id=self.env.get_episode_id())
 
-        return self.last_observation
+        return self.last_observation, info
 
     @override(BaseEnv)
     def step(self, action: ActionType) -> Tuple[ObservationType, Any, bool, bool, Dict[Any, Any]]:

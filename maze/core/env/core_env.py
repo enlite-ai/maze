@@ -49,10 +49,10 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
 
     @abstractmethod
     @override(StructuredEnv)
-    def reset(self) -> MazeStateType:
-        """Reset the environment and return initial state.
+    def reset(self) -> Tuple[MazeStateType, dict]:
+        """Reset the environment and return the initial state and info dict.
 
-        :return: The initial state after resetting.
+        :return: The initial state after resetting and an info dict.
         """
 
     @abstractmethod

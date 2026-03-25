@@ -31,7 +31,8 @@ def get_obs_action_hash_for_env_agent(env: MazeEnv, policy: Policy, env_seed: in
     observations: List[ObservationType] = list()
     actions: List[ActionType] = list()
 
-    obs = env.reset()
+    obs, info = env.reset()
+
     observations.append(obs)
     for step in range(n_steps):
         actor_id = env.actor_id()
@@ -43,7 +44,7 @@ def get_obs_action_hash_for_env_agent(env: MazeEnv, policy: Policy, env_seed: in
 
         obs, _, terminated, truncated, _ = env.step(action)
         if terminated or truncated:
-            obs = env.reset()
+            obs, _ = env.reset()
 
         observations.append(obs)
         actions.append(action)

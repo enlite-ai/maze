@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import Any, Optional, Union, Dict, List
+from typing import Any, Optional, Union, Dict, List, Tuple
 
 import numpy as np
 from gymnasium import spaces
@@ -134,7 +134,7 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         return observation
 
     @override(ObservationWrapper)
-    def reset(self) -> Dict[str, np.ndarray]:
+    def reset(self) -> Tuple[Any, dict]:
         """Intercept ``ObservationWrapper.reset`` and map observation."""
         # reset observation stack
         if self.stack_mode == 'flatten_history':

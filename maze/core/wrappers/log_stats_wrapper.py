@@ -135,7 +135,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
 
     @override(BaseEnv)
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Reset the environment and trigger the episode statistics calculation of the previous run.
         """
         # Generate the episode stats from the previous rollout if any

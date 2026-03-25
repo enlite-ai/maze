@@ -39,9 +39,9 @@ def build_dummy_base_env() -> BaseEnv:
             return None, None, False, False, {}
 
         @override(BaseEnv)
-        def reset(self) -> Any:
+        def reset(self) -> Tuple[Any, dict]:
             """ override of BaseEnv """
-            return None
+            return None, {}
 
         @override(BaseEnv)
         def seed(self, seed: int) -> None:

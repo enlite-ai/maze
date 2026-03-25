@@ -71,12 +71,14 @@ class ExternalCoreEnv(CoreEnv):
         of notifying the wrappers to do their processing of the previous episode. (Also, no more states are
         available from the external env at this point.
         """
+
+        events = {}
         # If the external env has been declared done, just return the last state again (as no more states are available)
         if not self.rollout_done_event.is_set():
             self.last_maze_state, _, _, _, _, events = self.state_queue.get()
             self._replay_events(events)
 
-        return self.last_maze_state
+        return self.last_maze_state, events
 
     @override(CoreEnv)
     def step(self, maze_action: MazeActionType) -> Tuple[

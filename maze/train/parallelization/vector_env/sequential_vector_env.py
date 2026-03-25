@@ -50,7 +50,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
             if env_terminated or env_truncated:
                 i['terminal_observation'] = obs
                 env.seed(self.get_next_seed())
-                o = env.reset()
+                obs, _ = env.reset()
                 # collect the episode statistics for finished environments
                 self.epoch_stats.receive(env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
@@ -88,14 +88,17 @@ class SequentialVectorEnv(StructuredVectorEnv):
         rewards = np.stack(rewards, axis=1).astype(np.float32)
         return rewards
 
-    def reset(self) -> Dict[str, np.ndarray]:
+    def reset(self) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         """VectorEnv implementation"""
         observations = []
+        infos = []
         self._next_seed_idx = 0
 
         for env in self.envs:
             env.seed(self.get_next_seed())
-            observations.append(env.reset())
+            obs, info = env.reset()
+            observations.append(obs)
+            infos.append(info)
             # send the episode statistics of the environment collected before the reset()
             self.epoch_stats.receive(env.get_stats(LogStatsLevel.EPISODE).last_stats)
 
@@ -103,7 +106,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
         self._actor_ids = [env.actor_id() for env in self.envs]
         self._actor_dones = np.hstack([env.is_actor_done() for env in self.envs])
 
-        return stack_numpy_dict_list(observations)
+        return stack_numpy_dict_list(observations), stack_numpy_dict_list(infos)
 
     @override(VectorEnv)
     def seed(self, seeds: List[Any]) -> None:

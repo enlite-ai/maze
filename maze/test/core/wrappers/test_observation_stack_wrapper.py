@@ -50,7 +50,7 @@ def get_n_stacked_obs(stack_mode: str, env: ObservationStackWrapper, obs_key: st
 def assertion_routine(env: ObservationStackWrapper) -> None:
     """Checks if stacking went well."""
     # test application of wrapper
-    obs = env.reset()
+    obs, _ = env.reset()
 
     for _ in range(3):
         observation_keys = list(obs.keys())
@@ -118,7 +118,7 @@ def test_observation_stack_wrapper_nothing_to_stack(stack_mode):
     }
 
     env = ObservationStackWrapper.wrap(env, stack_config=config['stack_config'], stack_mode=stack_mode)
-    obs = env.reset()
+    obs, _ = env.reset()
     assert obs['observation_0'].shape == (3, 32, 32)
 
 

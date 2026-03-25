@@ -1,5 +1,6 @@
 """Contains a reward scaling wrapper."""
 import copy
+from typing import Tuple, Any
 
 import numpy as np
 
@@ -40,7 +41,7 @@ class ReturnNormalizationRewardWrapper(RewardWrapper[MazeEnv]):
         # normalize reward
         return float(reward / np.sqrt(self._return_stats.var + self.epsilon))
 
-    def reset(self):
+    def reset(self) -> Tuple[Any, dict]:
         """implementation of :class:`~maze.core.wrappers.wrapper.RewardWrapper`
         """
         self._return = 0

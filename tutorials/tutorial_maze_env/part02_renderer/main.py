@@ -7,7 +7,7 @@ def main():
     # init and reset core environment
     core_env = Cutting2DCoreEnvironment(max_pieces_in_inventory=200, raw_piece_size=[100, 100],
                                         static_demand=(30, 15))
-    maze_state = core_env.reset()
+    maze_state, _ = core_env.reset()
     # run interaction loop
     for i in range(15):
         # create cutting maze_action

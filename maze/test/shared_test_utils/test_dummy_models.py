@@ -34,7 +34,7 @@ def test_dummy_model_with_dummy_network():
 
     dummy_critic = DummyValueNet(obs_shapes=obs_shapes[0], non_lin=nn.Tanh)
 
-    obs_np = maze_env.reset()
+    obs_np,  _ = maze_env.reset()
     obs = {k: torch.from_numpy(v) for k, v in obs_np.items()}
 
     for i in range(100):

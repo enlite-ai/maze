@@ -53,7 +53,7 @@ def rollout(
         with contextlib.redirect_stdout(devnull):
             # Initialize MonitoringSetup for rendering support.
             with MonitoringSetup(env, log_dir=log_dir) as monitored_env:
-                obs = monitored_env.reset()
+                obs, _ = monitored_env.reset()
                 terminated, truncated = False
 
                 while not (terminated or truncated) and i < n_max_steps:

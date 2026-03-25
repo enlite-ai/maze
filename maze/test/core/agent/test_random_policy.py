@@ -46,7 +46,7 @@ def test_masked_random_policy_equality_without_masking():
     policy_m.seed(1234)
     rng = np.random.RandomState(1234)
 
-    obs = env.reset()
+    obs, _ = env.reset()
     obs = create_random_action_mask(obs, rng, mask_nothing=True)
     for i in range(10):
         action = policy.compute_action(observation=obs, maze_state=None)
@@ -67,7 +67,7 @@ def test_masked_random_policy_equality_with_masking():
     policy_m.seed(1234)
     rng = np.random.RandomState(1234)
 
-    obs = env.reset()
+    obs, _ = env.reset()
     obs = create_random_action_mask(obs, rng, mask_nothing=False)
     all_same = True
     for i in range(10):
@@ -101,7 +101,7 @@ def test_masked_random_policy():
     policy_m.seed(1234)
     rng = np.random.RandomState(1234)
 
-    obs = env.reset()
+    obs, _ = env.reset()
     obs = create_random_action_mask(obs, rng, mask_nothing=False)
 
     for i in range(10):

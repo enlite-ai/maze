@@ -57,7 +57,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
         :param policy: Multi-step policy encapsulating the policy networks
         """
-        observation = self.reset()
+        observation, _ = self.reset()
 
         start_time = time.time()
 

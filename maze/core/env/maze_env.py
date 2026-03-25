@@ -126,13 +126,13 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> ObservationType:
-        """Resets the environment and returns the initial observation.
+    def reset(self) -> Tuple[ObservationType, dict]:
+        """Resets the environment and returns the initial observation and the info dict.
 
-        :return: the initial observation after resetting.
+        :return: the initial observation and info dict after resetting
         """
         self.core_env.context.reset_env_episode()
-        maze_state = self.core_env.reset()
+        maze_state, info = self.core_env.reset()
 
         self.observation_original = observation = self.observation_conversion.maze_to_space(maze_state)
         self.initial_env_time = self.get_env_time()
@@ -141,7 +141,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
             assert not (isinstance(value, np.ndarray) and value.dtype == np.float64), \
                    f"observation contains numpy arrays with float64, please convert observation '{key}' to float32"
 
-        return observation
+        return observation, info
 
     @override(BaseEnv)
     def seed(self, seed: Any) -> None:

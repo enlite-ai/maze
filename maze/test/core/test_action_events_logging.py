@@ -21,7 +21,7 @@ def train(env):
     env = LogStatsWrapper.wrap(env, logging_prefix="train")
     with SimpleStatsLoggingSetup(env):
         for episode in range(n_episodes):
-            _ = env.reset()
+            env.reset()
             for step in range(n_steps_per_episode):
                 # take random action
                 action = env.action_space.sample()

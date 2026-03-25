@@ -38,7 +38,7 @@ class PolicyExecutor:
         """Step the environment until the rollout is done."""
         try:
             # We need to reset first, otherwise no observation is available
-            observation = self.env.reset()
+            observation, _ = self.env.reset()
             while not self.rollout_done_event.is_set():
                 actor_id = self.env.actor_id()
 

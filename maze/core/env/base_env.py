@@ -17,10 +17,10 @@ class BaseEnv(ABC):
         """
 
     @abstractmethod
-    def reset(self) -> Any:
-        """Resets the environment and returns the initial state.
+    def reset(self) -> Tuple[Any, dict]:
+        """Resets the environment and returns the initial state and info dict.
 
-        :return: the initial state after resetting.
+        :return: the initial state after resetting and info dict
         """
 
     @abstractmethod

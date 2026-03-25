@@ -36,7 +36,7 @@ def test_cartpole_policy_model():
     critic = CustomCartpoleCriticNet(obs_shapes[0], non_lin='torch.nn.ReLU',
                                      hidden_units=[16, 32])
 
-    obs_np = env.reset()
+    obs_np, _ = env.reset()
     obs = {k: torch.from_numpy(v) for k, v in obs_np.items()}
 
     actions = policy(obs)

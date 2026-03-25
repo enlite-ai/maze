@@ -58,10 +58,10 @@ def _worker(remote, parent_remote, env_fn_wrapper):
             elif cmd == 'reset':
                 if data is not None:
                     env.seed(data)
-                observation = env.reset()
+                observation, info = env.reset()
                 actor_done = env.is_actor_done()
                 actor_id = env.actor_id()
-                remote.send((observation, actor_done, actor_id, env.get_stats(LogStatsLevel.EPISODE).last_stats,
+                remote.send((observation, info, actor_done, actor_id, env.get_stats(LogStatsLevel.EPISODE).last_stats,
                              env.get_env_time()))
             elif cmd == 'close':
                 remote.close()
@@ -184,25 +184,28 @@ class SubprocVectorEnv(StructuredVectorEnv):
         self._step_async(actions)
         return self._step_wait()
 
-    def reset(self) -> Dict[str, np.ndarray]:
+    def reset(self) -> Tuple[Dict[str, np.ndarray], dict]:
         """VectorEnv implementation"""
         self._next_seed_idx = 0
 
         for remote in self.remotes:
             remote.send(('reset', self.get_next_seed()))
         results = [remote.recv() for remote in self.remotes]
-        obs, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
+        # Unpack worker reset response
+        obs_list, infos, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
 
         self._env_times = np.stack(env_times)
         self._actor_dones = np.stack(actor_dones)
         self._actor_ids = actor_ids
 
+        aggregated_info = {"remote_infos": list(infos), "episode_stats": []}
         # collect episode statistics
         for stat in episode_stats:
             if stat is not None:
                 self.epoch_stats.receive(stat)
+                aggregated_info["episode_stats"].append(stat)
 
-        return stack_numpy_dict_list(obs)
+        return stack_numpy_dict_list(obs_list), aggregated_info
 
     @override(VectorEnv)
     def seed(self, seeds: List[Any]) -> None:
@@ -259,15 +262,16 @@ class SubprocVectorEnv(StructuredVectorEnv):
         new_results = [self.remotes[remote_idx].recv() for remote_idx in finished_envs_indexes]
 
         for org_idx, new_result in zip(finished_envs_indexes, new_results):
+            # Reset response: (observation, info, actor_done, actor_id, episode_stats, env_time)
             results[org_idx] = (new_result[0],  # fresh obs from reset
                                 results[org_idx][1],  # rew (from finished step)
                                 results[org_idx][2],  # terminated (from finished step)
                                 results[org_idx][3],  # truncated (from finished step)
                                 results[org_idx][4],  # infos (from finished step)
-                                new_result[1],  # actor_dones (from reset)
-                                new_result[2],  # actor_ids (from reset)
-                                new_result[3],  # episode_stats (from finished step)
-                                new_result[4]) # env_times (from finished step)
+                                new_result[2],  # actor_dones (from reset)
+                                new_result[3],  # actor_ids (from reset)
+                                new_result[4],  # episode_stats (from reset)
+                                new_result[5])  # env_times (from reset)
 
         obs, rews, env_terminated, env_truncated, infos, actor_dones, actor_ids, episode_stats, env_times = zip(
             *results)
@@ -275,6 +279,8 @@ class SubprocVectorEnv(StructuredVectorEnv):
         self._env_times = np.stack(env_times)
         self._actor_dones = np.stack(actor_dones)
         self._actor_ids = actor_ids
+        self._actor_terminated = np.stack(env_terminated)
+        self._actor_truncated = np.stack(env_truncated)
 
         # collect episode statistics
         for stat in episode_stats:

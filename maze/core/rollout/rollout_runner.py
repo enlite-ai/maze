@@ -210,7 +210,7 @@ class RolloutRunner(Runner, ABC):
             env.seed(env_seed)
             agent.seed(agent_seed)
             try:
-                obs = env.reset()
+                obs, _ = env.reset()
                 agent.reset()
             except Exception as exception:
                 BColors.print_colored(f'A error was encountered during reset on the env_seed: {env_seed} with '

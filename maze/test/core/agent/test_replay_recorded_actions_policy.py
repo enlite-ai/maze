@@ -15,7 +15,7 @@ def test_replay_recorded_actions_policy():
                                       output_dir="action_records")
 
     env.seed(1234)
-    obs = env.reset()
+    obs, _ = env.reset()
     terminated, truncated = False, False
     cum_reward_teacher = 0
     while not (terminated or truncated):
@@ -30,7 +30,7 @@ def test_replay_recorded_actions_policy():
     replay_policy = ReplayRecordedActionsPolicy(action_record_path=expected_file_path, with_agent_actions=True)
 
     env.seed(1234)
-    obs = env.reset()
+    obs, _ = env.reset()
     terminated, truncated = False, False
     cum_reward_replay = 0
     while not (terminated or truncated):

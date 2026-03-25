@@ -32,7 +32,7 @@ def test_flat_obs_space_is_box():
     assert env.observation_space.shape == (expected_dim,)
     assert env.observation_space.dtype == np.float32
 
-    obs = env.reset()
+    obs, _ = env.reset()
     assert env.observation_space.contains(obs), \
         f"reset obs {obs} not contained in {env.observation_space}"
 

@@ -9,7 +9,7 @@ def main():
                            static_demand=(30, 15))
 
     # reset environment
-    obs = env.reset()
+    obs, _ = env.reset()
     # run interaction loop
     for i in range(15):
         # sample random action

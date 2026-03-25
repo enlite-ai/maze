@@ -18,7 +18,7 @@ def test_records_episode_with_correct_data():
     actions = []
     observations = []
 
-    observation = env.reset()
+    observation, _ = env.reset()
     for _ in range(5):
         observations.append(observation)
         action = env.action_space.sample()

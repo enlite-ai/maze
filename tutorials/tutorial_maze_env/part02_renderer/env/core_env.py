@@ -92,10 +92,10 @@ class Cutting2DCoreEnvironment(CoreEnv):
         return Cutting2DMazeState(self.inventory.pieces, self.max_pieces_in_inventory,
                                   self.current_demand, self.raw_piece_size)
 
-    def reset(self) -> Cutting2DMazeState:
+    def reset(self) -> Tuple[Cutting2DMazeState, dict]:
         """Resets the environment to initial state."""
         self._setup_env()
-        return self.get_maze_state()
+        return self.get_maze_state(), {}
 
     def close(self):
         """No additional cleanup necessary."""

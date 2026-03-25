@@ -98,7 +98,7 @@ class RolloutGenerator:
 
         # Reset the environment during the first rollout only
         if self.last_observation is None:
-            self.last_observation = self.env.reset()
+            self.last_observation, _ = self.env.reset()
 
         # Step the desired number of (flat) steps
         step_count = 0
@@ -186,6 +186,6 @@ class RolloutGenerator:
         # Reset the env if done and keep the terminal observation
         if not self.is_vectorized and (record.terminated or record.truncated):
             record.info["terminal_observation"] = deepcopy(self.last_observation)
-            self.last_observation = self.env.reset()
+            self.last_observation, _ = self.env.reset()
 
         return record

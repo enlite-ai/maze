@@ -94,7 +94,7 @@ def test_action_record_rollout():
                                       output_dir="action_records")
 
     env.seed(1234)
-    obs = env.reset()
+    obs, info = env.reset()
     terminated, truncated = False, False
     while not (terminated or truncated):
         action = teacher_policy.compute_action(obs)

@@ -61,7 +61,7 @@ def test_profiling_events_recorded():
 
     env.seed(1234)
     agent.seed(1235)
-    obs = env.reset()
+    obs, _ = env.reset()
     act = agent.compute_action(obs)
 
     start_time = time.time()
@@ -84,7 +84,7 @@ def test_profiling_events_recorded_core_env():
 
     env.seed(1234)
     agent.seed(1235)
-    obs = env.reset()
+    obs, _ = env.reset()
     act = agent.compute_action(obs)
 
     start_time = time.time()

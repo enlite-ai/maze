@@ -13,7 +13,7 @@ def test_vectorized_rollout():
 
     policy = DistributedRandomPolicy(vectorized_env.action_spaces_dict, concurrency=concurrency)
 
-    observation = vectorized_env.reset()
+    observation, _ = vectorized_env.reset()
     for _ in range(3):
         action = policy.compute_action(observation, actor_id=vectorized_env.actor_id(), maze_state=None)
         observation, reward, terminated, truncated, info = vectorized_env.step(action)

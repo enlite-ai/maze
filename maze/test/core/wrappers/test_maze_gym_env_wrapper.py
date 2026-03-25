@@ -20,7 +20,7 @@ def test_maze_gym_env_wrapper():
     """ gym env wrapper unit test """
     env = GymMazeEnv(env="CartPole-v1", render_mode=None)
     env.seed(1234)
-    obs = env.reset()
+    obs, _ = env.reset()
     env.observation_conversion.space_to_maze(obs)
     assert not env.is_actor_done()
     assert env.get_serializable_components() == {}

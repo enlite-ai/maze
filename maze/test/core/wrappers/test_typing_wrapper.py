@@ -1,6 +1,6 @@
 """File contains tests regarding the typing of wrappers."""
 from abc import ABC
-from typing import Any
+from typing import Any, Tuple
 
 import gymnasium as gym
 import numpy as np
@@ -45,7 +45,7 @@ class _MazeInnerEnv(BaseEnv, _EnvInterfaceInner):
     def close(self) -> None:
         pass
 
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         pass
 
     def step(self, action):

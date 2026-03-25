@@ -15,7 +15,7 @@ agent_deployment = AgentDeployment(
 # Simulate an external production environment that does not use Maze
 external_env = gym.make("CartPole-v1", render_mode=None)
 
-maze_state = external_env.reset()
+maze_state, _ = external_env.reset()
 reward, terminated, truncated, info = 0, False, False,{}
 
 for i in range(10):

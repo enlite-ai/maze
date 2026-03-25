@@ -72,10 +72,10 @@ class NoDictSpacesWrapper(Wrapper[Union[EnvType, StructuredEnvSpacesMixin]]):
         return action[self.action_key]
 
     @override(BaseEnv)
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Intercept ``BaseEnv.reset`` and map observation."""
-        observation = self.env.reset()
-        return self.observation(observation)
+        observation, info = self.env.reset()
+        return self.observation(observation), info
 
     def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""

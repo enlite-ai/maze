@@ -46,13 +46,13 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         return self.env.seed(seed)
 
     @override(BaseEnv)
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Override BaseEnv.reset to reset the step count.
         """
 
         # sample number of steps to skip and reset env
         skip_steps = self.wrapper_rng.randint(self.min_skip_steps, self.max_skip_steps + 1)
-        obs = self.env.reset()
+        obs, info = self.env.reset()
 
         # skip steps
         for _ in range(skip_steps):
@@ -61,7 +61,7 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             assert not (terminated or truncated), ("Your environment was done during random resetting. "
                                                    "This should not happen! Make sure you set a valid number of skipping steps.")
 
-        return obs
+        return obs, info
 
     @override(Wrapper)
     def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],

@@ -1,7 +1,7 @@
 """Test event logging."""
 import random
 from abc import ABC
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Any
 from typing import Union, List, Type, Dict
 
 import gymnasium as gym
@@ -159,11 +159,11 @@ def test_logs_custom_env_time():
     class CustomTimedDummyEnv(DummyCoreEnvironment, TimeEnvMixin):
         """A subclass of the dummy core env that has custom env time."""
 
-        def reset(self):
+        def reset(self) -> Tuple[Any, dict]:
             """Start counting env time from 1337."""
-            obs = super().reset()
+            obs, info = super().reset()
             self.context.step_id = 1337
-            return obs
+            return obs, info
 
     dummy_observation_conversion = DummyObservationConversion()
     core_env = CustomTimedDummyEnv(observation_space=dummy_observation_conversion.space())

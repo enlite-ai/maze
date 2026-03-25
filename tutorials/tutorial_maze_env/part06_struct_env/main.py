@@ -9,7 +9,7 @@ def main():
                                     static_demand=[(30, 15)])
 
     # reset env
-    obs_step1 = struct_env.reset()
+    obs_step1, _ = struct_env.reset()
 
     print("action_space 1:     ", struct_env.action_space)
     print("observation_space 1:", struct_env.observation_space)
@@ -25,7 +25,7 @@ def main():
 
     # take second env step
     action_2 = struct_env.action_space.sample()
-    obs_step1 = struct_env.step(action=action_2)
+    struct_env.step(action=action_2)
 
 
 if __name__ == "__main__":

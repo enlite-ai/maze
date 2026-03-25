@@ -1,6 +1,6 @@
 import queue
 from collections import deque
-from typing import Any, Type, Optional
+from typing import Any, Type, Optional, Tuple
 
 from maze.core.agent.random_policy import RandomPolicy
 from maze.core.env.maze_env import MazeEnv
@@ -50,7 +50,7 @@ class ErrorInResetEnv(DummyEnvironment):
         super().__init__(*args, **kwargs)
         self.n_episodes = 0
 
-    def reset(self) -> ObservationType:
+    def reset(self) -> Tuple[ObservationType, dict]:
         if self.n_episodes % 2:
             raise RuntimeError("Test error in reset")
         self.n_episodes += 1
@@ -64,7 +64,7 @@ class ErrorInStepEnv(DummyEnvironment):
         super().__init__(*args, **kwargs)
         self.n_episodes = 0
 
-    def reset(self) -> ObservationType:
+    def reset(self) -> Tuple[ObservationType, dict]:
         self.n_episodes += 1
         return super().reset()
 

@@ -42,7 +42,7 @@ def test_steps_env_with_single_policy():
     # Step the environment manually here and query the agent integration wrapper for maze_actions
     test_policy = DummyGreedyPolicy()
     test_env = build_dummy_maze_env()
-    maze_state = test_env.reset()
+    maze_state, _ = test_env.reset()
     reward, terminated, truncated, info = None, None, None, None
 
     for i in range(10):
@@ -89,7 +89,7 @@ def test_supports_trajectory_recording_wrapper():
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
     test_core_env = build_dummy_maze_env().core_env
-    maze_state = test_core_env.reset()
+    maze_state, _ = test_core_env.reset()
     reward, terminated, truncated, info = None, None, None, None
     for i in range(10):
         maze_action = agent_deployment.act(maze_state, reward, terminated, truncated, info)
@@ -111,7 +111,7 @@ def test_supports_multi_step_wrappers():
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
     test_core_env = build_dummy_structured_env().core_env
-    maze_state = test_core_env.reset()
+    maze_state, _ = test_core_env.reset()
     reward, terminated, truncated, info = 0, False, False, {}
 
     for i in range(4):
@@ -143,7 +143,7 @@ def test_supports_step_skipping_wrappers():
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
     test_core_env = build_dummy_maze_env().core_env
-    maze_state = test_core_env.reset()
+    maze_state, _ = test_core_env.reset()
     reward, terminated, truncated, info = 0, False, False, {}
 
     for i in range(4):
@@ -173,7 +173,7 @@ def test_records_stats():
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
     test_core_env = build_dummy_maze_env().core_env
-    maze_state = test_core_env.reset()
+    maze_state, _ = test_core_env.reset()
     reward, terminated, truncated, info = 0, False, False, {}
 
     for i in range(5):
@@ -238,7 +238,7 @@ def test_writes_event_and_stats_logs():
 
     # Step the environment manually here and query the agent integration wrapper for maze_actions
     test_core_env = build_dummy_maze_env().core_env
-    maze_state = test_core_env.reset()
+    maze_state, _ = test_core_env.reset()
     reward, terminated, truncated, info = None, None, None, None
     for i in range(step_count):
         maze_action = agent_deployment.act(maze_state, reward, terminated, truncated, info,
@@ -282,7 +282,7 @@ def test_propagates_exceptions_to_main_thread():
     )
 
     test_core_env = build_dummy_maze_env().core_env
-    s = test_core_env.reset()  # Just get a valid state, the content is not really important
+    s, _ = test_core_env.reset()  # Just get a valid state, the content is not really important
     with pytest.raises(RuntimeError) as e_info:
         agent_deployment.act(s, 0, False, False, {})
 
@@ -299,7 +299,7 @@ def test_configures_from_hydra():
 
     external_env = EnvFactory(cfg.env, wrappers={})().core_env
 
-    maze_state = external_env.reset()
+    maze_state, _ = external_env.reset()
     reward, terminated, truncated, info = 0, False, False, {}
 
     for i in range(10):

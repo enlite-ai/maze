@@ -48,11 +48,11 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         return self.observation_space.sample()
 
     @override(CoreEnv)
-    def reset(self) -> Dict[str, np.ndarray]:
+    def reset(self) -> Tuple[Dict[str, np.ndarray], dict]:
         """Reset current agent"""
         self.current_agent = 0
         self._current_path_id = 0
-        return self.get_maze_state()
+        return self.get_maze_state(), {}
 
     @override(CoreEnv)
     def seed(self, seed: int) -> None:

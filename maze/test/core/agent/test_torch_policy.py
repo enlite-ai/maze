@@ -9,7 +9,7 @@ def test_actor_id_is_optional_for_single_network_policies():
     env = build_dummy_maze_env()
     policy = flatten_concat_probabilistic_policy_for_env(env)
 
-    obs = env.reset()
+    obs, _ = env.reset()
     action = policy.compute_action(obs)  # No actor ID provided
     assert all([key in env.action_space.spaces for key in action.keys()])
 
@@ -18,7 +18,7 @@ def test_torch_policy_with_discrete_only_action_space():
     env = build_dummy_maze_environment_with_discrete_action_space(2)
     policy = flatten_concat_probabilistic_policy_for_env(env)
 
-    obs = env.reset()
+    obs, _ = env.reset()
     action = policy.compute_action(obs)  # No actor ID provided
     assert all([key in env.action_space.spaces for key in action.keys()])
 

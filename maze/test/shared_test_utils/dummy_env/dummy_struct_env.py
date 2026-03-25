@@ -83,14 +83,14 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
 
         self.last_obs = None
 
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Resets the environment and returns the initial state.
 
         :return: the initial state after resetting.
         """
-        self.last_obs = self.env.reset()
+        self.last_obs, info = self.env.reset()
         self._sub_step_index = 0
-        return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0'])
+        return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0']), info
 
     def step(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict]]:
         """Generic sub-step function.
@@ -156,7 +156,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         """Override the observation spaces according to the introduced sub steps."""
         return self._observation_spaces_dict
 
-    def _action0(self, action) -> Tuple[Dict, float, bool, Optional[Dict[str, np.ndarray]]]:
+    def _action0(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict[str, np.ndarray]]]:
         """
         Returns the first action
 

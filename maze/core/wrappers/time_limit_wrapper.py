@@ -78,7 +78,7 @@ class TimeLimitWrapper(Wrapper[Union[BaseEnv, EnvType]], BaseEnv):
         return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Override BaseEnv.reset to reset the step count.
         """
         self._elapsed_steps = 0

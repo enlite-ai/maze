@@ -1,4 +1,5 @@
 """Tests related specifically to log_stats_wrapper mechanics (stats and event logging itself is tested separately)"""
+from typing import Tuple
 
 import pytest
 
@@ -20,18 +21,18 @@ from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, b
 class _EventsInResetWrapper(Wrapper[MazeEnv]):
     """Mock wrapper that fires test events during reset."""
 
-    def reset(self):
+    def reset(self) -> Tuple[ObservationType, dict]:
         """Reset the env, then fire the test event (the ordering matters)"""
-        obs = self.env.reset()
+        obs, info = self.env.reset()
         base_events = self.core_env.context.event_service.create_event_topic(BaseEnvEvents)
         base_events.test_event(1)
-        return obs
+        return obs, info
 
 
 class _StepSkippingAndErrorInResetWrapper(Wrapper[MazeEnv]):
     """Performs step skipping and then raises an error in reset function."""
 
-    def reset(self) -> ObservationType:
+    def reset(self) -> Tuple[ObservationType, dict]:
         """Skip one step, then raise an error."""
         self.env.reset()
         self.env.step(self.env.noop_action())

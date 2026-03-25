@@ -126,7 +126,7 @@ class ParallelRolloutWorker:
                 env.seed(env_seed)
                 agent.seed(agent_seed)
                 try:
-                    obs = env.reset()
+                    obs, _ = env.reset()
                     agent.reset()
 
                     ran_rollout = True

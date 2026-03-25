@@ -19,4 +19,4 @@ env = GymMazeEnv("CarRacing-v0")
 env = PreProcessingWrapper.wrap(env, pre_processor_mapping=config["pre_processor_mapping"])
 
 # after this step the training env yields pre-processed observations
-pre_processed_obs = env.reset()
+pre_processed_obs, _ = env.reset()

@@ -107,7 +107,7 @@ class _FiveSubstepsLimitWrapper(TimeLimitWrapper):
         self.elapsed_sub_steps += 1
         return observation, reward, terminated, truncated or self.elapsed_sub_steps >= 5, info
 
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Reset substep counter"""
         self.elapsed_sub_steps = 0
         return self.env.reset()

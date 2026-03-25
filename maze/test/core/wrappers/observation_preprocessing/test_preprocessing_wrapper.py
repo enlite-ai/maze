@@ -30,7 +30,7 @@ def test_pre_processing_wrapper():
     env = PreProcessingWrapper.wrap(env, pre_processor_mapping=config["pre_processor_mapping"])
 
     # test application of wrapper
-    obs = env.reset()
+    obs, _ = env.reset()
     observation_keys = list(obs.keys())
 
     assert 'observation_1_categorical_feature' not in observation_keys
@@ -65,7 +65,7 @@ def test_preprocessing_init_from_yaml_config():
     assert isinstance(env, PreProcessingWrapper)
 
     # test application of wrapper
-    obs = env.reset()
+    obs, _ = env.reset()
     observation_keys = list(obs.keys())
 
     assert 'observation_1_categorical_feature' not in observation_keys
@@ -113,7 +113,7 @@ def test_cascaded_preprocessing():
     env = PreProcessingWrapper.wrap(env, pre_processor_mapping=config["pre_processor_mapping"])
 
     # test application of wrapper
-    obs = env.reset()
+    obs, _ = env.reset()
     observation_keys = list(obs.keys())
 
     assert "observation_0_image-rgb2gray" not in observation_keys

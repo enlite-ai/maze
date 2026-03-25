@@ -8,6 +8,6 @@ def test_heuristic_lunar_lander_policy():
     policy = HeuristicLunarLanderPolicy()
     env = GymMazeEnv("LunarLander-v3", render_mode=None)
 
-    obs = env.reset()
+    obs, _= env.reset()
     action = policy.compute_action(obs)
     obs, _, _, _, _ = env.step(action)

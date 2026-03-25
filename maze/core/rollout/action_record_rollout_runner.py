@@ -94,7 +94,7 @@ class ActionRecordWorker(ParallelRolloutWorker):
                 env.seed(env_seed)
 
                 try:
-                    obs = env.reset()
+                    obs, _ = env.reset()
                     agent.reset()
 
                     RolloutRunner.run_episode(

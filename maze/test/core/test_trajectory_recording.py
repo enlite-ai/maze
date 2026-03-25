@@ -123,7 +123,7 @@ def test_records_maze_states_and_actions():
     states = []  # Observe changes in states over time.
 
     for _ in range(5):
-        obs = env.reset()
+        obs, _ = env.reset()
         for _ in range(10):
             maze_state = env.get_maze_state()
             states.append(deepcopy(maze_state))

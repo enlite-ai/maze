@@ -12,7 +12,7 @@ env = LogStatsWrapper(env, logging_prefix="main")
 # register a console writer and connect the writer to the statistics logging system
 with SimpleStatsLoggingSetup(env):
     # reset environment and run interaction loop
-    obs = env.reset()
+    obs, _ = env.reset()
     for i in range(15):
         action = env.action_space.sample()
         obs, reward, terminated, truncated, info = env.step(action)

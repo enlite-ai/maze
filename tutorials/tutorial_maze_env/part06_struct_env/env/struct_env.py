@@ -63,15 +63,15 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
 
         return sub_step_result
 
-    def reset(self) -> Any:
+    def reset(self) -> Tuple[Any, dict]:
         """Resets the environment and returns the initial state.
         :return: The initial state after resetting.
         """
-        self._flat_obs = self.env.reset()
+        self._flat_obs, info = self.env.reset()
         self._flat_obs["ordered_piece"] = self._flat_obs["ordered_piece"]
 
         self._sub_step_key = 0
-        return self._obs_selection_step(self._flat_obs)
+        return self._obs_selection_step(self._flat_obs), info
 
     @staticmethod
     def _obs_selection_step(flat_obs: Dict[str, np.array]) -> Dict[str, np.array]:

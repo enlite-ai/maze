@@ -74,7 +74,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         return obs, rew, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> ObservationType:
+    def reset(self) -> Tuple[ObservationType, dict]:
         """Resets the wrapper and returns the initial observation.
 
         :return: the initial observation after resetting.

@@ -200,7 +200,7 @@ class GymCoreEnv(CoreEnv):
         self.env.close()
 
     @override(CoreEnv)
-    def reset(self) -> MazeStateType:
+    def reset(self) -> Tuple[MazeStateType, dict]:
         """Intercept ``CoreEnv.reset``"""
         # Newer versions of gymnasium (v0.26+) require setting the seed with env.reset(seed) the first time this seed is
         # applied. Subsequent resets using the same seed only need an env.reset(seed=None).
@@ -211,12 +211,12 @@ class GymCoreEnv(CoreEnv):
         if self._need_seeding:
             seed = self._current_seed
 
-        maze_state, _ = self.env.reset(seed=seed)
+        maze_state, info = self.env.reset(seed=seed)
 
         self._maze_state = maze_state
         self._need_seeding = False
 
-        return maze_state
+        return maze_state, info
 
     def get_current_seed(self) -> int:
         """Return the current seed of the environment."""
