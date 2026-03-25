@@ -1,6 +1,6 @@
 # pyproject.toml for maze
 [build-system]
-requires = ['setuptools>=81.0.0', 'wheel']
+requires = ['setuptools<81', 'wheel']
 build-backend = 'setuptools.build_meta'
 
 [project]
@@ -43,6 +43,8 @@ keywords = [
     'optimization'
 ]
 dependencies = [
+    # setuptools above 81 are incompatible with tensorflow 2.20
+    'setuptools<81',
     'tensorboard',
     'pyyaml',
     'requests',
