@@ -43,7 +43,7 @@ keywords = [
     'optimization'
 ]
 dependencies = [
-    # setuptools above 81 are incompatible with tensorflow 2.20
+    # setuptools above 81 are incompatible with tensorboard 2.20
     'setuptools<81',
     'tensorboard',
     'pyyaml',
