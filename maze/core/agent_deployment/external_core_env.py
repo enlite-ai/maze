@@ -62,7 +62,7 @@ class ExternalCoreEnv(CoreEnv):
     # --- Step & reset: The core of ExternalCoreEnv functionality ---
 
     @override(CoreEnv)
-    def reset(self) -> MazeStateType:
+    def reset(self) -> Tuple[MazeStateType, dict]:
         """Reset is expected to be run twice -- at the beginning and end of external env rollout.
 
         At the beginning, thread execution is suspended until the initial state is available.

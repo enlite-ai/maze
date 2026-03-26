@@ -53,8 +53,8 @@ class RolloutEvaluator(Evaluator):
             observations, rewards, terminated_lst, truncated_lst, infos = self.eval_env.step(sampled_action)
 
             # Count done episodes
-            finished = np.logical_or(terminated_lst, truncated_lst)
-            n_done_episodes += np.count_nonzero(finished)
+            done = np.logical_or(terminated_lst, truncated_lst)
+            n_done_episodes += np.count_nonzero(done)
 
         # Enforce the epoch stats calculation (without calling increment_log_step() -- this is up to the trainer)
         self.eval_env.write_epoch_stats()
