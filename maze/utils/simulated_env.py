@@ -1,20 +1,27 @@
 """File holding util methods for the simulated environment"""
+
+from __future__ import annotations
+
 import logging
-from typing import Optional, List, Union, Callable
+from collections.abc import Callable
 
 import numpy as np
-from omegaconf import DictConfig
-
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.utils.factory import ConfigType, Factory
 from maze.core.utils.seeding import MazeSeeding
-from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
-    ObservationNormalizationWrapper
+from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import (
+    ObservationNormalizationWrapper,
+)
+from omegaconf import DictConfig
 
 
-def prepare_simulated_env(exclude_wrappers: Optional[List[str]], main_env: MazeEnv, policy_rng: np.random.RandomState,
-                          simulated_env: Union[SimulatedEnvMixin, Callable[[], SimulatedEnvMixin], ConfigType]) -> MazeEnv:
+def prepare_simulated_env(
+    exclude_wrappers: list[str] | None,
+    main_env: MazeEnv | None,
+    policy_rng: np.random.RandomState,
+    simulated_env: SimulatedEnvMixin | Callable[[], SimulatedEnvMixin] | ConfigType,
+) -> MazeEnv:
     """
     Prepares a simulated environment by excluding certain wrappers, instantiating the env and setting normalization
     statistics.
@@ -28,7 +35,7 @@ def prepare_simulated_env(exclude_wrappers: Optional[List[str]], main_env: MazeE
     # instantiate simulated env from config
     # potentially exclude wrappers from simulated env to be instantiated
     if exclude_wrappers and not isinstance(simulated_env, MazeEnv):
-        wrapper_config = DictConfig(simulated_env.wrappers.__dict__["_content"])
+        wrapper_config = DictConfig(simulated_env.wrappers.__dict__['_content'])
         for wrapper in exclude_wrappers:
             if wrapper in wrapper_config:
                 logging.info(f"Excluding '{wrapper}' from simulated environment!")
