@@ -122,6 +122,8 @@ intersphinx_mapping = {
     'torch': ('https://pytorch.org/docs/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
+    'gymnasium': ('https://gymnasium.farama.org', None),
+    'omegaconf': ('https://omegaconf.readthedocs.io/en/latest', None),
 }
 
 suppress_warnings = [

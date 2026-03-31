@@ -40,3 +40,4 @@ dependencies:
       - pytest-random-order
       - pytest-timeout
       - pytest-redis
+      - pre-commit
