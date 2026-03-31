@@ -119,6 +119,9 @@ nitpick_ignore = [
     ('py:class', 'pandas.core.frame.DataFrame'),
     ('py:class', 'DictConfig'),
     ('py:class', 'WrapperType'),
+    ('py:class', 'StepKeyType'),
+    ('py:class', 'CollectionOfConfigType'),
+    ('py:class', 'DataLoader'),
 ]
 nitpicky = True
 
