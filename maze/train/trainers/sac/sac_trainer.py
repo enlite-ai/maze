@@ -41,8 +41,8 @@ class SAC(Trainer):
                  algorithm_config: SACAlgorithmConfig,
                  learner_model: TorchActorCritic,
                  distributed_actors: BaseDistributedWorkersWithBuffer,
-                 model_selection: Optional[BestModelSelection],
-                 evaluator: Optional[RolloutEvaluator]):
+                 model_selection: BestModelSelection | None,
+                 evaluator: RolloutEvaluator | None):
         super().__init__(algorithm_config)
 
         self.algorithm_config = algorithm_config
@@ -114,7 +114,7 @@ class SAC(Trainer):
         self.evaluator.evaluate(self.learner_model.policy)
 
     @override(Trainer)
-    def train(self, n_epochs: Optional[int] = None) -> None:
+    def train(self, n_epochs: int | None = None) -> None:
         """Train function that wraps normal train function in order to close all processes properly
 
         :param n_epochs: number of epochs to train.
@@ -151,7 +151,7 @@ class SAC(Trainer):
         return self.learner_model.state_dict()
 
     @override(Trainer)
-    def load_state(self, file_path: Union[str, BinaryIO]) -> None:
+    def load_state(self, file_path: str | BinaryIO) -> None:
         """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
         """
         state_dict = torch.load(file_path, map_location=torch.device(self.learner_model.device))
@@ -357,7 +357,7 @@ class SAC(Trainer):
                                               percent=time_collecting_actors_total / total_update_time)
 
     def _compute_critic_loss(self, worker_output: StructuredSpacesRecord) -> \
-            Tuple[List[Dict[Union[str, int], torch.Tensor]], List[Dict[Union[str, int], torch.Tensor]]]:
+            Tuple[List[Dict[str | int, torch.Tensor]], List[Dict[str | int, torch.Tensor]]]:
         """Compute the critic losses.
 
         :param worker_output: The batched output of the workers.
@@ -434,10 +434,10 @@ class SAC(Trainer):
         return q_losses, q_values_mean
 
     def _compute_policy_loss(self, worker_output: StructuredSpacesRecord) -> \
-            Tuple[Dict[Union[str, int], torch.Tensor],
-                  Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]],
-                  Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]],
-                  Dict[Union[str, int], torch.Tensor]]:
+            Tuple[Dict[str | int, torch.Tensor],
+                  Dict[str | int, Union[torch.Tensor, Dict[str, torch.Tensor]]],
+                  Dict[str | int, Union[torch.Tensor, Dict[str, torch.Tensor]]],
+                  Dict[str | int, torch.Tensor]]:
         """Compute the critic losses.
 
         :param worker_output: The batched output of the workers.
@@ -508,9 +508,9 @@ class SAC(Trainer):
 
         return policy_losses, action_probs, action_log_probs, action_entropies
 
-    def _compute_entropy_loss(self, action_probs: Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]],
-                              action_log_probs: Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]]) \
-            -> Dict[Union[str, int], torch.Tensor]:
+    def _compute_entropy_loss(self, action_probs: Dict[str | int, Union[torch.Tensor, Dict[str, torch.Tensor]]],
+                              action_log_probs: Dict[str | int, Union[torch.Tensor, Dict[str, torch.Tensor]]]) \
+            -> Dict[str | int, torch.Tensor]:
         """Compute the entropy loss.
 
         :param action_probs: The probabilities of the individual actions.

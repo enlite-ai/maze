@@ -1,8 +1,11 @@
 """Wrapper for recording raw actions and observation, as seen in a particular
 point in the wrapper stack (where this wrapper is placed)."""
+
+from __future__ import annotations
+
 import pickle
 from pathlib import Path
-from typing import Union, Any, Tuple, Dict, Optional
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
@@ -12,8 +15,12 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
-from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import (
+    StructuredSpacesRecord,
+)
+from maze.core.trajectory_recording.records.trajectory_record import (
+    SpacesTrajectoryRecord,
+)
 from maze.core.wrappers.wrapper import Wrapper
 
 
@@ -26,17 +33,17 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
                        will be named after the episode ID, with ".pkl" suffix.
     """
 
-    def __init__(self, env: Union[MazeEnv], output_dir: str = "space_records"):
+    def __init__(self, env: MazeEnv, output_dir: str = 'space_records'):
         super().__init__(env)
 
-        self.episode_record: Optional[SpacesTrajectoryRecord] = None
-        self.last_observation = Optional[ObservationType]
-        self.last_env_time: Optional[int] = None
+        self.episode_record: SpacesTrajectoryRecord | None = None
+        self.last_observation = ObservationType | None
+        self.last_env_time: int | None = None
 
         self.output_dir = Path(output_dir)
 
     @override(BaseEnv)
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Write the episode record and initialize a new one."""
         self.write_episode_record()
 
@@ -47,9 +54,9 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
         return self.last_observation, info
 
     @override(BaseEnv)
-    def step(self, action: ActionType) -> Tuple[ObservationType, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> tuple[ObservationType, Any, bool, bool, dict[Any, Any]]:
         """Record available step-level data."""
-        assert self.episode_record is not None, "Environment must be reset before stepping."
+        assert self.episode_record is not None, 'Environment must be reset before stepping.'
 
         # If the env time changed, start a new structured step record
         if self.env.get_env_time() != self.last_env_time:
@@ -61,18 +68,20 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
 
         # store the terminal observation in info
         if terminated or truncated:
-            info["terminal_observation"] = observation
+            info['terminal_observation'] = observation
 
         # Record the spaces of the current (sub)step
-        self.episode_record.step_records[-1].append(SpacesRecord(
-            actor_id=actor_id,
-            observation=self.last_observation,
-            action=action,
-            reward=reward,
-            terminated=terminated,
-            truncated=truncated,
-            info=info
-        ))
+        self.episode_record.step_records[-1].append(
+            SpacesRecord(
+                actor_id=actor_id,
+                observation=self.last_observation,
+                action=action,
+                reward=reward,
+                terminated=terminated,
+                truncated=truncated,
+                info=info,
+            )
+        )
 
         self.last_observation = observation
         return observation, reward, terminated, truncated, info
@@ -80,15 +89,17 @@ class SpacesRecordingWrapper(Wrapper[MazeEnv]):
     def write_episode_record(self) -> None:
         """Serializes the episode record, if available."""
         if self.episode_record and len(self.episode_record.step_records) > 0:
-            output_path = self.output_dir / f"{self.episode_record.seed_id}.pkl"
+            output_path = self.output_dir / f'{self.episode_record.seed_id}.pkl'
             self.output_dir.mkdir(parents=True, exist_ok=True)
-            with open(output_path, "wb") as out_f:
+            with open(output_path, 'wb') as out_f:
                 pickle.dump(self.episode_record, out_f)
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Keep both actions and observation the same - no change takes place in this wrapper."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)

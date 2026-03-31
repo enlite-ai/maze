@@ -1,8 +1,12 @@
 """Trajectory data is logged through trajectory writer objects registered via the global trajectory writer registry."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.records.trajectory_record import (
+    StateTrajectoryRecord,
+)
 
 
 class TrajectoryWriter(ABC):

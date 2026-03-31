@@ -1,12 +1,14 @@
 """Episode records are composed of a chain of step records, each containing data for the particular step."""
 
-from typing import Dict, Union, Optional, Any
+from __future__ import annotations
 
-import numpy as np
+from typing import Any
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.log_events.step_event_log import StepEventLog
+
+import numpy as np
 
 
 class StateRecord:
@@ -26,16 +28,18 @@ class StateRecord:
         - e.g. { "demand_generator" : demand_generator_object }
     """
 
-    def __init__(self,
-                 env_time: Optional[int],
-                 maze_state: MazeStateType,
-                 maze_action: Optional[MazeActionType],
-                 step_event_log: Optional[StepEventLog] = None,
-                 reward: Optional[Union[float, np.ndarray, Any]] = None,
-                 terminated: Optional[bool] = None,
-                 truncated: Optional[bool] = None,
-                 info: Optional[Dict] = None,
-                 serializable_components: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        env_time: int | None,
+        maze_state: MazeStateType,
+        maze_action: MazeActionType | None,
+        step_event_log: StepEventLog | None = None,
+        reward: float | np.ndarray | Any | None = None,
+        terminated: bool | None = None,
+        truncated: bool | None = None,
+        info: dict | None = None,
+        serializable_components: dict[str, Any] | None = None,
+    ):
         self.env_time = env_time
         self.maze_state = maze_state
         self.maze_action = maze_action

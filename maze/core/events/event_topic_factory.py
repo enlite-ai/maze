@@ -1,13 +1,17 @@
 """Internal, functionality used by the event system to construct proxies for event recording."""
+
+from __future__ import annotations
+
 import inspect
-from typing import TypeVar, Type, Callable
+from collections.abc import Callable
+from typing import TypeVar
 
 from maze.core.events.event_record import EventRecord
 
 T = TypeVar('T')
 
 
-def event_topic_factory(interface_class: Type[T], fn_notify_event: Callable[[EventRecord], None]) -> T:
+def event_topic_factory(interface_class: type[T], fn_notify_event: Callable[[EventRecord], None]) -> T:
     """Constructs a proxy instance of the event interface, as required by EventService and LogStatsAggregator.
 
     :param interface_class: The class object of an abstract interface that defines the events as methods.
@@ -16,7 +20,7 @@ def event_topic_factory(interface_class: Type[T], fn_notify_event: Callable[[Eve
     """
 
     # dynamically create a derived proxy class
-    proxy_name = interface_class.__name__ + "Proxy"
+    proxy_name = interface_class.__name__ + 'Proxy'
     proxy_class = type(proxy_name, (interface_class,), dict())
     proxy = proxy_class()
 
@@ -32,7 +36,11 @@ def event_topic_factory(interface_class: Type[T], fn_notify_event: Callable[[Eve
         if not callable(attr):
             continue
 
-        setattr(proxy, name, _recorder_factory(interface_class, interface_method=attr, fn_notify_event=fn_notify_event))
+        setattr(
+            proxy,
+            name,
+            _recorder_factory(interface_class, interface_method=attr, fn_notify_event=fn_notify_event),
+        )
 
     return proxy
 
@@ -54,15 +62,20 @@ def _recorder_factory(interface_class, interface_method, fn_notify_event):
 
             value = args[0]
             attribute_name = event_attribute_names[0]
-            fn_notify_event(EventRecord(interface_class, interface_method, attributes={attribute_name: value}))
+            fn_notify_event(
+                EventRecord(
+                    interface_class,
+                    interface_method,
+                    attributes={attribute_name: value},
+                )
+            )
             return
 
         # call the original interface, to raise error on signature mismatch
         for key in kwargs.keys():
             if key not in event_attribute_names:
-                raise TypeError("got an unexpected keyword argument {}".format(key))
+                raise TypeError(f'got an unexpected keyword argument {key}')
 
         fn_notify_event(EventRecord(interface_class, interface_method, attributes=kwargs))
 
     return _record
-

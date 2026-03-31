@@ -1,13 +1,19 @@
 """Episode record is the main unit of trajectory data recording."""
 
-from typing import List, Optional, Any, TypeVar, Generic, Dict, Union
+from __future__ import annotations
 
-import numpy as np
+from typing import Any, Generic, TypeVar
 
 from maze.core.env.action_conversion import ActionType, TorchActionType
 from maze.core.rendering.renderer import Renderer
 from maze.core.trajectory_recording.records.state_record import StateRecord
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord, StepKeyType
+from maze.core.trajectory_recording.records.structured_spaces_record import (
+    StepKeyType,
+    StructuredSpacesRecord,
+)
+
+import numpy as np
+
 StepRecordType = TypeVar('StepRecordType', StructuredSpacesRecord, StateRecord)
 
 
@@ -19,7 +25,7 @@ class TrajectoryRecord(Generic[StepRecordType]):
 
     def __init__(self, id: Any):
         self.seed_id = id
-        self.step_records: List[StepRecordType] = []
+        self.step_records: list[StepRecordType] = []
 
     def __len__(self):
         """Length of the trajectory"""
@@ -29,14 +35,12 @@ class TrajectoryRecord(Generic[StepRecordType]):
         """Append a single step record."""
         self.step_records.append(step_record)
 
-    def extend(self, trajectory_record: 'TrajectoryRecord') -> None:
+    def extend(self, trajectory_record: TrajectoryRecord) -> None:
         """Extend this trajectory with another trajectory."""
         self.step_records.extend(trajectory_record.step_records)
 
     def __repr__(self):
-        return f"\nTrajectory record:\n" \
-               f"   ID: {self.seed_id}\n" \
-               f"   Length: {len(self)}"
+        return f'\nTrajectory record:\n   ID: {self.seed_id}\n   Length: {len(self)}'
 
 
 class StateTrajectoryRecord(TrajectoryRecord[StateRecord]):
@@ -49,13 +53,13 @@ class StateTrajectoryRecord(TrajectoryRecord[StateRecord]):
        makes it easier to instantiate the correct renderer for displaying the trajectory data.
     """
 
-    def __init__(self, id: Any, renderer: Optional[Renderer] = None):
+    def __init__(self, id: Any, renderer: Renderer | None = None):
         super().__init__(id)
         self.renderer = renderer
 
 
 class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
-    """Holds structured spaces records (i.e., raw actions and observations recorded during a rollout). """
+    """Holds structured spaces records (i.e., raw actions and observations recorded during a rollout)."""
 
     def stack(self) -> StructuredSpacesRecord:
         """Stack the whole trajectory into a single structured spaces record.
@@ -65,25 +69,26 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         return StructuredSpacesRecord.stack_records(self.step_records)
 
     @classmethod
-    def stack_trajectories(cls, trajectories: List['SpacesTrajectoryRecord']) -> 'SpacesTrajectoryRecord':
+    def stack_trajectories(cls, trajectories: list[SpacesTrajectoryRecord]) -> SpacesTrajectoryRecord:
         """Stack multiple trajectories, keeping the time dimension intact.
 
         All the trajectories should be of the same length. The resulting trajectory will have the same number of steps,
         each being a stack of the corresponding steps of the input trajectories.
 
         :param trajectories: Trajectories to stack.
-        :return: Trajectory record of the same lenght, consisting of stacked structured spaces records.
+        :return: Trajectory record of the same length, consisting of stacked structured spaces records.
         """
-        assert len(set([len(t) for t in trajectories])) == 1, "all trajectories must have the same length"
+        assert len({len(t) for t in trajectories}) == 1, 'all trajectories must have the same length'
 
         stacked_trajectory = SpacesTrajectoryRecord(id=np.stack([trajectory.seed_id for trajectory in trajectories]))
-        step_records_in_time = list(zip(*[t.step_records for t in trajectories]))
-        stacked_trajectory.step_records = [StructuredSpacesRecord.stack_records(list(recs)) for recs in
-                                           step_records_in_time]
+        step_records_in_time = list(zip(*[t.step_records for t in trajectories], strict=False))
+        stacked_trajectory.step_records = [
+            StructuredSpacesRecord.stack_records(list(recs)) for recs in step_records_in_time
+        ]
         return stacked_trajectory
 
     @property
-    def actions_dicts(self) -> List[Dict[StepKeyType, ActionType]]:
+    def actions_dicts(self) -> list[dict[StepKeyType, ActionType]]:
         """Convenience access to all structured action dicts from this trajectory.
 
         TODO: Does not support multi agent scenarios (where the substep (dict) key is the same for all agents)
@@ -92,9 +97,8 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         return [step_record.actions_dict for step_record in self.step_records]
 
     @property
-    def actions(self) -> List[List[Union[ActionType, TorchActionType]]]:
-        """Convenience access to all structured action dicts from this trajectory.
-        """
+    def actions(self) -> list[list[ActionType | TorchActionType]]:
+        """Convenience access to all structured action dicts from this trajectory."""
         return [step_record.actions for step_record in self.step_records]
 
     def is_done(self) -> bool:
@@ -102,7 +106,7 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         if len(self) == 0:
             return False
 
-        assert not self.step_records[-1].is_batched(), "cannot determine done state for batched trajectory."
+        assert not self.step_records[-1].is_batched(), 'cannot determine done state for batched trajectory.'
         return self.step_records[-1].is_terminated() or self.step_records[-1].is_truncated()
 
     def total_reward(self):
@@ -110,7 +114,7 @@ class SpacesTrajectoryRecord(TrajectoryRecord[StructuredSpacesRecord]):
         if len(self) == 0:
             return 0
 
-        assert not self.step_records[-1].is_batched(), "cannot determine total reward for a batched trajectory."
+        assert not self.step_records[-1].is_batched(), 'cannot determine total reward for a batched trajectory.'
         total_reward = 0
         for record in self.step_records:
             total_reward += sum(record.rewards_dict.values())

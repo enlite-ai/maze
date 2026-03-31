@@ -1,12 +1,15 @@
-""" Contains an image resizing pre-processor. """
-from typing import Tuple, Sequence
+"""Contains an image resizing pre-processor."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from maze.core.annotations import override
+from maze.core.wrappers.observation_preprocessing.preprocessors.base import PreProcessor
 
 import numpy as np
 from gymnasium import spaces
 from PIL import Image
-
-from maze.core.wrappers.observation_preprocessing.preprocessors.base import PreProcessor
-from maze.core.annotations import override
 
 
 class ResizeImgPreProcessor(PreProcessor):
@@ -23,9 +26,9 @@ class ResizeImgPreProcessor(PreProcessor):
         self.transpose = transpose
 
     @override(PreProcessor)
-    def processed_shape(self) -> Tuple[int, ...]:
-        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor` interface
-        """
+    def processed_shape(self) -> tuple[int, ...]:
+        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor`
+        interface"""
         new_shape = list(self._original_observation_space.shape)
         if self.transpose:
             new_shape[-2:] = self.target_size
@@ -35,16 +38,16 @@ class ResizeImgPreProcessor(PreProcessor):
 
     @override(PreProcessor)
     def processed_space(self) -> spaces.Box:
-        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor` interface
-        """
+        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor`
+        interface"""
         low = self.process(self._original_observation_space.low)
         high = self.process(self._original_observation_space.high)
         return spaces.Box(low=low, high=high, dtype=self._original_observation_space.dtype)
 
     @override(PreProcessor)
     def process(self, observation: np.ndarray) -> np.ndarray:
-        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor` interface
-        """
+        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor`
+        interface"""
 
         # check if dtype conversion is necessary
         if observation.ndim == 3:

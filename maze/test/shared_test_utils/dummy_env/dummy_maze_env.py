@@ -17,7 +17,7 @@ class DummyEnvironment(MazeEnv):
     """
 
     def __init__(self,
-                 core_env: Union[CoreEnv, dict],
+                 core_env: CoreEnv | dict,
                  action_conversion: CollectionOfConfigType,
                  observation_conversion: CollectionOfConfigType):
         super().__init__(

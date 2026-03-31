@@ -2,24 +2,27 @@
 
 The pubsub system provides means to decouple the reward calculation from the environment logic.
 """
+
+from __future__ import annotations
+
 import inspect
 from abc import ABC, abstractmethod
-from typing import Callable, List, Iterable, Dict, Union, Type, TypeVar
+from collections.abc import Callable, Iterable
+from typing import TypeVar
 
 from maze.core.events.event_collection import EventCollection
-from maze.core.events.event_service import EventScope, EventRecord, EventService
+from maze.core.events.event_service import EventRecord, EventScope, EventService
 
 
 class Subscriber(ABC):
-    """Event aggregation object.
-    """
+    """Event aggregation object."""
 
     def __init__(self):
         self.events = EventCollection()
         self.reset()
 
     @abstractmethod
-    def get_interfaces(self) -> List[Type[ABC]]:
+    def get_interfaces(self) -> list[type[ABC]]:
         """
         Specification of the event interfaces this subscriber wants to receive events from.
         Every subscriber must implement this configuration method.
@@ -42,7 +45,7 @@ class Subscriber(ABC):
         """
         self.events = EventCollection()
 
-    def query_events(self, event_spec: Union[Callable, Iterable[Callable]]) -> Iterable:
+    def query_events(self, event_spec: Callable | Iterable[Callable]) -> Iterable:
         """Return all events collected at the current env step matching one or more given event types. The event
         types are specified by the interface member function object itself.
 
@@ -59,9 +62,10 @@ class Subscriber(ABC):
             event_spec = [event_spec]
 
         for ev in event_spec:
-            assert self._get_class_that_defined_method(ev) in self.get_interfaces(), \
-                f"Event {ev} queried, but class not subscribed. Check your get_interfaces() implementation " \
-                f"{self.get_interfaces()}."
+            assert self._get_class_that_defined_method(ev) in self.get_interfaces(), (
+                f'Event {ev} queried, but class not subscribed. Check your get_interfaces() implementation '
+                f'{self.get_interfaces()}.'
+            )
 
         return self.events.query_events(event_spec)
 
@@ -74,8 +78,10 @@ class Subscriber(ABC):
                     return cls
             method = method.__func__  # fallback to __qualname__ parsing
         if inspect.isfunction(method):
-            cls = getattr(inspect.getmodule(method),
-                          method.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0])
+            cls = getattr(
+                inspect.getmodule(method),
+                method.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0],
+            )
             if isinstance(cls, type):
                 return cls
         return getattr(method, '__objclass__', None)  # handle special descriptor objects
@@ -93,13 +99,13 @@ class Pubsub(EventScope):
 
         self.event_collector = event_collector
 
-        self.interface_to_subscribers: Dict[Type[T], List[Subscriber]] = dict()
+        self.interface_to_subscribers: dict[type[T], list[Subscriber]] = {}
         """map of interface class to the list of subscribed receivers"""
 
-        self.subscribers: List[Subscriber] = list()
+        self.subscribers: list[Subscriber] = []
         """all registered subscribers"""
 
-    def create_event_topic(self, interface_class: Type[T]) -> T:
+    def create_event_topic(self, interface_class: type[T]) -> T:
         """
         Returns a proxy instance of the event interface, which the publisher can use to publish events. Behind the
         scenes every event invocation is serialized as EventRecord object and then routed to the registered
@@ -119,7 +125,7 @@ class Pubsub(EventScope):
         return recorder
 
     def register_subscriber(self, new_subscriber: Subscriber):
-        """ Register a subscriber to receive events from certain published interfaces,
+        """Register a subscriber to receive events from certain published interfaces,
             specified by Subscriber.get_interfaces()
 
         :param new_subscriber: the subscriber to be registered

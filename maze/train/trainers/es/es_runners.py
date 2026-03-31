@@ -32,7 +32,7 @@ class ESMasterRunner(TrainingRunner, ABC):
     """Number of float values in the deterministically generated pseudo-random table
     (250.000.000 x 32bit floats = 1GB)"""
 
-    shared_noise: Optional[SharedNoiseTable] = dataclasses.field(default=None, init=False)
+    shared_noise: SharedNoiseTable | None = dataclasses.field(default=None, init=False)
 
     @override(TrainingRunner)
     def setup(self, cfg: DictConfig) -> None:
@@ -85,7 +85,7 @@ class ESMasterRunner(TrainingRunner, ABC):
     @abstractmethod
     def create_distributed_rollouts(
             self,
-            env: Union[StructuredEnv, StructuredEnvSpacesMixin],
+            env: StructuredEnv | StructuredEnvSpacesMixin,
             shared_noise: SharedNoiseTable,
             agent_instance_seed: int
     ) -> ESDistributedRollouts:
@@ -100,9 +100,9 @@ class ESMasterRunner(TrainingRunner, ABC):
     @override(TrainingRunner)
     def run(
             self,
-            n_epochs: Optional[int] = None,
-            distributed_rollouts: Optional[ESDistributedRollouts] = None,
-            model_selection: Optional[ModelSelectionBase] = None
+            n_epochs: int | None = None,
+            distributed_rollouts: ESDistributedRollouts | None = None,
+            model_selection: ModelSelectionBase | None = None
     ) -> None:
         """
         See :py:meth:`~maze.train.trainers.common.training_runner.TrainingRunner.run`.
@@ -138,7 +138,7 @@ class ESDevRunner(ESMasterRunner):
 
     @override(ESMasterRunner)
     def create_distributed_rollouts(
-            self, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
+            self, env: StructuredEnv | StructuredEnvSpacesMixin, shared_noise: SharedNoiseTable,
             agent_instance_seed: int,
     ) -> ESDistributedRollouts:
         """use single-threaded rollout generation"""
@@ -163,7 +163,7 @@ class ESLocalRunner(ESMasterRunner):
 
     @override(ESMasterRunner)
     def create_distributed_rollouts(
-            self, env: Union[StructuredEnv, StructuredEnvSpacesMixin], shared_noise: SharedNoiseTable,
+            self, env: StructuredEnv | StructuredEnvSpacesMixin, shared_noise: SharedNoiseTable,
             agent_instance_seed: int,
     ) -> ESDistributedRollouts:
         """use multi-process rollout generation"""

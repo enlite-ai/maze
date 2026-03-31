@@ -39,7 +39,7 @@ class TrainingRunner(Runner):
 
     state_dict_dump_file: str
     """Where to save the best model (output directory handled by hydra)."""
-    dump_interval: Optional[int]
+    dump_interval: int | None
     """If provided the state dict will be dumped ever 'dump_interval' epochs."""
     spaces_config_dump_file: str
     """Where to save the env spaces configuration (output directory handled by hydra)."""
@@ -47,14 +47,12 @@ class TrainingRunner(Runner):
     """Number of samples (=steps) to collect normalization statistics at the beginning of the
     training."""
 
-    env_factory: Optional[
-        Union[EnvFactory, Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, ObservationNormalizationWrapper]]]
-    ] = dataclasses.field(default=None, init=False)
-    _model_composer: Optional[BaseModelComposer] = dataclasses.field(default=None, init=False)
-    _model_selection: Optional[BestModelSelection] = dataclasses.field(default=None, init=False)
-    _normalization_statistics: Optional[StructuredStatisticsType] = dataclasses.field(default=None, init=False)
-    _trainer: Optional[Trainer] = dataclasses.field(default=None, init=False)
-    _cfg: Optional[DictConfig] = dataclasses.field(default=None, init=False)
+    env_factory: Union[EnvFactory, Callable[[], StructuredEnv | StructuredEnvSpacesMixin | ObservationNormalizationWrapper]] | None = dataclasses.field(default=None, init=False)
+    _model_composer: BaseModelComposer | None = dataclasses.field(default=None, init=False)
+    _model_selection: BestModelSelection | None = dataclasses.field(default=None, init=False)
+    _normalization_statistics: StructuredStatisticsType | None = dataclasses.field(default=None, init=False)
+    _trainer: Trainer | None = dataclasses.field(default=None, init=False)
+    _cfg: DictConfig | None = dataclasses.field(default=None, init=False)
 
     def setup(self, cfg: DictConfig) -> None:
         """
@@ -124,7 +122,7 @@ class TrainingRunner(Runner):
         # close normalization env
         normalization_env.close()
 
-    def run(self, n_epochs: Optional[int] = None, **train_kwargs) -> None:
+    def run(self, n_epochs: int | None = None, **train_kwargs) -> None:
         """
         Runs training.
         While this method is designed to be overriden by individual subclasses, it provides some functionality

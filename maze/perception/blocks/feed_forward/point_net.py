@@ -32,7 +32,7 @@ class PointNetFeatureTransformNet(nn.Module):
         """
 
     def __init__(self, num_features: int, num_points: int, embedding_dim: int, pooling_func_name: str,
-                 use_batch_norm: bool, non_lin: Union[str, type(nn.Module)], use_masking: bool):
+                 use_batch_norm: bool, non_lin: str | type(nn.Module), use_masking: bool):
         super().__init__()
 
         # Init class variables
@@ -77,7 +77,7 @@ class PointNetFeatureTransformNet(nn.Module):
         self.non_lin_4 = non_lin()
         self.non_lin_5 = non_lin()
 
-    def forward(self, input_tensor, masking_tensor: Optional[torch.Tensor]):
+    def forward(self, input_tensor, masking_tensor: torch.Tensor | None):
         """Forward pass through the transformer module
 
         :param input_tensor: Input to the network (BB, KK, NN)
@@ -179,9 +179,9 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
     :param non_lin: The non-linearity to apply after each layer.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
+    def __init__(self, in_keys: str | List[str], out_keys: str | List[str],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], embedding_dim: int, pooling_func_name: str,
-                 use_feature_transform: bool, use_batch_norm: bool, non_lin: Union[str, type(nn.Module)]):
+                 use_feature_transform: bool, use_batch_norm: bool, non_lin: str | type(nn.Module)):
 
         # Infer number of input dimension depending if mask is provided
         in_keys = in_keys if isinstance(in_keys, List) else [in_keys]

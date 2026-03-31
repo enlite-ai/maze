@@ -12,8 +12,8 @@ from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.structured_env_utils import flat_structured_space
 
 
-def observation_spaces_to_in_shapes(observation_spaces: Dict[Union[int, str], gym.spaces.Dict]) \
-        -> Dict[Union[int, str], Dict[str, Sequence[int]]]:
+def observation_spaces_to_in_shapes(observation_spaces: Dict[int | str, gym.spaces.Dict]) \
+        -> Dict[int | str, Dict[str, Sequence[int]]]:
     """Convert an observation space to the input shapes for the neural networks
 
     :param observation_spaces: the observation spaces of a structured Env
@@ -101,8 +101,8 @@ def stack_and_flatten_spaces(input_tensor_dict: Iterable[Dict[str, torch.Tensor]
     return dict(result)
 
 
-def convert_to_torch(stats: Any, device: Union[str, None], cast: Union[torch.dtype, None],
-                     in_place: Union[bool, str]) -> Any:
+def convert_to_torch(stats: Any, device: str | None, cast: Union[torch.dtype, None],
+                     in_place: bool | str) -> Any:
     """Converts any struct to torch.Tensors.
 
     :param stats: Any (possibly nested) struct, the values in which will be
@@ -136,7 +136,7 @@ def convert_to_torch(stats: Any, device: Union[str, None], cast: Union[torch.dty
         return map_nested_structure(stats, mapping, in_place)
 
 
-def convert_to_numpy(stats: Any, cast: Union[np.dtype, None], in_place: Union[bool, str]):
+def convert_to_numpy(stats: Any, cast: Union[np.dtype, None], in_place: bool | str):
     """Convert torch to np
 
     :param stats: Any (possibly nested) struct, the values in which will be

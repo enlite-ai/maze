@@ -26,7 +26,7 @@ class BaseModelBuilder(ABC):
 
     def __init__(self, modality_config: Dict[str, Union[str, Dict[str, Any]]],
                  observation_modality_mapping: Dict[str, str],
-                 shared_embedding_keys: Optional[Union[List[str], Dict[str, List[str]]]]):
+                 shared_embedding_keys: Union[List[str], Dict[str, List[str]]] | None):
         self.modality_config = modality_config
         self.observation_modality_mapping = observation_modality_mapping
 

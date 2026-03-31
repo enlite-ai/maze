@@ -21,7 +21,7 @@ class MockQueue:
     def put(self, item: Any) -> None:
         self.items.append(item)
 
-    def get(self, block: Optional[bool] = None) -> Any:
+    def get(self, block: bool | None = None) -> Any:
         if block is False:
             if not len(self.items):
                 raise queue.Empty

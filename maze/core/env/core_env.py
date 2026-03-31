@@ -6,10 +6,12 @@ observations and actions, they operate with MazeStates (:mod:`~.maze_state`) and
 heuristic policies for a specific environment. (It is much easier to implement a heuristic
 given a clean state representation compared to a dictionary action space of machine-readable arrays.)
 """
-from abc import ABC, abstractmethod
-from typing import Tuple, Any, Dict, Union, Iterable, Optional
 
-import numpy as np
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.environment_context import EnvironmentContext
@@ -18,30 +20,33 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
 from maze.core.env.serializable_env_mixin import SerializableEnvMixin
-from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorID
+from maze.core.env.structured_env import ActorID, StepKeyType, StructuredEnv
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.rendering.renderer import Renderer
 
+import numpy as np
+
 
 class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, ABC):
-    """Interface definition for core environments forming the basis for actual RL trainable environments.
-    """
+    """Interface definition for core environments forming the basis for actual RL trainable environments."""
 
     def __init__(self):
         self.context = EnvironmentContext()
-        self.reward_aggregator: Optional[RewardAggregatorInterface] = None
+        self.reward_aggregator: RewardAggregatorInterface | None = None
 
     @abstractmethod
     @override(StructuredEnv)
-    def step(self, maze_action: MazeActionType) -> \
-            Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, bool, Dict[Any, Any]]:
+    def step(
+        self, maze_action: MazeActionType
+    ) -> tuple[MazeStateType, float | np.ndarray | Any, bool, bool, dict[Any, Any]]:
         """Environment step function.
 
         Note: If your core environment is structured, you should call
         :func:`maze.core.env.environment_context.EnvironmentContext.increment_env_step()`
-        once the structured step is terminated or truncated, so that the env time is incremented and events/stats cleared.
+        once the structured step is terminated or truncated, so that the env time is incremented and events/stats
+        cleared.
 
         :param maze_action: Environment MazeAction to take.
         :return: state, reward, terminated, truncated, info
@@ -49,7 +54,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
 
     @abstractmethod
     @override(StructuredEnv)
-    def reset(self) -> Tuple[MazeStateType, dict]:
+    def reset(self) -> tuple[MazeStateType, dict]:
         """Reset the environment and return the initial state and info dict.
 
         :return: The initial state after resetting and an info dict.
@@ -66,8 +71,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
     @abstractmethod
     @override(StructuredEnv)
     def close(self) -> None:
-        """Performs any necessary cleanup.
-        """
+        """Performs any necessary cleanup."""
 
     @abstractmethod
     def get_maze_state(self) -> MazeStateType:
@@ -90,13 +94,13 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
         return self.context.event_service.iterate_event_records()
 
     @override(EventEnvMixin)
-    def get_kpi_calculator(self) -> Optional[KpiCalculator]:
+    def get_kpi_calculator(self) -> KpiCalculator | None:
         """By default, Core Envs do not have to support KPIs."""
         return None
 
     @abstractmethod
     @override(SerializableEnvMixin)
-    def get_serializable_components(self) -> Dict[str, Any]:
+    def get_serializable_components(self) -> dict[str, Any]:
         """List components that should be serialized as part of trajectory data."""
 
     @abstractmethod
@@ -120,7 +124,8 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
     @abstractmethod
     @override(StructuredEnv)
     def is_actor_done(self) -> bool:
-        """Returns True if the just stepped actor is done, which is different to the terminated or truncated flag of the environment.
+        """Returns True if the just stepped actor is done, which is different to the terminated or truncated flag of
+        the environment.
 
         :return: True if the actor is done.
         """
@@ -128,7 +133,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
     @property
     @abstractmethod
     @override(StructuredEnv)
-    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+    def agent_counts_dict(self) -> dict[StepKeyType, int]:
         """Returns the maximum count of agents per sub-step that the environment features.
 
         For example:
@@ -139,7 +144,7 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
             this method should return {0: 1, 1: 1}
         """
 
-    def clone_from(self, env: 'CoreEnv') -> None:
+    def clone_from(self, env: CoreEnv) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`.
 
         Cloning 'self.context' and 'self.reward_aggregator' is not required here anymore as it is already implemented

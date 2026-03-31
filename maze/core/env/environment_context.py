@@ -8,8 +8,11 @@ several benefits
 - In scenarios with multiple instantiated agent-environment interaction loops the context can be used to identify
   the parent environments.
 """
+
+from __future__ import annotations
+
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 
 class EnvironmentContext:
@@ -109,14 +112,14 @@ class EnvironmentContext:
             self.event_service.clear_events()
             self._last_cleared_events_at = self.step_id
 
-    def clone_from(self, context: 'EnvironmentContext') -> None:
-        """ Clone environment by resetting to the provided context.
+    def clone_from(self, context: EnvironmentContext) -> None:
+        """Clone environment by resetting to the provided context.
 
         :param context: The environment context to clone.
         """
         # cloning context.event_service is not required as this gets cleared prior to each step in
         # maze.core.env.environment_context.EnvironmentContext.pre_step
-        # (as Python's GC cant resolve circular dependencies this would anyways cause severe problems)
+        # (as Python's GC can't resolve circular dependencies this would anyways cause severe problems)
         # self.event_service = copy.deepcopy(context.event_service)
 
         self.step_id = context.step_id

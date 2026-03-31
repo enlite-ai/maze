@@ -263,15 +263,15 @@ def test_propagates_exceptions_to_main_thread():
 
         def compute_action(self,
                            observation: ObservationType,
-                           maze_state: Optional[MazeStateType] = None,
-                           env: Optional[BaseEnv] = None,
+                           maze_state: MazeStateType | None = None,
+                           env: BaseEnv | None = None,
                            actor_id: ActorID = None,
                            deterministic: bool = False) -> ActionType:
             """Throw an error."""
             raise RuntimeError("Test error.")
 
-        def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                          maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
+        def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int | None,
+                                          maze_state: MazeStateType | None, env: BaseEnv | None,
                                           actor_id: ActorID = None) \
                 -> Tuple[Sequence[ActionType], Sequence[float]]:
             """Not used"""

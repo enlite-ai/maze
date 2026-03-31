@@ -137,9 +137,9 @@ class TemplateModelComposer(BaseModelComposer):
         return net, embedding_net
 
     def template_value_net(self,
-                           observation_space: Optional[spaces.Dict],
+                           observation_space: spaces.Dict | None,
                            shared_embedding_keys: List[str] = None,
-                           perception_net: Optional[InferenceBlock] = None) -> InferenceBlock:
+                           perception_net: InferenceBlock | None = None) -> InferenceBlock:
         """Compiles a template value network.
 
         :param observation_space: The input observations for the perception network.
@@ -206,10 +206,10 @@ class TemplateModelComposer(BaseModelComposer):
         return net
 
     def template_q_value_net(self,
-                             observation_space: Optional[spaces.Dict],
+                             observation_space: spaces.Dict | None,
                              action_space: spaces.Dict,
                              only_discrete_spaces: bool,
-                             perception_net: Optional[InferenceBlock] = None) -> InferenceBlock:
+                             perception_net: InferenceBlock | None = None) -> InferenceBlock:
         """Compiles a template state action (Q) value network.
 
         :param observation_space: The input observations for the perception network.
@@ -272,7 +272,7 @@ class TemplateModelComposer(BaseModelComposer):
 
         return net
 
-    def _only_discrete_spaces(self) -> Dict[Union[str, int], bool]:
+    def _only_discrete_spaces(self) -> Dict[str | int, bool]:
         """Check if the actions spaces have only discrete spaces.
 
         :return: A dict holding a bool indicating whether only discrete spaces are present w.r.t. to the steps.
@@ -287,7 +287,7 @@ class TemplateModelComposer(BaseModelComposer):
     @property
     @functools.lru_cache()
     @override(BaseModelComposer)
-    def policy(self) -> Optional[TorchPolicy]:
+    def policy(self) -> TorchPolicy | None:
         """Implementation of the BaseModelComposer interface, returns the policy networks."""
 
         if self._policy_type is None:
@@ -309,7 +309,7 @@ class TemplateModelComposer(BaseModelComposer):
     @property
     @functools.lru_cache()
     @override(BaseModelComposer)
-    def critic(self) -> Optional[Union[TorchStateCritic, TorchStateActionCritic]]:
+    def critic(self) -> TorchStateCritic | TorchStateActionCritic | None:
         """Implementation of the BaseModelComposer interface, returns the value networks."""
 
         if self._critic_type is None:

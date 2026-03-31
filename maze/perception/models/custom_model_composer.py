@@ -132,7 +132,7 @@ class CustomModelComposer(BaseModelComposer):
 
     @property
     @override(BaseModelComposer)
-    def policy(self) -> Optional[TorchPolicy]:
+    def policy(self) -> TorchPolicy | None:
         """Return the policy networks."""
         if self._policy_composer is None:
             return None
@@ -141,7 +141,7 @@ class CustomModelComposer(BaseModelComposer):
 
     @property
     @override(BaseModelComposer)
-    def critic(self) -> Optional[Union[TorchStateCritic, TorchStateActionCritic]]:
+    def critic(self) -> TorchStateCritic | TorchStateActionCritic | None:
         """Return the critic networks."""
         if self._critics_composer is None:
             return None

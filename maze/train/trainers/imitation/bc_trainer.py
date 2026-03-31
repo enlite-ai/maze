@@ -92,7 +92,7 @@ class BCTrainer(Trainer):
 
     @override(Trainer)
     def train(
-            self, evaluator: Evaluator, n_epochs: Optional[int] = None, eval_every_k_iterations: Optional[int] = None
+            self, evaluator: Evaluator, n_epochs: int | None = None, eval_every_k_iterations: int | None = None
     ) -> None:
         """
         Run training.
@@ -142,14 +142,14 @@ class BCTrainer(Trainer):
         return self.policy.state_dict()
 
     @override(Trainer)
-    def load_state(self, file_path: Union[str, BinaryIO]) -> None:
+    def load_state(self, file_path: str | BinaryIO) -> None:
         """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
         """
         state_dict = torch.load(file_path, map_location=torch.device(self.policy.device))
         self.load_state_dict(state_dict)
 
-    def _run_iteration(self, observations: List[Union[ObservationType, TorchObservationType]],
-                       actions: List[Union[ActionType, TorchActionType]], actor_ids: List[ActorID]) -> None:
+    def _run_iteration(self, observations: List[ObservationType | TorchObservationType],
+                       actions: List[ActionType | TorchActionType], actor_ids: List[ActorID]) -> None:
         """Run a single training iterations of the behavioural cloning.
 
         :param observations: A list (w.r.t. the substeps/agents) of batched observations.

@@ -20,10 +20,10 @@ class BestModelSelection(ModelSelectionBase):
     """
 
     def __init__(self,
-                 dump_file: Optional[str],
-                 model: Optional[TorchModel],
-                 dump_interval: Optional[int] = None,
-                 verbose: bool = False, logger_str: Optional[str] = None) -> None:
+                 dump_file: str | None,
+                 model: TorchModel | None,
+                 dump_interval: int | None = None,
+                 verbose: bool = False, logger_str: str | None = None) -> None:
         self.dump_file = dump_file
         self.model = model
         self.dump_interval = dump_interval

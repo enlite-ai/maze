@@ -42,7 +42,7 @@ class GraphAdjacencyMethods:
 
     @classmethod
     def preprocess_adj_to_adj_bar(cls, adj: torch.Tensor) \
-            -> Union[torch.Tensor, np.ndarray]:
+            -> torch.Tensor | np.ndarray:
         """Transform the adjacency matrix needed for the computation.
 
         Since repeated application of forward computation on the standard adjacency matrix can lead to numerical
@@ -79,7 +79,7 @@ class GraphAdjacencyMethods:
 
     @classmethod
     def preprocess_adj_to_adj_hat(cls, adj: torch.Tensor,
-                                  self_importance_scalar: Optional[torch.Tensor] = torch.tensor(1)) \
+                                  self_importance_scalar: torch.Tensor | None = torch.tensor(1)) \
             -> Union[torch.Tensor, np.ndarray]:
         """Transform the adjacency matrix needed for the computation.
 

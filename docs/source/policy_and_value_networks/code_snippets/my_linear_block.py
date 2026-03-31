@@ -8,7 +8,7 @@ from torch import nn as nn
 from maze.core.annotations import override
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
-Number = Union[builtins.int, builtins.float, builtins.bool]
+Number = builtins.int | builtins.float | builtins.bool
 
 
 class MyLinearBlock(ShapeNormalizationBlock):
@@ -21,8 +21,8 @@ class MyLinearBlock(ShapeNormalizationBlock):
     """
 
     def __init__(self,
-                 in_keys: Union[str, List[str]],
-                 out_keys: Union[str, List[str]],
+                 in_keys: str | List[str],
+                 out_keys: str | List[str],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]],
                  output_units: int):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=2, out_num_dims=2)

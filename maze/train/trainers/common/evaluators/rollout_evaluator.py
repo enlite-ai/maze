@@ -25,7 +25,7 @@ class RolloutEvaluator(Evaluator):
     def __init__(self,
                  eval_env: StructuredVectorEnv,
                  n_episodes: int,
-                 model_selection: Optional[ModelSelectionBase],
+                 model_selection: ModelSelectionBase | None,
                  deterministic: bool = False):
         self.eval_env = eval_env
         self.n_episodes = n_episodes

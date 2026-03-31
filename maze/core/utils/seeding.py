@@ -1,13 +1,17 @@
 """This file holds the maze random number generator as well as a Method for setting random seeds globally."""
+
+from __future__ import annotations
+
 import random
-from typing import Optional, Sequence, Any, Union, List
+from collections.abc import Sequence
+from typing import Any
+
+from maze.core.utils.factory import ConfigType, Factory
+from maze.utils.bcolors import BColors
 
 import numpy as np
 import torch
 import torch.backends.cudnn
-
-from maze.core.utils.factory import ConfigType, Factory
-from maze.utils.bcolors import BColors
 
 
 def set_seeds_globally(seed: int, set_cudnn_determinism: bool, info_txt: str) -> None:
@@ -43,18 +47,24 @@ class MazeSeeding:
     :param cudnn_determinism_flag: Specify whether to set the cudnn determinism flag, this will ensure guaranty when
         working on the gpu, however some torch modules will raise runtime errors, and the processing speed will be
         decreased. For more information on this topic please refer to:
-        https://pytorch.org/docs/1.7.1/notes/randomness.html?highlight=reproducability
+        https://pytorch.org/docs/1.7.1/notes/randomness.html?highlight=reproducibility
     :param explicit_env_seeds: Explicit sequence of seeds used for seeding the environment (w.r.t. each episode).
-    :param explicit_env_eval_seeds: Explicit sequence of seeds used for seeding the evaluation environment (w.r.t. each episode).
+    :param explicit_env_eval_seeds: Explicit sequence of seeds used for seeding the evaluation environment
+                                    (w.r.t. each episode).
     :param explicit_agent_seeds: Explicit sequence of seeds used for seeding the agent (w.r.t. each episode).
     :param shuffle_seeds: Whether the explicit sequence of seeds should be shuffled (based on the env/agent _base_seed).
     """
 
-    def __init__(self, env_seed: int, agent_seed: int, cudnn_determinism_flag: bool,
-                 explicit_env_seeds: Optional[Union[Sequence[Any], ConfigType]],
-                 explicit_env_eval_seeds: Optional[Union[Sequence[Any], ConfigType]],
-                 explicit_agent_seeds: Optional[Union[Sequence[Any], ConfigType]],
-                 shuffle_seeds: bool):
+    def __init__(
+        self,
+        env_seed: int,
+        agent_seed: int,
+        cudnn_determinism_flag: bool,
+        explicit_env_seeds: Sequence[Any] | ConfigType | None,
+        explicit_env_eval_seeds: Sequence[Any] | ConfigType | None,
+        explicit_agent_seeds: Sequence[Any] | ConfigType | None,
+        shuffle_seeds: bool,
+    ):
         self._env_base_seed = env_seed
         self._agent_base_seed = agent_seed
         self.env_rng = np.random.RandomState(env_seed)
@@ -93,7 +103,7 @@ class MazeSeeding:
 
         self.global_seed = self.generate_agent_instance_seed()
 
-    def get_explicit_env_seeds(self, n_seeds: int) -> List[Any]:
+    def get_explicit_env_seeds(self, n_seeds: int) -> list[Any]:
         """Return a list of explicit env seeds to be used for each episode.
 
         :param n_seeds: The number of seeds to be returned.
@@ -107,7 +117,7 @@ class MazeSeeding:
                 seeds = list(map(int, self.env_rng.permutation(seeds)))
             return seeds
 
-    def get_explicit_env_eval_seeds(self, n_seeds: int) -> List[Any]:
+    def get_explicit_env_eval_seeds(self, n_seeds: int) -> list[Any]:
         """Return a list of explicit env seeds to be used in the evaluation env.
 
         :param n_seeds: The number of seeds to be returned.
@@ -121,7 +131,7 @@ class MazeSeeding:
                 seeds = list(map(int, self.env_rng.permutation(seeds)))
             return seeds
 
-    def get_explicit_agent_seeds(self, n_seeds: int) -> List[Any]:
+    def get_explicit_agent_seeds(self, n_seeds: int) -> list[Any]:
         """Return a list of explicit agent seeds to be used for each episode.
 
         :param n_seeds: The number of seeds to be returned.

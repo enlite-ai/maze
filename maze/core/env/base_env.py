@@ -1,6 +1,9 @@
 """Interface common to all environments."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Tuple, Any, Dict
+from typing import Any
 
 
 class BaseEnv(ABC):
@@ -9,7 +12,7 @@ class BaseEnv(ABC):
     """
 
     @abstractmethod
-    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
         """Environment step function.
 
         :param action: the selected action to take.
@@ -17,7 +20,7 @@ class BaseEnv(ABC):
         """
 
     @abstractmethod
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Resets the environment and returns the initial state and info dict.
 
         :return: the initial state after resetting and info dict
@@ -35,5 +38,4 @@ class BaseEnv(ABC):
 
     @abstractmethod
     def close(self) -> None:
-        """Performs any necessary cleanup.
-        """
+        """Performs any necessary cleanup."""

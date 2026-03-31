@@ -1,6 +1,9 @@
 """Interface for environments to expose event logging capabilities."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
@@ -15,11 +18,10 @@ class EventEnvMixin(ABC):
 
     @abstractmethod
     def get_step_events(self) -> Iterable[EventRecord]:
-        """Retrieve all recorded events of the current environment step.
-        """
+        """Retrieve all recorded events of the current environment step."""
 
     @abstractmethod
-    def get_kpi_calculator(self) -> Optional[KpiCalculator]:
+    def get_kpi_calculator(self) -> KpiCalculator | None:
         """If available, return an instance of a KPI calculator that can be used to calculate KPIs
         from events at the end of episode.
 

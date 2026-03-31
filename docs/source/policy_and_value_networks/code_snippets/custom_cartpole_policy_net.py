@@ -22,7 +22,7 @@ class CustomCartpolePolicyNet(nn.Module):
     """
 
     def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logits_shapes: Dict[str, Sequence[int]],
-                 non_lin: Union[str, type(nn.Module)], hidden_units: List[int]):
+                 non_lin: str | type(nn.Module), hidden_units: List[int]):
         super().__init__()
 
         # Maze relies on dictionaries to represent the inference graph

@@ -1,7 +1,11 @@
 """Implementation of the basic event service for :obj:`~maze.core.env.core_env.CoreEnv` environments."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import Dict, TypeVar, Type, Set, Generator
+from collections.abc import Generator
+from typing import TypeVar
 
 from maze.core.events.event_record import EventRecord
 from maze.core.events.event_topic_factory import event_topic_factory
@@ -42,15 +46,15 @@ class EventService:
     class TopicInfo:
         """internal class to keep track of the topic state, including the collected events"""
 
-        def __init__(self, interface_class: Type[T], scope: EventScope, proxy: T):
+        def __init__(self, interface_class: type[T], scope: EventScope, proxy: T):
             self.interface_class = interface_class
             self.scope = scope
             self.events = deque()
             self.proxy = proxy
 
     def __init__(self):
-        self.topics: Dict[T, EventService.TopicInfo] = dict()
-        self.scopes: Set[EventScope] = set()
+        self.topics: dict[T, EventService.TopicInfo] = {}
+        self.scopes: set[EventScope] = set()
 
     def notify_event(self, event: EventRecord) -> None:
         """
@@ -64,15 +68,14 @@ class EventService:
         if topic.scope:
             topic.scope.notify_event(event)
 
-    def iterate_event_records(self) -> Generator[EventRecord, None, None]:
+    def iterate_event_records(self) -> Generator[EventRecord]:
         """
         A generator to iterate all collected events
         """
         for topic_info in self.topics.values():
-            for event in topic_info.events:
-                yield event
+            yield from topic_info.events
 
-    def create_event_topic(self, interface_class: Type[T], scope: EventScope = None) -> T:
+    def create_event_topic(self, interface_class: type[T], scope: EventScope = None) -> T:
         """
         Create a proxy instance of the event interface, which can be used conveniently to publish events.
         Returns an existing proxy, if it has been created before.
@@ -86,7 +89,7 @@ class EventService:
         # return topic proxy if it already exists
         topic = self.topics.get(interface_class)
         if topic:
-            assert topic.scope == scope, 'same interface in different scopes ({} and {})'.format(topic.scope, scope)
+            assert topic.scope == scope, f'same interface in different scopes ({topic.scope} and {scope})'
             return topic.proxy
 
         recorder = event_topic_factory(interface_class, self.notify_event)
@@ -115,7 +118,6 @@ class EventService:
         self.clear_pubsub()
 
     def clear_pubsub(self) -> None:
-        """ Clears the events collected by pubsub
-        """
+        """Clears the events collected by pubsub"""
         for scope in self.scopes:
             scope.clear_events()

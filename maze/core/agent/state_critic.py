@@ -1,8 +1,14 @@
 """Encapsulates state critic and queries them for values according to the provided policy ID."""
-from abc import ABC, abstractmethod
-from typing import Union
 
-from maze.core.agent.state_critic_input_output import StateCriticStepOutput, StateCriticOutput, StateCriticInput
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+
+from maze.core.agent.state_critic_input_output import (
+    StateCriticInput,
+    StateCriticOutput,
+    StateCriticStepOutput,
+)
 from maze.core.env.observation_conversion import ObservationType
 
 
@@ -22,7 +28,7 @@ class StateCritic(ABC):
         """
 
     @abstractmethod
-    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> StateCriticStepOutput:
+    def predict_value(self, observation: ObservationType, critic_id: int | str) -> StateCriticStepOutput:
         """Query a critic that corresponds to the given ID for the state value.
 
         :param observation: Current observation of the environment

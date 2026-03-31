@@ -19,8 +19,8 @@ class Adam(Optimizer):
         self.epsilon = epsilon
 
         # initialized by setup()
-        self.m: Optional[np.ndarray] = None
-        self.v: Optional[np.ndarray] = None
+        self.m: np.ndarray | None = None
+        self.v: np.ndarray | None = None
 
     def setup(self, policy: TorchPolicy) -> None:
         """prepare optimizer for training"""

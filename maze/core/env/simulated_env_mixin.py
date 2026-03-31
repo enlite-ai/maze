@@ -1,4 +1,7 @@
 """Environment interface for simulated environments (used e.g. by Monte Carlo Tree Search)."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -27,4 +30,3 @@ class SimulatedEnvMixin(ABC):
     def deserialize_state(self, serialized_state: Any) -> None:
         """Deserialize the current env from the given env state."""
         raise NotImplementedError
-

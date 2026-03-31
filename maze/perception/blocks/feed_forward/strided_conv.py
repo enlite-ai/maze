@@ -38,10 +38,10 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
                  hidden_kernels: List[Union[int, Tuple[int, ...]]],
                  non_lin: Union[str, type(nn.Module)],
                  convolution_dimension: int,
-                 hidden_strides: Optional[List[Union[int, Tuple[int, ...]]]],
-                 hidden_dilations: Optional[List[Union[int, Tuple[int, ...]]]],
-                 hidden_padding: Optional[List[Union[int, Tuple[int, ...]]]],
-                 padding_mode: Optional[str]):
+                 hidden_strides: List[Union[int, Tuple[int, ...]]] | None,
+                 hidden_dilations: List[Union[int, Tuple[int, ...]]] | None,
+                 hidden_padding: List[Union[int, Tuple[int, ...]]] | None,
+                 padding_mode: str | None):
 
         assert convolution_dimension in [1, 2, 3]
         if convolution_dimension == 1:

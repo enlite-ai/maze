@@ -1,7 +1,10 @@
 """Generate basic statistics for any gym environment."""
+
+from __future__ import annotations
+
 import uuid
-from typing import Callable, Optional, Iterable
-from typing import TypeVar, Union, Any, Tuple, Dict
+from collections.abc import Callable, Iterable
+from typing import Any, TypeVar
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -20,7 +23,12 @@ from maze.core.events.event_record import EventRecord
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
+from maze.core.log_stats.log_stats import (
+    LogStatsAggregator,
+    LogStatsLevel,
+    LogStatsValue,
+    get_stats_logger,
+)
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.rendering.events_stats_renderer import EventStatsRenderer
 from maze.core.wrappers.wrapper import Wrapper
@@ -32,7 +40,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
     :param env: The environment to wrap.
     """
 
-    def __init__(self, env: MazeEnv, logging_prefix: Optional[str] = None):
+    def __init__(self, env: MazeEnv, logging_prefix: str | None = None):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
         # BaseEnv is a subset of gymnasium.Env
         super().__init__(env)
@@ -45,27 +53,27 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         self.stats_map = {
             LogStatsLevel.EPOCH: self.epoch_stats,
             LogStatsLevel.EPISODE: self.episode_stats,
-            LogStatsLevel.STEP: self.step_stats
+            LogStatsLevel.STEP: self.step_stats,
         }
 
         if logging_prefix is not None:
             self.epoch_stats.register_consumer(get_stats_logger(logging_prefix))
 
-        self.last_env_time: Optional[int] = None
+        self.last_env_time: int | None = None
         self.reward_events = EventCollection()
-        self.episode_event_log: Optional[EpisodeEventLog] = None
+        self.episode_event_log: EpisodeEventLog | None = None
 
         self.step_stats_renderer = EventStatsRenderer()
 
         # register a post-step callback, so stats are recorded even in case that a wrapper
         # in the middle of the stack steps the environment (as done e.g. during step-skipping)
-        if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
+        if hasattr(env, 'context') and isinstance(env.context, EnvironmentContext):
             env.context.register_post_step(self._record_stats_if_ready)
 
-    T = TypeVar("T")
+    T = TypeVar('T')
 
     @classmethod
-    def wrap(cls, env: T, logging_prefix: Optional[str] = None) -> Union[T, LogStatsEnv]:
+    def wrap(cls, env: T, logging_prefix: str | None = None) -> T | LogStatsEnv:
         """Creation method providing appropriate type hints. Preferred method to construct the wrapper
         compared to calling the class constructor directly.
 
@@ -80,9 +88,8 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         return instance
 
     @override(BaseEnv)
-    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
-        """Collect the rewards for the logging statistics
-        """
+    def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
+        """Collect the rewards for the logging statistics"""
 
         # get identifier of current substep
         substep_id, _ = self.env.actor_id() if isinstance(self.env, StructuredEnv) else (None, None)
@@ -135,9 +142,8 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         self.last_env_time = self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
 
     @override(BaseEnv)
-    def reset(self) -> Tuple[Any, dict]:
-        """Reset the environment and trigger the episode statistics calculation of the previous run.
-        """
+    def reset(self) -> tuple[Any, dict]:
+        """Reset the environment and trigger the episode statistics calculation of the previous run."""
         # Generate the episode stats from the previous rollout if any
         self._calculate_kpis()
         self.episode_stats.reduce()
@@ -162,8 +168,7 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
 
     @override(LogStatsEnv)
     def write_epoch_stats(self):
-        """Implementation of the LogStatsEnv interface, call reduce on the episode aggregator.
-        """
+        """Implementation of the LogStatsEnv interface, call reduce on the episode aggregator."""
         if self.episode_event_log:
             self._calculate_kpis()
             self.episode_stats.reduce()
@@ -172,12 +177,8 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         self.episode_event_log = None
 
     @override(LogStatsEnv)
-    def get_stats_value(self,
-                        event: Callable,
-                        level: LogStatsLevel,
-                        name: Optional[str] = None) -> LogStatsValue:
-        """Implementation of the LogStatsEnv interface, obtain the value from the cached aggregator statistics.
-        """
+    def get_stats_value(self, event: Callable, level: LogStatsLevel, name: str | None = None) -> LogStatsValue:  # noqa: ARG002
+        """Implementation of the LogStatsEnv interface, obtain the value from the cached aggregator statistics."""
         return self.epoch_stats.last_stats[(event, name, None)]
 
     @override(LogStatsEnv)
@@ -185,12 +186,14 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         """Implementation of the LogStatsEnv interface, clear out episode statistics collected so far in this epoch."""
         self.epoch_stats.clear_inputs()
 
-    def render_stats(self,
-                     event_name: str = "BaseEnvEvents.reward",
-                     metric_name: str = "value",
-                     aggregation_func: Optional[Union[str, Callable]] = None,
-                     group_by: str = None,
-                     post_processing_func: Optional[Union[str, Callable]] = 'cumsum'):
+    def render_stats(
+        self,
+        event_name: str = 'BaseEnvEvents.reward',
+        metric_name: str = 'value',
+        aggregation_func: str | Callable | None = None,
+        group_by: str = None,
+        post_processing_func: str | Callable | None = 'cumsum',
+    ):
         """Render statistics from the currently running episode.
 
         Rendering is based on event logs. You can select arbitrary events from those dispatched by the currently
@@ -203,8 +206,13 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         :param group_by: Optionally, another of event attributes to group by on the step level (e.g. "product_id")
         :param post_processing_func: Optionally, a function to post-process the data ("cumsum" is often used)"""
         self.step_stats_renderer.render_current_episode_stats(
-            self.episode_event_log, event_name, metric_name,
-            aggregation_func, group_by, post_processing_func)
+            self.episode_event_log,
+            event_name,
+            metric_name,
+            aggregation_func,
+            group_by,
+            post_processing_func,
+        )
 
     def _calculate_kpis(self):
         """Calculate KPIs and append them to both aggregated and logged events."""
@@ -234,19 +242,21 @@ class LogStatsWrapper(Wrapper[MazeEnv], LogStatsEnv):
         self.episode_event_log = None
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'LogStatsWrapper') -> None:
+    def clone_from(self, env: LogStatsWrapper) -> None:  # noqa: ARG002
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         raise RuntimeError("Cloning the 'LogStatsWrapper' is not supported.")
 
-    def get_last_step_events(self, query: Union[Callable, Iterable[Callable]] = None):
+    def get_last_step_events(self, query: Callable | Iterable[Callable] = None):
         """Convenience accessor to all events recorded during the last step.
 
         :param query: Specify which events to return (one or more interface methods)

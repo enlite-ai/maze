@@ -1,6 +1,9 @@
-""" Implements step skipping as an environment wrapper. """
+"""Implements step skipping as an environment wrapper."""
+
+from __future__ import annotations
+
 import copy
-from typing import Any, Dict, Tuple, Union, Optional
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
@@ -11,10 +14,10 @@ from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.wrappers.wrapper import Wrapper, EnvType
+from maze.core.wrappers.wrapper import EnvType, Wrapper
 
 
-class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
+class StepSkipWrapper(Wrapper[StructuredEnv | EnvType]):
     """A step-skip-wrapper providing functionality for skipping n_steps environment steps.
     Options for skipping are: (noop: apply the noop action, sticky: apply the last action again).
 
@@ -22,19 +25,26 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
     :param n_steps: Total number of steps that should be taken (e.g., n_steps = 1 + n_skip_steps).
     :param skip_mode: Skipping action selection mode (noop, sticky).
     """
+
     SKIPPING_MODES = ['sticky', 'noop']
 
-    def __init__(self, env: Union[StructuredEnvSpacesMixin, MazeEnv], n_steps: int, skip_mode: str):
+    def __init__(
+        self,
+        env: StructuredEnvSpacesMixin | MazeEnv,
+        n_steps: int,
+        skip_mode: str,
+    ):
         super().__init__(env)
 
         # initialize observation skipping
         self.n_steps = n_steps
         self.skip_mode = skip_mode
-        assert self.skip_mode in self.SKIPPING_MODES, \
+        assert self.skip_mode in self.SKIPPING_MODES, (
             f'Skips mode ({self.skip_mode}) has to be one of the following {self.SKIPPING_MODES}'
+        )
 
         # init action recording
-        self._step_actions = dict()
+        self._step_actions = {}
         self._steps_done = 0
 
     def _record_action(self, action: ActionType) -> None:
@@ -48,10 +58,11 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
             self._step_actions[step_key] = copy.deepcopy(action)
         elif self.skip_mode == 'noop':
             self._step_actions[step_key] = self.env.action_conversion.noop_action()
-            assert self._step_actions[step_key] is not None, \
+            assert self._step_actions[step_key] is not None, (
                 'noop action not defined in the action_conversion interface'
+            )
 
-    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> tuple[ObservationType, float, bool, bool, dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
 
         # record the actions given until one flat step finished
@@ -97,19 +108,21 @@ class StepSkipWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
 
     def _reset_recording(self) -> None:
         """reset the action recording"""
-        self._step_actions = dict()
+        self._step_actions = {}
         self._steps_done = 0
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Not implemented yet. Note: Some step skipping might be required here as well (depends on the use case)."""
         raise NotImplementedError
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'StepSkipWrapper') -> None:
+    def clone_from(self, env: StepSkipWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self._step_actions = copy.deepcopy(env._step_actions)
         self._steps_done = env._steps_done

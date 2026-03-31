@@ -1,34 +1,41 @@
 """
 Provides functionality for instantiating objects from configuration.
 """
+
+from __future__ import annotations
+
 import copy
 import importlib
-from typing import TypeVar, Type, Dict, Union, Any, List, Mapping, Generic, Tuple, Sequence, Callable
+from collections.abc import Callable, Mapping, Sequence
+from typing import (
+    Any,
+    Generic,
+    TypeVar,
+)
 
 import omegaconf
 from hydra.utils import instantiate
-from omegaconf import open_dict, DictConfig
+from omegaconf import DictConfig, open_dict
 
-ConfigType = Union[None, Mapping[str, Any], Any]
-"""Shorthand type for configuration corresponding to a single object.
+ConfigType = None | Mapping[str, Any] | Any
+# Shorthand type for configuration corresponding to a single object.
+#
+# * Instance can be optional (None values supported)
+# * Instance can be specified by a dictionary, the type specified in the "_target_" attribute
+# * The object can already be instantiated
 
-* Instance can be optional (None values supported)
-* Instance can be specified by a dictionary, the type specified in the "_target_" attribute
-* The object can already be instantiated
-"""
 
-CollectionOfConfigType = Union[List[ConfigType], Mapping[Union[str, Type], ConfigType]]
-"""Shorthand type for a list or a dictionary of object parameters from the config files. E.g. used to specify
-a collection of ActionConversion objects.
+CollectionOfConfigType = list[ConfigType] | Mapping[str | type, ConfigType]
+# Shorthand type for a list or a dictionary of object parameters from the config files. E.g. used to specify
+# a collection of ActionConversion objects.
+#
+# Can be either:
+# * List of config parameter dictionaries
+# * Dictionary of config parameter dictionaries
+# * List of instantiated objects
+# * Dictionary of instantiated objects
 
-Can be either:
-* List of config parameter dictionaries
-* Dictionary of config parameter dictionaries
-* List of instantiated objects
-* Dictionary of instantiated objects
-"""
-
-BaseType = TypeVar("BaseType")
+BaseType = TypeVar('BaseType')
 
 
 class Factory(Generic[BaseType]):
@@ -39,10 +46,10 @@ class Factory(Generic[BaseType]):
     :param base_type: A common interface (parent class) of the registered types (e.g. DemandGenerator)
     """
 
-    def __init__(self, base_type: Type[BaseType]):
+    def __init__(self, base_type: type[BaseType]):
         self.base_type = base_type
 
-    def instantiate(self, config: Union[BaseType, ConfigType], **kwargs: Any) -> BaseType:
+    def instantiate(self, config: BaseType | ConfigType, **kwargs: Any) -> BaseType:
         """Instantiate an object from configuration.
 
         This is implemented as a thin layer on top of Hydra's instantiate() function, with the following additions
@@ -66,29 +73,28 @@ class Factory(Generic[BaseType]):
 
         # To ensure full Hydra compatibility: Convert config to OmegaConf, if necessary.
         if isinstance(config, dict):
-            config = omegaconf.OmegaConf.create(config, flags={"allow_objects": True})
+            config = omegaconf.OmegaConf.create(config, flags={'allow_objects': True})
 
         if not isinstance(config, DictConfig) and isinstance(config, self.base_type):
             # nothing to do, object is already instantiated
             return config
 
-        assert not isinstance(config, str), f"instantiation from string not supported, please pass as '_target_' arg"
-        assert hasattr(config, "__getitem__"), f"unexpected type {type(config)}"
-        assert "_target_" in config, f"Can't instantiate, field '_target_' is missing, config={config}"
+        assert not isinstance(config, str), "instantiation from string not supported, please pass as '_target_' arg"
+        assert hasattr(config, '__getitem__'), f'unexpected type {type(config)}'
+        assert '_target_' in config, f"Can't instantiate, field '_target_' is missing, config={config}"
 
-        if "_" in config:
+        if '_' in config:
             config = copy.deepcopy(config)
             # removing the reserved name "_" is only possible by accessing internal Hydra structures
             with open_dict(config):
-                del config["_"]
+                del config['_']
 
-        o = instantiate(config, _recursive_=config.get("_recursive_", False), **kwargs)
-        assert isinstance(o, self.base_type), f"{o} is not of type {self.base_type}"
+        o = instantiate(config, _recursive_=config.get('_recursive_', False), **kwargs)
+        assert isinstance(o, self.base_type), f'{o} is not of type {self.base_type}'
 
         return o
 
-    def instantiate_collection(self, config: CollectionOfConfigType, **kwargs: Any
-                               ) -> Dict[Union[str, int], BaseType]:
+    def instantiate_collection(self, config: CollectionOfConfigType, **kwargs: Any) -> dict[str | int, BaseType]:
         """Instantiates objects specified in a list or dictionary.
 
         :param config: A list or dictionary of individual configs, passed to `instantiate()`
@@ -101,27 +107,28 @@ class Factory(Generic[BaseType]):
         if isinstance(config, Sequence):
             return {idx: self.instantiate(a, **kwargs) for idx, a in enumerate(config)}
         if isinstance(config, Mapping):
-            assert "_target_" not in config, "expected a dictionary of config objects, " \
-                                             "but received an instance config instead"
+            assert '_target_' not in config, (
+                'expected a dictionary of config objects, but received an instance config instead'
+            )
 
             return {k: self.instantiate(v, **kwargs) for k, v in config.items()}
 
-        raise ValueError(f"unexpected collection type {config}")
+        raise ValueError(f'unexpected collection type {config}')
 
     @classmethod
-    def _split_module_and_class(cls, path) -> Tuple[str, str]:
+    def _split_module_and_class(cls, path) -> tuple[str, str]:
         """try to split module and class name from path
 
         :param path: path in the form package1.package2.MyClass
         :return: tuple (path, class_name), e.g. ("package1.package2", "MyClass")
         """
-        split_path = path.split(".")
-        path = ".".join(split_path[:-1])
+        split_path = path.split('.')
+        path = '.'.join(split_path[:-1])
         class_name = split_path[-1]
 
         return path, class_name
 
-    def type_from_name(self, name: Union[str, Type[BaseType]]) -> Type[BaseType]:
+    def type_from_name(self, name: str | type[BaseType]) -> type[BaseType]:
         """Import the given module and lookup the callable or class from the module with the correct base type.
 
         :param name: Fully qualified name including the module path (e.g.

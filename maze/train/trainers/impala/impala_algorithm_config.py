@@ -66,7 +66,7 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
         \rho_s \delta log \pi(a|x) (r + \gamma v_{s+1} - V(x_sfrom_importance_weights)). If None, no clipping is
         applied."""
 
-    # Should be Union[RolloutEvaluator, ConfigType], which Hydra does not support (yet).
+    # Should be RolloutEvaluator | ConfigType, which Hydra does not support (yet).
     rollout_evaluator: RolloutEvaluator
     """Rollout evaluator."""
 

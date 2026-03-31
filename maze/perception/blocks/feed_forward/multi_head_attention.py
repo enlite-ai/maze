@@ -54,8 +54,8 @@ class MultiHeadAttentionBlock(ShapeNormalizationBlock):
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], num_heads: int,
-                 dropout: Optional[float], add_input_to_output: bool, bias: bool, add_bias_kv: bool,
-                 add_zero_attn: bool, kdim: Optional[int], vdim: Optional[int], use_key_padding_mask: bool):
+                 dropout: float | None, add_input_to_output: bool, bias: bool, add_bias_kv: bool,
+                 add_zero_attn: bool, kdim: int | None, vdim: int | None, use_key_padding_mask: bool):
 
         in_keys = in_keys if isinstance(in_keys, List) else [in_keys]
         out_keys = out_keys if isinstance(out_keys, List) else [out_keys]

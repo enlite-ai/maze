@@ -26,7 +26,7 @@ class DefaultRewardAggregator(RewardAggregatorInterface):
         return [CuttingEvents, InventoryEvents]
 
     @override(RewardAggregatorInterface)
-    def summarize_reward(self, maze_state: Optional[MazeStateType] = None) -> float:
+    def summarize_reward(self, maze_state: MazeStateType | None = None) -> float:
         """Assign rewards and penalties according to respective events.
 
         :param maze_state: Not used by this reward aggregator.

@@ -21,7 +21,7 @@ class ActionMaskingBlock(PerceptionBlock):
     """
 
     def __init__(self, in_keys: List[str], out_keys: Union[str, List[str]],
-                 in_shapes: List[Sequence[int]], num_actors: int, num_of_actor_actions: Union[int, None]):
+                 in_shapes: List[Sequence[int]], num_actors: int, num_of_actor_actions: int | None):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
         assert len(self.out_keys) == num_actors, f'The number of out_keys should be equal to the number of actors'
         assert len(self.in_keys) == 2

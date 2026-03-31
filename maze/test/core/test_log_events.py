@@ -32,7 +32,7 @@ from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversi
     as DummyObservationConversion
 
 
-def _run_rollout_loop(env: Union[BaseEnv, MazeEnv], n_steps_per_episode: int, n_episodes: int, writer: LogEventsWriter):
+def _run_rollout_loop(env: BaseEnv | MazeEnv, n_steps_per_episode: int, n_episodes: int, writer: LogEventsWriter):
     LogEventsWriterRegistry.writers = []  # Ensure there is no other writer
     LogEventsWriterRegistry.register_writer(writer)
 
@@ -224,7 +224,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
             super().__init__(observation_space)
             self.dummy_events = self.pubsub.create_event_topic(_CoreEnvEvents)
 
-        def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, bool, Optional[Dict]]:
+        def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, bool, Dict | None]:
             """Dispatch the step event..."""
             self.dummy_events.core_env_step_event()
             return super().step(maze_action)
@@ -236,11 +236,11 @@ def test_records_once_per_maze_step_in_multistep_envs():
             super().__init__(maze_env)
             self.dummy_events = self.pubsub.create_event_topic(_SubStepEvents)
 
-        def _action0(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict[str, np.ndarray]]]:
+        def _action0(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
             self.dummy_events.sub_step_event()
             return {}, 0, False, False, None
 
-        def _action1(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict[str, np.ndarray]]]:
+        def _action1(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
             self.dummy_events.sub_step_event()
             return self.maze_env.step(action)
 

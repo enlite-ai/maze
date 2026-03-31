@@ -25,9 +25,9 @@ class IMPALA(ActorCritic):
     def __init__(self,
                  algorithm_config: ImpalaAlgorithmConfig,
                  rollout_generator: DistributedActors,
-                 evaluator: Optional[RolloutEvaluator],
+                 evaluator: RolloutEvaluator | None,
                  model: TorchActorCritic,
-                 model_selection: Optional[BestModelSelection]):
+                 model_selection: BestModelSelection | None):
         super().__init__(algorithm_config, rollout_generator, evaluator, model, model_selection)
 
         # inject statistics directly into the epoch log
@@ -35,7 +35,7 @@ class IMPALA(ActorCritic):
         self.impala_events = epoch_stats.create_event_topic(ImpalaEvents)
 
     @override(Trainer)
-    def train(self, n_epochs: Optional[int] = None) -> None:
+    def train(self, n_epochs: int | None = None) -> None:
         """Train function that wraps normal train function in order to close all processes properly
 
         :param n_epochs: number of epochs to train.

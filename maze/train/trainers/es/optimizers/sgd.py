@@ -17,7 +17,7 @@ class SGD(Optimizer):
         self.step_size, self.momentum = step_size, momentum
 
         # smoothed gradient, initialized by setup()
-        self.v: Optional[np.ndarray] = None
+        self.v: np.ndarray | None = None
 
     @override(Optimizer)
     def setup(self, policy: TorchPolicy) -> None:

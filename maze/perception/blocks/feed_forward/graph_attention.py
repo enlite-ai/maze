@@ -146,7 +146,7 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], hidden_features: List[int],
                  non_lins: Union[str, type(nn.Module), List[str], List[type(nn.Module)]],
-                 n_heads: Union[int, List[int]], attention_alpha: Union[List[float], float],
+                 n_heads: Union[int, List[int]], attention_alpha: List[float] | float,
                  avg_last_head_attentions: bool,
                  attention_dropout: Union[float, List[float]]):
 

@@ -23,8 +23,8 @@ class StepStateActionCriticComposer(BaseStateActionCriticComposer):
     :param networks: Critics networks as defined in the config (either list or dictionary of object params and type).
     """
 
-    def __init__(self, observation_spaces_dict: Dict[Union[str, int], spaces.Dict],
-                 action_spaces_dict: Dict[Union[str, int], spaces.Dict],
+    def __init__(self, observation_spaces_dict: Dict[str | int, spaces.Dict],
+                 action_spaces_dict: Dict[str | int, spaces.Dict],
                  networks: CollectionOfConfigType):
         super().__init__(observation_spaces_dict, action_spaces_dict)
 

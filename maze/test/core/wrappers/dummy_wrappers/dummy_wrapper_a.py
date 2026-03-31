@@ -14,7 +14,7 @@ class DummyWrapperA(DummyWrapper):
     Dummy wrapper.
     """
 
-    def __init__(self, env: Union[MazeEnv, Wrapper], arg_a: str):
+    def __init__(self, env: MazeEnv | Wrapper, arg_a: str):
         """
         Initialize dummy wrapper.
         :param env: The inner env.

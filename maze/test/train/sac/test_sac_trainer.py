@@ -31,7 +31,7 @@ class PolicyNet(nn.Module):
     """
 
     def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logits_shapes: Dict[str, Sequence[int]],
-                 non_lin: Union[str, type(nn.Module)]):
+                 non_lin: str | type(nn.Module)):
         super().__init__()
         self.obs_shapes = obs_shapes
         action_key = list(action_logits_shapes.keys())[0]
@@ -66,8 +66,8 @@ class QCriticNetContinuous(nn.Module):
     for all observations.
     """
 
-    def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_spaces_dict: Dict[Union[str, int], spaces.Space],
-                 non_lin: Union[str, type(nn.Module)]):
+    def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_spaces_dict: Dict[str | int, spaces.Space],
+                 non_lin: str | type(nn.Module)):
         super().__init__()
         self.obs_shapes = obs_shapes
         # build perception part

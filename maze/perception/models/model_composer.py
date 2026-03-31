@@ -49,12 +49,12 @@ class BaseModelComposer(ABC):
 
     @property
     @abstractmethod
-    def policy(self) -> Optional[TorchPolicy]:
+    def policy(self) -> TorchPolicy | None:
         """Policy networks."""
 
     @property
     @abstractmethod
-    def critic(self) -> Optional[TorchStateCritic]:
+    def critic(self) -> TorchStateCritic | None:
         """The critic model."""
 
     @property

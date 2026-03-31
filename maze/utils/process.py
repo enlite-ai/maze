@@ -48,7 +48,7 @@ class Process(mp.Process):
         """Returns the result (if any)"""
         return self._result
 
-    def exception(self) -> Optional[Exception]:
+    def exception(self) -> Exception | None:
         """Get any exception that might occurred."""
         self._poll()
 

@@ -1,21 +1,27 @@
-""" Contains utility functions to be used in concert with the ObservationNormalizationWrapper """
+"""Contains utility functions to be used in concert with the ObservationNormalizationWrapper"""
+
+from __future__ import annotations
 
 import os
-from typing import Union, Optional, Callable
-
-from tqdm import tqdm
+from collections.abc import Callable
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.rollout.rollout_generator import RolloutGenerator
-from maze.core.wrappers.observation_normalization.normalization_strategies.base import StructuredStatisticsType
-from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
-    ObservationNormalizationWrapper
+from maze.core.wrappers.observation_normalization.normalization_strategies.base import (
+    StructuredStatisticsType,
+)
+from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import (
+    ObservationNormalizationWrapper,
+)
+
+from tqdm import tqdm
 
 
-def estimate_observation_normalization_statistics(env: Union[MazeEnv, ObservationNormalizationWrapper],
-                                                  n_samples: int) -> None:
+def estimate_observation_normalization_statistics(
+    env: MazeEnv | ObservationNormalizationWrapper, n_samples: int
+) -> None:
     """Helper function estimating normalization statistics.
     :param env: The observation normalization wrapped environment.
     :param n_samples: The number of samples (i.e., flat environment steps) to take for statistics computation.
@@ -37,8 +43,9 @@ def estimate_observation_normalization_statistics(env: Union[MazeEnv, Observatio
     env.estimate_statistics()
 
 
-def obtain_normalization_statistics(env: Union[MazeEnv, ObservationNormalizationWrapper], n_samples: int) \
-        -> Optional[StructuredStatisticsType]:
+def obtain_normalization_statistics(
+    env: MazeEnv | ObservationNormalizationWrapper, n_samples: int
+) -> StructuredStatisticsType | None:
     """Obtain the normalization statistics of a given environment.
 
     * Returns None, if the ObservationNormalizationWrapper is not implemented
@@ -70,9 +77,12 @@ def obtain_normalization_statistics(env: Union[MazeEnv, ObservationNormalization
 
 
 def make_normalized_env_factory(
-        env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, ObservationNormalizationWrapper]],
-        normalization_statistics: StructuredStatisticsType
-) -> Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, ObservationNormalizationWrapper]]:
+    env_factory: Callable[
+        [],
+        StructuredEnv | StructuredEnvSpacesMixin | ObservationNormalizationWrapper,
+    ],
+    normalization_statistics: StructuredStatisticsType,
+) -> Callable[[], StructuredEnv | StructuredEnvSpacesMixin | ObservationNormalizationWrapper]:
     """Wrap an existing env factory to assign the passed normalization statistics.
 
     :param env_factory: The existing env factory
@@ -80,7 +90,7 @@ def make_normalized_env_factory(
     :return: The wrapped env factory
     """
 
-    def normalized_env_factory() -> Union[StructuredEnv, StructuredEnvSpacesMixin, ObservationNormalizationWrapper]:
+    def normalized_env_factory() -> StructuredEnv | StructuredEnvSpacesMixin | ObservationNormalizationWrapper:
         """the wrapped env factory"""
         env = env_factory()
         env.set_normalization_statistics(normalization_statistics)

@@ -13,23 +13,26 @@ This is done while reusing most of the standard architecture used in the normal 
 Agent, the wrapper stack and flat env run on a separate thread together with a special core env that obtains
 states from the agent deployment and passes MazeActions back.
 """
+
+from __future__ import annotations
+
 from queue import Queue
 from threading import Event, Thread
-from typing import Any, Dict, Union, List, Optional
-
-import numpy as np
+from typing import Any
 
 from maze.core.agent.policy import Policy
 from maze.core.agent_deployment.external_core_env import ExternalCoreEnv
-from maze.core.agent_deployment.policy_executor import PolicyExecutor, ExceptionReport
+from maze.core.agent_deployment.policy_executor import ExceptionReport, PolicyExecutor
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import ActorID
 from maze.core.events.event_record import EventRecord
 from maze.core.utils.config_utils import EnvFactory
-from maze.core.utils.factory import ConfigType, CollectionOfConfigType, Factory
+from maze.core.utils.factory import CollectionOfConfigType, ConfigType, Factory
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
+
+import numpy as np
 
 
 class AgentDeployment:
@@ -59,10 +62,12 @@ class AgentDeployment:
     :param wrappers: Configuration for (additional) wrappers, if required.
     """
 
-    def __init__(self,
-                 policy: ConfigType,
-                 env: ConfigType,
-                 wrappers: CollectionOfConfigType = None):
+    def __init__(
+        self,
+        policy: ConfigType,
+        env: ConfigType,
+        wrappers: CollectionOfConfigType = None,
+    ):
         self.rollout_done = False
 
         # Thread synchronisation
@@ -79,7 +84,8 @@ class AgentDeployment:
             state_queue=self.state_queue,
             maze_action_queue=self.maze_action_queue,
             rollout_done_event=self.rollout_done_event,
-            renderer=self.env.core_env.get_renderer())
+            renderer=self.env.core_env.get_renderer(),
+        )
 
         # Due to the fake subclass hierarchy generated in each Wrapper, we need to make sure
         # we swap the core env directly on the MazeEnv, not on any wrapper above it
@@ -94,18 +100,21 @@ class AgentDeployment:
             env=self.env,
             policy=self.policy,
             rollout_done_event=self.rollout_done_event,
-            exception_queue=self.maze_action_queue)
+            exception_queue=self.maze_action_queue,
+        )
         self.policy_thread = Thread(target=self.policy_executor.run_rollout_loop, daemon=True)
         self.policy_thread.start()
 
-    def act(self,
-            maze_state: MazeStateType,
-            reward: Union[None, float, np.ndarray, Any],
-            terminated: bool,
-            truncated: bool,
-            info: Union[None, Dict[Any, Any]],
-            events: Optional[List[EventRecord]] = None,
-            actor_id: ActorID = ActorID(0, 0)) -> MazeActionType:
+    def act(
+        self,
+        maze_state: MazeStateType,
+        reward: None | float | np.ndarray | Any,
+        terminated: bool,
+        truncated: bool,
+        info: None | dict[Any, Any],
+        events: list[EventRecord] | None = None,
+        actor_id: ActorID = ActorID(0, 0),  # noqa: B008
+    ) -> MazeActionType:
         """Query the agent for MazeAction derived from the given state.
 
         Passes the state etc. to the agent's thread, where it is integrated into an ordinary env rollout loop.
@@ -121,8 +130,9 @@ class AgentDeployment:
         :return: MazeAction from the agent
         """
         if self.rollout_done:
-            raise RuntimeError("External env has been declared done already. Please create a new connector object for"
-                               "a new episode.")
+            raise RuntimeError(
+                'External env has been declared done already. Please create a new connector object fora new episode.'
+            )
 
         self.external_core_env.set_actor_id(actor_id)
         self.state_queue.put((maze_state, reward, terminated, truncated, info, events))
@@ -133,17 +143,19 @@ class AgentDeployment:
         # If exception occurs in the agent thread, it will be passed back using this same queue as an exception report.
         if isinstance(maze_action, ExceptionReport):
             exc_report = maze_action
-            raise RuntimeError("Error encountered in agent thread:\n" + exc_report.traceback) from exc_report.exception
+            raise RuntimeError('Error encountered in agent thread:\n' + exc_report.traceback) from exc_report.exception
 
         return maze_action
 
-    def close(self,
-              maze_state: MazeStateType,
-              reward: Union[float, np.ndarray, Any],
-              terminated: bool,
-              truncated: bool,
-              info: Dict[Any, Any],
-              events: Optional[List[EventRecord]] = None):
+    def close(
+        self,
+        maze_state: MazeStateType,
+        reward: float | np.ndarray | Any,
+        terminated: bool,
+        truncated: bool,
+        info: dict[Any, Any],
+        events: list[EventRecord] | None = None,
+    ):
         """
         Should be called when the rollout is finished. While this has no effect on the provided MazeActions,
         it passes an env reset call through the wrapper stack, enabling the wrappers to do any work they

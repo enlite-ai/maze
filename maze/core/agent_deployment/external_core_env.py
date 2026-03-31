@@ -1,9 +1,11 @@
 """Acts as a core env in an Agent Deployment setting."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
 from queue import Queue
 from threading import Event
-from typing import Tuple, Any, Dict, Union, Iterable, Optional
-
-import numpy as np
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
@@ -11,10 +13,12 @@ from maze.core.env.environment_context import EnvironmentContext
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
-from maze.core.env.structured_env import StepKeyType, ActorID
+from maze.core.env.structured_env import ActorID, StepKeyType
 from maze.core.events.event_record import EventRecord
 from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.rendering.renderer import Renderer
+
+import numpy as np
 
 
 class ExternalCoreEnv(CoreEnv):
@@ -40,13 +44,15 @@ class ExternalCoreEnv(CoreEnv):
                      to be serialized with trajectory data)
     """
 
-    def __init__(self,
-                 context: EnvironmentContext,
-                 state_queue: Queue,
-                 maze_action_queue: Queue,
-                 rollout_done_event: Event,
-                 renderer: Optional[Renderer] = None,
-                 kpi_calculator: Optional[KpiCalculator] = None):
+    def __init__(
+        self,
+        context: EnvironmentContext,
+        state_queue: Queue,
+        maze_action_queue: Queue,
+        rollout_done_event: Event,
+        renderer: Renderer | None = None,
+        kpi_calculator: KpiCalculator | None = None,
+    ):
         super().__init__()
         self.context = context
         self.state_queue = state_queue
@@ -62,7 +68,7 @@ class ExternalCoreEnv(CoreEnv):
     # --- Step & reset: The core of ExternalCoreEnv functionality ---
 
     @override(CoreEnv)
-    def reset(self) -> Tuple[MazeStateType, dict]:
+    def reset(self) -> tuple[MazeStateType, dict]:
         """Reset is expected to be run twice -- at the beginning and end of external env rollout.
 
         At the beginning, thread execution is suspended until the initial state is available.
@@ -79,8 +85,9 @@ class ExternalCoreEnv(CoreEnv):
         return self.last_maze_state, {}
 
     @override(CoreEnv)
-    def step(self, maze_action: MazeActionType) -> Tuple[
-        MazeStateType, Union[float, np.ndarray, Any], bool, bool, Dict[Any, Any]]:
+    def step(
+        self, maze_action: MazeActionType
+    ) -> tuple[MazeStateType, float | np.ndarray | Any, bool, bool, dict[Any, Any]]:
         """Relays the execution back to the agent deployment. Then suspends thread execution until
         the next state is provided by agent deployment."""
         self.maze_action_queue.put(maze_action)
@@ -119,7 +126,7 @@ class ExternalCoreEnv(CoreEnv):
 
     @property
     @override(CoreEnv)
-    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+    def agent_counts_dict(self) -> dict[StepKeyType, int]:
         """Agent counts are not known and not needed, as this env is not used for training or any other setup."""
         return {0: -1}
 
@@ -131,8 +138,8 @@ class ExternalCoreEnv(CoreEnv):
         return self.last_maze_state
 
     @override(CoreEnv)
-    def get_renderer(self) -> Optional[Renderer]:
-        """Renderer provided by the agent deployment. Might be None if not available. """
+    def get_renderer(self) -> Renderer | None:
+        """Renderer provided by the agent deployment. Might be None if not available."""
         return self.renderer
 
     @override(EventEnvMixin)
@@ -141,12 +148,12 @@ class ExternalCoreEnv(CoreEnv):
         return self.context.event_service.iterate_event_records()
 
     @override(CoreEnv)
-    def get_kpi_calculator(self) -> Optional[KpiCalculator]:
-        """KPI calculator provided by the agent deployment. Might be None if not available. """
+    def get_kpi_calculator(self) -> KpiCalculator | None:
+        """KPI calculator provided by the agent deployment. Might be None if not available."""
         return self.kpi_calculator
 
     @override(CoreEnv)
-    def get_serializable_components(self) -> Dict[str, Any]:
+    def get_serializable_components(self) -> dict[str, Any]:
         """No components available."""
         return {}
 
@@ -162,7 +169,7 @@ class ExternalCoreEnv(CoreEnv):
 
     # -- External core env helpers --
 
-    def _replay_events(self, events: Optional[Iterable[EventRecord]]) -> None:
+    def _replay_events(self, events: Iterable[EventRecord] | None) -> None:
         """Notify the event service about each of the events passed in from outside."""
         if events:
             for event in events:

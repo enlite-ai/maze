@@ -1,6 +1,8 @@
-""" Defines interfaces for pre-processor. """
+"""Defines interfaces for pre-processor."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Tuple
 
 import numpy as np
 from gymnasium import spaces
@@ -15,11 +17,11 @@ class PreProcessor(ABC):
     :param kwargs: Arguments to be passed on to preprocessor's constructor.
     """
 
-    def __init__(self, observation_space: spaces.Space, **kwargs):
+    def __init__(self, observation_space: spaces.Space, **kwargs):  # noqa: ARG002
         self._original_observation_space = observation_space
 
     @abstractmethod
-    def processed_shape(self) -> Tuple[int, ...]:
+    def processed_shape(self) -> tuple[int, ...]:
         """Computes the observation's shape after pre-processing.
 
         :return: The resulting shape.
@@ -45,4 +47,4 @@ class PreProcessor(ABC):
 
         :return: The pre-processor's tag.
         """
-        return str(self.__class__).rsplit(".")[-2]
+        return str(self.__class__).rsplit('.')[-2]

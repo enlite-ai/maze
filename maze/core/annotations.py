@@ -1,8 +1,9 @@
-""" Provides commonly used annotation decorators. """
-from typing import Type
+"""Provides commonly used annotation decorators."""
+
+from __future__ import annotations
 
 
-def override(cls: Type):
+def override(cls: type):
     """
     Annotation for documenting method overrides.
 
@@ -13,11 +14,10 @@ def override(cls: Type):
     def _check_override(method):
         if getattr(cls, '__sphinx_mock__', None) is None:
             if method.__name__ not in dir(cls):
-                raise NameError("{} does not override any method of {}".format(
-                    method, cls))
+                raise NameError(f'{method} does not override any method of {cls}')
 
-        fully_qualified_name = ".".join([str(cls.__module__), str(cls.__name__)])
-        method.__doc__ = "(overrides :class:`~{}`)\n\n{}".format(fully_qualified_name, method.__doc__)
+        fully_qualified_name = '.'.join([str(cls.__module__), str(cls.__name__)])
+        method.__doc__ = f'(overrides :class:`~{fully_qualified_name}`)\n\n{method.__doc__}'
 
         return method
 

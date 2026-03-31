@@ -25,7 +25,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
     """
 
     def __init__(self, env_factories: List[Callable[[], MazeEnv]],
-                 logging_prefix: Optional[str] = None):
+                 logging_prefix: str | None = None):
         self.envs = [LogStatsWrapper.wrap(env_fn()) for env_fn in env_factories]
 
         super().__init__(
@@ -77,7 +77,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
         return obs, rewards, env_terminated_rec, env_truncated_rec, infos
 
     @override(StructuredVectorEnv)
-    def get_actor_rewards(self) -> Optional[np.ndarray]:
+    def get_actor_rewards(self) -> np.ndarray | None:
         """Stack actor rewards from encapsulated environments."""
         rewards = [env.get_actor_rewards() for env in self.envs]
 

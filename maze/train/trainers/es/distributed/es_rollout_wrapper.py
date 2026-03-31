@@ -26,11 +26,11 @@ class ESAbortException(Exception):
     pass
 
 
-class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
+class ESRolloutWorkerWrapper(Wrapper[StructuredEnv | LogStatsEnv]):
     """The rollout generation is bound to a single worker environment by implementing it as a Wrapper class."""
 
     def __init__(self,
-                 env: Union[StructuredEnv, LogStatsEnv],
+                 env: StructuredEnv | LogStatsEnv,
                  shared_noise: SharedNoiseTable,
                  agent_instance_seed: int):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
@@ -50,7 +50,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
     T = TypeVar("T")
 
-    def rollout(self, policy: Union[Policy, TorchModel]) -> None:
+    def rollout(self, policy: Policy | TorchModel) -> None:
         """Use the passed policy to step the environment until it is done.
 
         This method does not return any results, query the episode statistics instead to process the results.
@@ -83,7 +83,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
         logger.debug(f"Rollout took {(time.time() - start_time) :.1f} seconds")
 
-    def generate_evaluation(self, policy: Union[Policy, TorchModel]) -> ESRolloutResult:
+    def generate_evaluation(self, policy: Policy | TorchModel) -> ESRolloutResult:
         """Generate a single evaluation rollout.
 
            :param policy: Multi-step policy encapsulating the policy networks
@@ -98,7 +98,7 @@ class ESRolloutWorkerWrapper(Wrapper[Union[StructuredEnv, LogStatsEnv]]):
 
         return r
 
-    def generate_training(self, policy: Union[Policy, TorchModel], noise_stddev: float) -> ESRolloutResult:
+    def generate_training(self, policy: Policy | TorchModel, noise_stddev: float) -> ESRolloutResult:
         """Generate a single training sample, consisting of two rollouts, obtained by adding and subtracting the
            same random perturbation vector from the policy.
 

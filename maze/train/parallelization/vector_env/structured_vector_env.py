@@ -27,7 +27,7 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
                  action_spaces_dict: Dict[StepKeyType, gym.spaces.Space],
                  observation_spaces_dict: Dict[StepKeyType, gym.spaces.Space],
                  agent_counts_dict: Dict[StepKeyType, int],
-                 logging_prefix: Optional[str] = None):
+                 logging_prefix: str | None = None):
         super().__init__(n_envs)
 
         # Spaces
@@ -55,7 +55,7 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
         self.seeds = None
         self._next_seed_idx = 0
 
-    def get_next_seed(self) -> Optional[Any]:
+    def get_next_seed(self) -> Any | None:
         """Return the next seed to use.
 
         :return: The next seed to use.
@@ -93,7 +93,7 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
 
     @abstractmethod
     @override(StructuredEnv)
-    def get_actor_rewards(self) -> Optional[np.ndarray]:
+    def get_actor_rewards(self) -> np.ndarray | None:
         """Individual implementations need to override this to support structured rewards."""
 
     @override(TimeEnvMixin)
@@ -102,12 +102,12 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
         return self._env_times
 
     @property
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
+    def action_spaces_dict(self) -> Dict[int | str, gym.spaces.Space]:
         """Return the action space of one of the vectorised envs."""
         return self._action_spaces_dict
 
     @property
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
+    def observation_spaces_dict(self) -> Dict[int | str, gym.spaces.Space]:
         """Return the observation space of one of the vectorised envs."""
         return self._observation_spaces_dict
 
@@ -150,7 +150,7 @@ class StructuredVectorEnv(VectorEnv, StructuredEnv, StructuredEnvSpacesMixin, Lo
     def get_stats_value(self,
                         event: Callable,
                         level: LogStatsLevel,
-                        name: Optional[str] = None) -> LogStatsValue:
+                        name: str | None = None) -> LogStatsValue:
         """Obtain a single value from the epoch statistics dict.
 
         :param event: The event interface method of the value in question.

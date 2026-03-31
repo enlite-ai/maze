@@ -40,11 +40,11 @@ class ActorCritic(Trainer, ABC):
 
     def __init__(
             self,
-            algorithm_config: Union[A2CAlgorithmConfig, PPOAlgorithmConfig, ImpalaAlgorithmConfig],
-            rollout_generator: Union[RolloutGenerator, DistributedActors],
-            evaluator: Optional[RolloutEvaluator],
+            algorithm_config: A2CAlgorithmConfig | PPOAlgorithmConfig | ImpalaAlgorithmConfig,
+            rollout_generator: RolloutGenerator | DistributedActors,
+            evaluator: RolloutEvaluator | None,
             model: TorchActorCritic,
-            model_selection: Optional[BestModelSelection]
+            model_selection: BestModelSelection | None
     ):
         super().__init__(algorithm_config)
 
@@ -70,7 +70,7 @@ class ActorCritic(Trainer, ABC):
             self.algorithm_config.n_epochs = sys.maxsize
 
     @override(Trainer)
-    def train(self, n_epochs: Optional[int] = None) -> None:
+    def train(self, n_epochs: int | None = None) -> None:
         """Main train method of the actor critic trainer. This is used in order to do algorithm specific operations
         around this method in the main train method which is called by the runner. (e.g. this is used when it comes to
         multiprocessing)
@@ -169,7 +169,7 @@ class ActorCritic(Trainer, ABC):
         self.model.load_state_dict(state_dict)
 
     @override(Trainer)
-    def load_state(self, file_path: Union[str, BinaryIO]) -> None:
+    def load_state(self, file_path: str | BinaryIO) -> None:
         """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
         """
         state_dict = torch.load(file_path, map_location=torch.device(self.algorithm_config.device))
@@ -266,8 +266,8 @@ class ActorCritic(Trainer, ABC):
             critic_train_stats[critic_id]["critic_grad_norm"].append(grad_norm)
             critic_train_stats[critic_id]['discounted_returns'].append(substep_discounted_returns.mean().item())
 
-    def _log_train_stats(self, policy_train_stats: Dict[Union[str, int], Dict[str, List[float]]],
-                         critic_train_stats: Dict[Union[str, int], Dict[str, List[float]]]) -> None:
+    def _log_train_stats(self, policy_train_stats: Dict[str | int, Dict[str, List[float]]],
+                         critic_train_stats: Dict[str | int, Dict[str, List[float]]]) -> None:
         """Fire logging events for training statistics.
 
         :param policy_train_stats: Dict of policy training statistics.

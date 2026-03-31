@@ -1,5 +1,7 @@
 """Interface for direct access to current MazeState and MazeAction objects."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 from maze.core.env.maze_action import MazeActionType

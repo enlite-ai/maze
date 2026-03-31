@@ -23,7 +23,7 @@ def _dummy_model_config():
     }
 
 
-def _dummy_policy_for(model_config: Dict, env: MazeEnv, agent_counts_dict: Optional[Dict] = None):
+def _dummy_policy_for(model_config: Dict, env: MazeEnv, agent_counts_dict: Dict | None = None):
     """Helper for building a policy from env and model config, with the option to override
     the agent_counts dict returned by the env."""
     if agent_counts_dict is None:

@@ -1,15 +1,15 @@
 """Record of spaces (i.e., raw action, observation, and associated data) from a single sub-step."""
 
-from dataclasses import dataclass
-from typing import Dict, Union, Optional, List, Any
+from __future__ import annotations
 
-import numpy as np
-import torch
+from dataclasses import dataclass
 
 from maze.core.env.structured_env import ActorID
 from maze.perception.perception_utils import convert_to_numpy, convert_to_torch
 from maze.train.utils.train_utils import stack_numpy_dict_list, stack_torch_dict_list
 
+import numpy as np
+import torch
 
 PolicyRecordType = object
 
@@ -21,46 +21,46 @@ class SpacesRecord:
     actor_id: ActorID
     """ID of the actor for this step."""
 
-    observation: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None
+    observation: dict[str, np.ndarray | torch.Tensor] | None = None
     """Observation recorded during the step."""
 
-    action: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None
+    action: dict[str, np.ndarray | torch.Tensor] | None = None
     """Action recorded during the step."""
 
-    reward: Optional[Union[float, np.ndarray, torch.Tensor]] = None
+    reward: float | np.ndarray | torch.Tensor | None = None
     """Reward recorded during the step."""
 
-    terminated: Optional[Union[bool, np.ndarray, torch.Tensor]] = None
+    terminated: bool | np.ndarray | torch.Tensor | None = None
     """Terminated flag recorded during the step."""
 
-    truncated: Optional[Union[bool, np.ndarray, torch.Tensor]] = None
+    truncated: bool | np.ndarray | torch.Tensor | None = None
     """Truncated flag recorded during the step."""
 
-    info: Optional[Dict] = None
+    info: dict | None = None
     """Info dictionary recorded during the step."""
 
-    next_observation: Optional[Dict[str, Union[np.ndarray, torch.Tensor]]] = None
+    next_observation: dict[str, np.ndarray | torch.Tensor] | None = None
     """Observation obtained after this step (i.e., results of the action taken in this step)."""
 
-    logits: Optional[Dict[str, np.ndarray]] = None
+    logits: dict[str, np.ndarray] | None = None
     """Action logits recorded during the step."""
 
-    discounted_return: Optional[Union[float, np.ndarray]] = None
+    discounted_return: float | np.ndarray | None = None
     """Discounted return for this step."""
 
-    batch_shape: Optional[List[int]] = None
+    batch_shape: list[int] | None = None
     """If the record is batched, this is the shape of the batch."""
 
-    policy_record: Optional[PolicyRecordType] = None
+    policy_record: PolicyRecordType | None = None
     """Policy specific data that can be recorded with the help of the write_policy_record method of the policy."""
 
-    env_time: Optional[int] = None
+    env_time: int | None = None
     """The env time (t) of the env when recording the observation such that:
        (s_t, a_t, v_t) -> env step -> (r_t, terminated_t, truncated_t, info_t) is recorded.
     """
 
     @classmethod
-    def stack(cls, records: List['SpacesRecord']) -> 'SpacesRecord':
+    def stack(cls, records: list[SpacesRecord]) -> SpacesRecord:
         """Stack multiple records into a single spaces record. Useful for processing multiple records in a batch.
 
         All the records should be in numpy and have the same structure of the spaces (i.e. come from the same
@@ -70,8 +70,8 @@ class SpacesRecord:
         :return: Single stacked record, containing all the given records, and having the corresponding batch shape.
         """
 
-        assert len(set([r.substep_key for r in records])) == 1, "Cannot batch records for different sub-step keys."
-        assert len(set([r.agent_id for r in records])) == 1, "Cannot batch records for different agent ids."
+        assert len({r.substep_key for r in records}) == 1, 'Cannot batch records for different sub-step keys.'
+        assert len({r.agent_id for r in records}) == 1, 'Cannot batch records for different agent ids.'
 
         stacked_record = SpacesRecord(
             actor_id=records[0].actor_id,
@@ -79,7 +79,7 @@ class SpacesRecord:
             action=stack_numpy_dict_list([r.action for r in records]),
             reward=np.stack([r.reward for r in records]),
             terminated=np.stack([r.terminated for r in records]),
-            truncated=np.stack([r.truncated for r in records])
+            truncated=np.stack([r.truncated for r in records]),
         )
 
         if records[0].next_observation:
@@ -98,7 +98,7 @@ class SpacesRecord:
         return stacked_record
 
     @property
-    def substep_key(self) -> Union[str, int]:
+    def substep_key(self) -> str | int:
         """Sub-step key (i.e., the first part of the Actor ID) for this step."""
         return self.actor_id.step_key
 
@@ -112,7 +112,7 @@ class SpacesRecord:
         """Whether the step is done (i.e., terminated or truncated)."""
         return self.terminated | self.truncated
 
-    def to_numpy(self) -> 'SpacesRecord':
+    def to_numpy(self) -> SpacesRecord:
         """Convert the record to numpy."""
         self.observation = convert_to_numpy(self.observation, cast=None, in_place=True)
         self.action = convert_to_numpy(self.action, cast=None, in_place=True)
@@ -128,7 +128,7 @@ class SpacesRecord:
 
         return self
 
-    def to_torch(self, device: str) -> 'SpacesRecord':
+    def to_torch(self, device: str) -> SpacesRecord:
         """Convert the record to Torch.
 
         :param device: Device to move the tensors to.
@@ -148,6 +148,8 @@ class SpacesRecord:
         return self
 
     def __repr__(self):
-        return f"Spaces record (batch_shape={self.batch_shape}): Actor {self.actor_id}, " \
-               f"observation keys {list(self.observation.keys())}, " \
-               f"action keys {list(self.action.keys())}"
+        return (
+            f'Spaces record (batch_shape={self.batch_shape}): Actor {self.actor_id}, '
+            f'observation keys {list(self.observation.keys())}, '
+            f'action keys {list(self.action.keys())}'
+        )

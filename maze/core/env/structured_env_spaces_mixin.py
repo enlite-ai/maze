@@ -1,6 +1,8 @@
 """An environment interface for space definitions."""
-from abc import abstractmethod, ABC
-from typing import Union, Dict
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 
 import gymnasium as gym
 
@@ -15,23 +17,19 @@ class StructuredEnvSpacesMixin(ABC):
     @property
     @abstractmethod
     def action_space(self) -> gym.spaces.Dict:
-        """The currently active gym action space.
-        """
+        """The currently active gym action space."""
 
     @property
     @abstractmethod
     def observation_space(self) -> gym.spaces.Dict:
-        """The currently active gym observation space.
-        """
+        """The currently active gym observation space."""
 
     @property
     @abstractmethod
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Dict]:
-        """A dictionary of gym action spaces, with policy IDs as keys.
-        """
+    def action_spaces_dict(self) -> dict[int | str, gym.spaces.Dict]:
+        """A dictionary of gym action spaces, with policy IDs as keys."""
 
     @property
     @abstractmethod
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Dict]:
-        """A dictionary of gym observation spaces, with policy IDs as keys.
-        """
+    def observation_spaces_dict(self) -> dict[int | str, gym.spaces.Dict]:
+        """A dictionary of gym observation spaces, with policy IDs as keys."""

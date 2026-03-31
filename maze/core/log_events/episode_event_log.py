@@ -1,7 +1,8 @@
 """Episode event log is the main unit of logging environment events in granular form."""
 
-from typing import Iterable, Union, Callable
-from typing import List
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable
 
 from maze.core.log_events.step_event_log import StepEventLog
 
@@ -14,9 +15,9 @@ class EpisodeEventLog:
 
     def __init__(self, episode_id: str):
         self.episode_id = episode_id
-        self.step_event_logs: List[StepEventLog] = []
+        self.step_event_logs: list[StepEventLog] = []
 
-    def query_events(self, event_spec: Union[Callable, Iterable[Callable]]) -> Iterable:
+    def query_events(self, event_spec: Callable | Iterable[Callable]) -> Iterable:
         """Query events across the whole episode.
 
         :param event_spec: Specification of events to query

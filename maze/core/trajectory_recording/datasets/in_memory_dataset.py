@@ -1,30 +1,38 @@
 """Trajectory data set for imitation learning."""
+
+from __future__ import annotations
+
 import itertools
 import logging
 import pickle
 from abc import ABC
+from collections.abc import Callable, Generator, Sequence
 from itertools import chain
-from multiprocessing import Queue, Process
+from multiprocessing import Process, Queue
 from pathlib import Path
-from typing import Callable, List, Union, Optional, Tuple, Type
-from typing import Dict, Sequence, Generator
-
-import torch
-from omegaconf import ListConfig
-from torch.utils.data import Dataset, Subset, DataLoader, ConcatDataset
-from tqdm import tqdm
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType, TorchActionType
 from maze.core.env.observation_conversion import ObservationType, TorchObservationType
 from maze.core.env.structured_env import ActorID
-from maze.core.trajectory_recording.datasets.trajectory_processor import \
-    TrajectoryProcessor
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.datasets.trajectory_processor import (
+    TrajectoryProcessor,
+)
+from maze.core.trajectory_recording.records.structured_spaces_record import (
+    StructuredSpacesRecord,
+)
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
-from maze.core.trajectory_recording.sampler.sampler import ActorIdSampler, BatchActorIdSampler
+from maze.core.trajectory_recording.sampler.sampler import (
+    ActorIdSampler,
+    BatchActorIdSampler,
+)
 from maze.core.utils.factory import ConfigType, Factory
 from maze.utils.exception_report import ExceptionReport
+
+import torch
+from omegaconf import ListConfig
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, Subset
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +58,14 @@ class InMemoryDataset(Dataset, ABC):
             n_workers > 1.
     """
 
-    def __init__(self,
-                 input_data: Optional[Union[str, Path, List[Union[str, Path]]]],
-                 conversion_env_factory: Optional[Callable], n_workers: int,
-                 trajectory_processor: Union[TrajectoryProcessor, ConfigType], deserialize_in_main_thread: bool):
-
+    def __init__(
+        self,
+        input_data: str | Path | list[str | Path] | None,
+        conversion_env_factory: Callable | None,
+        n_workers: int,
+        trajectory_processor: TrajectoryProcessor | ConfigType,
+        deserialize_in_main_thread: bool,
+    ):
         self._conversion_env_factory = conversion_env_factory
         self._conversion_env = self._conversion_env_factory() if self._conversion_env_factory else None
         self.n_workers = n_workers
@@ -68,7 +79,7 @@ class InMemoryDataset(Dataset, ABC):
         if input_data is not None:
             self.load_data(input_data)
 
-    def load_data(self, input_data: Union[str, Path, List[Union[str, Path]]]) -> None:
+    def load_data(self, input_data: str | Path | list[str | Path]) -> None:
         """Load the trajectory data from the given file or directory and append it to the dataset.
 
         Should provide the main logic of how the data load is done to be efficient for the data at hand
@@ -85,7 +96,7 @@ class InMemoryDataset(Dataset, ABC):
             self._load_data_parallel(input_data)
 
     @classmethod
-    def _read_input_data_to_list(cls, input_data: Union[str, Path, List[Union[str, Path]]]) -> List[str]:
+    def _read_input_data_to_list(cls, input_data: str | Path | list[str | Path]) -> list[str]:
         """Read the input data: either a directory, a list of files, a list of dirs or a single file to a list of files.
 
         :param input_data: The input data.
@@ -95,7 +106,7 @@ class InMemoryDataset(Dataset, ABC):
             if Path(input_data[0]).is_file():
                 trajectory_save_paths = list(input_data)
             else:
-                trajectory_save_paths = list()
+                trajectory_save_paths = []
                 for dir_path in input_data:
                     assert Path(dir_path).is_dir()
                     trajectory_save_paths.extend(cls.list_trajectory_files(dir_path))
@@ -108,9 +119,9 @@ class InMemoryDataset(Dataset, ABC):
 
         return trajectory_save_paths
 
-    def _load_data_sequential(self, input_data: Union[Union[str, Path], List[Union[str, Path]]]) -> None:
+    def _load_data_sequential(self, input_data: str | Path | list[str | Path]) -> None:
         """Load data in a sequential fashion."""
-        logger.info(f"Started loading trajectory data from: {input_data}")
+        logger.info(f'Started loading trajectory data from: {input_data}')
 
         trajectory_save_paths = self._read_input_data_to_list(input_data=input_data)
 
@@ -122,12 +133,12 @@ class InMemoryDataset(Dataset, ABC):
                 logger.exception(f'failed loading trajectory: {e}')
                 pass
 
-        logger.info(f"Loaded trajectory data from: {input_data}")
-        logger.info(f"Current length is {len(self)} steps in total.")
+        logger.info(f'Loaded trajectory data from: {input_data}')
+        logger.info(f'Current length is {len(self)} steps in total.')
 
-    def _load_data_parallel(self, dir_or_file: Union[str, Path]) -> None:
+    def _load_data_parallel(self, dir_or_file: str | Path) -> None:
         """Load data in a parallel fashion."""
-        logger.info(f"Started loading trajectory data from: {dir_or_file}")
+        logger.info(f'Started loading trajectory data from: {dir_or_file}')
 
         trajectory_save_paths = self._read_input_data_to_list(input_data=dir_or_file)
         if self._deserialize_in_main_thread:
@@ -149,15 +160,20 @@ class InMemoryDataset(Dataset, ABC):
 
             p = Process(
                 target=DataLoadWorker.run,
-                args=(type(self), self._conversion_env_factory, trajectories_chunk, self.reporting_queue,
-                      self._trajectory_processor),
-                daemon=True
+                args=(
+                    type(self),
+                    self._conversion_env_factory,
+                    trajectories_chunk,
+                    self.reporting_queue,
+                    self._trajectory_processor,
+                ),
+                daemon=True,
             )
             p.start()
             workers.append(p)
 
         # Monitor the loading process
-        progress_bar = tqdm(desc="Loaded", unit=" trajectories")
+        progress_bar = tqdm(desc='Loaded', unit=' trajectories')
         n_workers_done = 0
         while n_workers_done < len(workers):
             report = self.reporting_queue.get()
@@ -172,7 +188,8 @@ class InMemoryDataset(Dataset, ABC):
                 for p in workers:
                     p.terminate()
                 raise RuntimeError(
-                    "A worker encountered the following error:\n" + report.traceback) from report.exception
+                    'A worker encountered the following error:\n' + report.traceback
+                ) from report.exception
 
             # Store loaded trajectories
             step_records = report
@@ -184,8 +201,8 @@ class InMemoryDataset(Dataset, ABC):
         for w in workers:
             w.join()
 
-        logger.info(f"Loaded trajectory data from: {dir_or_file}")
-        logger.info(f"Current length is {len(self)} steps in total.")
+        logger.info(f'Loaded trajectory data from: {dir_or_file}')
+        logger.info(f'Current length is {len(self)} steps in total.')
 
     def __len__(self) -> int:
         """Size of the dataset.
@@ -194,8 +211,13 @@ class InMemoryDataset(Dataset, ABC):
         """
         return len(self.step_records)
 
-    def __getitem__(self, index: int) -> Tuple[List[Union[ObservationType, TorchObservationType]],
-    List[Union[ActionType, TorchActionType]], List[ActorID]]:
+    def __getitem__(
+        self, index: int
+    ) -> tuple[
+        list[ObservationType | TorchObservationType],
+        list[ActionType | TorchActionType],
+        list[ActorID],
+    ]:
         """Get a record.
 
         :param index: Index of the record to get.
@@ -203,8 +225,11 @@ class InMemoryDataset(Dataset, ABC):
             to the sub-step of the env (actor_id and step_id).
         """
 
-        return self.step_records[index].observations, self.step_records[index].actions, \
-            self.step_records[index].actor_ids
+        return (
+            self.step_records[index].observations,
+            self.step_records[index].actions,
+            self.step_records[index].actor_ids,
+        )
 
     def append(self, trajectory: TrajectoryRecord) -> None:
         """Append a new trajectory to the dataset.
@@ -216,7 +241,9 @@ class InMemoryDataset(Dataset, ABC):
             self._store_loaded_trajectory(spaces_record)
 
     @staticmethod
-    def deserialize_trajectory(trajectory_file: Union[str, Path]) -> Generator[TrajectoryRecord, None, None]:
+    def deserialize_trajectory(
+        trajectory_file: str | Path,
+    ) -> Generator[TrajectoryRecord]:
         """Deserialize all trajectories located in the given file path.
 
         Will attempt to load the given trajectory file. Supports pickled TrajectoryRecords, or lists or
@@ -231,7 +258,7 @@ class InMemoryDataset(Dataset, ABC):
         trajectory_file = Path(trajectory_file)
         assert trajectory_file.is_file()
 
-        with open(str(trajectory_file), "rb") as in_f:
+        with open(str(trajectory_file), 'rb') as in_f:
             record = pickle.load(in_f)
 
         # Loading trajectory record directly
@@ -239,22 +266,22 @@ class InMemoryDataset(Dataset, ABC):
             yield record
 
         # Loading a list of trajectory records
-        elif isinstance(record, List):
+        elif isinstance(record, list):
             for item in record:
                 assert isinstance(item, TrajectoryRecord)
                 yield item
 
         # Loading a dict of trajectory records
-        elif isinstance(record, Dict):
+        elif isinstance(record, dict):
             for item in record.values():
                 assert isinstance(item, TrajectoryRecord)
                 yield item
 
         else:
-            raise RuntimeError("Unsupported data type, expected a TrajectoryRecord, or list or dict thereof")
+            raise RuntimeError('Unsupported data type, expected a TrajectoryRecord, or list or dict thereof')
 
     @staticmethod
-    def list_trajectory_files(data_dir: Union[str, Path]) -> List[Path]:
+    def list_trajectory_files(data_dir: str | Path) -> list[Path]:
         """List pickle files ("pkl" suffix, used for trajectory data storage by default) in the given directory.
 
         :param data_dir: Where to look for the trajectory records (= pickle files).
@@ -263,12 +290,12 @@ class InMemoryDataset(Dataset, ABC):
         file_paths = []
 
         for file_path in Path(data_dir).iterdir():
-            if file_path.is_file() and file_path.suffix == ".pkl":
+            if file_path.is_file() and file_path.suffix == '.pkl':
                 file_paths.append(file_path)
 
         return file_paths
 
-    def _store_loaded_trajectory(self, records: List[StructuredSpacesRecord]) -> None:
+    def _store_loaded_trajectory(self, records: list[StructuredSpacesRecord]) -> None:
         """Stores the step records, keeping a reference that they belong to the same episode.
 
         Keeping the reference is important in case we want to split the dataset later -- samples from
@@ -281,8 +308,11 @@ class InMemoryDataset(Dataset, ABC):
         # Store the data
         self.step_records.extend(records)
 
-    def random_split(self, lengths: Sequence[int], generator: torch.Generator = torch.default_generator) \
-            -> List[Subset]:
+    def random_split(
+        self,
+        lengths: Sequence[int],
+        generator: torch.Generator = torch.default_generator,
+    ) -> list[Subset]:
         """Randomly split the dataset into non-overlapping new datasets of given lengths.
 
         The split is based on episodes -- samples from the same episode will end up in the same subset. Based
@@ -298,7 +328,7 @@ class InMemoryDataset(Dataset, ABC):
         :return: A list of the data subsets, each with size roughly (!) corresponding to what was specified by lengths.
         """
         if sum(lengths) != len(self):
-            raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
+            raise ValueError('Sum of input lengths does not equal the length of the input dataset!')
 
         # Shuffle episode indexes, we will then draw them in the new order
         shuffled_indices = torch.randperm(len(self.trajectory_references), generator=generator).tolist()
@@ -340,8 +370,9 @@ class InMemoryDataset(Dataset, ABC):
         return data_subsets
 
     @staticmethod
-    def create_data_loader(dataset: Dataset, batch_size: int, num_workers: int,
-                           generator: torch.Generator) -> DataLoader:
+    def create_data_loader(
+        dataset: Dataset, batch_size: int, num_workers: int, generator: torch.Generator
+    ) -> DataLoader:
         """Creates a data loader from the given input.
 
         :param dataset: The dataset. This could be the in-memory dataset or a concatenation dataset.
@@ -350,17 +381,23 @@ class InMemoryDataset(Dataset, ABC):
         :param generator: Generator used for the random permutation.
         :return: the DataLoader object.
         """
-        return DataLoader(dataset=dataset, shuffle=True, batch_size=batch_size,
-                          num_workers=num_workers, batch_sampler=None, generator=generator)
+        return DataLoader(
+            dataset=dataset,
+            shuffle=True,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            batch_sampler=None,
+            generator=generator,
+        )
 
 
 class FlattenInMemoryDataset(InMemoryDataset):
     """Overrides InMemoryDataset for imitation learning.
-        It flattens at the sub step level such as each sub step is now a flat_step.
+    It flattens at the sub step level such as each sub step is now a flat_step.
     """
 
     @override(InMemoryDataset)
-    def _store_loaded_trajectory(self, records: List[StructuredSpacesRecord]) -> None:
+    def _store_loaded_trajectory(self, records: list[StructuredSpacesRecord]) -> None:
         """Stores the flatten step records, keeping a reference that they belong to the same episode.
         Each substep entry of the step_records within the trajectory is stored as a step_record
         with exactly 1 substep.
@@ -389,8 +426,9 @@ class FlattenInMemoryDataset(InMemoryDataset):
 
     @staticmethod
     @override(InMemoryDataset)
-    def create_data_loader(dataset: Dataset, batch_size: int, num_workers: int,
-                           generator: torch.Generator) -> DataLoader:
+    def create_data_loader(
+        dataset: Dataset, batch_size: int, num_workers: int, generator: torch.Generator
+    ) -> DataLoader:
         """Creates a data loader from the given input.
 
         :param dataset: The dataset. This could be the in-memory dataset or a concatenation dataset.
@@ -400,21 +438,31 @@ class FlattenInMemoryDataset(InMemoryDataset):
         :return: the DataLoader object.
         """
         train_sampler = ActorIdSampler(dataset, generator=generator)
-        train_batch_sampler = BatchActorIdSampler(train_sampler, batch_size=batch_size,
-                                                  drop_last=True)
+        train_batch_sampler = BatchActorIdSampler(train_sampler, batch_size=batch_size, drop_last=True)
 
-        return DataLoader(dataset=dataset, shuffle=False, batch_size=1,
-                          num_workers=num_workers, batch_sampler=train_batch_sampler, generator=None)
+        return DataLoader(
+            dataset=dataset,
+            shuffle=False,
+            batch_size=1,
+            num_workers=num_workers,
+            batch_sampler=train_batch_sampler,
+            generator=None,
+        )
 
 
 class DataLoadWorker:
     """Data loading worker used to map states to actual observations."""
-    DONE_TOKEN = "DONE"
+
+    DONE_TOKEN = 'DONE'
 
     @staticmethod
-    def run(dataset_cls: Type[InMemoryDataset], env_factory: Callable,
-            trajectories_or_paths: List[Union[Path, str, TrajectoryRecord]],
-            reporting_queue: Queue, trajectory_processor: TrajectoryProcessor) -> None:
+    def run(
+        dataset_cls: type[InMemoryDataset],
+        env_factory: Callable,
+        trajectories_or_paths: list[Path | str | TrajectoryRecord],
+        reporting_queue: Queue,
+        trajectory_processor: TrajectoryProcessor,
+    ) -> None:
         """Load trajectory data from the provided trajectory file paths. Report exceptions to the main process.
 
         :param dataset_cls: The class of the InMemoryDataset used.
@@ -426,7 +474,6 @@ class DataLoadWorker:
         try:
             env = env_factory() if env_factory else None
             for trajectory_or_file in trajectories_or_paths:
-
                 # If we got a file path, then deserialize, convert, and report all trajectories in it
                 if isinstance(trajectory_or_file, Path) or isinstance(trajectory_or_file, str):
                     try:
@@ -441,7 +488,7 @@ class DataLoadWorker:
                     for step_record in trajectory_processor.process(trajectory_or_file, env):
                         reporting_queue.put(step_record)
                 else:
-                    raise RuntimeError(f"Expected a path or a loaded trajectory record, got {type(trajectory_or_file)}")
+                    raise RuntimeError(f'Expected a path or a loaded trajectory record, got {type(trajectory_or_file)}')
 
             reporting_queue.put(DataLoadWorker.DONE_TOKEN)
 
@@ -451,7 +498,9 @@ class DataLoadWorker:
             raise
 
 
-def get_maze_dataset_class(dataset: Union[ConcatDataset, Subset, InMemoryDataset]) -> type(InMemoryDataset):
+def get_maze_dataset_class(
+    dataset: ConcatDataset | Subset | InMemoryDataset,
+) -> type(InMemoryDataset):
     """Get the base dataset class of the concat dataset.
 
     :param dataset: The concat dataset to get the base class of.

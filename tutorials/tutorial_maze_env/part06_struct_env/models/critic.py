@@ -18,7 +18,7 @@ class SelectionValueNet(nn.Module):
     :param non_lin: The nonlinear activation to be used.
     """
 
-    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: Union[str, type(nn.Module)]):
+    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: str | type(nn.Module)):
         nn.Module.__init__(self)
         self.obs_shapes = obs_shapes
 
@@ -67,7 +67,7 @@ class CuttingValueNet(nn.Module):
     :param non_lin: The nonlinear activation to be used.
     """
 
-    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: Union[str, type(nn.Module)]):
+    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: str | type(nn.Module)):
         nn.Module.__init__(self)
         self.obs_shapes = obs_shapes
 

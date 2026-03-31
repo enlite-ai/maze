@@ -1,13 +1,17 @@
 """File holding utility methods for the dataset"""
-from typing import Tuple, Dict
 
-from maze.core.env.maze_env import MazeEnv
+from __future__ import annotations
+
 from maze.core.trajectory_recording.records.state_record import StateRecord
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import (
+    StructuredSpacesRecord,
+)
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
 
 
-def retrieve_terminated_truncated_and_last_info(trajectory: TrajectoryRecord) -> Tuple[bool, bool, Dict]:
+def retrieve_terminated_truncated_and_last_info(
+    trajectory: TrajectoryRecord,
+) -> tuple[bool, bool, dict]:
     """Helper method to retrieve the information on how the given trajectory ended.
 
     :param trajectory: Episode record to load.
@@ -23,8 +27,12 @@ def retrieve_terminated_truncated_and_last_info(trajectory: TrajectoryRecord) ->
         info = trajectory.step_records[-1].info
 
     elif isinstance(last_record, StructuredSpacesRecord):
-        if last_record.observations is None or last_record.observations is [] or last_record.actions is [] \
-                or last_record.actions is None:
+        if (
+            last_record.observations is None
+            or last_record.observations == []
+            or last_record.actions == []
+            or last_record.actions is None
+        ):
             trajectory.step_records = trajectory.step_records[:-1]
         is_terminated = trajectory.step_records[-1].is_terminated()
         is_truncated = trajectory.step_records[-1].is_truncated()
@@ -34,7 +42,7 @@ def retrieve_terminated_truncated_and_last_info(trajectory: TrajectoryRecord) ->
     return is_terminated, is_truncated, info
 
 
-def retrieve_episode_end_info(trajectory: TrajectoryRecord) -> Tuple[bool, bool, Dict]:
+def retrieve_episode_end_info(trajectory: TrajectoryRecord) -> tuple[bool, bool, dict]:
     """Helper method to retrieve the information on how the given trajectory ended.
 
     :param trajectory: Episode record to load.

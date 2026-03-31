@@ -19,7 +19,7 @@ class Cutting2DRenderer(Renderer):
     """
 
     @override(Renderer)
-    def render(self, maze_state: Cutting2DMazeState, maze_action: Optional[Cutting2DMazeAction], events: StepEventLog) -> None:
+    def render(self, maze_state: Cutting2DMazeState, maze_action: Cutting2DMazeAction | None, events: StepEventLog) -> None:
         """
         Render maze_state and maze_action of the cutting 2D env.
 

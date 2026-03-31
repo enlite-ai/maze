@@ -50,7 +50,7 @@ class ConcatModelBuilder(BaseModelBuilder):
 
     def __init__(self, modality_config: Dict[str, Union[str, Dict[str, Any]]],
                  observation_modality_mapping: Dict[str, str],
-                 shared_embedding_keys: Optional[Union[List[str], Dict[str, List[str]]]]):
+                 shared_embedding_keys: Union[List[str], Dict[str, List[str]]] | None):
         self._check_modality_config(modality_config)
         super().__init__(modality_config, observation_modality_mapping, shared_embedding_keys)
 

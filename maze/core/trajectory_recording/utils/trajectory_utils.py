@@ -1,7 +1,13 @@
 """Simple setup for trajectory data recording into the current directory."""
 
-from maze.core.trajectory_recording.writers.trajectory_writer_file import TrajectoryWriterFile
-from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
+from __future__ import annotations
+
+from maze.core.trajectory_recording.writers.trajectory_writer_file import (
+    TrajectoryWriterFile,
+)
+from maze.core.trajectory_recording.writers.trajectory_writer_registry import (
+    TrajectoryWriterRegistry,
+)
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 
 

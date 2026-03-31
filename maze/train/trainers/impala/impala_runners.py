@@ -117,7 +117,7 @@ class ImpalaRunner(TrainingRunner):
 
     @abstractmethod
     def create_distributed_eval_env(self,
-                                    env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+                                    env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin],
                                     eval_concurrency: int,
                                     logging_prefix: str
                                     ) -> VectorEnv:
@@ -126,7 +126,7 @@ class ImpalaRunner(TrainingRunner):
     @abstractmethod
     def create_distributed_rollout_actors(
             self,
-            env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+            env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
             policy: TorchPolicy,
             n_rollout_steps: int,
             n_actors: int,
@@ -143,7 +143,7 @@ class ImpalaDevRunner(ImpalaRunner):
 
     def create_distributed_rollout_actors(
             self,
-            env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+            env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
             policy: TorchPolicy,
             n_rollout_steps: int,
             n_actors: int,
@@ -156,7 +156,7 @@ class ImpalaDevRunner(ImpalaRunner):
                                            env_instance_seeds)
 
     def create_distributed_eval_env(self,
-                                    env_factory: Callable[[], Union[StructuredEnv, MazeEnv]],
+                                    env_factory: Callable[[], StructuredEnv | MazeEnv],
                                     eval_concurrency: int,
                                     logging_prefix: str
                                     ) -> SequentialVectorEnv:
@@ -176,7 +176,7 @@ class ImpalaLocalRunner(ImpalaRunner):
 
     def create_distributed_rollout_actors(
             self,
-            env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+            env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
             policy: TorchPolicy,
             n_rollout_steps: int,
             n_actors: int,
@@ -192,7 +192,7 @@ class ImpalaLocalRunner(ImpalaRunner):
                                         agent_instance_seeds)
 
     def create_distributed_eval_env(self,
-                                    env_factory: Callable[[], Union[StructuredEnv, MazeEnv]],
+                                    env_factory: Callable[[], StructuredEnv | MazeEnv],
                                     eval_concurrency: int,
                                     logging_prefix: str
                                     ) -> SubprocVectorEnv:

@@ -1,8 +1,10 @@
 """Generate trajectory data for the wrapped environment."""
 
+from __future__ import annotations
+
 import uuid
 from copy import deepcopy
-from typing import Union, Any, Tuple, Dict, Optional
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -16,10 +18,16 @@ from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_collection import EventCollection
 from maze.core.log_events.step_event_log import StepEventLog
-from maze.core.rendering.keyboard_controlled_trajectory_viewer import KeyboardControlledTrajectoryViewer
+from maze.core.rendering.keyboard_controlled_trajectory_viewer import (
+    KeyboardControlledTrajectoryViewer,
+)
 from maze.core.trajectory_recording.records.state_record import StateRecord
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
-from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
+from maze.core.trajectory_recording.records.trajectory_record import (
+    StateTrajectoryRecord,
+)
+from maze.core.trajectory_recording.writers.trajectory_writer_registry import (
+    TrajectoryWriterRegistry,
+)
 from maze.core.wrappers.wrapper import Wrapper
 
 
@@ -39,11 +47,11 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
 
         self.serialize_renderer = serialize_renderer
 
-        self.episode_record: Optional[StateTrajectoryRecord] = None
+        self.episode_record: StateTrajectoryRecord | None = None
 
-        self.last_env_time: Optional[int] = None
-        self.last_maze_state: Optional[MazeStateType] = None
-        self.last_serializable_components: Optional[Dict[str, Any]] = None
+        self.last_env_time: int | None = None
+        self.last_maze_state: MazeStateType | None = None
+        self.last_serializable_components: dict[str, Any] | None = None
 
         # Recording of maze actions with support for step-skipping
         self._last_maze_action_before_skipping = None  # Last maze action taken before step-skipping started (if in use)
@@ -60,9 +68,9 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             self._maze_action_recorded = True
 
     @override(BaseEnv)
-    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
         """Record available step-level data."""
-        assert self.episode_record is not None, "Environment must be reset before stepping."
+        assert self.episode_record is not None, 'Environment must be reset before stepping.'
 
         self._maze_action_recorded = False
         observation, reward, terminated, truncated, info = self.env.step(action)
@@ -76,27 +84,34 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
 
             # Collect step events
             event_collection = EventCollection(
-                self.env.get_step_events() if isinstance(self.env, EventEnvMixin) else [])
+                self.env.get_step_events() if isinstance(self.env, EventEnvMixin) else []
+            )
             step_event_log = StepEventLog(self.last_env_time, events=event_collection)
 
             # Record trajectory data
-            step_record = StateRecord(env_time=self.last_env_time,
-                                      maze_state=self.last_maze_state,
-                                      maze_action=self._last_maze_action_before_skipping,
-                                      step_event_log=step_event_log,
-                                      reward=reward, terminated=terminated, truncated=truncated, info=info,
-                                      serializable_components=self.last_serializable_components)
+            step_record = StateRecord(
+                env_time=self.last_env_time,
+                maze_state=self.last_maze_state,
+                maze_action=self._last_maze_action_before_skipping,
+                step_event_log=step_event_log,
+                reward=reward,
+                terminated=terminated,
+                truncated=truncated,
+                info=info,
+                serializable_components=self.last_serializable_components,
+            )
             self.episode_record.step_records.append(step_record)
 
             # Collect state and components for the next step
             self._collect_state_and_components()
-            self.last_env_time = self.env.get_env_time() if isinstance(self.env,
-                                                                       TimeEnvMixin) else self.last_env_time + 1
+            self.last_env_time = (
+                self.env.get_env_time() if isinstance(self.env, TimeEnvMixin) else self.last_env_time + 1
+            )
 
         return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Record the final state and ship the episode record, reset underlying env and start a new episode record."""
         self._write_episode_record()
         observation, info = self.env.reset()
@@ -120,7 +135,7 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             self.env.render()
             return
 
-        assert len(self.episode_record.step_records) > 0, "There are no step records to render (yet?)"
+        assert len(self.episode_record.step_records) > 0, 'There are no step records to render (yet?)'
 
         renderer = self.env.get_renderer()
 
@@ -128,16 +143,20 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             trajectory_viewer = KeyboardControlledTrajectoryViewer(
                 episode_record=self.episode_record,
                 renderer=renderer,
-                renderer_kwargs=kwargs)
+                renderer_kwargs=kwargs,
+            )
             trajectory_viewer.render()
         else:
             last_step_record = self.episode_record.step_records[-1]
-            renderer.render(last_step_record.maze_state, last_step_record.maze_action,
-                            last_step_record.step_event_log, **kwargs)
+            renderer.render(
+                last_step_record.maze_state,
+                last_step_record.maze_action,
+                last_step_record.step_event_log,
+                **kwargs,
+            )
 
     def _collect_state_and_components(self):
-        """Collect the state and serializable components, if the env provides access to them.
-        """
+        """Collect the state and serializable components, if the env provides access to them."""
         if isinstance(self.env, SerializableEnvMixin):
             self.last_serializable_components = self.env.get_serializable_components()
         else:
@@ -164,7 +183,8 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
             terminated=None,
             truncated=None,
             info=None,
-            serializable_components=self.last_serializable_components)
+            serializable_components=self.last_serializable_components,
+        )
         self.episode_record.step_records.append(final_step_record)
 
         # Write out the current episode
@@ -182,14 +202,16 @@ class TrajectoryRecordingWrapper(Wrapper[MazeEnv]):
         return StateTrajectoryRecord(episode_id, renderer)
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'TrajectoryRecordingWrapper') -> None:
+    def clone_from(self, env: TrajectoryRecordingWrapper) -> None:  # noqa: ARG002
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        raise RuntimeError("Cloning the TrajectoryRecordingWrapper is not supported.")
+        raise RuntimeError('Cloning the TrajectoryRecordingWrapper is not supported.')

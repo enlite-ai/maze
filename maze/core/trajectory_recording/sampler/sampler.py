@@ -1,14 +1,19 @@
 """File holdings the custom sampler for sampling the indices from a dataset."""
-from typing import Iterable, Iterator, Optional
 
-import numpy as np
-import torch
-from torch.utils.data import Sampler, BatchSampler, IterDataPipe, MapDataPipe, Subset, Dataset
-from torch.utils.data.datapipes.datapipe import (_IterDataPipeSerializationWrapper,
-                                                 _MapDataPipeSerializationWrapper)
+from __future__ import annotations
+
+from collections.abc import Iterator
 
 from maze.core.annotations import override
 from maze.core.env.structured_env import ActorID
+
+import numpy as np
+import torch
+from torch.utils.data import BatchSampler, Dataset, IterDataPipe, MapDataPipe, Subset
+from torch.utils.data.datapipes.datapipe import (
+    _IterDataPipeSerializationWrapper,
+    _MapDataPipeSerializationWrapper,
+)
 
 
 class ActorIdSampler:
@@ -17,7 +22,7 @@ class ActorIdSampler:
     :param generator: Generator used in sampling.
     """
 
-    def __init__(self, data_source: Dataset, generator: Optional[torch.Generator]):
+    def __init__(self, data_source: Dataset, generator: torch.Generator | None):
         self.generator = generator
         self.data_source = data_source
         if isinstance(data_source, IterDataPipe):
@@ -79,16 +84,16 @@ class ActorIdSampler:
 
 class BatchActorIdSampler(BatchSampler):
     """Wraps a ActorIdSampler to yield a mini-batch of indices. Overrides torch.utils.data.sampler.BatchSampler
-        Args:
-            sampler (Sampler or Iterable): Base sampler. Can be any iterable object
-            batch_size (int): Size of mini-batch.
-            drop_last (bool): If ``True``, the sampler will drop the last batch if
-                its size would be less than ``batch_size``
-        """
+    Args:
+        sampler (Sampler or Iterable): Base sampler. Can be any iterable object
+        batch_size (int): Size of mini-batch.
+        drop_last (bool): If ``True``, the sampler will drop the last batch if
+            its size would be less than ``batch_size``
+    """
 
     def __init__(self, sampler, batch_size: int, drop_last: bool):
         assert isinstance(sampler, ActorIdSampler)
-        assert drop_last, f"drop_last set to {drop_last} is not yet supported."
+        assert drop_last, f'drop_last set to {drop_last} is not yet supported.'
         super().__init__(sampler, batch_size, drop_last)
         self.sampler: ActorIdSampler = sampler
 

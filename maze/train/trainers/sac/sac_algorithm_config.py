@@ -69,7 +69,7 @@ class SACAlgorithmConfig(AlgorithmConfig):
     initial_buffer_size: int
     """The initial buffer size, where transaction are sampled with the initial sampling policy"""
 
-    initial_sampling_policy: Optional[Union[Policy, ConfigType]]
+    initial_sampling_policy: Policy | ConfigType | None
     """The policy used to initially fill the replay buffer"""
 
     rollouts_per_iteration: int
@@ -84,6 +84,6 @@ class SACAlgorithmConfig(AlgorithmConfig):
     patience: int
     """number of steps used for early stopping"""
 
-    # Should be Union[RolloutEvaluator, ConfigType], which Hydra does not support (yet).
+    # Should be RolloutEvaluator | ConfigType, which Hydra does not support (yet).
     rollout_evaluator: RolloutEvaluator
     """Rollout evaluator."""

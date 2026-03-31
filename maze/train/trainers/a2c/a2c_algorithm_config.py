@@ -48,7 +48,7 @@ class A2CAlgorithmConfig(AlgorithmConfig):
     device: str
     """Either "cpu" or "cuda" """
 
-    # Should be Union[RolloutEvaluator, ConfigType], which Hydra does not support (yet).
+    # Should be RolloutEvaluator | ConfigType, which Hydra does not support (yet).
     rollout_evaluator: RolloutEvaluator
     """Rollout evaluator."""
 

@@ -164,7 +164,7 @@ class SACRunner(TrainingRunner):
                 replay_buffer.add_transition(traj)
 
     @staticmethod
-    def init_replay_buffer(replay_buffer: BaseReplayBuffer, initial_sampling_policy: Union[DictConfig, Policy],
+    def init_replay_buffer(replay_buffer: BaseReplayBuffer, initial_sampling_policy: DictConfig | Policy,
                            initial_buffer_size: int, replay_buffer_seed: int,
                            split_rollouts_into_transitions: bool, n_rollout_steps: int,
                            env_factory: Callable[[], MazeEnv]) -> None:

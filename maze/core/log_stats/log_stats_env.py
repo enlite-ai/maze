@@ -1,8 +1,15 @@
 """Interface for environments to expose statistics logging capabilities."""
-from abc import abstractmethod, ABC
-from typing import Callable, Optional
 
-from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsValue, LogStatsAggregator
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+
+from maze.core.log_stats.log_stats import (
+    LogStatsAggregator,
+    LogStatsLevel,
+    LogStatsValue,
+)
 
 
 class LogStatsEnv(ABC):
@@ -40,10 +47,7 @@ class LogStatsEnv(ABC):
         """
 
     @abstractmethod
-    def get_stats_value(self,
-                        event: Callable,
-                        level: LogStatsLevel,
-                        name: Optional[str] = None) -> LogStatsValue:
+    def get_stats_value(self, event: Callable, level: LogStatsLevel, name: str | None = None) -> LogStatsValue:
         """Obtain a single value from the statistics dict.
 
         :param event: The event interface method of the value in question

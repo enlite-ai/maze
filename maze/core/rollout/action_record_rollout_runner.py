@@ -1,24 +1,34 @@
-""" Contains a parallel rollout runner that allows to collect features by replaying pre-computed action records. """
+"""Contains a parallel rollout runner that allows to collect features by replaying pre-computed action records."""
+
+from __future__ import annotations
+
 import glob
 import logging
 import os
 import traceback
-from multiprocessing import Queue, Process
-from typing import Iterable
-
-from omegaconf import DictConfig
+from collections.abc import Iterable
+from multiprocessing import Process, Queue
 
 from maze.core.agent.replay_recorded_actions_policy import ReplayRecordedActionsPolicy
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
-from maze.core.rollout.parallel_rollout_runner import ParallelRolloutRunner, ParallelRolloutWorker, ExceptionReport
+from maze.core.rollout.parallel_rollout_runner import (
+    ExceptionReport,
+    ParallelRolloutRunner,
+    ParallelRolloutWorker,
+)
 from maze.core.rollout.rollout_runner import RolloutRunner
-from maze.core.utils.factory import ConfigType, CollectionOfConfigType
-from maze.core.wrappers.observation_normalization.observation_normalization_utils import obtain_normalization_statistics
-from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
-    ObservationNormalizationWrapper
+from maze.core.utils.factory import CollectionOfConfigType, ConfigType
+from maze.core.wrappers.observation_normalization.observation_normalization_utils import (
+    obtain_normalization_statistics,
+)
+from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import (
+    ObservationNormalizationWrapper,
+)
 from maze.core.wrappers.spaces_recording_wrapper import SpacesRecordingWrapper
 from maze.utils.bcolors import BColors
+
+from omegaconf import DictConfig
 
 logger = logging.getLogger('ActionRecordWorker')
 logger.setLevel(logging.INFO)
@@ -28,16 +38,18 @@ class ActionRecordWorker(ParallelRolloutWorker):
     """Class encapsulating functionality performed in worker processes."""
 
     @staticmethod
-    def run(env_config: DictConfig,
-            wrapper_config: DictConfig,
-            agent_config: DictConfig,
-            deterministic: bool,
-            max_episode_steps: int,
-            record_trajectory: bool,
-            input_directory: str,
-            reporting_queue: Queue,
-            seeding_queue: Queue,
-            serialize_renderer: bool) -> None:
+    def run(
+        env_config: DictConfig,
+        wrapper_config: DictConfig,
+        agent_config: DictConfig,
+        deterministic: bool,
+        max_episode_steps: int,
+        record_trajectory: bool,
+        input_directory: str,
+        reporting_queue: Queue,
+        seeding_queue: Queue,
+        serialize_renderer: bool,
+    ) -> None:
         """Build the environment and run the rollout for the specified number of episodes.
 
         :param env_config: Hydra configuration of the environment to instantiate.
@@ -54,17 +66,28 @@ class ActionRecordWorker(ParallelRolloutWorker):
         """
         env_seed, agent_seed = None, None
         try:
-            env, agent = RolloutRunner.init_env_and_agent(env_config, wrapper_config, max_episode_steps,
-                                                          agent_config, input_directory)
+            env, agent = RolloutRunner.init_env_and_agent(
+                env_config,
+                wrapper_config,
+                max_episode_steps,
+                agent_config,
+                input_directory,
+            )
             assert isinstance(agent, ReplayRecordedActionsPolicy)
 
             # Set up the wrappers
             if not isinstance(env, SpacesRecordingWrapper):
-                BColors.print_colored("Adding SpacesRecordingWrapper on top of wrapper stack!",
-                                      color=BColors.WARNING)
+                BColors.print_colored(
+                    'Adding SpacesRecordingWrapper on top of wrapper stack!',
+                    color=BColors.WARNING,
+                )
                 env = SpacesRecordingWrapper.wrap(env)
 
-            env, episode_recorder = ParallelRolloutWorker._setup_monitoring(env, record_trajectory, serialize_renderer)
+            env, episode_recorder = ParallelRolloutWorker._setup_monitoring(  # noqa: SLF001
+                env,
+                record_trajectory,
+                serialize_renderer,
+            )
 
             first_episode = True
             while True:
@@ -79,8 +102,8 @@ class ActionRecordWorker(ParallelRolloutWorker):
                         agent.reset()
                     except Exception as e:
                         logger.warning(
-                            f"\nException in event collection reset() encountered: {e}"
-                            f"\n{traceback.format_exc()}")
+                            f'\nException in event collection reset() encountered: {e}\n{traceback.format_exc()}'
+                        )
 
                     reporting_queue.put(episode_recorder.get_last_episode_data())
                     break
@@ -98,16 +121,22 @@ class ActionRecordWorker(ParallelRolloutWorker):
                     agent.reset()
 
                     RolloutRunner.run_episode(
-                        env=env, agent=agent, obs=obs, deterministic=deterministic, render=False)
+                        env=env,
+                        agent=agent,
+                        obs=obs,
+                        deterministic=deterministic,
+                        render=False,
+                    )
 
-                    out_txt = f"agent_seed: {agent_seed}" \
-                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}"
+                    out_txt = f'agent_seed: {agent_seed} | {str(env.core_env if isinstance(env, MazeEnv) else env)}'
                     logger.info(out_txt)
                 except Exception as e:
-                    out_txt = f"agent_seed: {agent_seed}" \
-                              f" | {str(env.core_env if isinstance(env, MazeEnv) else env)}" \
-                              f"\nException encountered: {e}" \
-                              f"\n{traceback.format_exc()}"
+                    out_txt = (
+                        f'agent_seed: {agent_seed}'
+                        f' | {str(env.core_env if isinstance(env, MazeEnv) else env)}'
+                        f'\nException encountered: {e}'
+                        f'\n{traceback.format_exc()}'
+                    )
                     logger.warning(out_txt)
                 finally:
                     if not first_episode:
@@ -132,20 +161,28 @@ class ActionRecordRolloutRunner(ParallelRolloutRunner):
     :param verbose: If True debug messages are printed to the command line.
     """
 
-    def __init__(self,
-                 max_episode_steps: int,
-                 deterministic: bool,
-                 action_record_path: str,
-                 normalization_samples: int,
-                 n_processes: int,
-                 verbose: bool,
-                 serialize_renderer: bool = False):
-        super().__init__(n_episodes=0, max_episode_steps=max_episode_steps, deterministic=deterministic,
-                         record_trajectory=False, record_event_logs=False, n_processes=n_processes,
-                         serialize_renderer=serialize_renderer)
+    def __init__(
+        self,
+        max_episode_steps: int,
+        deterministic: bool,
+        action_record_path: str,
+        normalization_samples: int,
+        n_processes: int,
+        verbose: bool,
+        serialize_renderer: bool = False,
+    ):
+        super().__init__(
+            n_episodes=0,
+            max_episode_steps=max_episode_steps,
+            deterministic=deterministic,
+            record_trajectory=False,
+            record_event_logs=False,
+            n_processes=n_processes,
+            serialize_renderer=serialize_renderer,
+        )
         self.verbose = verbose
 
-        self.action_record_paths = glob.glob(os.path.join(action_record_path, "*.pkl"))
+        self.action_record_paths = glob.glob(os.path.join(action_record_path, '*.pkl'))
         self.n_episodes = len(self.action_record_paths)
         self.normalization_samples = normalization_samples
 
@@ -155,21 +192,26 @@ class ActionRecordRolloutRunner(ParallelRolloutRunner):
     def run_with(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType):
         """Run the parallel rollout in multiple worker processes."""
         # initialize observation normalization
-        obs_norm_env, agent = ParallelRolloutRunner.init_env_and_agent(env_config=env, wrappers_config=wrappers,
-                                                                       max_episode_steps=self.max_episode_steps,
-                                                                       agent_config=agent,
-                                                                       input_dir=self.input_dir)
+        obs_norm_env, agent = ParallelRolloutRunner.init_env_and_agent(
+            env_config=env,
+            wrappers_config=wrappers,
+            max_episode_steps=self.max_episode_steps,
+            agent_config=agent,
+            input_dir=self.input_dir,
+        )
 
         if isinstance(obs_norm_env, ObservationNormalizationWrapper):
-            normalization_statistics = obtain_normalization_statistics(obs_norm_env,
-                                                                       n_samples=self.normalization_samples)
+            normalization_statistics = obtain_normalization_statistics(
+                obs_norm_env, n_samples=self.normalization_samples
+            )
             obs_norm_env.set_normalization_statistics(normalization_statistics)
 
         super().run_with(env=env, wrappers=wrappers, agent=agent)
 
     @override(ParallelRolloutRunner)
-    def _launch_workers(self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType) \
-            -> Iterable[Process]:
+    def _launch_workers(
+        self, env: ConfigType, wrappers: CollectionOfConfigType, agent: ConfigType
+    ) -> Iterable[Process]:
         """Configure the workers according to the rollout config and launch them."""
 
         self.seeding_queue = Queue()
@@ -179,10 +221,17 @@ class ActionRecordRolloutRunner(ParallelRolloutRunner):
         n_plans = len(self.action_record_paths)
         actual_number_of_episodes = min(n_plans, self.n_episodes)
         if actual_number_of_episodes < self.n_episodes:
-            BColors.print_colored(f'Only {n_plans} explicit seed(s) given, thus the number of episodes changed '
-                                  f'from: {self.n_episodes} to {actual_number_of_episodes}.', BColors.WARNING)
+            BColors.print_colored(
+                f'Only {n_plans} explicit seed(s) given, thus the number of episodes changed '
+                f'from: {self.n_episodes} to {actual_number_of_episodes}.',
+                BColors.WARNING,
+            )
 
         # Configure and launch the processes
-        workers = self._configure_and_launch_processes(parallel_worker_type=ActionRecordWorker,
-                                                       env=env, wrappers=wrappers, agent=agent)
+        workers = self._configure_and_launch_processes(
+            parallel_worker_type=ActionRecordWorker,
+            env=env,
+            wrappers=wrappers,
+            agent=agent,
+        )
         return workers

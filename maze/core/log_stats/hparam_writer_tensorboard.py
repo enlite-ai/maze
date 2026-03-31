@@ -1,17 +1,21 @@
 """File containing methods for adding hparams logging in tensorboard for a given experiment directory"""
+
+from __future__ import annotations
+
 import glob
 import os
-from typing import List, Union, Dict, Any, Callable, Tuple
+from collections.abc import Callable
+from typing import Any
+
+from maze.utils.bcolors import BColors
+from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
 import numpy as np
 import yaml
 from torch.utils.tensorboard import SummaryWriter
 
-from maze.utils.bcolors import BColors
-from maze.utils.tensorboard_reader import tensorboard_to_pandas
 
-
-def flatten(struc_dict: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Union[str, int, float]]:
+def flatten(struc_dict: dict[str, Any], parent_key: str = '', sep: str = '.') -> dict[str, str | int | float]:
     """Flatten the given dict such that keys are concatenated by the given sep parameter
 
     :param struc_dict: The structured dictionary to be flattened.
@@ -36,9 +40,11 @@ def flatten(struc_dict: Dict[str, Any], parent_key: str = '', sep: str = '.') ->
     return dict(items)
 
 
-def manipulate_hparams_logging_for_exp(exp_dir: str, metrics: List[Tuple[str, Union[Callable[[np.ndarray],
-                                                                                             float], float], str]],
-                                       clear_hparams: bool) -> None:
+def manipulate_hparams_logging_for_exp(
+    exp_dir: str,
+    metrics: list[tuple[str, Callable[[np.ndarray], float] | float, str]],
+    clear_hparams: bool,
+) -> None:
     """Manipulate the hparams logging for a given experiment directory.
 
     That is ether add hparams logging by adding a new tfevents file, or replace an already present hparams event files,
@@ -46,7 +52,7 @@ def manipulate_hparams_logging_for_exp(exp_dir: str, metrics: List[Tuple[str, Un
 
     :param exp_dir: The experiment directory.
     :param metrics: A list of metrics to be added to tensorboard. Each tuple in the list should consist of the key to
-        query the original events file, the funciton to aggregate the values to a single float values and a simple
+        query the original events file, the function to aggregate the values to a single float values and a simple
         name describing the function.. e.g. metrics=[('train_BaseEnvEvents/reward/mean', np.max, 'max')]
         Note: Instead of the callable a float value can be given as well, which will be used instead of querying the
         file.
@@ -54,28 +60,27 @@ def manipulate_hparams_logging_for_exp(exp_dir: str, metrics: List[Tuple[str, Un
     """
 
     # Get hparams file if present and delete it
-    tf_hparams_summary_files = glob.glob(f"{exp_dir}/*events.out.tfevents*_hparams")
+    tf_hparams_summary_files = glob.glob(f'{exp_dir}/*events.out.tfevents*_hparams')
     if len(tf_hparams_summary_files) > 0:
         for ff in tf_hparams_summary_files:
             os.remove(ff)
 
     # Assert that only one events file is present
-    tf_summary_files = glob.glob(f"{exp_dir}/*events.out.tfevents*")
+    tf_summary_files = glob.glob(f'{exp_dir}/*events.out.tfevents*')
     hydra_config_file = os.path.join(exp_dir, '.hydra/config.yaml')
     if len(tf_summary_files) == 0 or not os.path.exists(hydra_config_file):
         return
     assert len(tf_summary_files) == 1
 
     if not clear_hparams:
-
-        # Read confg.yaml file as hyperparameters
+        # Read config.yaml file as hyperparameters
         assert os.path.exists(hydra_config_file)
         cfg = yaml.safe_load(open(hydra_config_file))
         hparam_dict = flatten(dict(cfg))
 
         # compute maximum for each given metric from the original events file
-        metrics_dict = dict()
-        for (metric_key, metric_func, metric_func_name) in metrics:
+        metrics_dict = {}
+        for metric_key, metric_func, metric_func_name in metrics:
             try:
                 if isinstance(metric_func, float):
                     new_metric_name = f'{metric_key}-{metric_func_name}'
@@ -86,8 +91,9 @@ def manipulate_hparams_logging_for_exp(exp_dir: str, metrics: List[Tuple[str, Un
                     metrics_dict[new_metric_name] = metric_func(np.asarray(events_df.loc[metric_key]))
             except KeyError:
                 BColors.print_colored(
-                    f'The given metric key: {metric_key} could not be found in the summary file for exp: '
-                    f'{exp_dir}', BColors.WARNING)
+                    f'The given metric key: {metric_key} could not be found in the summary file for exp: {exp_dir}',
+                    BColors.WARNING,
+                )
 
         # Store all files and dirs present in the directory before creating a new summary file writer
         all_elems_in_exp_dir_before = set(os.listdir(exp_dir))
@@ -113,11 +119,14 @@ def manipulate_hparams_logging_for_exp(exp_dir: str, metrics: List[Tuple[str, Un
         proper_file = os.listdir(os.path.join(exp_dir, new_dirs[0]))
         assert len(proper_file) == 1
 
-        # Remove emtpy file (created from some unknown reason)
+        # Remove empty file (created from some unknown reason)
         os.remove(os.path.join(exp_dir, new_files[0]))
 
         # Move the proper hparams events file into the same dir, for same naming in tensorboard
-        os.rename(os.path.join(exp_dir, new_dirs[0], proper_file[0]), os.path.join(exp_dir, new_files[0]))
+        os.rename(
+            os.path.join(exp_dir, new_dirs[0], proper_file[0]),
+            os.path.join(exp_dir, new_files[0]),
+        )
 
         # Remove the now empty dir created by the summary writer
         os.rmdir(os.path.join(exp_dir, new_dirs[0]))

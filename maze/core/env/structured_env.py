@@ -1,12 +1,15 @@
 """An environment interface for multi-step, hierarchical and multi-agent environments."""
-from abc import abstractmethod
-from typing import Union, Dict, NamedTuple, Optional
 
-import numpy as np
+from __future__ import annotations
+
+from abc import abstractmethod
+from typing import NamedTuple
 
 from maze.core.env.base_env import BaseEnv
 
-StepKeyType = Union[str, int]
+import numpy as np
+
+StepKeyType = str | int
 
 
 class ActorID(NamedTuple):
@@ -77,7 +80,7 @@ class StructuredEnv(BaseEnv):
 
     @property
     @abstractmethod
-    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+    def agent_counts_dict(self) -> dict[StepKeyType, int]:
         """Returns the maximum count of agents per sub-step that the environment features.
 
         If the agent count for a particular sub-step is dynamic (unknown upfront), then returns -1 for this sub-step.
@@ -95,7 +98,7 @@ class StructuredEnv(BaseEnv):
             this method should return {0: 1, 1: 1}
         """
 
-    def get_actor_rewards(self) -> Optional[np.ndarray]:
+    def get_actor_rewards(self) -> np.ndarray | None:
         """Optional. If this is a multi-step or multi-agent environment, this method should return
         the last reward for all actors from the last structured step.
 

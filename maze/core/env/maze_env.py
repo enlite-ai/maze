@@ -8,12 +8,13 @@ RL training algorithms require a more rigid representation. To that end :class:`
 gymnasium-compatible environment in a reusable form, by utilizing mappings from the MazeState to the observations space
 and from the MazeAction to the action space.
 """
-import time
-from copy import deepcopy
-from typing import Any, Tuple, Dict, Iterable, Optional, Union, TypeVar, Generic
 
-import gymnasium as gym
-import numpy as np
+from __future__ import annotations
+
+import time
+from collections.abc import Iterable
+from copy import deepcopy
+from typing import Any, Generic, TypeVar
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionConversionInterface, ActionType
@@ -22,10 +23,13 @@ from maze.core.env.core_env import CoreEnv
 from maze.core.env.event_env_mixin import EventEnvMixin
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
-from maze.core.env.observation_conversion import ObservationConversionInterface, ObservationType
+from maze.core.env.observation_conversion import (
+    ObservationConversionInterface,
+    ObservationType,
+)
 from maze.core.env.recordable_env_mixin import RecordableEnvMixin
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
-from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorID
+from maze.core.env.structured_env import ActorID, StepKeyType, StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.env.time_env_mixin import TimeEnvMixin
 from maze.core.events.event_record import EventRecord
@@ -34,11 +38,21 @@ from maze.core.log_events.monitoring_events import RewardEvents
 from maze.core.rendering.renderer import Renderer
 from maze.core.wrappers.wrapper import Wrapper
 
-CoreEnvType = TypeVar("CoreEnvType")
+import gymnasium as gym
+import numpy as np
+
+CoreEnvType = TypeVar('CoreEnvType')
 
 
-class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, StructuredEnvSpacesMixin, EventEnvMixin,
-              RecordableEnvMixin, TimeEnvMixin):
+class MazeEnv(
+    Generic[CoreEnvType],
+    Wrapper[CoreEnvType],
+    StructuredEnv,
+    StructuredEnvSpacesMixin,
+    EventEnvMixin,
+    RecordableEnvMixin,
+    TimeEnvMixin,
+):
     """Base class for (gym style) environments wrapping a core environment and defining state and execution interfaces.
     The aim of this class is to provide reusable functionality across different gym environments.
     This functionality comprises for example the reset-function, the step-function or the render-function.
@@ -50,10 +64,12 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
                                       and policy names as keys.
     """
 
-    def __init__(self,
-                 core_env: CoreEnv,
-                 action_conversion_dict: Dict[Union[str, int], ActionConversionInterface],
-                 observation_conversion_dict: Dict[Union[str, int], ObservationConversionInterface]):
+    def __init__(
+        self,
+        core_env: CoreEnv,
+        action_conversion_dict: dict[str | int, ActionConversionInterface],
+        observation_conversion_dict: dict[str | int, ObservationConversionInterface],
+    ):
         self.core_env = core_env
         """wrapped :class:`~.core_env.CoreEnv`"""
 
@@ -92,7 +108,11 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         # Dictionary to hold the profiling times for the different components of the maze env. These will always be
         # reset at the beginning of the step function and are logged as events in the logger base class after the step.
-        self.profiling_times = {'core_env': 0.0, 'observation_conversion': 0.0, 'action_conversion': 0.0}
+        self.profiling_times = {
+            'core_env': 0.0,
+            'observation_conversion': 0.0,
+            'action_conversion': 0.0,
+        }
 
     @property
     def is_single_substep_env(self) -> bool:
@@ -105,14 +125,18 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return len(agent_counts) == 1 and sum(agent_counts.values()) == 1
 
     @override(BaseEnv)
-    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, bool, Dict[Any, Any]]:
+    def step(self, action: ActionType) -> tuple[ObservationType, float, bool, bool, dict[Any, Any]]:
         """Take environment step (see :func:`CoreEnv.step <maze.core.env.core_env.CoreEnv.step>` for details).
 
         :param action: the action the agent wants to take.
         :return: observation, reward, terminated, truncated, info
         """
-        self.profiling_times = {'core_env': 0.0, 'observation_conversion': 0.0, 'action_conversion': 0.0}
-        assert self.initial_env_time is not None, "Environment must be reset before stepping."
+        self.profiling_times = {
+            'core_env': 0.0,
+            'observation_conversion': 0.0,
+            'action_conversion': 0.0,
+        }
+        assert self.initial_env_time is not None, 'Environment must be reset before stepping.'
 
         # first, take step without observation
         reward, terminated, truncated, info = self._step_core_env(action)
@@ -126,7 +150,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> Tuple[ObservationType, dict]:
+    def reset(self) -> tuple[ObservationType, dict]:
         """Resets the environment and returns the initial observation and the info dict.
 
         :return: the initial observation and info dict after resetting
@@ -138,33 +162,30 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         self.initial_env_time = self.get_env_time()
 
         for key, value in observation.items():
-            assert not (isinstance(value, np.ndarray) and value.dtype == np.float64), \
-                   f"observation contains numpy arrays with float64, please convert observation '{key}' to float32"
+            assert not (isinstance(value, np.ndarray) and value.dtype == np.float64), (
+                f"observation contains numpy arrays with float64, please convert observation '{key}' to float32"
+            )
 
         return observation, info
 
     @override(BaseEnv)
     def seed(self, seed: Any) -> None:
-        """forward call to :attr:`self.core_env <core_env>`
-        """
+        """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.seed(seed)
 
     @override(BaseEnv)
     def close(self) -> None:
-        """forward call to :attr:`self.core_env <core_env>`
-        """
+        """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.close()
 
     @override(CoreEnv)
     def get_step_events(self) -> Iterable[EventRecord]:
-        """forward call to :attr:`self.core_env <core_env>`
-        """
+        """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.get_step_events()
 
     @override(CoreEnv)
-    def get_kpi_calculator(self) -> Optional[KpiCalculator]:
-        """forward call to :attr:`self.core_env <core_env>`
-        """
+    def get_kpi_calculator(self) -> KpiCalculator | None:
+        """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.get_kpi_calculator()
 
     @override(RecordableEnvMixin)
@@ -189,13 +210,13 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
+    def action_spaces_dict(self) -> dict[int | str, gym.spaces.Space]:
         """Policy action spaces as dict."""
         return self._action_spaces
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Space]:
+    def observation_spaces_dict(self) -> dict[int | str, gym.spaces.Space]:
         """Policy observation spaces as dict."""
         return self._observation_spaces
 
@@ -205,8 +226,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return self.core_env.get_env_time()
 
     def _init_spaces(self) -> None:
-        """Initialize observation and action space.
-        """
+        """Initialize observation and action space."""
         self._observation_spaces = {k: obs_conv.space() for k, obs_conv in self.observation_conversion_dict.items()}
         self._action_spaces = {k: act_conv.space() for k, act_conv in self.action_conversion_dict.items()}
 
@@ -222,17 +242,19 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
     def is_flat_step(self) -> bool:
         """forward call to :attr:`self.core_env <core_env>`"""
-        return (self.actor_id().agent_id == 0 and
-                self.actor_id().step_key == list(self.observation_conversion_dict.keys())[0])
+        return (
+            self.actor_id().agent_id == 0
+            and self.actor_id().step_key == list(self.observation_conversion_dict.keys())[0]
+        )
 
     @property
     @override(StructuredEnv)
-    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+    def agent_counts_dict(self) -> dict[StepKeyType, int]:
         """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.agent_counts_dict
 
     @override(StructuredEnv)
-    def get_actor_rewards(self) -> Optional[np.ndarray]:
+    def get_actor_rewards(self) -> np.ndarray | None:
         """forward call to :attr:`self.core_env <core_env>`"""
         return self.core_env.get_actor_rewards()
 
@@ -268,9 +290,12 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return self.action_conversion.noop_action()
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType], first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,  # noqa: ARG002
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Convert MazeState and MazeAction back into observations and actions using the space conversion interfaces.
 
         :param maze_state: State of the environment
@@ -298,7 +323,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         return observation_dict, action_dict
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'MazeEnv') -> None:
+    def clone_from(self, env: MazeEnv) -> None:
         """Reset the maze env to the state of the provided env.
 
         Note, that it also clones the CoreEnv and its member variables including environment context.
@@ -317,7 +342,7 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
 
         self.initial_env_time = env.initial_env_time
 
-    def _step_core_env(self, action: ActionType) -> Tuple[float, bool, bool, Dict[Any, Any]]:
+    def _step_core_env(self, action: ActionType) -> tuple[float, bool, bool, dict[Any, Any]]:
         """Take environment step without converting the state into and observation.
 
         :param action: the action the agent wants to take.
@@ -370,4 +395,3 @@ class MazeEnv(Generic[CoreEnvType], Wrapper[CoreEnvType], StructuredEnv, Structu
         core_env.context = self.core_env.context
         self.core_env = core_env
         self.env = self.core_env
-

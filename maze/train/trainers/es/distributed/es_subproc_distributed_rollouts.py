@@ -42,8 +42,8 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
 
     @override(ESDistributedRollouts)
     def generate_rollouts(self,
-                          policy: Union[Policy, TorchModel],
-                          max_steps: Optional[int],
+                          policy: Policy | TorchModel,
+                          max_steps: int | None,
                           noise_stddev: float,
                           normalization_stats: StructuredStatisticsType
                           ) -> Generator[ESRolloutResult, None, None]:
@@ -100,7 +100,7 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
             logging.exception(e)
 
     @staticmethod
-    def _get_multiprocessing_context(start_method: Optional[str]) -> BaseContext:
+    def _get_multiprocessing_context(start_method: str | None) -> BaseContext:
         if start_method is None:
             forkserver_available = 'forkserver' in multiprocessing.get_all_start_methods()
             start_method = 'forkserver' if forkserver_available else 'spawn'

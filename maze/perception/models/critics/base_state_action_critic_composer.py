@@ -18,8 +18,8 @@ class BaseStateActionCriticComposer(CriticComposerInterface):
     """
 
     @abstractmethod
-    def __init__(self, observation_spaces_dict: Dict[Union[str, int], spaces.Dict],
-                 action_spaces_dict: Dict[Union[str, int], spaces.Dict]):
+    def __init__(self, observation_spaces_dict: Dict[str | int, spaces.Dict],
+                 action_spaces_dict: Dict[str | int, spaces.Dict]):
         self._observation_spaces_dict = observation_spaces_dict
         self._action_spaces_dict = action_spaces_dict
         # convert to observation shapes

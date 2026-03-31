@@ -1,7 +1,9 @@
 """Core Interface for implementing a custom policy in a given env."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Tuple, Sequence, Optional
+from collections.abc import Sequence
 
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.observation_conversion import ObservationType
@@ -21,8 +23,9 @@ class FlatPolicy(ABC):
         """
 
     @abstractmethod
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int]) \
-            -> Tuple[Sequence[ActionType], Sequence[float]]:
+    def compute_top_action_candidates(
+        self, observation: ObservationType, num_candidates: int | None
+    ) -> tuple[Sequence[ActionType], Sequence[float]]:
         """
         Get the top :num_candidates actions as well as the probabilities, q-values, .. leading to the decision.
 

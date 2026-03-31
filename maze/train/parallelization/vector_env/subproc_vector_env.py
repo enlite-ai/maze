@@ -125,7 +125,7 @@ class SubprocVectorEnv(StructuredVectorEnv):
 
     def __init__(self,
                  env_factories: List[Callable[[], MazeEnv]],
-                 logging_prefix: Optional[str] = None,
+                 logging_prefix: str | None = None,
                  start_method: str = None):
         self.waiting = False
         self.closed = False
@@ -161,7 +161,7 @@ class SubprocVectorEnv(StructuredVectorEnv):
         )
 
     @override(StructuredVectorEnv)
-    def get_actor_rewards(self) -> Optional[np.ndarray]:
+    def get_actor_rewards(self) -> np.ndarray | None:
         """Stack actor rewards from encapsulated environments."""
         for remote in self.remotes:
             remote.send(('get_actor_rewards', None))

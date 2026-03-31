@@ -1,10 +1,12 @@
-""" Contains an example showing how to visualize processed observations (network input) with tensorboard. """
-from abc import ABC
-import warnings
-from typing import TypeVar, Union, Any, Tuple, Dict, Optional, List, Callable
+"""Contains an example showing how to visualize processed observations (network input) with tensorboard."""
 
-import matplotlib.pyplot as plt
-import numpy as np
+from __future__ import annotations
+
+import warnings
+from abc import ABC
+from collections.abc import Callable
+from typing import Any, TypeVar
+
 from maze.core.annotations import override, unused
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
@@ -14,14 +16,22 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
-from maze.core.log_stats.event_decorators import define_plot, define_epoch_stats, define_episode_stats, \
-    define_step_stats, define_stats_grouping
+from maze.core.log_stats.event_decorators import (
+    define_episode_stats,
+    define_epoch_stats,
+    define_plot,
+    define_stats_grouping,
+    define_step_stats,
+)
 from maze.core.log_stats.reducer_functions import histogram
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.wrapper import Wrapper
 
+import matplotlib.pyplot as plt
+import numpy as np
 
-def histogram_plot(value: List[np.ndarray], **kwargs) -> None:
+
+def histogram_plot(value: list[np.ndarray], **kwargs) -> None:
     """Plots histograms of all observations (default behaviour).
 
     :param value: A list of observation arrays.
@@ -36,6 +46,9 @@ def histogram_plot(value: List[np.ndarray], **kwargs) -> None:
     return fig
 
 
+# ruff: noqa: B027, B024
+
+
 class ObservationVisualizationEvents(ABC):
     """Event topic class with logging statistics based only on observations, therefore applicable to any valid
     reinforcement learning environment.
@@ -47,9 +60,9 @@ class ObservationVisualizationEvents(ABC):
     @define_epoch_stats(histogram)
     @define_episode_stats(histogram)
     @define_step_stats(None)
-    @define_stats_grouping("step_key", "name")
+    @define_stats_grouping('step_key', 'name')
     def observation_to_visualize(self, step_key: str, name: str, value: int):
-        """ observation to be visualized """
+        """observation to be visualized"""
 
 
 class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
@@ -60,9 +73,9 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
     :param plot_function: The custom matplotlib plotting function.
     """
 
-    T = TypeVar("T")
+    T = TypeVar('T')
 
-    def __init__(self, env: MazeEnv, plot_function: Optional[str]):
+    def __init__(self, env: MazeEnv, plot_function: str | None):
         """Avoid calling this constructor directly, use :method:`wrap` instead."""
         super().__init__(env)
 
@@ -75,13 +88,12 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
             ObservationVisualizationEvents.observation_to_visualize.tensorboard_render_figure_dict[None] = function
 
     @override(BaseEnv)
-    def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, bool, Dict[Any, Any]]:
-        """Triggers logging events for observations, actions and reward.
-        """
+    def step(self, action: ActionType) -> tuple[ObservationType, float, bool, bool, dict[Any, Any]]:
+        """Triggers logging events for observations, actions and reward."""
 
         # get identifier of current sub step
         substep_id, _ = self.env.actor_id() if isinstance(self.env, StructuredEnv) else (None, None)
-        substep_name = f"step_key_{substep_id}" if substep_id is not None else None
+        substep_name = f'step_key_{substep_id}' if substep_id is not None else None
 
         # take wrapped env step
         obs, rew, terminated, truncated, info = self.env.step(action)
@@ -89,21 +101,27 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
         # log processed observations
         for observation_name, observation_value in obs.items():
             self.observation_events.observation_to_visualize(
-                step_key=substep_name, name=observation_name, value=observation_value)
+                step_key=substep_name, name=observation_name, value=observation_value
+            )
 
         return obs, rew, terminated, truncated, info
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'ObservationVisualizationWrapper') -> None:
+    def clone_from(self, env: ObservationVisualizationWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
-        warnings.warn("Try to avoid wrappers such as the 'ObservationVisualizationWrapper'"
-                      "when working with simulated envs to reduce overhead.")
+        warnings.warn(
+            "Try to avoid wrappers such as the 'ObservationVisualizationWrapper'"
+            'when working with simulated envs to reduce overhead.',
+            stacklevel=2,
+        )
         self.env.clone_from(env)

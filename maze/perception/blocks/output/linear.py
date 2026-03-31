@@ -9,7 +9,7 @@ from torch import nn as nn
 from maze.core.annotations import override
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
-Number = Union[builtins.int, builtins.float, builtins.bool]
+Number = builtins.int | builtins.float | builtins.bool
 
 
 class LinearOutputBlock(ShapeNormalizationBlock):

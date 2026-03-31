@@ -15,52 +15,52 @@ class ImitationEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', 'agent_id')
-    def policy_loss(self, step_id: Union[str, int], agent_id: int, value: float):
+    def policy_loss(self, step_id: str | int, agent_id: int, value: float):
         """Optimization loss of the step policy."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', 'agent_id')
-    def policy_entropy(self, step_id: Union[str, int], agent_id: int, value: float):
+    def policy_entropy(self, step_id: str | int, agent_id: int, value: float):
         """Entropy of the step policies."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', 'agent_id')
-    def policy_l2_norm(self, step_id: Union[str, int], agent_id: int, value: float):
+    def policy_l2_norm(self, step_id: str | int, agent_id: int, value: float):
         """L2 norm of the step policies."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', 'agent_id')
-    def policy_grad_norm(self, step_id: Union[str, int], agent_id: int, value: float):
+    def policy_grad_norm(self, step_id: str | int, agent_id: int, value: float):
         """Gradient norm of the step policies."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
-    def discrete_accuracy(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
+    def discrete_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
-    def mean_step_policy_loss(self, step_id: Union[str, int], value: float):
+    def mean_step_policy_loss(self, step_id: str | int, value: float):
         """Optimization loss of the step policy."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
-    def mean_step_policy_entropy(self, step_id: Union[str, int], value: float):
+    def mean_step_policy_entropy(self, step_id: str | int, value: float):
         """Entropy of the step policies."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
-    def mean_step_policy_l2_norm(self, step_id: Union[str, int],value: float):
+    def mean_step_policy_l2_norm(self, step_id: str | int,value: float):
         """L2 norm of the step policies."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
-    def mean_step_policy_grad_norm(self, step_id: Union[str, int], value: float):
+    def mean_step_policy_grad_norm(self, step_id: str | int, value: float):
         """Gradient norm of the step policies."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
-    def mean_step_discrete_accuracy(self, step_id: Union[str, int], value: int):
+    def mean_step_discrete_accuracy(self, step_id: str | int, value: int):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
@@ -70,27 +70,27 @@ class ImitationEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
-    def discrete_top_5_accuracy(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
+    def discrete_top_5_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
-    def discrete_top_10_accuracy(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
+    def discrete_top_10_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
-    def discrete_action_rank(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
+    def discrete_action_rank(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Rank of target action in discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
-    def multi_binary_accuracy(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
+    def multi_binary_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for multi-binary subspaces."""
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id', "subspace_name", 'agent_id')
-    def box_mean_abs_deviation(self, step_id: Union[str, int], agent_id: int, subspace_name: str, value: int):
+    def box_mean_abs_deviation(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Mean absolute deviation for box (continuous) subspaces."""
 
     @define_epoch_stats(np.nanmean)

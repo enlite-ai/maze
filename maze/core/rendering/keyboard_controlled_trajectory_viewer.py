@@ -1,8 +1,13 @@
 """Rendering trajectory data in a simple form."""
-from typing import Dict, Any
+
+from __future__ import annotations
+
+from typing import Any
 
 from maze.core.rendering.renderer import Renderer
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.records.trajectory_record import (
+    StateTrajectoryRecord,
+)
 
 
 class KeyboardControlledTrajectoryViewer:
@@ -23,11 +28,13 @@ class KeyboardControlledTrajectoryViewer:
     Also, the console needs to be active dor the keys to be picked up.
     """
 
-    def __init__(self,
-                 episode_record: StateTrajectoryRecord,
-                 renderer: Renderer,
-                 initial_step_index: int = 0,
-                 renderer_kwargs: Dict[str, Any] = None):
+    def __init__(
+        self,
+        episode_record: StateTrajectoryRecord,
+        renderer: Renderer,
+        initial_step_index: int = 0,
+        renderer_kwargs: dict[str, Any] = None,
+    ):
         self.episode_record = episode_record
         self.renderer = renderer
         self.step_index = initial_step_index
@@ -51,7 +58,7 @@ class KeyboardControlledTrajectoryViewer:
                 print()
                 return
             else:
-                print("Invalid key. Press right/left arrow or Esc.", end="\r")
+                print('Invalid key. Press right/left arrow or Esc.', end='\r')
 
     def _render_next_step(self):
         if self.step_index == len(self.episode_record.step_records) - 1:
@@ -69,15 +76,19 @@ class KeyboardControlledTrajectoryViewer:
 
     def _print_step_and_render(self):
         if self.step_index == 0 == len(self.episode_record.step_records) - 1:
-            suffix = "(the only step in episode)"
+            suffix = '(the only step in episode)'
         elif self.step_index == 0:
-            suffix = "(beginning of episode)    "
+            suffix = '(beginning of episode)    '
         elif self.step_index == len(self.episode_record.step_records) - 1:
-            suffix = "(end of episode)          "
+            suffix = '(end of episode)          '
         else:
-            suffix = "                          "
-        print(f"Current step: {self.step_index} {suffix}", end="\r")
+            suffix = '                          '
+        print(f'Current step: {self.step_index} {suffix}', end='\r')
 
         step_record = self.episode_record.step_records[self.step_index]
-        self.renderer.render(maze_state=step_record.maze_state, maze_action=step_record.maze_action,
-                             events=step_record.step_event_log, **self.renderer_kwargs)
+        self.renderer.render(
+            maze_state=step_record.maze_state,
+            maze_action=step_record.maze_action,
+            events=step_record.step_event_log,
+            **self.renderer_kwargs,
+        )

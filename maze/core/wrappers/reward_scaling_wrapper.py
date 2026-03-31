@@ -1,4 +1,7 @@
 """Contains a reward scaling wrapper."""
+
+from __future__ import annotations
+
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
@@ -26,6 +29,6 @@ class RewardScalingWrapper(RewardWrapper[MazeEnv]):
         return reward * self.scale
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'RewardScalingWrapper') -> None:
+    def clone_from(self, env: RewardScalingWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self.env.clone_from(env)

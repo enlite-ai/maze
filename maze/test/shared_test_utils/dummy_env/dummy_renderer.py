@@ -18,7 +18,7 @@ class DummyRenderer(Renderer):
     Dummy renderer for dummy environment. Doesn't render anything.
     """
 
-    def render(self, maze_state: MazeStateType, maze_action: Optional[MazeActionType], events: StepEventLog, **kwargs) \
+    def render(self, maze_state: MazeStateType, maze_action: MazeActionType | None, events: StepEventLog, **kwargs) \
             -> None:
         """
         Doesn't render anything.
@@ -30,7 +30,7 @@ class DummyMatplotlibRenderer(Renderer):
     """Dummy matplotlib based rendering class.
     """
 
-    def render(self, maze_state: MazeStateType, maze_action: Optional[MazeActionType], events: StepEventLog, **kwargs) \
+    def render(self, maze_state: MazeStateType, maze_action: MazeActionType | None, events: StepEventLog, **kwargs) \
             -> None:
         """
         Renders a random integer array with matplotlib.

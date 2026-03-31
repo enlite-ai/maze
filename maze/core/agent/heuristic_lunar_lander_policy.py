@@ -4,10 +4,9 @@ Contains a simple heuristic policy for the OpenAI Gym LunarLander environment.
 The implementation is adopted from here: https://github.com/openai/gym/blob/master/gym/envs/box2d/lunar_lander.py
 """
 
-from typing import Union, Sequence, Tuple, Optional
+from __future__ import annotations
 
-import gymnasium as gym
-import numpy as np
+from collections.abc import Sequence
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
@@ -17,6 +16,9 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID
 
+import gymnasium as gym
+import numpy as np
+
 
 class HeuristicLunarLanderPolicy(Policy):
     """Dummy structured policy for the LunarLander env.
@@ -25,7 +27,7 @@ class HeuristicLunarLanderPolicy(Policy):
     """
 
     def __init__(self):
-        self.action_space = gym.make("LunarLander-v3").action_space
+        self.action_space = gym.make('LunarLander-v3').action_space
 
     @override(Policy)
     def needs_state(self) -> bool:
@@ -38,15 +40,17 @@ class HeuristicLunarLanderPolicy(Policy):
         pass
 
     @override(Policy)
-    def compute_action(self,
-                       observation: ObservationType,
-                       maze_state: Optional[MazeStateType] = None,
-                       env: Optional[BaseEnv] = None,
-                       actor_id: ActorID = None,
-                       deterministic: bool = False) -> ActionType:
+    def compute_action(
+        self,
+        observation: ObservationType,
+        maze_state: MazeStateType | None = None,  # noqa: ARG002
+        env: BaseEnv | None = None,  # noqa: ARG002
+        actor_id: ActorID = None,  # noqa: ARG002
+        deterministic: bool = False,  # noqa: ARG002
+    ) -> ActionType:
         """Sample an action."""
 
-        s = observation["observation"]
+        s = observation['observation']
 
         # angle should point towards center (s[0] is horizontal coordinate, s[2] hor speed)
         angle_targ = s[0] * 0.5 + s[2] * 1.0
@@ -76,13 +80,16 @@ class HeuristicLunarLanderPolicy(Policy):
         elif angle_todo > +0.05:
             a = 1
 
-        return {"action": a}
+        return {'action': a}
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: Union[str, int] = None) \
-            -> Tuple[Sequence[ActionType], Sequence[float]]:
-        """implementation of :class:`~maze.core.agent.policy.Policy` interface
-        """
+    def compute_top_action_candidates(
+        self,
+        observation: ObservationType,
+        num_candidates: int | None,
+        maze_state: MazeStateType | None,
+        env: BaseEnv | None,
+        actor_id: str | int = None,
+    ) -> tuple[Sequence[ActionType], Sequence[float]]:
+        """implementation of :class:`~maze.core.agent.policy.Policy` interface"""
         raise NotImplementedError

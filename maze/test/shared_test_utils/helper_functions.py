@@ -216,7 +216,7 @@ def flatten_concat_probabilistic_policy_and_critic_for_env(env: MazeEnv, masking
     return composer.policy, composer.critic
 
 
-def convert_np_array_to_tuple(arr: np.ndarray) -> Union[Tuple, np.ndarray]:
+def convert_np_array_to_tuple(arr: np.ndarray) -> Tuple | np.ndarray:
     """
     Recursive conversion of numpy arrays with an arbitrary number of dimensions to tuples.
     :param arr: numpy array to convert.

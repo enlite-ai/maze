@@ -41,12 +41,12 @@ class ESTrainer(Trainer):
                  algorithm_config: ESAlgorithmConfig,
                  torch_policy: TorchPolicy,
                  shared_noise: SharedNoiseTable,
-                 normalization_stats: Optional[Dict[str, Tuple[np.ndarray, np.ndarray]]]) -> None:
+                 normalization_stats: Dict[str, Tuple[np.ndarray, np.ndarray]] | None) -> None:
         super().__init__(algorithm_config)
 
         # --- training setup ---
-        self.model_selection: Optional[ModelSelectionBase] = None
-        self.policy: Union[Policy, TorchModel] = torch_policy
+        self.model_selection: ModelSelectionBase | None = None
+        self.policy: Policy | TorchModel = torch_policy
 
         self.shared_noise = shared_noise
         self.normalization_stats = normalization_stats
@@ -65,8 +65,8 @@ class ESTrainer(Trainer):
     def train(
             self,
             distributed_rollouts: ESDistributedRollouts,
-            n_epochs: Optional[int] = None,
-            model_selection: Optional[ModelSelectionBase] = None
+            n_epochs: int | None = None,
+            model_selection: ModelSelectionBase | None = None
     ) -> None:
         """
         Run the ES training loop.
@@ -112,7 +112,7 @@ class ESTrainer(Trainer):
         return self.policy.state_dict()
 
     @override(Trainer)
-    def load_state(self, file_path: Union[str, BinaryIO]) -> None:
+    def load_state(self, file_path: str | BinaryIO) -> None:
         """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
         """
         state_dict = torch.load(file_path, map_location=torch.device(self.policy.device))
@@ -219,7 +219,7 @@ class ESTrainer(Trainer):
                               batch_size: int) -> np.ndarray:
         """calculate a weighted sum of the given vectors, in steps of at most `batch_size` vectors"""
         # start with float, at the first operation numpy broadcasting takes care of the correct shape
-        total: Union[np.array, float] = 0.
+        total: np.array | float = 0.
 
         for batch_weights, batch_vectors in zip(cls._iter_groups(weights, batch_size),
                                                 cls._iter_groups(vectors, batch_size)):

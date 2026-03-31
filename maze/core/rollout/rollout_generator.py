@@ -1,20 +1,34 @@
 """General interface for performing and recording policy rollouts during training."""
-from copy import deepcopy
-from typing import Union, Optional, Any, Callable
 
-import numpy as np
-import torch
+from __future__ import annotations
+
+from collections.abc import Callable
+from copy import deepcopy
+from typing import Any
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.maze_env import MazeEnv
-from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, LogStatsValue
+from maze.core.log_stats.log_stats import (
+    LogStatsAggregator,
+    LogStatsLevel,
+    LogStatsValue,
+)
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
-from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import (
+    StructuredSpacesRecord,
+)
+from maze.core.trajectory_recording.records.trajectory_record import (
+    SpacesTrajectoryRecord,
+)
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.perception.perception_utils import convert_to_numpy
-from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
+from maze.train.parallelization.vector_env.structured_vector_env import (
+    StructuredVectorEnv,
+)
+
+import numpy as np
+import torch
 
 
 class RolloutGenerator:
@@ -33,13 +47,15 @@ class RolloutGenerator:
                               scenarios.
     """
 
-    def __init__(self,
-                 env: Union[MazeEnv, StructuredVectorEnv],
-                 record_logits: bool = False,
-                 record_step_stats: bool = False,
-                 record_episode_stats: bool = False,
-                 record_next_observations: bool = False,
-                 terminate_on_done: bool = False):
+    def __init__(
+        self,
+        env: MazeEnv | StructuredVectorEnv,
+        record_logits: bool = False,
+        record_step_stats: bool = False,
+        record_episode_stats: bool = False,
+        record_next_observations: bool = False,
+        terminate_on_done: bool = False,
+    ):
         self.env = env
         self.is_vectorized = isinstance(self.env, StructuredVectorEnv)
         self.record_logits = record_logits
@@ -60,10 +76,7 @@ class RolloutGenerator:
         """Return the collected epoch stats aggregator"""
         return self.env.get_stats(LogStatsLevel.EPOCH)
 
-    def get_stats_value(self,
-                        event: Callable,
-                        level: LogStatsLevel,
-                        name: Optional[str] = None) -> LogStatsValue:
+    def get_stats_value(self, event: Callable, level: LogStatsLevel, name: str | None = None) -> LogStatsValue:
         """Obtain a single value from the epoch statistics dict.
 
         :param event: The event interface method of the value in question.
@@ -75,8 +88,12 @@ class RolloutGenerator:
 
         return self.env.get_stats_value(event, level, name)
 
-    def rollout(self, policy: Policy, n_steps: Optional[int], trajectory_id: Optional[Any] = None) \
-            -> SpacesTrajectoryRecord:
+    def rollout(
+        self,
+        policy: Policy,
+        n_steps: int | None,
+        trajectory_id: Any | None = None,
+    ) -> SpacesTrajectoryRecord:
         """Perform and record a rollout with given policy, for given steps or until done.
 
         Note that the env is only reset on the very first rollout with this generator, the following rollouts
@@ -90,7 +107,7 @@ class RolloutGenerator:
         """
         # Check: Logits can be recorded with torch policy only
         if self.record_logits:
-            assert isinstance(policy, TorchPolicy), "to collect logits, the policy needs to be a Torch policy"
+            assert isinstance(policy, TorchPolicy), 'to collect logits, the policy needs to be a Torch policy'
 
         # Initialize a trajectory record
         trajectory_record = SpacesTrajectoryRecord(trajectory_id if trajectory_id else self.rollout_counter)
@@ -124,7 +141,7 @@ class RolloutGenerator:
             actor_rewards = self.env.get_actor_rewards()
             if actor_rewards is not None:
                 assert len(actor_rewards) == len(step_record.substep_records)
-                for substep_record, reward in zip(step_record.substep_records, actor_rewards):
+                for substep_record, reward in zip(step_record.substep_records, actor_rewards, strict=False):
                     substep_record.reward = reward
 
             trajectory_record.append(step_record)
@@ -135,12 +152,16 @@ class RolloutGenerator:
                 break
 
             # End prematurely on env done if desired
-            if self.terminate_on_done and not self.is_vectorized and (step_record.is_terminated() or step_record.is_truncated()):
+            if (
+                self.terminate_on_done
+                and not self.is_vectorized
+                and (step_record.is_terminated() or step_record.is_truncated())
+            ):
                 break
 
         return trajectory_record
 
-    def _record_sub_step(self, policy: Union[Policy, TorchPolicy]) -> SpacesRecord:
+    def _record_sub_step(self, policy: Policy | TorchPolicy) -> SpacesRecord:
         """Perform one sub-step in the environment and return the record of it.
 
         Resets non-vectorised envs when done.
@@ -148,8 +169,10 @@ class RolloutGenerator:
         :param policy: The policy to roll out.
         :return: Spaces record with the data recorded during this sub-step.
         """
-        record = SpacesRecord(actor_id=self.env.actor_id(),
-                              batch_shape=[self.env.n_envs] if self.is_vectorized else None)
+        record = SpacesRecord(
+            actor_id=self.env.actor_id(),
+            batch_shape=[self.env.n_envs] if self.is_vectorized else None,
+        )
 
         record.env_time = self.env.get_env_time()
 
@@ -160,24 +183,33 @@ class RolloutGenerator:
         # Note: Copy the observation (as by default, the policy converts and handles it in place)
         if self.record_logits:
             with torch.no_grad():
-                step_policy_output = policy.compute_substep_policy_output(self.last_observation.copy(),
-                                                                          actor_id=record.actor_id)
+                step_policy_output = policy.compute_substep_policy_output(
+                    self.last_observation.copy(), actor_id=record.actor_id
+                )
                 action = convert_to_numpy(step_policy_output.prob_dist.sample(), cast=None, in_place=False)
                 record.logits = step_policy_output.action_logits
         else:
             # Inject the MazeEnv state if desired by the policy
             maze_state = self.env.get_maze_state() if policy.needs_state() else None
             env = self.env if policy.needs_env() else None
-            action = policy.compute_action(self.last_observation.copy(),
-                                           actor_id=record.actor_id,
-                                           maze_state=maze_state,
-                                           env=env,
-                                           deterministic=False)
+            action = policy.compute_action(
+                self.last_observation.copy(),
+                actor_id=record.actor_id,
+                maze_state=maze_state,
+                env=env,
+                deterministic=False,
+            )
         record.action = action
         record.policy_record = policy.write_policy_record()
 
         # Take the step
-        self.last_observation, record.reward, record.terminated, record.truncated, record.info = self.env.step(action)
+        (
+            self.last_observation,
+            record.reward,
+            record.terminated,
+            record.truncated,
+            record.info,
+        ) = self.env.step(action)
 
         # Record the resulting observation if requested
         if self.record_next_observations:
@@ -185,7 +217,7 @@ class RolloutGenerator:
 
         # Reset the env if done and keep the terminal observation
         if not self.is_vectorized and (record.terminated or record.truncated):
-            record.info["terminal_observation"] = deepcopy(self.last_observation)
+            record.info['terminal_observation'] = deepcopy(self.last_observation)
             self.last_observation, _ = self.env.reset()
 
         return record

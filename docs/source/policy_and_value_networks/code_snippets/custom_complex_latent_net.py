@@ -19,7 +19,7 @@ class CustomComplexLatentNet:
     """
 
     def __init__(self, obs_shapes: Dict[str, Sequence[int]],
-                 non_lin: Union[str, type(nn.Module)], hidden_units: List[int]):
+                 non_lin: str | type(nn.Module), hidden_units: List[int]):
         self.obs_shapes = obs_shapes
 
         # Maze relies on dictionaries to represent the inference graph

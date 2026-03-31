@@ -18,7 +18,7 @@ from maze.train.trainers.imitation.imitation_events import ImitationEvents
 class BCLoss:
     """Loss function for behavioral cloning."""
 
-    action_spaces_dict: Dict[Union[int, str], gym.spaces.Dict]
+    action_spaces_dict: Dict[int | str, gym.spaces.Dict]
     """Action space we are training on (used to determine appropriate loss functions)"""
 
     entropy_coef: float
@@ -37,7 +37,7 @@ class BCLoss:
                        policy: TorchPolicy,
                        observations: List[ObservationType],
                        actions: List[TorchActionType],
-                       action_logits: Optional[List[TorchActionType]],
+                       action_logits: List[TorchActionType] | None,
                        actor_ids: List[ActorID],
                        events: ImitationEvents,
                        log_substep_events: bool

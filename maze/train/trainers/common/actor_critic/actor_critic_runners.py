@@ -28,7 +28,7 @@ class ACRunner(TrainingRunner):
     Abstract baseclass of AC runners.
     """
 
-    trainer_class: Union[str, type]
+    trainer_class: str | type
     """The actor critic trainer class to be used."""
     concurrency: int
     """Number of concurrently executed environments."""
@@ -104,7 +104,7 @@ class ACRunner(TrainingRunner):
 
     @abstractmethod
     def create_distributed_env(self,
-                               env_factory: Callable[[], Union[MazeEnv, StructuredEnv]],
+                               env_factory: Callable[[], MazeEnv | StructuredEnv],
                                concurrency: int,
                                logging_prefix: str
                                ) -> StructuredVectorEnv:
@@ -116,7 +116,7 @@ class ACDevRunner(ACRunner):
     """Runner for single-threaded training, based on SequentialVectorEnv."""
 
     def create_distributed_env(self,
-                               env_factory: Callable[[], Union[MazeEnv, StructuredEnv]],
+                               env_factory: Callable[[], MazeEnv | StructuredEnv],
                                concurrency: int,
                                logging_prefix: str
                                ) -> SequentialVectorEnv:
@@ -131,7 +131,7 @@ class ACLocalRunner(ACRunner):
     """Runner for locally distributed training, based on SubprocVectorEnv."""
 
     def create_distributed_env(self,
-                               env_factory: Callable[[], Union[MazeEnv, StructuredEnv]],
+                               env_factory: Callable[[], MazeEnv | StructuredEnv],
                                concurrency: int,
                                logging_prefix: str
                                ) -> SubprocVectorEnv:

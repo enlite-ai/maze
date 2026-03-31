@@ -1,19 +1,25 @@
 """Sequential rollout runner for running envs and agents in the local process."""
-from tqdm import tqdm
+
+from __future__ import annotations
 
 from maze.core.annotations import override
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
 from maze.core.log_stats.log_stats import register_log_stats_writer
-from maze.core.log_stats.log_stats_writer_console import LogStatsWriterConsole
 from maze.core.log_stats.log_stats_writer_logger import LogStatsWriterLogger
 from maze.core.rollout.rollout_runner import RolloutRunner
-from maze.core.trajectory_recording.writers.trajectory_writer_file import TrajectoryWriterFile
-from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
-from maze.core.utils.factory import ConfigType, CollectionOfConfigType
+from maze.core.trajectory_recording.writers.trajectory_writer_file import (
+    TrajectoryWriterFile,
+)
+from maze.core.trajectory_recording.writers.trajectory_writer_registry import (
+    TrajectoryWriterRegistry,
+)
+from maze.core.utils.factory import CollectionOfConfigType, ConfigType
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.utils.bcolors import BColors
+
+from tqdm import tqdm
 
 
 class SequentialRolloutRunner(RolloutRunner):
@@ -32,21 +38,28 @@ class SequentialRolloutRunner(RolloutRunner):
     :param serialize_renderer: Whether to serialize renderer state after every step
     """
 
-    def __init__(self,
-                 n_episodes: int,
-                 max_episode_steps: int,
-                 deterministic: bool,
-                 record_trajectory: bool,
-                 record_event_logs: bool,
-                 render: bool,
-                 serialize_renderer: bool):
-        super().__init__(n_episodes=n_episodes, max_episode_steps=max_episode_steps, deterministic=deterministic,
-                         record_trajectory=record_trajectory, record_event_logs=record_event_logs)
+    def __init__(
+        self,
+        n_episodes: int,
+        max_episode_steps: int,
+        deterministic: bool,
+        record_trajectory: bool,
+        record_event_logs: bool,
+        render: bool,
+        serialize_renderer: bool,
+    ):
+        super().__init__(
+            n_episodes=n_episodes,
+            max_episode_steps=max_episode_steps,
+            deterministic=deterministic,
+            record_trajectory=record_trajectory,
+            record_event_logs=record_event_logs,
+        )
         if render:
-            assert record_trajectory, "Rendering is supported only when trajectory recording is enabled."
+            assert record_trajectory, 'Rendering is supported only when trajectory recording is enabled.'
 
         if not record_trajectory and serialize_renderer:
-            raise ValueError("Renderer serialization is not possible when trajectory recording is disabled.")
+            raise ValueError('Renderer serialization is not possible when trajectory recording is disabled.')
 
         self.render = render
         self.progress_bar = None
@@ -57,30 +70,44 @@ class SequentialRolloutRunner(RolloutRunner):
         """Run the rollout sequentially in the main process."""
         env_seeds = self.maze_seeding.get_explicit_env_seeds(self.n_episodes)
         agent_seeds = self.maze_seeding.get_explicit_agent_seeds(self.n_episodes)
-        env, agent = self.init_env_and_agent(env_config=env, wrappers_config=wrappers, input_dir=self.input_dir,
-                                             max_episode_steps=self.max_episode_steps, agent_config=agent)
+        env, agent = self.init_env_and_agent(
+            env_config=env,
+            wrappers_config=wrappers,
+            input_dir=self.input_dir,
+            max_episode_steps=self.max_episode_steps,
+            agent_config=agent,
+        )
 
         # Set up the wrappers
         # Hydra handles working directory
         register_log_stats_writer(LogStatsWriterLogger())
         if not isinstance(env, LogStatsWrapper):
-            env = LogStatsWrapper.wrap(env, logging_prefix="rollout_data")
+            env = LogStatsWrapper.wrap(env, logging_prefix='rollout_data')
         if self.record_event_logs:
-            LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir="./event_logs"))
+            LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir='./event_logs'))
         if self.record_trajectory:
-            TrajectoryWriterRegistry.register_writer(TrajectoryWriterFile(log_dir="./trajectory_data"))
+            TrajectoryWriterRegistry.register_writer(TrajectoryWriterFile(log_dir='./trajectory_data'))
             if not isinstance(env, TrajectoryRecordingWrapper):
                 env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=self.serialize_renderer)
 
         actual_number_of_episodes = min(len(env_seeds), self.n_episodes)
         if actual_number_of_episodes < self.n_episodes:
-            BColors.print_colored(f'Only {len(env_seeds)} explicit seed(s) given, thus the number of episodes changed '
-                                  f'from: {self.n_episodes} to {actual_number_of_episodes}.', BColors.WARNING)
-        self.progress_bar = tqdm(desc="Episodes done", unit=" episodes", total=actual_number_of_episodes)
-        RolloutRunner.run_interaction_loop(env, agent, actual_number_of_episodes, render=self.render,
-                                           after_reset_callback=lambda: self.update_progress(),
-                                           env_seeds=env_seeds, agent_seeds=agent_seeds,
-                                           deterministic=self.deterministic)
+            BColors.print_colored(
+                f'Only {len(env_seeds)} explicit seed(s) given, thus the number of episodes changed '
+                f'from: {self.n_episodes} to {actual_number_of_episodes}.',
+                BColors.WARNING,
+            )
+        self.progress_bar = tqdm(desc='Episodes done', unit=' episodes', total=actual_number_of_episodes)
+        RolloutRunner.run_interaction_loop(
+            env,
+            agent,
+            actual_number_of_episodes,
+            render=self.render,
+            after_reset_callback=lambda: self.update_progress(),
+            env_seeds=env_seeds,
+            agent_seeds=agent_seeds,
+            deterministic=self.deterministic,
+        )
         self.progress_bar.close()
         env.write_epoch_stats()
 

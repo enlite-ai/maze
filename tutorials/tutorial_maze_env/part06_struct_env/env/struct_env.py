@@ -110,7 +110,7 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
         """
         return ActorID(step_key=self._sub_step_key, agent_id=0)
 
-    def get_actor_rewards(self) -> Optional[np.ndarray]:
+    def get_actor_rewards(self) -> np.ndarray | None:
         """Returns rewards attributed to individual actors after the step has been done. This is necessary,
         as after the first sub-step (i.e., piece selection), the full reward is not yet available, so zero
         reward is returned instead. The second (= last) sub-step then returns joint reward for all (both) actors.
@@ -123,7 +123,7 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
         return np.array([self._last_reward / 2.0] * 2)
 
     @property
-    def agent_counts_dict(self) -> Dict[Union[str, int], int]:
+    def agent_counts_dict(self) -> Dict[str | int, int]:
         """Returns the count of agents for individual sub-steps (or -1 for dynamic agent count).
 
         This env has two sub-steps (0 and 1), in each of which one agent gets to act. Hence, we return
@@ -146,12 +146,12 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
         return self._observation_spaces_dict[self._sub_step_key]
 
     @property
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Dict]:
+    def action_spaces_dict(self) -> Dict[int | str, gym.spaces.Dict]:
         """Implementation of :class:`~maze.core.env.structured_env_spaces_mixin.StructuredEnvSpacesMixin` interface."""
         return self._action_spaces_dict
 
     @property
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Dict]:
+    def observation_spaces_dict(self) -> Dict[int | str, gym.spaces.Dict]:
         """Implementation of :class:`~maze.core.env.structured_env_spaces_mixin.StructuredEnvSpacesMixin` interface."""
         return self._observation_spaces_dict
 
@@ -167,7 +167,7 @@ class StructuredCutting2DEnvironment(Wrapper[MazeEnv], StructuredEnv, Structured
 
     def get_observation_and_action_dicts(self, maze_state: MazeStateType, maze_action: MazeActionType,
                                          first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+            -> Tuple[Dict[int | str, Any] | None, Dict[int | str, Any] | None]:
         """Convert the flat action and MazeAction from Maze env into the structured ones.
 
         Note that both MazeState and MazeAction needs to be supplied together, otherwise actions/observations for the

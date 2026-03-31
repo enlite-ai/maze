@@ -12,9 +12,9 @@ class Optimizer(ABC):
     """Abstract baseclass of an optimizer to be used with ES."""
 
     def __init__(self):
-        self.policy: Optional[TorchModel] = None
-        self.dim: Optional[int] = None
-        self.t: Optional[int] = None
+        self.policy: TorchModel | None = None
+        self.dim: int | None = None
+        self.t: int | None = None
 
     def setup(self, policy: TorchModel) -> None:
         """Two-stage construction to enable construction from config-files.

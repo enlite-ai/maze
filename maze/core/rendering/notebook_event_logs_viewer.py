@@ -1,12 +1,14 @@
 """Displaying event logs data as interactive plots in Jupyter Notebooks."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Union, Dict, Any, List, Tuple, Optional
+from typing import Any
+
+from maze.core.rendering.events_stats_renderer import EventStatsRenderer
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-from maze.core.rendering.events_stats_renderer import EventStatsRenderer
 
 
 class NotebookEventLogsViewer:
@@ -21,7 +23,7 @@ class NotebookEventLogsViewer:
     The logs will be passed and a set of widgets will be shown, offering options on which event to display and what
     event attribute to use as a metric.
 
-    Statics are always aggregated on episode level -- the timeline displays mean value along with standard
+    Statistics are always aggregated on episode level -- the timeline displays mean value along with standard
     deviation (displayed as a ribbon).
 
     Optionally, events can be grouped by another attribute (e.g., distribution center ID in multi-echelon inventory
@@ -31,7 +33,7 @@ class NotebookEventLogsViewer:
     :param: event_logs_dir_path: Path to directory where the event logs are stored.
     """
 
-    def __init__(self, event_logs_dir_path: Union[str, Path]):
+    def __init__(self, event_logs_dir_path: str | Path):
         self.event_logs_dir_path = event_logs_dir_path
         if isinstance(event_logs_dir_path, Path):
             self.event_logs_dir_path = event_logs_dir_path
@@ -39,7 +41,7 @@ class NotebookEventLogsViewer:
             self.event_logs_dir_path = Path(event_logs_dir_path)
 
         self.event_log_options = []
-        for path in list(self.event_logs_dir_path.glob("*.tsv")):
+        for path in list(self.event_logs_dir_path.glob('*.tsv')):
             self.event_log_options.append((path.stem, path))
 
         self.event_name_widget = None
@@ -85,14 +87,16 @@ class NotebookEventLogsViewer:
             description='Post-process:',
         )
 
-        interact(self.render,
-                 event_path=self.event_name_widget,
-                 metric_name=self.metric_widget,
-                 group_by=self.group_by_widget,
-                 aggregation_func=self.aggregation_func_widget,
-                 post_processing_func=self.post_processing_func_widget)
+        interact(
+            self.render,
+            event_path=self.event_name_widget,
+            metric_name=self.metric_widget,
+            group_by=self.group_by_widget,
+            aggregation_func=self.aggregation_func_widget,
+            post_processing_func=self.post_processing_func_widget,
+        )
 
-    def update_column_options(self, metadata: Dict[str, Any]):
+    def update_column_options(self, metadata: dict[str, Any]):  # noqa: ARG002
         """Called by ipywidgets interact module when the user selects a different event to display. Loads
         attributes available for this event and updates the metric and group_by widget options accordingly."""
         columns = self._read_column_options(self.event_name_widget.value)
@@ -105,7 +109,7 @@ class NotebookEventLogsViewer:
 
     def render(self, event_path, **kwargs) -> None:
         """Refresh the rendered view. Called by ipywidgets on widget update."""
-        df = pd.read_csv(event_path, sep="\t")
+        df = pd.read_csv(event_path, sep='\t')
         plt.figure(figsize=(10, 6))
         self.renderer.render_timeline_stat(df, event_name=event_path.stem, **kwargs)
         plt.show()
@@ -113,11 +117,11 @@ class NotebookEventLogsViewer:
     @staticmethod
     def _read_column_options(file_path: Path):
         """Read available columns (i.e. event attributes) from an event log file."""
-        event_log = pd.read_csv(file_path, sep="\t")
-        return [col for col in event_log.columns if col not in ["episode_id", "step_id", "env_time"]]
+        event_log = pd.read_csv(file_path, sep='\t')
+        return [col for col in event_log.columns if col not in ['episode_id', 'step_id', 'env_time']]
 
     @staticmethod
-    def _options_with_none(options: List[str]):
+    def _options_with_none(options: list[str]):
         """Construct an options array for a dropdown ipywidget with added None as the first option."""
-        none_option: Tuple[str, Optional[str]] = ("None", None)
-        return [none_option] + list(zip(options, options))
+        none_option: tuple[str, str | None] = ('None', None)
+        return [none_option] + list(zip(options, options, strict=False))

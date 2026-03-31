@@ -1,14 +1,17 @@
 """Implementation of Tensorboard output for the logging statistics system."""
+
+from __future__ import annotations
+
 import logging
 import math
 import numbers
-from typing import Callable, Union, List, Optional
+from collections.abc import Callable
+
+from maze.core.annotations import override
+from maze.core.log_stats.log_stats import GlobalLogState, LogStats, LogStatsWriter
 
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-
-from maze.core.annotations import override
-from maze.core.log_stats.log_stats import LogStatsWriter, LogStats, GlobalLogState
 
 
 class LogStatsWriterTensorboard(LogStatsWriter):
@@ -30,7 +33,7 @@ class LogStatsWriterTensorboard(LogStatsWriter):
         class _IgnoreTensorboardCheckNaN(logging.Filter):
             def filter(self, record):
                 """Filter out a logging warning message caused by a unnecessary NaN check in tensorboard/x2num.py"""
-                return not (record.funcName == "check_nan" and record.msg == "NaN or Inf found in input tensor.")
+                return not (record.funcName == 'check_nan' and record.msg == 'NaN or Inf found in input tensor.')
 
         # this relies on knowing the variable name in my_module
         logging.getLogger().addFilter(_IgnoreTensorboardCheckNaN())
@@ -45,10 +48,10 @@ class LogStatsWriterTensorboard(LogStatsWriter):
             for (event, name, groups), value in stats.items():
                 tag = self._event_to_tag(event, name, groups)
                 if path:
-                    tag = path.replace("/", "_") + "_" + tag
+                    tag = path.replace('/', '_') + '_' + tag
 
                 # get plotting function from the event definition
-                render_figure_dict = getattr(event, "tensorboard_render_figure_dict", dict())
+                render_figure_dict = getattr(event, 'tensorboard_render_figure_dict', dict())
                 render_figure_function = render_figure_dict.get(name, None)
                 if render_figure_function:
                     fig = render_figure_function(value, event=event, name=event, groups=groups)
@@ -61,14 +64,14 @@ class LogStatsWriterTensorboard(LogStatsWriter):
         for (event, name, groups), value in stats.items():
             tag = self._event_to_tag(event, name, groups)
             if path:
-                tag = path.replace("/", "_") + "_" + tag
+                tag = path.replace('/', '_') + '_' + tag
 
             # Skip all events that have the attribute "tensorboard_render_figure". Events with this attribute are
             # plotted with an external plotting library and added to TensorBoard manually above.
-            if getattr(event, "tensorboard_render_figure_dict", dict()):
+            if getattr(event, 'tensorboard_render_figure_dict', dict()):
                 continue
 
-            if isinstance(value, List):
+            if isinstance(value, list):
                 self.summary_writer.add_histogram(tag, np.array(value), step)
             elif isinstance(value, numbers.Number):
                 self.summary_writer.add_scalar(tag, value, step)
@@ -85,7 +88,7 @@ class LogStatsWriterTensorboard(LogStatsWriter):
         for tag in self.previous_step_tags:
             if tag not in self.this_step_tags:
                 # do not add NaN for bc-eval related tags
-                if tag.startswith("bc-eval"):
+                if tag.startswith('bc-eval'):
                     continue
                 self.summary_writer.add_scalar(tag, math.nan, GlobalLogState.global_step)
 
@@ -101,14 +104,14 @@ class LogStatsWriterTensorboard(LogStatsWriter):
         self.summary_writer.close()
 
     @staticmethod
-    def _event_to_tag(event: Callable, name: str, groups: Optional[List[Union[int, str]]]) -> str:
+    def _event_to_tag(event: Callable, name: str, groups: list[int | str] | None) -> str:
         # use the qualified name of the method as a basis, in the form 'EventInterface.event_method'
         qualified_name = event.__qualname__
 
         key_name = qualified_name.replace('.', '/')
 
         if name is not None and len(name):
-            key_name = key_name + "/" + name
+            key_name = key_name + '/' + name
 
         if groups is not None:
             for group in groups:
@@ -116,6 +119,6 @@ class LogStatsWriterTensorboard(LogStatsWriter):
                 if group is None:
                     continue
 
-                key_name = key_name + "/" + str(group)
+                key_name = key_name + '/' + str(group)
 
         return key_name

@@ -1,11 +1,14 @@
 """Event log reducer functions."""
+
+from __future__ import annotations
+
 import itertools
-from typing import List, Tuple, Union, ValuesView
+from collections.abc import ValuesView
 
 import numpy as np
 
 
-def epoch_quantile_25(values: List[List[Union[int, float]]]) -> float:
+def epoch_quantile_25(values: list[list[int | float]]) -> float:
     """Computes the 25th quantile on epoch level assuming that no reduction took place on episode level.
 
     :param values: List of episode value lists.
@@ -15,7 +18,7 @@ def epoch_quantile_25(values: List[List[Union[int, float]]]) -> float:
     return np.quantile(all_epoch_values, q=0.25)
 
 
-def epoch_quantile_75(values: List[List[Union[int, float]]]) -> float:
+def epoch_quantile_75(values: list[list[int | float]]) -> float:
     """Computes the 75th quantile on epoch level assuming that no reduction took place on episode level.
 
     :param values: List of episode value lists.
@@ -25,7 +28,7 @@ def epoch_quantile_75(values: List[List[Union[int, float]]]) -> float:
     return np.quantile(all_epoch_values, q=0.75)
 
 
-def epoch_median(values: List[List[Union[int, float]]]) -> float:
+def epoch_median(values: list[list[int | float]]) -> float:
     """Computes the median on epoch level assuming that no reduction took place on episode level.
 
     :param values: List of episode value lists.
@@ -35,7 +38,7 @@ def epoch_median(values: List[List[Union[int, float]]]) -> float:
     return float(np.median(all_epoch_values))
 
 
-def epoch_mean(values: List[List[Union[int, float]]]) -> float:
+def epoch_mean(values: list[list[int | float]]) -> float:
     """Computes the mean on epoch level assuming that no reduction took place on episode level.
 
     :param values: List of episode value lists.
@@ -45,8 +48,9 @@ def epoch_mean(values: List[List[Union[int, float]]]) -> float:
     return float(np.mean(all_epoch_values))
 
 
-def histogram(values: Union[List[Union[float, int]], List[List[Union[float, int]]], List[ValuesView]]) \
-        -> Union[List[Union[float, int]], Tuple[List[Union[float, int]], int]]:
+def histogram(
+    values: list[float | int] | list[list[float | int]] | list[ValuesView],
+) -> list[float | int] | tuple[list[float | int], int]:
     """the histogram reducer function
         We decided to return the full list, rather then binning the values (e.g. collections.Counter), so that float
         values are supported as well.

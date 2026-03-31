@@ -46,7 +46,7 @@ class GNNLayerPyG(nn.Module):
         in_features: int,
         out_features: int,
         gnn_type: str,
-        gnn_kwargs: Union[dict[str, Any], None],
+        gnn_kwargs: dict[str, Any] | None,
     ) -> None:
         super().__init__()
 
@@ -172,13 +172,13 @@ class GNNBlockPyG(ShapeNormalizationBlock):
 
     def __init__(
         self,
-        in_keys: Union[str, list[str]],
-        out_keys: Union[str, list[str]],
+        in_keys: str | list[str],
+        out_keys: str | list[str],
         in_shapes: Union[Sequence[int], list[Sequence[int]]],
         hidden_features: list[int],
-        non_lin: Union[str, nn.Module],
+        non_lin: str | nn.Module,
         gnn_type: str,
-        gnn_kwargs: Union[dict[str, Any], None],
+        gnn_kwargs: dict[str | Any, None],
     ):
 
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3]*3, out_num_dims=3)

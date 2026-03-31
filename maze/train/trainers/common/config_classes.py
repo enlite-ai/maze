@@ -24,7 +24,7 @@ class ModelConfig:
     As with TrainConfig this class enables type hinting, but is not actually instantiated."""
 
     policies: Dict[Any, Any]
-    critics: Optional[Dict[Any, Any]]
+    critics: Dict[Any, Any] | None
     distribution_mapper: Dict[Any, Any]
 
 

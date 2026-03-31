@@ -41,10 +41,10 @@ class StridedConvolutionDenseBlock(PerceptionBlock):
                  hidden_channels: List[int],
                  hidden_kernels: List[Union[int, Tuple[int, ...]]],
                  convolution_dimension: int,
-                 hidden_strides: Optional[List[Union[int, Tuple[int, ...]]]],
-                 hidden_dilations: Optional[List[Union[int, Tuple[int, ...]]]],
-                 hidden_padding: Optional[List[Union[int, Tuple[int, ...]]]],
-                 padding_mode: Optional[str],
+                 hidden_strides: List[Union[int, Tuple[int, ...]]] | None,
+                 hidden_dilations: List[Union[int, Tuple[int, ...]]] | None,
+                 hidden_padding: List[Union[int, Tuple[int, ...]]] | None,
+                 padding_mode: str | None,
                  hidden_units: List[int],
                  non_lin: Union[str, type(nn.Module)]):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)

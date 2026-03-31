@@ -11,7 +11,7 @@ from maze.core.trajectory_recording.records.structured_spaces_record import Stru
 def _mock_spaces_record(
         actor_id: ActorID,
         keys: List[str],
-        value: Union[int, List[int]],
+        value: int | List[int],
         reward: int = 1,
         terminated: bool = False,
         truncated: bool = False,

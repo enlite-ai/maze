@@ -1,5 +1,9 @@
-""" Implements observation pre-processing as an observation wrapper. """
-from typing import Any, Dict, List, Tuple, Mapping
+"""Implements observation pre-processing as an observation wrapper."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
@@ -23,14 +27,14 @@ class PreProcessingWrapper(ObservationWrapper[MazeEnv]):
            Example mappings can be found in our reference documentation.
     """
 
-    def __init__(self, env: StructuredEnvSpacesMixin, pre_processor_mapping: List[Dict[str, Any]]):
+    def __init__(self, env: StructuredEnvSpacesMixin, pre_processor_mapping: list[dict[str, Any]]):
         super().__init__(env)
 
         self.pre_processor_mapping = pre_processor_mapping
         self.drop_original = False
 
         # Initialize normalization strategies for all sub step hierarchies and observations
-        self._preprocessors: List[Tuple[str, PreProcessor, bool]] = list()
+        self._preprocessors: list[tuple[str, PreProcessor, bool]] = []
         self._initialize_preprocessors()
 
     @override(ObservationWrapper)
@@ -43,10 +47,9 @@ class PreProcessingWrapper(ObservationWrapper[MazeEnv]):
 
         # iteratively pre-process observations
         for obs_key, processor, keep_original in self._preprocessors:
-
             # check if obs_key is in the observation
             if obs_key in observation:
-                tag = f"{obs_key}-{processor.tag()}"
+                tag = f'{obs_key}-{processor.tag()}'
                 observation[tag] = processor.process(observation=observation[obs_key])
 
                 # drop original observation
@@ -56,8 +59,7 @@ class PreProcessingWrapper(ObservationWrapper[MazeEnv]):
         return observation
 
     def _initialize_preprocessors(self) -> None:
-        """Initialize pre-processors for all sub steps and all dictionary observations.
-        """
+        """Initialize pre-processors for all sub steps and all dictionary observations."""
 
         # get full flat observation space
         observation_spaces = flat_structured_space(self.observation_spaces_dict).spaces
@@ -67,31 +69,30 @@ class PreProcessingWrapper(ObservationWrapper[MazeEnv]):
 
         # iterate pre-processor config
         for mapping in self.pre_processor_mapping:
-            obs_key = mapping["observation"]
-            assert obs_key in observation_spaces, f"Observation {obs_key} not contained in observation space."
+            obs_key = mapping['observation']
+            assert obs_key in observation_spaces, f'Observation {obs_key} not contained in observation space.'
 
-            pre_processor_cls = Factory(PreProcessor).type_from_name(mapping["_target_"])
-            assert isinstance(mapping["config"], Mapping), \
-                f"Make sure that the config for {pre_processor_cls.__name__} of observation {obs_key} is a dict!"
-            processor = pre_processor_cls(observation_space=observation_spaces[obs_key], **mapping["config"])
+            pre_processor_cls = Factory(PreProcessor).type_from_name(mapping['_target_'])
+            assert isinstance(mapping['config'], Mapping), (
+                f'Make sure that the config for {pre_processor_cls.__name__} of observation {obs_key} is a dict!'
+            )
+            processor = pre_processor_cls(observation_space=observation_spaces[obs_key], **mapping['config'])
 
-            self._preprocessors.append((obs_key, processor, mapping["keep_original"]))
+            self._preprocessors.append((obs_key, processor, mapping['keep_original']))
 
             # append processed space
-            tag = f"{obs_key}-{processor.tag()}"
+            tag = f'{obs_key}-{processor.tag()}'
             observation_spaces[tag] = processor.processed_space()
 
             # iterate all structured env sub steps and update observation spaces accordingly
             for sub_step_key, sub_space in self.observation_spaces_dict.items():
-
                 # check if the subspace is contained
                 if obs_key in sub_space.spaces:
-
                     # add new key to observation space
                     self.observation_spaces_dict[sub_step_key].spaces[tag] = processor.processed_space()
 
                     # remove original key from observation space
-                    if not mapping["keep_original"]:
+                    if not mapping['keep_original']:
                         temporary_spaces.append((sub_step_key, obs_key))
 
         # remove temporary spaces
@@ -99,6 +100,6 @@ class PreProcessingWrapper(ObservationWrapper[MazeEnv]):
             self.observation_spaces_dict[sub_step_key].spaces.pop(obs_key)
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'PreProcessingWrapper') -> None:
+    def clone_from(self, env: PreProcessingWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self.env.clone_from(env)

@@ -26,8 +26,8 @@ class ESDistributedRollouts(ABC):
 
     @abstractmethod
     def generate_rollouts(self,
-                          policy: Union[Policy, TorchModel],
-                          max_steps: Optional[int],
+                          policy: Policy | TorchModel,
+                          max_steps: int | None,
                           noise_stddev: float,
                           normalization_stats: Dict[str, Tuple[np.ndarray, np.ndarray]]
                           ) -> Generator[ESRolloutResult, None, None]:

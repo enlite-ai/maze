@@ -1,5 +1,7 @@
 """Simple default setup for event logging into CSV files."""
 
+from __future__ import annotations
+
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper

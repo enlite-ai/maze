@@ -10,8 +10,8 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.wrapper import Wrapper
 
 
-class DummyWrapper(Wrapper[Union[BaseEnv, Wrapper]], ABC):
-    def __init__(self, env: Union[MazeEnv, Wrapper]):
+class DummyWrapper(Wrapper[BaseEnv | Wrapper], ABC):
+    def __init__(self, env: MazeEnv | Wrapper):
         super().__init__(env)
 
     @abstractmethod

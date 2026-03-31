@@ -17,7 +17,7 @@ class Trainer(ABC):
     AlgorithmConfigType: TypeVar = TypeVar("AlgorithmConfigType", bound=AlgorithmConfig)
     _TorchModelType: TypeVar = TypeVar("_TorchModelType", bound=TorchModel)
 
-    def __init__(self, algorithm_config: AlgorithmConfigType, model: Optional[TorchModel] = None):
+    def __init__(self, algorithm_config: AlgorithmConfigType, model: TorchModel | None = None):
         """
         Note: This is not implemented as dataclass due to type hinting for class members not working properly in derived
         classes with dataclasses. I.e. PyCharm's type hinting always assumes model is of type TorchModel, but not the
@@ -28,7 +28,7 @@ class Trainer(ABC):
         self.algorithm_config = algorithm_config
 
     @abstractmethod
-    def load_state(self, file_path: Union[str, BinaryIO]) -> None:
+    def load_state(self, file_path: str | BinaryIO) -> None:
         """Load state from file.
         This is required for resuming training or model fine tuning with different parameters.
 
@@ -43,7 +43,7 @@ class Trainer(ABC):
         """
 
     @abstractmethod
-    def train(self, n_epochs: Optional[int] = None, **kwargs) -> None:
+    def train(self, n_epochs: int | None = None, **kwargs) -> None:
         """
         Train for n epochs. kwargs describe additional configuration necessary at training time, as for e.g. ESTrainer
         or BCTrainer.

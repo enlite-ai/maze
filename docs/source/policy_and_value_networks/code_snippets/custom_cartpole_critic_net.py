@@ -19,7 +19,7 @@ class CustomCartpoleCriticNet(nn.Module):
     :param hidden_units: A list of units per hidden layer.
     """
 
-    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: Union[str, type(nn.Module)],
+    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: str | type(nn.Module),
                  hidden_units: List[int]):
         super().__init__()
 

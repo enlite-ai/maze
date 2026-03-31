@@ -183,7 +183,7 @@ class InferenceGraph:
         self._draw(name=name, figure_size=None)
         plt.show(block=block_execution)
 
-    def _draw(self, name: str, figure_size: Optional[Tuple[int, int]]) -> None:
+    def _draw(self, name: str, figure_size: Tuple[int, int] | None) -> None:
         """Draws the inference graph using matplotlib.
 
         :param name: The name of the network to be drawn (used in the tile only)
@@ -255,7 +255,7 @@ class InferenceGraph:
             if out_key in block.out_keys:
                 return block_name
 
-    def _build_inference_graph(self, out_keys: List[str], parent: Optional[str] = None) -> None:
+    def _build_inference_graph(self, out_keys: List[str], parent: str | None = None) -> None:
         """Recursively compiles the perception inference graph.
 
         :param out_keys: The out keys to start depth search from.

@@ -1,7 +1,9 @@
 """Contains an replay recorded actions policy."""
+
+from __future__ import annotations
+
 import os.path
-from typing import Tuple
-from typing import Union, Optional, Sequence
+from collections.abc import Sequence
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
@@ -21,7 +23,11 @@ class ReplayRecordedActionsPolicy(Policy):
     :param with_agent_actions: If True agent actions are returned; else MazeActions.
     """
 
-    def __init__(self, action_record_path: Optional[Union[ActionRecord, str]], with_agent_actions: bool):
+    def __init__(
+        self,
+        action_record_path: ActionRecord | str | None,
+        with_agent_actions: bool,
+    ):
         super().__init__()
 
         self._with_agent_actions = with_agent_actions
@@ -30,7 +36,7 @@ class ReplayRecordedActionsPolicy(Policy):
         if action_record_path is not None:
             self.load_action_record(action_record_path)
 
-    def load_action_record(self, action_record_path: Union[ActionRecord, str]) -> None:
+    def load_action_record(self, action_record_path: ActionRecord | str) -> None:
         """Load action record from file.
 
         :param action_record_path: Action record or path to action record dump.
@@ -56,14 +62,15 @@ class ReplayRecordedActionsPolicy(Policy):
         return True
 
     @override(Policy)
-    def compute_action(self,
-                       observation: ObservationType,
-                       maze_state: Optional[MazeStateType],
-                       env: Optional[MazeEnv],
-                       actor_id: Optional[ActorID] = None,
-                       deterministic: bool = False) -> Union[ActionType, MazeActionType]:
-        """Deterministically returns the action record action at the respective step.
-        """
+    def compute_action(
+        self,
+        observation: ObservationType,  # noqa: ARG002
+        maze_state: MazeStateType | None,  # noqa: ARG002
+        env: MazeEnv | None,
+        actor_id: ActorID | None = None,
+        deterministic: bool = False,  # noqa: ARG002
+    ) -> ActionType | MazeActionType:
+        """Deterministically returns the action record action at the respective step."""
         current_env_time = env.get_env_time()
 
         if self._with_agent_actions:
@@ -74,12 +81,14 @@ class ReplayRecordedActionsPolicy(Policy):
             return self.action_record.get_maze_action(current_env_time)
 
     @override(Policy)
-    def compute_top_action_candidates(self,
-                                      observation: ObservationType,
-                                      num_candidates: int,
-                                      maze_state: Optional[MazeStateType],
-                                      env: Optional[MazeEnv],
-                                      actor_id: Union[str, int] = None) -> Tuple[Sequence[ActionType], Sequence[float]]:
+    def compute_top_action_candidates(
+        self,
+        observation: ObservationType,
+        num_candidates: int,
+        maze_state: MazeStateType | None,
+        env: MazeEnv | None,
+        actor_id: str | int = None,
+    ) -> tuple[Sequence[ActionType], Sequence[float]]:
         """
         Implementation of :py:attr:`~maze.core.agent.policy.Policy.compute_top_action_candidates`.
         """

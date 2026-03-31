@@ -86,9 +86,9 @@ def from_logits(behaviour_policy_logits: List[TorchActionType],
                 rewards: torch.Tensor,
                 values: List[torch.Tensor],
                 bootstrap_value: List[torch.Tensor],
-                clip_rho_threshold: Union[float, None],
-                clip_pg_rho_threshold: Union[float, None],
-                device: Union[str, None]) -> VTraceFromLogitsReturns:
+                clip_rho_threshold: float | None,
+                clip_pg_rho_threshold: float | None,
+                device: str | None) -> VTraceFromLogitsReturns:
     r"""V-trace for softmax policies.
 
     Calculates V-trace actor critic targets for softmax polices as described in
@@ -173,8 +173,8 @@ def from_importance_weights(log_rhos: torch.Tensor,
                             rewards: torch.Tensor,
                             values: torch.Tensor,
                             bootstrap_value: torch.Tensor,
-                            clip_rho_threshold: Union[float, None],
-                            clip_pg_rho_threshold: Union[float, None]) -> VTraceReturns:
+                            clip_rho_threshold: float | None,
+                            clip_pg_rho_threshold: float | None) -> VTraceReturns:
     r"""V-trace from log importance weights.
 
     Calculates V-trace actor critic targets as described in

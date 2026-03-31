@@ -27,8 +27,8 @@ class ESDummyDistributedRollouts(ESDistributedRollouts):
 
     @override(ESDistributedRollouts)
     def generate_rollouts(self,
-                          policy: Union[Policy, TorchModel],
-                          max_steps: Optional[int],
+                          policy: Policy | TorchModel,
+                          max_steps: int | None,
                           noise_stddev: float,
                           normalization_stats: StructuredStatisticsType
                           ) -> Generator[ESRolloutResult, None, None]:

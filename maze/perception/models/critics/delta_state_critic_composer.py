@@ -27,7 +27,7 @@ class DeltaStateCriticComposer(BaseStateCriticComposer):
     prev_value_space = spaces.Dict({prev_value_key: spaces.Box(0, 1, shape=prev_value_shape, dtype=np.float32)})
 
     def __init__(self,
-                 observation_spaces_dict: Dict[Union[str, int], spaces.Dict],
+                 observation_spaces_dict: Dict[str | int, spaces.Dict],
                  agent_counts_dict: Dict[StepKeyType, int],
                  networks: CollectionOfConfigType):
         super().__init__(observation_spaces_dict, agent_counts_dict)

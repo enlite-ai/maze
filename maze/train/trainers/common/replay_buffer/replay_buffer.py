@@ -12,15 +12,14 @@ class BaseReplayBuffer:
     """Abstract interface for all replay buffer implementations."""
 
     @abstractmethod
-    def add_rollout(self, rollout: Union[SpacesTrajectoryRecord, List[StructuredSpacesRecord]]) -> None:
+    def add_rollout(self, rollout: SpacesTrajectoryRecord | List[StructuredSpacesRecord]) -> None:
         """Add an actor rollout to the buffer.
 
         :param rollout: A single actor rollout consisting of n_rollout_steps transitions.
         """
 
     @abstractmethod
-    def sample_batch(self, n_samples: int, learner_device: str) -> List[Union[StructuredSpacesRecord,
-                                                                              SpacesTrajectoryRecord]]:
+    def sample_batch(self, n_samples: int, learner_device: str) -> List[StructuredSpacesRecord | SpacesTrajectoryRecord]:
         """Sample mini-batch randomly from the buffer.
 
         :param n_samples: The number of samples to draw.
@@ -29,7 +28,7 @@ class BaseReplayBuffer:
         """
 
     @abstractmethod
-    def add_transition(self, transition: Union[StructuredSpacesRecord, SpacesTrajectoryRecord]) -> None:
+    def add_transition(self, transition: StructuredSpacesRecord | SpacesTrajectoryRecord) -> None:
         """Add a single transition (rollout length == 1) to the buffer.
 
         :param transition: The actor transition to be added to the buffer.

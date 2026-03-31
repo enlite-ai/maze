@@ -45,8 +45,8 @@ class DummyPolicyWrapper(Policy, TorchModel):
         return True
 
     @override(Policy)
-    def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType], env: MazeEnv,
-                       actor_id: Optional[ActorID] = None, deterministic: bool = False) -> ActionType:
+    def compute_action(self, observation: ObservationType, maze_state: MazeStateType | None, env: MazeEnv,
+                       actor_id: ActorID | None = None, deterministic: bool = False) -> ActionType:
         """Here we could do arbitrarily complex, non-differentiable processing on top of the policy."""
         actions, probs = self.torch_policy.compute_top_action_candidates(
             observation=observation, maze_state=maze_state, env=env,
@@ -58,9 +58,9 @@ class DummyPolicyWrapper(Policy, TorchModel):
         return actions[env.get_env_time() % 2]
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: Optional[ActorID] = None) \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int | None,
+                                      maze_state: MazeStateType | None, env: BaseEnv | None,
+                                      actor_id: ActorID | None = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """Not supported"""
         raise NotImplementedError

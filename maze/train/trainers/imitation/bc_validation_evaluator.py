@@ -31,10 +31,10 @@ class BCValidationEvaluator(Evaluator):
 
     def __init__(self,
                  loss: BCLoss,
-                 model_selection: Optional[ModelSelectionBase],
+                 model_selection: ModelSelectionBase | None,
                  data_loader: DataLoader,
                  log_substep_events: bool,
-                 logging_prefix: Optional[str] = "eval"):
+                 logging_prefix: str | None = "eval"):
         self.loss = loss
         self.data_loader = data_loader
         self.model_selection = model_selection

@@ -25,7 +25,7 @@ class SequentialDistributedActors(DistributedActors):
     """
 
     def __init__(self,
-                 env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+                 env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
                  policy: TorchPolicy,
                  n_rollout_steps: int,
                  n_actors: int,

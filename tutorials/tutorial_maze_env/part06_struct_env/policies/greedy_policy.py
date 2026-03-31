@@ -69,17 +69,17 @@ class GreedyPolicy(Policy):
         return False
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: Optional[ActorID] = None) \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int | None,
+                                      maze_state: MazeStateType | None, env: BaseEnv | None,
+                                      actor_id: ActorID | None = None) \
             -> Tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface
         """
         raise NotImplementedError
 
     @override(Policy)
-    def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType] = None,
-                       env: Optional[BaseEnv] = None, actor_id: Optional[ActorID] = None,
+    def compute_action(self, observation: ObservationType, maze_state: MazeStateType | None = None,
+                       env: BaseEnv | None = None, actor_id: ActorID | None = None,
                        deterministic: bool = False) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface
         """

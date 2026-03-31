@@ -1,7 +1,8 @@
 """Encapsulates policies and queries them for actions according to the provided policy ID."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional, List
 
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
@@ -25,7 +26,7 @@ class Policy(ABC):
         distributions or any other form of randomness in the policy. This ensures that when the policy is explicit
         seeded it is reproducible.
 
-        :param seed: The seed to use for all random state objects withing the policy.
+        :param seed: The seed to use for all random state objects within the policy.
         """
 
     @abstractmethod
@@ -49,8 +50,14 @@ class Policy(ABC):
         return False
 
     @abstractmethod
-    def compute_action(self, observation: ObservationType, maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                       actor_id: Optional[ActorID] = None, deterministic: bool = False) -> ActionType:
+    def compute_action(
+        self,
+        observation: ObservationType,
+        maze_state: MazeStateType | None,
+        env: BaseEnv | None,
+        actor_id: ActorID | None = None,
+        deterministic: bool = False,
+    ) -> ActionType:
         """
         Query a policy that corresponds to the given actor ID for action.
 
@@ -65,10 +72,14 @@ class Policy(ABC):
         """
 
     @abstractmethod
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: Optional[ActorID] = None) \
-            -> Tuple[List[ActionType], List[float]]:
+    def compute_top_action_candidates(
+        self,
+        observation: ObservationType,
+        num_candidates: int | None,
+        maze_state: MazeStateType | None,
+        env: BaseEnv | None,
+        actor_id: ActorID | None = None,
+    ) -> tuple[list[ActionType], list[float]]:
         """
         Get the top :num_candidates actions as well as the probabilities, q-values, .. leading to the decision.
 
@@ -83,10 +94,10 @@ class Policy(ABC):
                  to the associated scores (e.g, probabilities or Q-values).
         """
 
-    def reset(self) -> None:
+    def reset(self) -> None:  # noqa: B027
         """Reset the agent components after each episode if necessary."""
 
-    def write_policy_record(self) -> PolicyRecordType:
+    def write_policy_record(self) -> PolicyRecordType:  # noqa: B027
         """Return additional policy data that should be written into the spaces record along with other information such
         as observation, reward or action.
 

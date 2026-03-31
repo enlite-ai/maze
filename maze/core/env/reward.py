@@ -1,18 +1,21 @@
 """Interface specifying the computation of scalar rewards from aggregated reward events."""
-from abc import abstractmethod, ABC
-from typing import Union, List, Type, Optional
 
-import numpy as np
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+
 from maze.core.annotations import override
 from maze.core.env.maze_state import MazeStateType
 from maze.core.events.pubsub import Subscriber
+
+import numpy as np
 
 
 class RewardAggregatorInterface(Subscriber):
     """Event aggregation object for reward customization and shaping."""
 
     @abstractmethod
-    def summarize_reward(self, maze_state: Optional[MazeStateType] = None) -> Union[float, np.ndarray]:
+    def summarize_reward(self, maze_state: MazeStateType | None = None) -> float | np.ndarray:
         """
         Summarize the reward for this step. Expected to be called once per structured step.
 
@@ -32,7 +35,7 @@ class RewardAggregatorInterface(Subscriber):
         """
 
     @override(Subscriber)
-    def get_interfaces(self) -> List[Type[ABC]]:
+    def get_interfaces(self) -> list[type[ABC]]:
         """
         Declare which events this reward aggregator should be notified about.
 
@@ -49,12 +52,13 @@ class RewardAggregatorInterface(Subscriber):
         """
         return []
 
-    def clone_from(self, reward_aggregator: 'RewardAggregatorInterface') -> None:
+    def clone_from(self, reward_aggregator: RewardAggregatorInterface) -> None:
         """Clones the state of the provided reward aggregator.
 
         :param reward_aggregator: The reward aggregator to clone from.
         """
         for key, value in self.__dict__.items():
-            if key != "events":
-                assert value == reward_aggregator.__dict__[key], \
-                    f"Your reward aggregator seems to be stateful. Make sure to overwrite 'clone_from' properly!"
+            if key != 'events':
+                assert value == reward_aggregator.__dict__[key], (
+                    "Your reward aggregator seems to be stateful. Make sure to overwrite 'clone_from' properly!"
+                )

@@ -25,7 +25,7 @@ class DistributedActors:
     """
 
     def __init__(self,
-                 env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+                 env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
                  policy: TorchPolicy,
                  n_rollout_steps: int,
                  n_actors: int,
@@ -74,7 +74,7 @@ class DistributedActors:
     def get_stats_value(self,
                         event: Callable,
                         level: LogStatsLevel,
-                        name: Optional[str] = None) -> LogStatsValue:
+                        name: str | None = None) -> LogStatsValue:
         """Obtain a single value from the epoch statistics dict.
 
         :param event: The event interface method of the value in question.

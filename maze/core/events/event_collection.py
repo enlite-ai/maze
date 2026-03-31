@@ -1,13 +1,17 @@
 """Implements a collection of EventRecord instances to have a stable interface regardless of
-   potential data structure optimizations."""
+potential data structure optimizations."""
+
+from __future__ import annotations
+
 from collections import deque
-from typing import Callable, Iterable, MutableSequence, Union
+from collections.abc import Callable, Iterable, MutableSequence
 
 from maze.core.events.event_service import EventRecord
 
 
 class EventCollection:
     """A collection of EventRecord instances that can be queried by event specification."""
+
     def __init__(self, events: Iterable[EventRecord] = ()):
         self.events: MutableSequence[EventRecord] = deque(events)
 
@@ -19,8 +23,8 @@ class EventCollection:
         """Extends self.events with a list of new event records."""
         self.events.extend(event_list)
 
-    def query_events(self, event_spec: Union[Callable, Iterable[Callable]]) -> Iterable:
-        """ Return all events collected at the current env step matching one or more given event types. The event
+    def query_events(self, event_spec: Callable | Iterable[Callable]) -> Iterable:
+        """Return all events collected at the current env step matching one or more given event types. The event
             types are specified by the interface member function object itself.
 
             Event calls are recorded as EventRecord, an object providing access to the passed arguments of the event

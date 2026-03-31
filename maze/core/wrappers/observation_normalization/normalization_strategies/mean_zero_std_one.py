@@ -1,11 +1,14 @@
 """Contains a mean zero standard deviation one observation normalization strategy"""
-from typing import List
 
-import numpy as np
+from __future__ import annotations
 
 from maze.core.annotations import override
-from maze.core.wrappers.observation_normalization.normalization_strategies.base import \
-    ObservationNormalizationStrategy, StatisticsType
+from maze.core.wrappers.observation_normalization.normalization_strategies.base import (
+    ObservationNormalizationStrategy,
+    StatisticsType,
+)
+
+import numpy as np
 
 
 class MeanZeroStdOneObservationNormalizationStrategy(ObservationNormalizationStrategy):
@@ -16,7 +19,7 @@ class MeanZeroStdOneObservationNormalizationStrategy(ObservationNormalizationStr
     """
 
     @override(ObservationNormalizationStrategy)
-    def estimate_stats(self, observations: List[np.ndarray]) -> StatisticsType:
+    def estimate_stats(self, observations: list[np.ndarray]) -> StatisticsType:
         """Implementation of
         :class:`~maze.core.wrappers.observation_normalization.normalization_strategies.base.ObservationNormalizationStrategy`
         interface.
@@ -39,7 +42,7 @@ class MeanZeroStdOneObservationNormalizationStrategy(ObservationNormalizationStr
         # fix standard deviations to avoid division by zero
         std[std == 0] = 1.0
 
-        statistics = {"mean": mean, "std": std}
+        statistics = {'mean': mean, 'std': std}
 
         return statistics
 
@@ -52,16 +55,15 @@ class MeanZeroStdOneObservationNormalizationStrategy(ObservationNormalizationStr
 
         # check if nan save division is required
         if np.max(np.abs(value)) == np.finfo(np.float32).max:
-
             # divide by masked broadcasting
             mask = (value != np.finfo(np.float32).min) & (value != np.finfo(np.float32).max)
-            mean = np.broadcast_to(self._statistics["mean"], value.shape)
-            std = np.broadcast_to(self._statistics["std"], value.shape)
+            mean = np.broadcast_to(self._statistics['mean'], value.shape)
+            std = np.broadcast_to(self._statistics['std'], value.shape)
 
             value[mask] -= mean[mask]
             value[mask] /= std[mask]
 
         else:
-            value = (value - self._statistics["mean"]) / self._statistics["std"]
+            value = (value - self._statistics['mean']) / self._statistics['std']
 
         return value

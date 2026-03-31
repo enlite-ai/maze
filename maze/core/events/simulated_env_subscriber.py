@@ -1,7 +1,8 @@
 """File holding subscriber for simulated envs to share the events with the main env."""
+
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from maze.core.agent.policy import Policy
 from maze.core.events.event_collection import EventCollection
@@ -29,7 +30,7 @@ def share_sim_env_events_to_main_env(func_obj: Callable) -> Callable:
         shared_event_subscriber = getattr(policy, 'shared_event_subscriber', SimulationEnvSharedEventsSubscriber())
         if not hasattr(policy, 'shared_event_subscriber'):
             # Add Subscriber
-            setattr(policy, 'shared_event_subscriber', shared_event_subscriber)
+            policy.shared_event_subscriber = shared_event_subscriber
 
             # Get main env. There are two options, the env can either be in the args directly, or it can be in kwargs.
             if len(args) > 3:
@@ -40,7 +41,10 @@ def share_sim_env_events_to_main_env(func_obj: Callable) -> Callable:
 
             # Get available event topics/interfaces from main env and register the subscriber
             # Note: Simulated envs are replicates of main env, therefore they have the same events
-            for interface_cls, interface_ref in env.core_env.context.event_service.topics.items():
+            for (
+                interface_cls,
+                interface_ref,
+            ) in env.core_env.context.event_service.topics.items():
                 policy.shared_event_subscriber.set_interface(interface_cls, interface_ref)
 
             if hasattr(policy, 'sim_env'):
@@ -70,6 +74,7 @@ class SimulationEnvSharedEventsSubscriber(Subscriber):
     The subscriber subscribes to the pubsub object of the simulated env in order to receive events. The events are
     forwarded to the main env.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -118,7 +123,8 @@ class SimulationEnvSharedEventsSubscriber(Subscriber):
         # Get and filter class methods
         interface_methods = [
             attr
-            for attr in dir(interface_class) if callable(getattr(interface_class, attr)) and not attr.startswith('__')
+            for attr in dir(interface_class)
+            if callable(getattr(interface_class, attr)) and not attr.startswith('__')
         ]
 
         # Check if an event should be shared

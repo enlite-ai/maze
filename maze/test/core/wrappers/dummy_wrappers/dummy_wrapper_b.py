@@ -16,7 +16,7 @@ class DummyWrapperB(DummyWrapper):
 
     def __init__(
             self,
-            env: Union[MazeEnv, Wrapper],
+            env: MazeEnv | Wrapper,
             arg_b: str,
             arg_c: str
     ):

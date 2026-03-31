@@ -1,10 +1,11 @@
 """Contains statistics helper utils."""
-from typing import Optional, Union
+
+from __future__ import annotations
 
 import numpy as np
 
 
-class CumulativeMovingMeanStd(object):
+class CumulativeMovingMeanStd:
     """Maintains cumulative moving mean and std of incoming numpy arrays along axis 0.
     Output shapes:
     scalar -> scalar
@@ -18,11 +19,11 @@ class CumulativeMovingMeanStd(object):
     """
 
     def __init__(self, epsilon: float = 1e-8):
-        self.mean: Optional[np.ndarray] = None
-        self.var: Optional[np.ndarray] = None
+        self.mean: np.ndarray | None = None
+        self.var: np.ndarray | None = None
         self._count: float = epsilon
 
-    def update(self, new_data: Union[np.ndarray, float]) -> None:
+    def update(self, new_data: np.ndarray | float) -> None:
         """Update cumulative moving statistics.
 
         :param new_data: New data to update the stats with.
@@ -63,7 +64,7 @@ class CumulativeMovingMeanStd(object):
         self._count = new_count
 
 
-class CumulativeMovingMinMax(object):
+class CumulativeMovingMinMax:
     """Maintains cumulative moving min and max of incoming numpy arrays along axis 0.
 
     Output shapes:
@@ -74,7 +75,7 @@ class CumulativeMovingMinMax(object):
     :param initial_max: Initial (known) maximum value.
     """
 
-    def __init__(self, initial_min: Optional[float] = None, initial_max: Optional[float] = None):
+    def __init__(self, initial_min: float | None = None, initial_max: float | None = None):
         self.min = initial_min if initial_min is not None else np.finfo(np.float32).max
         self.max = initial_max if initial_max is not None else np.finfo(np.float32).min
 

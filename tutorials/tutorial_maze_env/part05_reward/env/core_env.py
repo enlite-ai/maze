@@ -146,7 +146,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
         return ActorID(step_key=0, agent_id=0)
 
     @property
-    def agent_counts_dict(self) -> Dict[Union[str, int], int]:
+    def agent_counts_dict(self) -> Dict[str | int, int]:
         """Returns the count of agents for individual sub-steps (or -1 for dynamic agent count).
 
         As this is a single-step single-agent environment, in which 1 agent gets to act during sub-step 0,

@@ -37,7 +37,7 @@ class SelfAttentionConvBlock(PerceptionBlock):
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 embed_dim: int, dropout: Optional[float], add_input_to_output: bool, bias: bool):
+                 embed_dim: int, dropout: float | None, add_input_to_output: bool, bias: bool):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
         # Assertions

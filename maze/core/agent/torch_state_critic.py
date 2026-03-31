@@ -1,18 +1,29 @@
 """Encapsulation of multiple torch state critics for training in structured environments."""
-from abc import abstractmethod
-from typing import Mapping, Union, List, Dict
 
-import torch
-from gymnasium import spaces
-from torch import nn
+from __future__ import annotations
+
+from abc import abstractmethod
+from collections.abc import Mapping
 
 from maze.core.agent.state_critic import StateCritic
-from maze.core.agent.state_critic_input_output import StateCriticStepOutput, StateCriticOutput, StateCriticInput
+from maze.core.agent.state_critic_input_output import (
+    StateCriticInput,
+    StateCriticOutput,
+    StateCriticStepOutput,
+)
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StepKeyType
-from maze.perception.perception_utils import convert_to_torch, flatten_spaces, stack_and_flatten_spaces
+from maze.perception.perception_utils import (
+    convert_to_torch,
+    flatten_spaces,
+    stack_and_flatten_spaces,
+)
+
+import torch
+from gymnasium import spaces
+from torch import nn
 
 
 class TorchStateCritic(TorchModel, StateCritic):
@@ -23,17 +34,20 @@ class TorchStateCritic(TorchModel, StateCritic):
     :param device: Device the policy should be located on (cpu or cuda).
     """
 
-    def __init__(self, networks: Mapping[Union[str, int], nn.Module],
-                 obs_spaces_dict: Dict[StepKeyType, spaces.Dict], device: str):
+    def __init__(
+        self,
+        networks: Mapping[str | int, nn.Module],
+        obs_spaces_dict: dict[StepKeyType, spaces.Dict],
+        device: str,
+    ):
         self.networks = networks
         self._num_critics = len(obs_spaces_dict)
         self._obs_spaces_dict = dict(obs_spaces_dict)
         TorchModel.__init__(self, device=device)
 
     @override(StateCritic)
-    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`
-        """
+    def predict_value(self, observation: ObservationType, critic_id: int | str) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.core.agent.state_critic.StateCritic`"""
         obs_t = convert_to_torch(observation, device=self._device, cast=None, in_place=False)
         return self.networks[critic_id](obs_t)
 
@@ -45,9 +59,8 @@ class TorchStateCritic(TorchModel, StateCritic):
         """
 
     @override(TorchModel)
-    def parameters(self) -> List[torch.Tensor]:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+    def parameters(self) -> list[torch.Tensor]:
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         params = []
         for critic in self.networks.values():
             params.extend(list(critic.parameters()))
@@ -55,37 +68,32 @@ class TorchStateCritic(TorchModel, StateCritic):
 
     @override(TorchModel)
     def eval(self) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         for critic in self.networks.values():
             critic.eval()
 
     @override(TorchModel)
     def train(self) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         for critic in self.networks.values():
             critic.train()
 
     @override(TorchModel)
     def to(self, device: str) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         self._device = device
         for critic in self.networks.values():
             critic.to(device)
 
     @property
     def device(self) -> str:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         return self._device
 
     @override(TorchModel)
-    def state_dict(self) -> Dict:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
-        state_dict_critics = dict()
+    def state_dict(self) -> dict:
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
+        state_dict_critics = {}
 
         for key, critic in self.networks.items():
             state_dict_critics[key] = critic.state_dict()
@@ -93,25 +101,25 @@ class TorchStateCritic(TorchModel, StateCritic):
         return dict(critics=state_dict_critics)
 
     @override(TorchModel)
-    def load_state_dict(self, state_dict: Dict) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
-        if "critics" in state_dict:
-            state_dict_critics = state_dict["critics"]
+    def load_state_dict(self, state_dict: dict) -> None:
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
+        if 'critics' in state_dict:
+            state_dict_critics = state_dict['critics']
 
             for key, critic in self.networks.items():
-                assert key in state_dict_critics, f"Could not find state dict for policy ID: {key}"
+                assert key in state_dict_critics, f'Could not find state dict for policy ID: {key}'
                 critic.load_state_dict(state_dict_critics[key])
 
     @abstractmethod
-    def compute_structured_return(self,
-                                  gamma: float,
-                                  gae_lambda: float,
-                                  rewards: List[torch.Tensor],
-                                  values: List[torch.Tensor],
-                                  terminated: torch.Tensor,
-                                  truncated: torch.Tensor,
-                                  ) -> List[torch.Tensor]:
+    def compute_structured_return(
+        self,
+        gamma: float,
+        gae_lambda: float,
+        rewards: list[torch.Tensor],
+        values: list[torch.Tensor],
+        terminated: torch.Tensor,
+        truncated: torch.Tensor,
+    ) -> list[torch.Tensor]:
         """Compute bootstrapped return for the whole structured step (i.e., all sub-steps).
 
         :param gamma: Discounting factor
@@ -123,15 +131,16 @@ class TorchStateCritic(TorchModel, StateCritic):
         :return: List of per-time sub-step returns
         """
 
-    def compute_return(self,
-                       gamma: float,
-                       gae_lambda: float,
-                       rewards: torch.Tensor,
-                       values: torch.Tensor,
-                       terminated: torch.Tensor,
-                       truncated: torch.Tensor,
-                       deltas: torch.Tensor = None,
-                       ) -> torch.Tensor:
+    def compute_return(
+        self,
+        gamma: float,
+        gae_lambda: float,
+        rewards: torch.Tensor,
+        values: torch.Tensor,
+        terminated: torch.Tensor,
+        truncated: torch.Tensor,
+        deltas: torch.Tensor = None,
+    ) -> torch.Tensor:
         """Compute bootstrapped return from rewards and estimated values.
 
         :param gamma: Discounting factor
@@ -148,7 +157,11 @@ class TorchStateCritic(TorchModel, StateCritic):
         assert rewards.shape == truncated.shape, f'{rewards.shape} vs {truncated.shape}'
 
         # initialize returns
-        returns = torch.zeros((rewards.shape[0], rewards.shape[1]), dtype=torch.float32, device=self.device)
+        returns = torch.zeros(
+            (rewards.shape[0], rewards.shape[1]),
+            dtype=torch.float32,
+            device=self.device,
+        )
 
         # prepare end-of-episode mask
         mask = (~(terminated | truncated)).float()
@@ -156,7 +169,6 @@ class TorchStateCritic(TorchModel, StateCritic):
         # traverse time steps in reverse order
         gae = torch.zeros(rewards.shape[1], dtype=torch.float32, device=self.device)
         for t in reversed(range(0, len(rewards))):
-
             # bootstrap value function for last entry
             if t == len(rewards) - 1:
                 returns[t] = values[t]
@@ -165,7 +177,6 @@ class TorchStateCritic(TorchModel, StateCritic):
 
             # compute discounted return
             else:
-
                 if gae_lambda != 1.0:
                     delta = rewards[t] + gamma * values[t + 1] * mask[t] - values[t]
                     gae = delta + gamma * gae_lambda * gae
@@ -187,26 +198,28 @@ class TorchSharedStateCritic(TorchStateCritic):
     :class:`~maze.perception.models.critics.shared_state_critic_composer.SharedStateCriticComposer`.
     """
 
-    def __init__(self,
-                 networks: Mapping[Union[str, int], nn.Module],
-                 obs_spaces_dict: Dict[StepKeyType, spaces.Dict],
-                 device: str,
-                 stack_observations: bool):
+    def __init__(
+        self,
+        networks: Mapping[str | int, nn.Module],
+        obs_spaces_dict: dict[StepKeyType, spaces.Dict],
+        device: str,
+        stack_observations: bool,
+    ):
         super().__init__(networks=networks, obs_spaces_dict=obs_spaces_dict, device=device)
         self.stack_observations = stack_observations
         self.network = list(self.networks.values())[0]  # For convenient access to the single network of this critic
 
     @override(StateCritic)
     def predict_values(self, critic_input: StateCriticInput) -> StateCriticOutput:
-        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
-        """
+        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`"""
         if self.stack_observations:
-            flattened_obs_t = stack_and_flatten_spaces(critic_input.tensor_dict,
-                                                       observation_spaces_dict=self._obs_spaces_dict)
+            flattened_obs_t = stack_and_flatten_spaces(
+                critic_input.tensor_dict, observation_spaces_dict=self._obs_spaces_dict
+            )
         else:
             flattened_obs_t = flatten_spaces(critic_input.tensor_dict)
 
-        value = self.network(flattened_obs_t)["value"][..., 0]
+        value = self.network(flattened_obs_t)['value'][..., 0]
         critic_output = StateCriticOutput()
         for actor_id in critic_input.actor_ids:
             critic_output.append(StateCriticStepOutput(values=value, detached_values=value.detach(), actor_id=actor_id))
@@ -214,10 +227,9 @@ class TorchSharedStateCritic(TorchStateCritic):
         return critic_output
 
     @override(StateCritic)
-    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> torch.Tensor:
-        """Predictions depend on previous sub-steps, thus this method is not supported in the delta state critic.
-        """
-        raise NotImplemented
+    def predict_value(self, observation: ObservationType, critic_id: int | str) -> torch.Tensor:
+        """Predictions depend on previous sub-steps, thus this method is not supported in the delta state critic."""
+        raise NotImplementedError
 
     @property
     @override(TorchStateCritic)
@@ -226,22 +238,28 @@ class TorchSharedStateCritic(TorchStateCritic):
         return 1
 
     @override(TorchStateCritic)
-    def compute_structured_return(self,
-                                  gamma: float,
-                                  gae_lambda: float,
-                                  rewards: List[torch.Tensor],
-                                  values: List[torch.Tensor],
-                                  terminated: torch.Tensor,
-                                  truncated: torch.Tensor,
-                                  ) -> List[torch.Tensor]:
+    def compute_structured_return(
+        self,
+        gamma: float,
+        gae_lambda: float,
+        rewards: list[torch.Tensor],
+        values: list[torch.Tensor],
+        terminated: torch.Tensor,
+        truncated: torch.Tensor,
+    ) -> list[torch.Tensor]:
         """Compute return based on shared reward (summing the reward across all sub-steps)"""
         # Sum rewards across all sub-steps into a shared reward
         shared_rewards = torch.stack(rewards).sum(dim=0)
 
         # Note: With shared critic, values are the same for each sub-step --> just take the last one here
-        sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                              rewards=shared_rewards, values=values[-1],
-                                              terminated=terminated, truncated=truncated)
+        sub_step_return = self.compute_return(
+            gamma=gamma,
+            gae_lambda=gae_lambda,
+            rewards=shared_rewards,
+            values=values[-1],
+            terminated=terminated,
+            truncated=truncated,
+        )
 
         # The same shared return for each sub-step
         return [sub_step_return for _ in values]
@@ -255,38 +273,47 @@ class TorchStepStateCritic(TorchStateCritic):
 
     @override(StateCritic)
     def predict_values(self, critic_input: StateCriticInput) -> StateCriticOutput:
-        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
-        """
+        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`"""
         critic_output = StateCriticOutput()
         for critic_step_input in critic_input:
-            value = self.networks[critic_step_input.actor_id.step_key](critic_step_input.tensor_dict)["value"][..., 0]
-            critic_output.append(StateCriticStepOutput(values=value, detached_values=value.detach(),
-                                                       actor_id=critic_step_input.actor_id))
+            value = self.networks[critic_step_input.actor_id.step_key](critic_step_input.tensor_dict)['value'][..., 0]
+            critic_output.append(
+                StateCriticStepOutput(
+                    values=value,
+                    detached_values=value.detach(),
+                    actor_id=critic_step_input.actor_id,
+                )
+            )
 
         return critic_output
 
     @property
     @override(TorchStateCritic)
     def num_critics(self) -> int:
-        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
-        """
+        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`"""
         return self._num_critics
 
     @override(TorchStateCritic)
-    def compute_structured_return(self,
-                                  gamma: float,
-                                  gae_lambda: float,
-                                  rewards: List[torch.Tensor],
-                                  values: List[torch.Tensor],
-                                  terminated: torch.Tensor,
-                                  truncated: torch.Tensor,
-                                  ) -> List[torch.Tensor]:
+    def compute_structured_return(
+        self,
+        gamma: float,
+        gae_lambda: float,
+        rewards: list[torch.Tensor],
+        values: list[torch.Tensor],
+        terminated: torch.Tensor,
+        truncated: torch.Tensor,
+    ) -> list[torch.Tensor]:
         """Compute returns for each sub-step separately"""
         returns = []
-        for substep_rewards, substep_values in zip(rewards, values):
-            sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                                  rewards=substep_rewards, values=substep_values,
-                                                  terminated=terminated, truncated=truncated)
+        for substep_rewards, substep_values in zip(rewards, values, strict=False):
+            sub_step_return = self.compute_return(
+                gamma=gamma,
+                gae_lambda=gae_lambda,
+                rewards=substep_rewards,
+                values=substep_values,
+                terminated=terminated,
+                truncated=truncated,
+            )
             returns.append(sub_step_return)
 
         return returns
@@ -305,9 +332,14 @@ class TorchDeltaStateCritic(TorchStateCritic):
         critic_output = StateCriticOutput()
         # predict values for the first state
         key_0 = critic_input[0].actor_id.step_key
-        value_0 = self.networks[key_0](critic_input[0].tensor_dict)["value"][..., 0]
-        critic_output.append(StateCriticStepOutput(value_0, detached_values=value_0.detach(),
-                                                   actor_id=critic_input[0].actor_id))
+        value_0 = self.networks[key_0](critic_input[0].tensor_dict)['value'][..., 0]
+        critic_output.append(
+            StateCriticStepOutput(
+                value_0,
+                detached_values=value_0.detach(),
+                actor_id=critic_input[0].actor_id,
+            )
+        )
 
         for step_critic_input in critic_input.substep_inputs[1:]:
             # compute value 2 as delta of value 1
@@ -315,42 +347,51 @@ class TorchDeltaStateCritic(TorchStateCritic):
             obs = step_critic_input.tensor_dict.copy()
             obs['prev_value'] = prev_values.unsqueeze(-1)
 
-            value_delta = self.networks[step_critic_input.actor_id.step_key](obs)["value"][..., 0]
+            value_delta = self.networks[step_critic_input.actor_id.step_key](obs)['value'][..., 0]
             next_values = critic_output.detached_values[-1] + value_delta
 
-            critic_output.append(StateCriticStepOutput(next_values, detached_values=next_values.detach(),
-                                                       actor_id=step_critic_input.actor_id))
+            critic_output.append(
+                StateCriticStepOutput(
+                    next_values,
+                    detached_values=next_values.detach(),
+                    actor_id=step_critic_input.actor_id,
+                )
+            )
 
         return critic_output
 
     @override(StateCritic)
-    def predict_value(self, observation: ObservationType, critic_id: Union[int, str]) -> torch.Tensor:
-        """Predictions depend on previous sub-steps, thus this method is not supported in the delta state critic.
-        """
-        raise NotImplemented
+    def predict_value(self, observation: ObservationType, critic_id: int | str) -> torch.Tensor:
+        """Predictions depend on previous sub-steps, thus this method is not supported in the delta state critic."""
+        raise NotImplementedError
 
     @property
     @override(TorchStateCritic)
     def num_critics(self) -> int:
-        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`
-        """
+        """implementation of :class:`~maze.core.agent.torch_state_critic.TorchStateCritic`"""
         return self._num_critics
 
     @override(TorchStateCritic)
-    def compute_structured_return(self,
-                                  gamma: float,
-                                  gae_lambda: float,
-                                  rewards: List[torch.Tensor],
-                                  values: List[torch.Tensor],
-                                  terminated: torch.Tensor,
-                                  truncated: torch.Tensor,
-                                  ) -> List[torch.Tensor]:
+    def compute_structured_return(
+        self,
+        gamma: float,
+        gae_lambda: float,
+        rewards: list[torch.Tensor],
+        values: list[torch.Tensor],
+        terminated: torch.Tensor,
+        truncated: torch.Tensor,
+    ) -> list[torch.Tensor]:
         """Compute return based on shared reward (summing the reward across all sub-steps)"""
         # Sum rewards across all sub-steps into a shared reward
         shared_rewards = torch.stack(rewards).sum(dim=0)
-        sub_step_return = self.compute_return(gamma=gamma, gae_lambda=gae_lambda,
-                                              rewards=shared_rewards, values=values[-1],
-                                              terminated=terminated, truncated=truncated)
+        sub_step_return = self.compute_return(
+            gamma=gamma,
+            gae_lambda=gae_lambda,
+            rewards=shared_rewards,
+            values=values[-1],
+            terminated=terminated,
+            truncated=truncated,
+        )
 
         # The same shared return for each sub-step
         return [sub_step_return for _ in values]

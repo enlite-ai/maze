@@ -1,11 +1,19 @@
 """Generic event interfaces"""
+
+from __future__ import annotations
+
 from abc import ABC
-from typing import Union
+
+from maze.core.log_stats.event_decorators import (
+    define_episode_stats,
+    define_epoch_stats,
+    define_stats_grouping,
+    define_step_stats,
+)
 
 import numpy as np
 
-from maze.core.log_stats.event_decorators import define_episode_stats, define_step_stats, define_epoch_stats, \
-    define_stats_grouping
+# ruff: noqa: B027, B024
 
 
 class BaseEnvEvents(ABC):
@@ -18,17 +26,17 @@ class BaseEnvEvents(ABC):
     - Mean epoch reward and standard deviation
     """
 
-    @define_epoch_stats(np.max, input_name="sum", output_name="max")
-    @define_epoch_stats(np.min, input_name="sum", output_name="min")
-    @define_epoch_stats(np.mean, input_name="sum", output_name="mean")
-    @define_epoch_stats(np.std, input_name="sum", output_name="std")
-    @define_epoch_stats(sum, input_name="count", output_name="total_step_count", cumulative=True)
-    @define_epoch_stats(np.mean, input_name="count", output_name="mean_step_count")
-    @define_epoch_stats(np.median, input_name="count", output_name="median_step_count")
-    @define_epoch_stats(len, input_name="sum", output_name="episode_count")
-    @define_epoch_stats(len, input_name="sum", output_name="total_episode_count", cumulative=True)
-    @define_episode_stats(np.sum, output_name="sum")
-    @define_episode_stats(len, output_name="count")
+    @define_epoch_stats(np.max, input_name='sum', output_name='max')
+    @define_epoch_stats(np.min, input_name='sum', output_name='min')
+    @define_epoch_stats(np.mean, input_name='sum', output_name='mean')
+    @define_epoch_stats(np.std, input_name='sum', output_name='std')
+    @define_epoch_stats(sum, input_name='count', output_name='total_step_count', cumulative=True)
+    @define_epoch_stats(np.mean, input_name='count', output_name='mean_step_count')
+    @define_epoch_stats(np.median, input_name='count', output_name='median_step_count')
+    @define_epoch_stats(len, input_name='sum', output_name='episode_count')
+    @define_epoch_stats(len, input_name='sum', output_name='total_episode_count', cumulative=True)
+    @define_episode_stats(np.sum, output_name='sum')
+    @define_episode_stats(len, output_name='count')
     @define_step_stats(sum)
     def reward(self, value: float):
         """reward value for the current step"""
@@ -37,14 +45,26 @@ class BaseEnvEvents(ABC):
     # as methods like min or max cannot be applied to strings. The lambda function addresses this by returning the
     # input value unchanged if it's a string (acting as an identity function), or applying the specified reduction
     # otherwise.
-    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.mean(x), output_name="mean")
-    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.std(x), output_name="std")
-    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.min(x), output_name="min")
-    @define_epoch_stats(lambda x: x if any(isinstance(i, str) for i in x) else np.max(x), output_name="max")
+    @define_epoch_stats(
+        lambda x: x if any(isinstance(i, str) for i in x) else np.mean(x),
+        output_name='mean',
+    )
+    @define_epoch_stats(
+        lambda x: x if any(isinstance(i, str) for i in x) else np.std(x),
+        output_name='std',
+    )
+    @define_epoch_stats(
+        lambda x: x if any(isinstance(i, str) for i in x) else np.min(x),
+        output_name='min',
+    )
+    @define_epoch_stats(
+        lambda x: x if any(isinstance(i, str) for i in x) else np.max(x),
+        output_name='max',
+    )
     @define_episode_stats(None)
     @define_step_stats(None)
-    @define_stats_grouping("name")
-    def kpi(self, name: str, value: Union[float, str]):
+    @define_stats_grouping('name')
+    def kpi(self, name: str, value: float | str):
         """Event representing a KPI metric (Key Performance Indicator).
 
         KPI metrics are expected to be calculated at the end of the episode. Only one KPI value

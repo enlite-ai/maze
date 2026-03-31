@@ -24,7 +24,7 @@ policy_composer_type = 'maze.perception.models.policies.ProbabilisticPolicyCompo
 
 def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCriticComposer),
                                        critics_type: type(TorchStateCritic),
-                                       shared_embedding_keys: Optional[Union[List[str], Dict[StepKeyType, List[str]]]]):
+                                       shared_embedding_keys: Union[List[str], Dict[StepKeyType, List[str]]] | None):
     """ helper function """
     # init environment
     env = GymMazeEnv("CartPole-v1", render_mode=None)
@@ -117,7 +117,7 @@ def test_default_models() -> None:
 def build_structured_with_critic_type(env,
                                       critics_composer_type: type(BaseStateCriticComposer),
                                       critics_type: type(TorchStateCritic),
-                                      shared_embedding_keys: Optional[Union[List[str], Dict[StepKeyType, List[str]]]]):
+                                      shared_embedding_keys: Union[List[str], Dict[StepKeyType, List[str]]] | None):
     """ helper function """
 
     # map observations to a modality

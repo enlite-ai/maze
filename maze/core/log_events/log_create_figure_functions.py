@@ -1,15 +1,17 @@
-""" Contains function to create figures that are to be added to TensorBoard for events logging. """
+"""Contains function to create figures that are to be added to TensorBoard for events logging."""
+
+from __future__ import annotations
+
 from collections import Counter
-from typing import List, Tuple, Union
+
+from maze.core.annotations import unused
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from maze.core.annotations import unused
 
-
-def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], List[float]], **kwargs) -> plt.Figure:
-    """ Checks the type of value and calls the correct plotting function accordingly.
+def create_binary_plot(value: list[tuple[np.ndarray, int]] | list[int] | list[float], **kwargs) -> plt.Figure:
+    """Checks the type of value and calls the correct plotting function accordingly.
 
     :param value: Output of an reducer function
     :param kwargs: Additional plotting relevant arguments.
@@ -27,7 +29,7 @@ def create_binary_plot(value: Union[List[Tuple[np.ndarray, int]], List[int], Lis
 
 
 def create_categorical_plot(
-    value: Union[List[Tuple[int, int]], List[int], List[float], np.ndarray], **kwargs
+    value: list[tuple[int, int]] | list[int] | list[float] | np.ndarray, **kwargs
 ) -> plt.Figure:
     """Checks the type of value and calls the correct plotting function accordingly.
 
@@ -78,7 +80,9 @@ def create_full_histogram(value) -> plt.Figure:
     return fig
 
 
-def create_multi_binary_relative_bar_plot(value: List[Tuple[np.ndarray, int]]) -> plt.Figure:
+def create_multi_binary_relative_bar_plot(
+    value: list[tuple[np.ndarray, int]],
+) -> plt.Figure:
     """
     Counts the categories in value and prepares a relative bar plot of these.
 
@@ -101,7 +105,7 @@ def create_multi_binary_relative_bar_plot(value: List[Tuple[np.ndarray, int]]) -
     return fig
 
 
-def create_relative_bar_plot(value: List[Tuple[int, int]]) -> plt.Figure:
+def create_relative_bar_plot(value: list[tuple[int, int]]) -> plt.Figure:
     """
     Counts the categories in value and prepares a relative bar plot of these.
 
@@ -125,12 +129,15 @@ def create_relative_bar_plot(value: List[Tuple[int, int]]) -> plt.Figure:
     # in order to imitate a probability distribution
     fig_size = (min(14, max(7, action_dim // 2)), 7)
     fig = plt.figure(figsize=fig_size)
-    plt.bar(x=cat_dict.keys(), height=np.array(list(cat_dict.values())) / sum(cat_dict.values()))
+    plt.bar(
+        x=cat_dict.keys(),
+        height=np.array(list(cat_dict.values())) / sum(cat_dict.values()),
+    )
     plt.ylim([0, 1])
     return fig
 
 
-def create_violin_distribution(value: List[np.ndarray], **kwargs) -> plt.Figure:
+def create_violin_distribution(value: list[np.ndarray], **kwargs) -> plt.Figure:
     """
     Creates simple matplotlib violin plot of value.
 

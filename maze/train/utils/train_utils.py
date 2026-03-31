@@ -67,7 +67,7 @@ def compute_gradient_norm(params: Iterable[torch.Tensor]) -> float:
     return total_norm
 
 
-def stack_torch_dict_list(dict_list: List[Dict[str, Union[torch.Tensor, np.ndarray]]], dim: int = 0)\
+def stack_torch_dict_list(dict_list: List[Dict[str, torch.Tensor | np.ndarray]], dim: int = 0)\
         -> Dict[str, torch.Tensor]:
     """Stack list of dictionaries holding torch tensors as values.
 
@@ -90,7 +90,7 @@ def stack_torch_dict_list(dict_list: List[Dict[str, Union[torch.Tensor, np.ndarr
     return stacked_dict
 
 
-def stack_torch_array_list(array_list: List[Union[np.ndarray, torch.Tensor]], expand: bool = False, dim: int = 0) \
+def stack_torch_array_list(array_list: List[np.ndarray | torch.Tensor], expand: bool = False, dim: int = 0) \
         -> torch.Tensor:
     """Batch together a list of arrays (either torch or numpy) after converting them to torch. That is ether stack them
         if the batch dimension does not exists, otherwise concatenate them in the batch dimension (2)

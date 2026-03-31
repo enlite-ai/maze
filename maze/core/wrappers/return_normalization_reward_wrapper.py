@@ -1,14 +1,17 @@
 """Contains a reward scaling wrapper."""
-import copy
-from typing import Tuple, Any
 
-import numpy as np
+from __future__ import annotations
+
+import copy
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.utils.stats_utils import CumulativeMovingMeanStd
 from maze.core.wrappers.wrapper import RewardWrapper
+
+import numpy as np
 
 
 class ReturnNormalizationRewardWrapper(RewardWrapper[MazeEnv]):
@@ -31,8 +34,7 @@ class ReturnNormalizationRewardWrapper(RewardWrapper[MazeEnv]):
 
     @override(RewardWrapper)
     def reward(self, reward: float) -> float:
-        """implementation of :class:`~maze.core.wrappers.wrapper.RewardWrapper`
-        """
+        """implementation of :class:`~maze.core.wrappers.wrapper.RewardWrapper`"""
 
         # update
         self._return = self._return * self.gamma + reward
@@ -41,14 +43,13 @@ class ReturnNormalizationRewardWrapper(RewardWrapper[MazeEnv]):
         # normalize reward
         return float(reward / np.sqrt(self._return_stats.var + self.epsilon))
 
-    def reset(self) -> Tuple[Any, dict]:
-        """implementation of :class:`~maze.core.wrappers.wrapper.RewardWrapper`
-        """
+    def reset(self) -> tuple[Any, dict]:
+        """implementation of :class:`~maze.core.wrappers.wrapper.RewardWrapper`"""
         self._return = 0
         return self.env.reset()
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'ReturnNormalizationRewardWrapper') -> None:
+    def clone_from(self, env: ReturnNormalizationRewardWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self._return = env._return
         self._return_stats = copy.deepcopy(env._return_stats)

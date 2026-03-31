@@ -27,7 +27,7 @@ class UniformReplayBuffer(BaseReplayBuffer):
         self.buffer_rng = np.random.RandomState(seed)
 
     @override(BaseReplayBuffer)
-    def add_transition(self, transition: Union[StructuredSpacesRecord, SpacesTrajectoryRecord]) -> None:
+    def add_transition(self, transition: StructuredSpacesRecord | SpacesTrajectoryRecord) -> None:
         """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
         self._buffer[self._buffer_idx] = transition
@@ -36,7 +36,7 @@ class UniformReplayBuffer(BaseReplayBuffer):
         self._total_number_of_transitions += 1
 
     @override(BaseReplayBuffer)
-    def add_rollout(self, rollout: Union[SpacesTrajectoryRecord, List[StructuredSpacesRecord]]) -> None:
+    def add_rollout(self, rollout: SpacesTrajectoryRecord | List[StructuredSpacesRecord]) -> None:
         """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
         if isinstance(rollout, SpacesTrajectoryRecord):
@@ -51,7 +51,7 @@ class UniformReplayBuffer(BaseReplayBuffer):
 
     @override(BaseReplayBuffer)
     def sample_batch(self, n_samples: int, learner_device: str) -> \
-            List[Union[StructuredSpacesRecord, SpacesTrajectoryRecord]]:
+            List[StructuredSpacesRecord | SpacesTrajectoryRecord]:
         """implementation of :class:`~maze.train.trainers.common.replay_buffer.replay_buffer.BaseReplayBuffer`
         """
         indices = self.buffer_rng.permutation(len(self))[:n_samples]

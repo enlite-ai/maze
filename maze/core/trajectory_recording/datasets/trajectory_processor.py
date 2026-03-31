@@ -1,25 +1,29 @@
 """Holds methods for preprocessing the trajectories, before passing them through the env and storing them in the
-    InMemoryDataset"""
+InMemoryDataset"""
+
+from __future__ import annotations
+
 import dataclasses
 from abc import abstractmethod
-from typing import List, Optional, Union, Dict
-
-from omegaconf import ListConfig
 
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.trajectory_recording.datasets.utils import retrieve_episode_end_info
 from maze.core.trajectory_recording.records.state_record import StateRecord
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import (
+    StructuredSpacesRecord,
+)
 from maze.core.trajectory_recording.records.trajectory_record import TrajectoryRecord
 from maze.core.utils.factory import Factory
+
+from omegaconf import ListConfig
 
 
 class TrajectoryProcessor:
     """Base class for processing individual trajectories."""
 
     @abstractmethod
-    def pre_process(self, trajectory: TrajectoryRecord) -> Union[TrajectoryRecord, List[TrajectoryRecord]]:
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord | list[TrajectoryRecord]:
         """Preprocess a given trajectory before passing it through the wrapper stack.
 
         In order to deal with pre-processing methods that create multiple trajectories from a single one
@@ -31,8 +35,9 @@ class TrajectoryProcessor:
         """
 
     @staticmethod
-    def convert_trajectory_with_env(trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[StructuredSpacesRecord]:
+    def convert_trajectory_with_env(
+        trajectory: TrajectoryRecord, conversion_env: MazeEnv | None
+    ) -> list[StructuredSpacesRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
         :param trajectory: Episode record to load
@@ -46,25 +51,29 @@ class TrajectoryProcessor:
         step_records = []
 
         for step_id, step_record in enumerate(trajectory.step_records):
-
             # Process and convert in case we are dealing with state records (otherwise no conversion needed)
             if isinstance(step_record, StateRecord):
-                assert conversion_env is not None, "when conversion from Maze states is needed, conversion env " \
-                                                   "needs to be present."
+                assert conversion_env is not None, (
+                    'when conversion from Maze states is needed, conversion env needs to be present.'
+                )
 
                 # Drop incomplete records (e.g. at the end of episode)
                 if step_record.maze_state is None or step_record.maze_action is None:
                     continue
                 # Convert to spaces
-                step_record = StructuredSpacesRecord.converted_from(step_record, conversion_env=conversion_env,
-                                                                    first_step_in_episode=step_id == 0)
+                step_record = StructuredSpacesRecord.converted_from(
+                    step_record,
+                    conversion_env=conversion_env,
+                    first_step_in_episode=step_id == 0,
+                )
 
             step_records.append(step_record)
 
         return step_records
 
-    def process(self, trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[List[StructuredSpacesRecord]]:
+    def process(
+        self, trajectory: TrajectoryRecord, conversion_env: MazeEnv | None
+    ) -> list[list[StructuredSpacesRecord]]:
         """Convert an individual trajectory, by calling the pre_processing method followed by the
         convert_trajectory_with_env
 
@@ -82,8 +91,10 @@ class TrajectoryProcessor:
         if not isinstance(pre_processed_trajectories, list):
             pre_processed_trajectories = [pre_processed_trajectories]
 
-        env_processed_trajectories = [self.convert_trajectory_with_env(pre_processed_trajectory, conversion_env)
-                                      for pre_processed_trajectory in pre_processed_trajectories]
+        env_processed_trajectories = [
+            self.convert_trajectory_with_env(pre_processed_trajectory, conversion_env)
+            for pre_processed_trajectory in pre_processed_trajectories
+        ]
         return env_processed_trajectories
 
 
@@ -92,17 +103,18 @@ class IdentityTrajectoryProcessor(TrajectoryProcessor):
 
     @override(TrajectoryProcessor)
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
-        """
+        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor`
+        interface."""
         return trajectory
 
 
 @dataclasses.dataclass
 class BaseClippingTrajectoryProcessor(TrajectoryProcessor):
     """A base class for different clipping trajectory preprocessors."""
+
     clip_k: int
 
-    def pre_process(self, trajectory: TrajectoryRecord) -> Union[TrajectoryRecord, List[TrajectoryRecord]]:
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord | list[TrajectoryRecord]:
         """Clip a trajectory for self.clip_k steps if the clipping condition returns true.
 
         :param trajectory: The trajectory to preprocess.
@@ -117,19 +129,19 @@ class BaseClippingTrajectoryProcessor(TrajectoryProcessor):
         if self.test_for_trajectory_clipping(done_terminated, done_truncated, info):
             # If the length of the trajectory is longer then the clip_k clip it, otherwise delete it.
             if len(trajectory) > self.clip_k:
-                trajectory.step_records = trajectory.step_records[:-self.clip_k]
+                trajectory.step_records = trajectory.step_records[: -self.clip_k]
             else:
-                trajectory.step_records = list()
+                trajectory.step_records = []
         return trajectory
 
     @abstractmethod
-    def test_for_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+    def test_for_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: dict[str, str]) -> bool:
         """Abstract method for checking whether the current trajectory should be clipped or not.
 
         :param done_terminated: Whether the current trajectory ended in done by termination.
         :param done_truncated: Whether the current trajectory ended in done by truncation.
         :param info: The info of the last environment step.
-        :return: Return True if teh trajectory should be clipped, false otherwise.
+        :return: Return True if the trajectory should be clipped, false otherwise.
         """
 
 
@@ -139,13 +151,18 @@ class ClipTerminatedEpisodeTrajectoryProcessor(BaseClippingTrajectoryProcessor):
     clipped iff the env is done in the last state."""
 
     @override(BaseClippingTrajectoryProcessor)
-    def test_for_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+    def test_for_trajectory_clipping(
+        self,
+        done_terminated: bool,
+        done_truncated: bool,  # noqa: ARG002
+        info: dict[str, str],  # noqa: ARG002
+    ) -> bool:  # noqa: ARG002
         """Clip a trajectory if it ended in a done and was not timelimit truncated.
 
         :param done_terminated: Whether the current trajectory ended in done by termination.
         :param done_truncated: Whether the current trajectory was truncated by the timelimit wrapper.
         :param info: The info of the last environment step.
-        :return: Return True if teh trajectory should be clipped, false otherwise.
+        :return: Return True if the trajectory should be clipped, false otherwise.
         """
         return done_terminated
 
@@ -160,13 +177,18 @@ class ClipTruncatedEpisodeTrajectoryProcessor(BaseClippingTrajectoryProcessor):
     clipped iff the env is NOT done in the last state. Relevant for critic learning in infinite time horizon tasks."""
 
     @override(BaseClippingTrajectoryProcessor)
-    def test_for_trajectory_clipping(self, done_terminated: bool, done_truncated: bool, info: Dict[str, str]) -> bool:
+    def test_for_trajectory_clipping(
+        self,
+        done_terminated: bool,  # noqa: ARG002
+        done_truncated: bool,
+        info: dict[str, str],  # noqa: ARG002
+    ) -> bool:  # noqa: ARG002
         """Clip a trajectory if it ended in a done and was not timelimit truncated.
 
         :param done_terminated: Whether the current trajectory ended in done by termination.
         :param done_truncated: Whether the current trajectory was truncated by the timelimit wrapper.
         :param info: The info of the last environment step.
-        :return: Return True if teh trajectory should be clipped, false otherwise.
+        :return: Return True if the trajectory should be clipped, false otherwise.
         """
         return done_truncated
 
@@ -184,8 +206,9 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
 
     @staticmethod
     @override(TrajectoryProcessor)
-    def convert_trajectory_with_env(trajectory: TrajectoryRecord, conversion_env: Optional[MazeEnv]) \
-            -> List[StructuredSpacesRecord]:
+    def convert_trajectory_with_env(
+        trajectory: TrajectoryRecord, conversion_env: MazeEnv | None
+    ) -> list[StructuredSpacesRecord]:
         """Convert an episode trajectory record into an array of observations and actions using the given env.
 
         :param trajectory: Episode record to load
@@ -199,11 +222,11 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
         spaces_records = []
 
         for step_id, step_record in enumerate(trajectory.step_records[::-1]):
-
             # Process and convert in case we are dealing with state records (otherwise no conversion needed)
             if isinstance(step_record, StateRecord):
-                assert conversion_env is not None, "when conversion from Maze states is needed, conversion env " \
-                                                   "needs to be present."
+                assert conversion_env is not None, (
+                    'when conversion from Maze states is needed, conversion env needs to be present.'
+                )
 
                 # Drop incomplete records (e.g. at the end of episode)
                 if step_record.maze_state is None or step_record.maze_action is None:
@@ -214,16 +237,21 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
 
                 # Convert to spaces
                 spaces_record: StructuredSpacesRecord = StructuredSpacesRecord.converted_from(
-                    state_record=step_record, conversion_env=conversion_env,
-                    first_step_in_episode=step_id == len(trajectory.step_records))
-                assert len(spaces_record.substep_records) == 1, f'Only spaces with one substep are supported at this ' \
-                                                                f'point'
+                    state_record=step_record,
+                    conversion_env=conversion_env,
+                    first_step_in_episode=step_id == len(trajectory.step_records),
+                )
+                assert len(spaces_record.substep_records) == 1, (
+                    'Only spaces with one substep are supported at this point'
+                )
                 spaces_record.substep_records[-1].reward = step_record.reward
             else:
                 spaces_record = step_record
 
             if step_id > 0:
-                for substep, next_substep in zip(spaces_record.substep_records, spaces_records[-1].substep_records):
+                for substep, next_substep in zip(
+                    spaces_record.substep_records, spaces_records[-1].substep_records, strict=False
+                ):
                     substep.next_observation = next_substep.observation
 
             spaces_records.append(spaces_record)
@@ -234,17 +262,18 @@ class IdentityWithNextObservationTrajectoryProcessor(TrajectoryProcessor):
 
     @override(TrajectoryProcessor)
     def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord:
-        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor` interface.
-        """
+        """Implementation of :class:`~maze.core.trajectory_recording.datasets.trajectory_processor.TrajectoryProcessor`
+        interface."""
         return trajectory
 
 
 @dataclasses.dataclass
 class FilterTrajectoryWithSmallerKSubStepsProcessor(TrajectoryProcessor):
     """Filter out trajectories that have any step record with less than clip_k substep_records."""
+
     clip_k: int
 
-    def pre_process(self, trajectory: TrajectoryRecord) -> Union[TrajectoryRecord, List[TrajectoryRecord]]:
+    def pre_process(self, trajectory: TrajectoryRecord) -> TrajectoryRecord | list[TrajectoryRecord]:
         """Filter out trajectories that have any step record with less than clip_k substep_records.
 
         :param trajectory: The trajectory to preprocess.
@@ -254,9 +283,10 @@ class FilterTrajectoryWithSmallerKSubStepsProcessor(TrajectoryProcessor):
             return trajectory
 
         if any([len(sr.substep_records) < self.clip_k for sr in trajectory.step_records]):
-            trajectory.step_records = list()
+            trajectory.step_records = []
 
         return trajectory
+
 
 @dataclasses.dataclass
 class StackTrajectoryProcessor(TrajectoryProcessor):
@@ -266,7 +296,7 @@ class StackTrajectoryProcessor(TrajectoryProcessor):
     :param traj_preprocessors: List of trajectory preprocessors.
     """
 
-    def __init__(self, traj_preprocessors: Union[ListConfig, List[TrajectoryProcessor]]):
+    def __init__(self, traj_preprocessors: ListConfig | list[TrajectoryProcessor]):
         factory = Factory(TrajectoryProcessor)
         self.traj_preprocessors = [factory.instantiate(tp) for tp in traj_preprocessors]
 

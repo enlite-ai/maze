@@ -1,30 +1,40 @@
 """Statistics Logging"""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Callable
 from enum import Enum
-from typing import Union, Callable, Dict, Optional, NamedTuple, List, Type, TypeVar, Tuple, Any
+from typing import (
+    Any,
+    NamedTuple,
+    TypeVar,
+)
 
-import numpy as np
 from maze.core.events.event_record import EventRecord
 from maze.core.events.event_topic_factory import event_topic_factory
 
+import numpy as np
+
 # define the LogStats type
-LogStatsValue = Union[int, float, np.ndarray, dict]
-"""Basic data structure for log statistics"""
+LogStatsValue = int | float | np.ndarray | dict
+# Basic data structure for log statistics
 
-LogStatsGroup = Tuple[Union[str, int], ...]
-"""Basic data structure for log statistics"""
+LogStatsGroup = tuple[str | int, ...]
+# Basic data structure for log statistics
 
-LogStatsKey = NamedTuple("LogStatsKey",
-                         [
-                             ("event", Callable),
-                             ("output_name", str),
-                             ("group", Optional[LogStatsGroup])
-                         ])
-"""Basic data structure for log statistics"""
 
-LogStats = Dict[LogStatsKey, LogStatsValue]
-"""Basic data structure for log statistics"""
+class LogStatsKey(NamedTuple):
+    event: Callable
+    output_name: str
+    group: LogStatsGroup | None
+
+
+# Basic data structure for log statistics
+
+LogStats = dict[LogStatsKey, LogStatsValue]
+# Basic data structure for log statistics
 
 
 class LogStatsConsumer(ABC):
@@ -79,16 +89,16 @@ class LogStatsAggregator(LogStatsConsumer):
         self.level = level
         self.consumers = list(consumers)
 
-        self.input: Dict[LogStatsKey, list] = defaultdict(list)
+        self.input: dict[LogStatsKey, list] = defaultdict(list)
 
-        self.last_stats: Optional[LogStats] = None
+        self.last_stats: LogStats | None = None
         """keep track of the previous statistics, required e.g. for cumulative statistics"""
 
-        self.last_stats_step: Optional[int] = None
+        self.last_stats_step: int | None = None
         """step number of the last statistics calculation"""
 
-        self.cumulative_stats = dict()
-        """keep track of all cumulative stats, required e.g. for an epoch where the previous epoch did not finish any 
+        self.cumulative_stats = {}
+        """keep track of all cumulative stats, required e.g. for an epoch where the previous epoch did not finish any
         episode"""
 
         if level == LogStatsLevel.EPOCH:
@@ -106,7 +116,7 @@ class LogStatsAggregator(LogStatsConsumer):
 
     def clear_inputs(self) -> None:
         """Clear the input statistics (and start fresh)."""
-        self.input: Dict[LogStatsKey, list] = defaultdict(list)
+        self.input: dict[LogStatsKey, list] = defaultdict(list)
 
     def add_event(self, event_record: EventRecord) -> None:
         """
@@ -126,15 +136,17 @@ class LogStatsAggregator(LogStatsConsumer):
             return
 
         # handle grouping
-        group_by_list = getattr(event, "group_by", None)
+        group_by_list = getattr(event, 'group_by', None)
         group = tuple(event_record.attributes[group_by] for group_by in group_by_list) if group_by_list else None
         # add all event attributes if there are reducers operating on the event level
         if None in input_to_reducers:
             # flatten the dict if there is only a single event attribute
-            self.add_value(event,
-                           self._flatten_single_attribute(event_record.attributes, group_by_list),
-                           name=None,
-                           group=group)
+            self.add_value(
+                event,
+                self._flatten_single_attribute(event_record.attributes, group_by_list),
+                name=None,
+                group=group,
+            )
 
         # iterate over the individual event attributes
         for attribute_name, attribute_value in event_record.attributes.items():
@@ -144,11 +156,13 @@ class LogStatsAggregator(LogStatsConsumer):
 
             self.add_value(event, attribute_value, name=attribute_name, group=group)
 
-    def add_value(self,
-                  event: Callable,
-                  value: LogStatsValue,
-                  name: str = None,
-                  group: LogStatsGroup = None) -> None:
+    def add_value(
+        self,
+        event: Callable,
+        value: LogStatsValue,
+        name: str = None,
+        group: LogStatsGroup = None,
+    ) -> None:
         """
         Add a single value to this aggregator.
 
@@ -196,7 +210,7 @@ class LogStatsAggregator(LogStatsConsumer):
         :return Returns the statistics object. The same object has been sent to the consumers.
         """
         if self.level == LogStatsLevel.EPOCH:
-            assert self.last_stats_step != GlobalLogState.global_step, "reduce() called twice on same global log step"
+            assert self.last_stats_step != GlobalLogState.global_step, 'reduce() called twice on same global log step'
 
         all_values = defaultdict(list)
 
@@ -208,19 +222,30 @@ class LogStatsAggregator(LogStatsConsumer):
             if not input_to_reducers or input_name not in input_to_reducers:
                 continue
 
-            all_grouping_attributes = getattr(event, "group_by", None)
+            all_grouping_attributes = getattr(event, 'group_by', None)
 
             # iterate the aggregations
             reducers = input_to_reducers[input_name]
-            for reduce_function, output_name, grouping_attribute, cumulative in reducers:
+            for (
+                reduce_function,
+                output_name,
+                grouping_attribute,
+                cumulative,
+            ) in reducers:
                 projected_group = self._project_group(group_tuple, grouping_attribute, all_grouping_attributes, event)
 
                 all_values[(event, output_name, projected_group, cumulative, reduce_function)].extend(values)
 
         # second stage: execute reducers
-        aggregated_stats = dict()
+        aggregated_stats = {}
 
-        for (event, output_name, group_tuple, cumulative, reduce_function), values in all_values.items():
+        for (
+            event,
+            output_name,
+            group_tuple,
+            cumulative,
+            reduce_function,
+        ), values in all_values.items():
             try:
                 stats_key = (event, output_name, group_tuple)
                 reduced_value = self._reduce(reduce_function, values, event)
@@ -239,7 +264,7 @@ class LogStatsAggregator(LogStatsConsumer):
                 raise
             except Exception as e:
                 # wrap the exception to make it easier to trace the event that caused the exception
-                raise ValueError(f"failed to reduce event {event}") from e
+                raise ValueError(f'failed to reduce event {event}') from e
 
         aggregated_stats.update(self.cumulative_stats)
 
@@ -257,7 +282,7 @@ class LogStatsAggregator(LogStatsConsumer):
         return aggregated_stats
 
     @classmethod
-    def _reduce(cls, reduce_function: Callable, values: List[Any], event: Callable) -> Any:
+    def _reduce(cls, reduce_function: Callable, values: list[Any], event: Callable) -> Any:
         """Execute the given reduce function.
 
         Note that the input and output of the reduce function is not limited to a (lists of) attribute dictionaries
@@ -267,8 +292,9 @@ class LogStatsAggregator(LogStatsConsumer):
         # special case: no aggregation
         if reduce_function is None:
             if len(values) > 1:
-                raise AssertionError("event with aggregation skip operation 'None' is dispatched "
-                                     "more than once per step: {} ".format(event))
+                raise AssertionError(
+                    f"event with aggregation skip operation 'None' is dispatched more than once per step: {event} "
+                )
 
             # get the first and only value
             first_value = values[0]
@@ -285,10 +311,9 @@ class LogStatsAggregator(LogStatsConsumer):
         return reduce_function(values)
 
     @classmethod
-    def _flatten_single_attribute(cls,
-                                  attributes: Dict[str, Any],
-                                  group_by_list: Optional[List[str]]
-                                  ) -> Union[Dict[str, Any], Any]:
+    def _flatten_single_attribute(
+        cls, attributes: dict[str, Any], group_by_list: list[str] | None
+    ) -> dict[str, Any] | Any:
         """Unwrap single attributes (events with just one value) from the dictionary. Return the dict as is if it
         contains more than one attribute."""
         if group_by_list:
@@ -304,12 +329,14 @@ class LogStatsAggregator(LogStatsConsumer):
         return attributes
 
     @classmethod
-    def _project_group(cls,
-                       group_tuple: LogStatsGroup,
-                       group_attribute: str,
-                       all_group_attributes: List[str],
-                       event: Callable) -> LogStatsGroup:
-        """"helper to project groups, ie. setting all other tuple positions to None
+    def _project_group(
+        cls,
+        group_tuple: LogStatsGroup,
+        group_attribute: str,
+        all_group_attributes: list[str],
+        event: Callable,
+    ) -> LogStatsGroup:
+        """ "helper to project groups, ie. setting all other tuple positions to None
 
         e.g. suppose group_attribute references the second position in the group tuple, then
         we project ('g1_value', 'g2_value', 'g3_value') to (None, 'g2_value', None)
@@ -317,16 +344,18 @@ class LogStatsAggregator(LogStatsConsumer):
         if not group_attribute:
             return group_tuple
 
-        assert all_group_attributes, \
-            "group_by without grouping, did you specify @define_stats_grouping for event {}?".format(event)
-        assert group_attribute in all_group_attributes, \
-            "group {} is not configured for event {}, check @define_stats_grouping".format(group_attribute, event)
+        assert all_group_attributes, (
+            f'group_by without grouping, did you specify @define_stats_grouping for event {event}?'
+        )
+        assert group_attribute in all_group_attributes, (
+            f'group {group_attribute} is not configured for event {event}, check @define_stats_grouping'
+        )
 
         return tuple(group_tuple[idx] if group_attribute == g else None for idx, g in enumerate(all_group_attributes))
 
     T = TypeVar('T')
 
-    def create_event_topic(self, interface_class: Type[T]) -> T:
+    def create_event_topic(self, interface_class: type[T]) -> T:
         """
         Provide an event topic proxy analogous to the event proxies provided by EventSystem/PubSub. But in contrast
         to the event system, this can be used to inject statistics also on the step, episode and epoch level.
@@ -344,7 +373,7 @@ class LogStatsWriter(ABC):
     """A minimal interface concrete log statistics writers must implement."""
 
     @abstractmethod
-    def write(self, path: Optional[str], step: int, stats: LogStats) -> None:
+    def write(self, path: str | None, step: int, stats: LogStats) -> None:
         """
         Write the passed statistics dictionary to the log.
 
@@ -355,18 +384,17 @@ class LogStatsWriter(ABC):
         :return None
         """
 
-    def close(self) -> None:
-        """Close writer and clean up.
-        """
+    def close(self) -> None:  # noqa: B027
+        """Close writer and clean up."""
 
 
 class GlobalLogState:
     """Internal class that encapsulates the global state of the logging system."""
 
     global_step = 1
-    global_log_stats_writers: List[LogStatsWriter] = list()
+    global_log_stats_writers: list[LogStatsWriter] = []
 
-    hook_on_log_step: List[Callable] = list()
+    hook_on_log_step: list[Callable] = []
     """ list of functions called on increment_log_step() """
 
 
@@ -374,11 +402,10 @@ class LogStatsLogger(LogStatsConsumer):
     """Auxiliary class returned by get_stats_logger."""
 
     def receive(self, stat: LogStats) -> None:
-        """Implementation of LogStatsConsumer interface
-        """
+        """Implementation of LogStatsConsumer interface"""
         log_stats(stat, self.path)
 
-    def __init__(self, path: Optional[str]):
+    def __init__(self, path: str | None):
         self.path = path
 
 
@@ -391,7 +418,7 @@ def register_log_stats_writer(writer: LogStatsWriter) -> None:
     GlobalLogState.global_log_stats_writers.append(writer)
 
 
-def log_stats(stats: LogStats, path: Optional[str]) -> None:
+def log_stats(stats: LogStats, path: str | None) -> None:
     """Helper function.
 
     :param stats: The statistics dictionary
@@ -411,14 +438,14 @@ def increment_log_step() -> None:
     GlobalLogState.global_step += 1
 
 
-def get_stats_logger(path: Optional[str] = None) -> LogStatsConsumer:
+def get_stats_logger(path: str | None = None) -> LogStatsConsumer:
     """
     Creates an object that can be used to pipe LogStatAggregator instances with the logging writers.
 
     Example usage:
-    >>> logger = get_stats_logger("eval")
+    >>> logger = get_stats_logger('eval')
     >>> aggregator = LogStatsAggregator(LogStatsLevel.STEP, logger)
-    >>> aggregator.reduce() # calculate the statistics and sent it to the registered logging writers
+    >>> aggregator.reduce()  # calculate the statistics and sent it to the registered logging writers
 
     :param path: The optional path to prefix the logging tags
     :return:

@@ -1,15 +1,18 @@
 """Contains interface definitions for observation normalization strategies."""
+
+from __future__ import annotations
+
 import copy
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union, Iterable, Tuple, Optional
+from collections.abc import Iterable
 
 import gymnasium as gym
 import numpy as np
 
 # specify data types
-Number = Union[float, int]
-StatisticsType = Dict[str, Union[np.ndarray, Number, Iterable[Number]]]
-StructuredStatisticsType = Dict[str, StatisticsType]
+Number = float | int
+StatisticsType = dict[str, np.ndarray | Number | Iterable[Number]]
+StructuredStatisticsType = dict[str, StatisticsType]
 
 
 class ObservationNormalizationStrategy(ABC):
@@ -26,12 +29,15 @@ class ObservationNormalizationStrategy(ABC):
     :param axis: Defines the axis along which to compute normalization statistics
     """
 
-    def __init__(self, observation_space: gym.spaces.Box, clip_range: Tuple[Number, Number],
-                 axis: Optional[Union[int, Tuple[int], List[int]]]):
-
+    def __init__(
+        self,
+        observation_space: gym.spaces.Box,
+        clip_range: tuple[Number, Number],
+        axis: int | tuple[int] | list[int] | None,
+    ):
         assert isinstance(observation_space, gym.spaces.Box)
         self._original_observation_space = copy.deepcopy(observation_space)
-        self._statistics: Optional[StatisticsType] = None
+        self._statistics: StatisticsType | None = None
         self._axis = axis
         # Convert to tuple, since yaml only reads lists
         if isinstance(self._axis, Iterable):
@@ -74,7 +80,7 @@ class ObservationNormalizationStrategy(ABC):
         :param stats: A dictionary containing the respective observation normalization statistics.
         """
 
-        results = dict()
+        results = {}
 
         for stats_key, values in stats.items():
             results[stats_key] = np.asarray(values, dtype=np.float32)
@@ -100,7 +106,7 @@ class ObservationNormalizationStrategy(ABC):
         return self._statistics is not None
 
     @abstractmethod
-    def estimate_stats(self, observations: List[np.ndarray]) -> StatisticsType:
+    def estimate_stats(self, observations: list[np.ndarray]) -> StatisticsType:
         """Estimate observation statistics from collected observations.
 
         :param observations: A lists of observations.

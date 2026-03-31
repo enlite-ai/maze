@@ -3,7 +3,7 @@ Event log writers need to be globally registered in order to receive episode eve
 environments.
 """
 
-from typing import List
+from __future__ import annotations
 
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
@@ -16,7 +16,7 @@ class LogEventsWriterRegistry:
     """
 
     # List of registered writers
-    writers: List[LogEventsWriter] = []
+    writers: list[LogEventsWriter] = []
 
     @classmethod
     def register_writer(cls, writer: LogEventsWriter) -> None:

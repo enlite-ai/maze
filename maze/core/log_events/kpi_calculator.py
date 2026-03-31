@@ -1,7 +1,8 @@
 """KPIs can be calculated at the end of the episode to help with measuring agent performance."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Dict
 
 from maze.core.env.maze_state import MazeStateType
 from maze.core.log_events.episode_event_log import EpisodeEventLog
@@ -12,7 +13,7 @@ class KpiCalculator(ABC):
     If available, is called by statistics wrapper at the end of each episode."""
 
     @abstractmethod
-    def calculate_kpis(self, episode_event_log: EpisodeEventLog, last_maze_state: MazeStateType) -> Dict[str, float]:
+    def calculate_kpis(self, episode_event_log: EpisodeEventLog, last_maze_state: MazeStateType) -> dict[str, float]:
         """Compute KPIs for the current episode.
 
         This is expected to be called once at the end of the episode, if statistics logging is enabled.

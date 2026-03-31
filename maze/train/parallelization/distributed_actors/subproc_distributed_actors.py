@@ -35,7 +35,7 @@ class SubprocDistributedActors(DistributedActors):
     """
 
     def __init__(self,
-                 env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin, LogStatsEnv]],
+                 env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
                  policy: TorchPolicy,
                  n_rollout_steps: int,
                  n_actors: int,
@@ -95,7 +95,7 @@ class SubprocDistributedActors(DistributedActors):
         q_size_before = self.actor_output_queue.qsize()
 
         while len(trajectories) < self.batch_size:
-            trajectory_report: Union[SpacesTrajectoryRecord, ExceptionReport] = self.actor_output_queue.get()
+            trajectory_report: SpacesTrajectoryRecord | ExceptionReport = self.actor_output_queue.get()
             if isinstance(trajectory_report, ExceptionReport):
                 raise RuntimeError("An actor encountered the following error:\n"
                                    + trajectory_report.traceback) from trajectory_report.exception

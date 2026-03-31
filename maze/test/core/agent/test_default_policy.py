@@ -20,7 +20,7 @@ class DummyFlatPolicy(FlatPolicy):
         """ compute action """
         return {self.action_name: np.ones(5, dtype=np.float32)}
 
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int]) -> \
+    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int | None) -> \
             Tuple[Sequence[ActionType], Sequence[float]]:
         """ compute top action """
         raise NotImplementedError

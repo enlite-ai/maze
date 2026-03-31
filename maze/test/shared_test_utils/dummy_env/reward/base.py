@@ -26,7 +26,7 @@ class RewardAggregator(RewardAggregatorInterface):
         """
         return [DummyEnvEvents]
 
-    def summarize_reward(self, maze_state: Optional[MazeStateType] = None) -> float:
+    def summarize_reward(self, maze_state: MazeStateType | None = None) -> float:
         """Summarize reward based on the orders and pieces to cut.
 
         :return: the summarized scalar reward.

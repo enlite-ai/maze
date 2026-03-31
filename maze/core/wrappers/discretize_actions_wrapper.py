@@ -1,8 +1,6 @@
 """Wrapper for discretizing individual actions."""
-from typing import Union, Dict, List
 
-import gymnasium as gym
-import numpy as np
+from __future__ import annotations
 
 from maze.core.annotations import override
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
@@ -11,8 +9,11 @@ from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.structured_env_utils import flat_structured_space
 from maze.core.wrappers.wrapper import ActionWrapper, EnvType
 
+import gymnasium as gym
+import numpy as np
 
-class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesMixin, StructuredEnv]]):
+
+class DiscretizeActionsWrapper(ActionWrapper[EnvType | StructuredEnvSpacesMixin | StructuredEnv]):
     """The DiscretizeActionsWrapper provides functionality for discretizing individual continuous actions into discrete
      ones.
 
@@ -32,22 +33,29 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
     :param discretization_config: The action discretization configuration.
     """
 
-    def __init__(self, env: Union[StructuredEnvSpacesMixin, StructuredEnv],
-                 discretization_config: Dict[str, Dict[str, Union[Union[int, float], List[Union[int, float]]]]]):
+    def __init__(
+        self,
+        env: StructuredEnvSpacesMixin | StructuredEnv,
+        discretization_config: dict[str, dict[str, int | float | list[int | float]]],
+    ):
         super().__init__(env)
         assert isinstance(self.env.action_space, gym.spaces.Dict)
         self._test_config(discretization_config)
         self.discretization_config = discretization_config
 
-        self._bins: Dict[str, np.ndarray] = dict()
-        self._avgs: Dict[str, np.ndarray] = dict()
+        self._bins: dict[str, np.ndarray] = {}
+        self._avgs: dict[str, np.ndarray] = {}
 
         # Initialize the action space dict
-        self._action_spaces_dict = {step_key: self._discretize_action_space(action_space)
-                                    for step_key, action_space in self.env.action_spaces_dict.items()}
+        self._action_spaces_dict = {
+            step_key: self._discretize_action_space(action_space)
+            for step_key, action_space in self.env.action_spaces_dict.items()
+        }
 
-    def _test_config(self, discretization_config: Dict[str, Dict[str, Union[Union[int, float],
-                                                                            List[Union[int, float]]]]]) -> None:
+    def _test_config(
+        self,
+        discretization_config: dict[str, dict[str, int | float | list[int | float]]],
+    ) -> None:
         """Test the config for inconsistencies or incomplete definitions.
 
         :param discretization_config: The action discretization configuration.
@@ -58,9 +66,10 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
             flat_action_space = flat_structured_space(self.env.action_spaces_dict)
             assert action_key in flat_action_space.spaces.keys(), f'{action_key} not in {flat_action_space}'
             assert isinstance(flat_action_space[action_key], gym.spaces.Box)
-            assert len(flat_action_space[action_key].shape) == 1, \
-                'Only single dimensional continuous spaces supported. Please use the SplitActionWrapper in order to ' \
+            assert len(flat_action_space[action_key].shape) == 1, (
+                'Only single dimensional continuous spaces supported. Please use the SplitActionWrapper in order to '
                 'split the actions first.'
+            )
             assert 'num_bins' in config
             assert config['num_bins'] > 1, 'Num of bins must be greater than 1'
             if 'low' in config:
@@ -76,14 +85,18 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
                     high = config['high']
                     if not isinstance(low, (float, int)):
                         assert len(low) == len(high)
-                assert np.all(low < high), f'lower bound must be smaller than higher bound (low: {low}, high: {high}' \
-                                           f', action_key: {action_key})'
-                assert np.all(low >= flat_action_space[action_key].low), \
-                    f'Lower bound has to be larger or equal to the lower bound of the original space (low: {low}, ' \
+                assert np.all(low < high), (
+                    f'lower bound must be smaller than higher bound (low: {low}, high: {high}'
+                    f', action_key: {action_key})'
+                )
+                assert np.all(low >= flat_action_space[action_key].low), (
+                    f'Lower bound has to be larger or equal to the lower bound of the original space (low: {low}, '
                     f'original space low: {flat_action_space[action_key].low}, action_key: {action_key})'
-                assert np.all(high <= flat_action_space[action_key].high), \
-                    f'Higher bound has to be smaller or equal to the higher bound of the original space (high: {high}' \
+                )
+                assert np.all(high <= flat_action_space[action_key].high), (
+                    f'Higher bound has to be smaller or equal to the higher bound of the original space (high: {high}'
                     f', original space high: {flat_action_space[action_key].high}, action_key: {action_key})'
+                )
 
     def _discretize_action_space(self, action_space: gym.spaces.Dict) -> gym.spaces.Dict:
         """Discretize a single action space (dict) into the corresponding sub actions spaces w.r.t. the split config
@@ -91,7 +104,7 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
         :param action_space: The action space to split.
         :return: The resulting (split) action space.
         """
-        new_action_space = dict()
+        new_action_space = {}
         for org_action_name, org_action_space in action_space.spaces.items():
             if org_action_name in self.discretization_config:
                 dis_config = self.discretization_config[org_action_name]
@@ -107,7 +120,9 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
                     high = org_action_space.high
                 bounds = np.linspace(start=low, stop=high, num=dis_config['num_bins'] + 1)
                 self._bins[org_action_name] = bounds[1:]
-                self._avgs[org_action_name] = np.array(list(zip(bounds, bounds[1:])), dtype=np.float32).mean(axis=1)
+                self._avgs[org_action_name] = np.array(
+                    list(zip(bounds, bounds[1:], strict=False)), dtype=np.float32
+                ).mean(axis=1)
                 assert self._bins[org_action_name].shape == self._avgs[org_action_name].shape
                 if org_action_space.shape[-1] == 1:
                     new_action_space[org_action_name] = gym.spaces.Discrete(n=dis_config['num_bins'])
@@ -121,25 +136,25 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
     @property
     @override(StructuredEnvSpacesMixin)
     def action_space(self) -> gym.spaces.Dict:
-        """The currently active gym action space.
-        """
+        """The currently active gym action space."""
         return self._action_spaces_dict[self.env.actor_id()[0]]
 
     @property
     @override(StructuredEnvSpacesMixin)
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Dict]:
-        """A dictionary of gym action spaces, with policy IDs as keys.
-        """
+    def action_spaces_dict(self) -> dict[int | str, gym.spaces.Dict]:
+        """A dictionary of gym action spaces, with policy IDs as keys."""
         return self._action_spaces_dict
 
     @override(ActionWrapper)
-    def action(self, action: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        """Implementation of :class:`~maze.core.wrappers.wrapper.ActionWrapper` interface.
-        """
+    def action(self, action: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+        """Implementation of :class:`~maze.core.wrappers.wrapper.ActionWrapper` interface."""
         new_action = {}
         for org_action_name, org_action in action.items():
-            if org_action_name in self.discretization_config and isinstance(org_action, np.ndarray) \
-                    and len(org_action.shape) > 0:
+            if (
+                org_action_name in self.discretization_config
+                and isinstance(org_action, np.ndarray)
+                and len(org_action.shape) > 0
+            ):
                 new_action[org_action_name] = self._avgs[org_action_name][org_action, range(len(org_action))]
             elif org_action_name in self.discretization_config:
                 new_action[org_action_name] = self._avgs[org_action_name][org_action]
@@ -149,9 +164,8 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
         return new_action
 
     @override(ActionWrapper)
-    def reverse_action(self, action: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        """Implementation of :class:`~maze.core.wrappers.wrapper.ActionWrapper` interface.
-        """
+    def reverse_action(self, action: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+        """Implementation of :class:`~maze.core.wrappers.wrapper.ActionWrapper` interface."""
         my_func = np.vectorize(np.digitize, signature='(),(m),()->()')
         new_action = {}
         for org_action_name, org_action in action.items():
@@ -166,6 +180,6 @@ class DiscretizeActionsWrapper(ActionWrapper[Union[EnvType, StructuredEnvSpacesM
         return new_action
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'DiscretizeActionsWrapper') -> None:
+    def clone_from(self, env: DiscretizeActionsWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self.env.clone_from(env)

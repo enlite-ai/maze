@@ -1,39 +1,43 @@
 """Utility methods used throughout the code base"""
+
+from __future__ import annotations
+
 import functools
 import os
 import sys
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Mapping, Union, Sequence, IO, cast, Callable, Any
-
-import hydra
-import numpy as np
-import yaml
-from hydra import initialize_config_module, compose
-from hydra.core.hydra_config import HydraConfig
-from omegaconf import DictConfig, OmegaConf
-from packaging.version import Version
+from typing import IO, Any, cast
 
 from maze.core.agent.serialized_torch_policy import SerializedTorchPolicy
 from maze.core.env.maze_env import MazeEnv
-from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
+from maze.core.utils.factory import CollectionOfConfigType, ConfigType, Factory
 from maze.core.wrappers.wrapper_factory import WrapperFactory
 from maze.train.utils.seed_wrapper import SeedWrapper
 from maze.utils.bcolors import BColors
 
+import hydra
+import numpy as np
+import yaml
+from hydra import compose, initialize_config_module
+from hydra.core.hydra_config import HydraConfig
+from omegaconf import DictConfig, OmegaConf
+from packaging.version import Version
 
-def read_config(path: Union[Path, str]) -> dict:
+
+def read_config(path: Path | str) -> dict:
     """
     Read YAML file into a dict
 
     :param path: Path of the file to read
     :return: Dict with the YAML file contents
     """
-    with open(str(path), 'r') as in_config:
+    with open(str(path)) as in_config:
         config = yaml.safe_load(in_config)
     return config
 
 
-def list_to_dict(list_or_dict: Union[list, Mapping]) -> Mapping:
+def list_to_dict(list_or_dict: list | Mapping) -> Mapping:
     """Convert lists to int-indexed dicts.
 
     Code is simplified by supporting only one universal data structure instead of implementing code paths for lists
@@ -125,7 +129,7 @@ class EnvFactory:
         self.env = env
         self.wrappers = wrappers
 
-    def __call__(self, *args, **kwargs) -> MazeEnv:
+    def __call__(self, *args, **kwargs) -> MazeEnv:  # noqa: ARG002
         """environment factory
         :return: Newly created environment instance.
         """
@@ -206,6 +210,7 @@ def version_based_hydra_main(config_path: str, config_name: str) -> Callable:
     :param config_name: Name of the config file.
     :return: The extended hydra.main decorator.
     """
+
     def decorator(func: Callable) -> Callable:
         """Wrap the decorated function with the hydra.main decorator and stdout tee.
 
@@ -261,20 +266,16 @@ def version_based_hydra_main(config_path: str, config_name: str) -> Callable:
                     sys.stdout = sys.__stdout__
                     log_file.close()
 
-            return hydra.main(
-                config_path=config_path,
-                config_name=config_name,
-                **hydra_version_base
-            )(tee_stdout_to_hydra_log)(*args, **kwargs)
+            return hydra.main(config_path=config_path, config_name=config_name, **hydra_version_base)(
+                tee_stdout_to_hydra_log
+            )(*args, **kwargs)
 
         return wrapper
 
     return decorator
 
 
-def read_hydra_config(config_module: str,
-                      config_name: str = None,
-                      **hydra_overrides: str) -> DictConfig:
+def read_hydra_config(config_module: str, config_name: str = None, **hydra_overrides: str) -> DictConfig:
     """Read and assemble a hydra config, given the config module, name, and overrides.
 
     :param config_module: Python module path of the hydra configuration package
@@ -285,14 +286,15 @@ def read_hydra_config(config_module: str,
     # Add additional version_base iff hydra version is above 1.2.xx.
     kwargs = get_hydra_version_base()
     with initialize_config_module(config_module, **kwargs):
-        cfg = compose(config_name, overrides=[key + "=" + value for key, value in hydra_overrides.items()])
+        cfg = compose(
+            config_name,
+            overrides=[key + '=' + value for key, value in hydra_overrides.items()],
+        )
 
     return cfg
 
 
-def make_env_from_hydra(config_module: str,
-                        config_name: str = None,
-                        **hydra_overrides: str) -> MazeEnv:
+def make_env_from_hydra(config_module: str, config_name: str = None, **hydra_overrides: str) -> MazeEnv:
     """Create an environment instance from the hydra configuration, given the overrides.
     :param config_module: Python module path of the hydra configuration package
     :param config_name: Name of the defaults configuration yaml within `config_module`
@@ -300,7 +302,7 @@ def make_env_from_hydra(config_module: str,
     :return: The newly instantiated environment
     """
     cfg = read_hydra_config(config_module, config_name, **hydra_overrides)
-    env_factory = EnvFactory(cfg.env, cfg.wrappers if "wrappers" in cfg else {})
+    env_factory = EnvFactory(cfg.env, cfg.wrappers if 'wrappers' in cfg else {})
     return env_factory()
 
 
@@ -337,7 +339,7 @@ class SwitchWorkingDirectoryToInput:
             original_work_dir = os.getcwd()
         input_dir_full_path = os.path.join(original_work_dir, self.input_dir)
 
-        print(f"Switching load directory to {input_dir_full_path}")
+        print(f'Switching load directory to {input_dir_full_path}')
         os.chdir(input_dir_full_path)
 
     def __exit__(self, *args):
@@ -347,7 +349,7 @@ class SwitchWorkingDirectoryToInput:
         os.chdir(self.return_to_dir)
 
 
-def make_env_from_output_dir(path: Union[Path, str], config_file: str) -> MazeEnv:
+def make_env_from_output_dir(path: Path | str, config_file: str) -> MazeEnv:
     """Create an environment instance from an output directory of a previous run. The
     directory is expected to contain the hydra config of the run and all associated
     information needed for the env (like observation normalization statistics).
@@ -358,11 +360,11 @@ def make_env_from_output_dir(path: Union[Path, str], config_file: str) -> MazeEn
     """
     with SwitchWorkingDirectoryToInput(path):
         cfg = read_config(config_file)
-        env = EnvFactory(cfg["env"], cfg["wrappers"] if "wrappers" in cfg else {})()
+        env = EnvFactory(cfg['env'], cfg['wrappers'] if 'wrappers' in cfg else {})()
     return env
 
 
-def make_policy_from_output_dir(path: Union[Path, str], config_file: str) -> SerializedTorchPolicy:
+def make_policy_from_output_dir(path: Path | str, config_file: str) -> SerializedTorchPolicy:
     """Create a serialized Torch policy instance from an output directory of a previous run. The
     directory is expected to contain the hydra config of the run and all associated
     information needed for the policy (like state_dict).
@@ -374,10 +376,11 @@ def make_policy_from_output_dir(path: Union[Path, str], config_file: str) -> Ser
     with SwitchWorkingDirectoryToInput(path):
         cfg = read_config(config_file)
         policy = SerializedTorchPolicy(
-            model=cfg["model"],
-            state_dict_file="state_dict.pt",
-            spaces_dict_file="spaces_config.pkl",
-            device="cpu")
+            model=cfg['model'],
+            state_dict_file='state_dict.pt',
+            spaces_dict_file='spaces_config.pkl',
+            device='cpu',
+        )
 
     return policy
 
@@ -394,17 +397,21 @@ def get_colored_config_str(cfg: DictConfig, resolve: bool) -> str:
 
     runner_config = full_config.pop('runner')
 
-    full_config_str = BColors.format_colored(yaml.dump({'env': full_config.pop('env')}, sort_keys=False),
-                                             BColors.OKGREEN)
-    full_config_str += BColors.format_colored(yaml.dump({'wrappers': full_config.pop('wrappers')}, sort_keys=False),
-                                              BColors.OKGREEN)
+    full_config_str = BColors.format_colored(
+        yaml.dump({'env': full_config.pop('env')}, sort_keys=False), BColors.OKGREEN
+    )
+    full_config_str += BColors.format_colored(
+        yaml.dump({'wrappers': full_config.pop('wrappers')}, sort_keys=False),
+        BColors.OKGREEN,
+    )
     if 'model' in full_config:
         full_config_str += BColors.format_colored(yaml.dump({'model': full_config.pop('model')}), BColors.OKCYAN)
 
     # Blue config for algorithm or policy
     if 'algorithm' in full_config:
-        full_config_str += BColors.format_colored(yaml.dump({'algorithm': full_config.pop('algorithm')}),
-                                                  BColors.OKBLUE)
+        full_config_str += BColors.format_colored(
+            yaml.dump({'algorithm': full_config.pop('algorithm')}), BColors.OKBLUE
+        )
     elif 'policy' in full_config:
         full_config_str += BColors.format_colored(yaml.dump({'policy': full_config.pop('policy')}), BColors.OKBLUE)
 

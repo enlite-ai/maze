@@ -49,7 +49,7 @@ class BCRunner(TrainingRunner):
     eval_concurrency: int
     """Number of concurrent evaluation envs."""
 
-    evaluators: Optional[List[BCValidationEvaluator]] = dataclasses.field(default=None, init=False)
+    evaluators: List[BCValidationEvaluator] | None = dataclasses.field(default=None, init=False)
 
     def __post_init__(self):
         """
@@ -149,9 +149,9 @@ class BCRunner(TrainingRunner):
     @override(TrainingRunner)
     def run(
             self,
-            n_epochs: Optional[int] = None,
-            evaluator: Optional[Evaluator] = None,
-            eval_every_k_iterations: Optional[int] = None
+            n_epochs: int | None = None,
+            evaluator: Evaluator | None = None,
+            eval_every_k_iterations: int | None = None
     ) -> None:
         """
         Run the training master node.
@@ -198,7 +198,7 @@ class BCRunner(TrainingRunner):
     @classmethod
     @abstractmethod
     def create_distributed_eval_env(cls,
-                                    env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+                                    env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin],
                                     eval_concurrency: int,
                                     logging_prefix: str
                                     ) -> StructuredVectorEnv:
@@ -213,7 +213,7 @@ class BCDevRunner(BCRunner):
     @override(BCRunner)
     def create_distributed_eval_env(
             cls,
-            env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+            env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin],
             eval_concurrency: int,
             logging_prefix: str
     ) -> SequentialVectorEnv:
@@ -229,7 +229,7 @@ class BCLocalRunner(BCRunner):
     @override(BCRunner)
     def create_distributed_eval_env(
             cls,
-            env_factory: Callable[[], Union[StructuredEnv, StructuredEnvSpacesMixin]],
+            env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin],
             eval_concurrency: int,
             logging_prefix: str
     ) -> SubprocVectorEnv:

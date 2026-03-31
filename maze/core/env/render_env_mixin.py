@@ -1,5 +1,7 @@
 """Interface for environments to expose render capabilities."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 

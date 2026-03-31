@@ -1,8 +1,10 @@
-""" Implements an action recording wrapper. """
-import os.path
-from typing import Dict, Any, Tuple, Optional, Union
+"""Implements an action recording wrapper."""
 
+from __future__ import annotations
+
+import os.path
 from pathlib import Path
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
@@ -22,8 +24,13 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
     :param output_dir: Path where to store the action records.
     """
 
-    def __init__(self, env: MazeEnv, record_maze_actions: bool, record_actions: bool,
-                 output_dir: str = 'action_records'):
+    def __init__(
+        self,
+        env: MazeEnv,
+        record_maze_actions: bool,
+        record_actions: bool,
+        output_dir: str = 'action_records',
+    ):
         super().__init__(env)
         self.record_maze_actions = record_maze_actions
         self.record_actions = record_actions
@@ -36,7 +43,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         self.output_dir = Path(output_dir)
 
     @override(ObservationWrapper)
-    def step(self, action) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
         """Intercept ``ObservationWrapper.step`` and map observation."""
 
         # get current actor id
@@ -67,7 +74,7 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         self.env.seed(seed)
 
     @override(ObservationWrapper)
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Intercept ``ObservationWrapper.reset`` and map observation."""
 
         # dump previous trajectory
@@ -87,22 +94,24 @@ class ActionRecordingWrapper(Wrapper[MazeEnv]):
         return obs, info
 
     def dump(self) -> None:
-        """Dump recorded trajectory to file.
-        """
+        """Dump recorded trajectory to file."""
         if self.action_record is not None and self.action_record.seed is not None:
-            output_path = self.output_dir / f"{self._episode_id}.pkl"
-            print(f'dumping action record to: {os.path.abspath((output_path))}')
+            output_path = self.output_dir / f'{self._episode_id}.pkl'
+            print(f'dumping action record to: {os.path.abspath(output_path)}')
             self.output_dir.mkdir(parents=True, exist_ok=True)
             # set cumulative reward
             self.action_record.cum_action_record_reward = self._cum_reward
             # dump record
             self.action_record.dump(output_path)
 
-    def clone_from(self, env: 'ActionRecordingWrapper') -> None:
+    def clone_from(self, env: ActionRecordingWrapper) -> None:  # noqa: ARG002
         """Reset this gym environment to the given state by creating a deep copy of the `env.state` instance variable"""
         raise RuntimeError("Cloning the 'ActionRecordingWrapper' is not supported.")
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType], first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         raise NotImplementedError

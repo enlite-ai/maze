@@ -1,7 +1,11 @@
 """Displaying trajectory data as interactive plots in Jupyter Notebooks."""
 
-from maze.core.rendering.renderer_args import RendererArg, IntRangeArg
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
+from __future__ import annotations
+
+from maze.core.rendering.renderer_args import IntRangeArg, RendererArg
+from maze.core.trajectory_recording.records.trajectory_record import (
+    StateTrajectoryRecord,
+)
 
 
 class NotebookTrajectoryViewer:
@@ -27,8 +31,9 @@ class NotebookTrajectoryViewer:
         from ipywidgets import interact
 
         step_count = len(self.episode_record.step_records)
-        step_id_argument: RendererArg = IntRangeArg(name="step_id", title="Step ID",
-                                                    min_value=0, max_value=(step_count - 1))
+        step_id_argument: RendererArg = IntRangeArg(
+            name='step_id', title='Step ID', min_value=0, max_value=(step_count - 1)
+        )
         arguments = [step_id_argument] + self.renderer.arguments()
         widgets = {arg.name: arg.create_widget() for arg in arguments}
         interact(self.render, **widgets)
@@ -43,4 +48,9 @@ class NotebookTrajectoryViewer:
         """
         assert 0 <= step_id < len(self.episode_record.step_records)
         step_record = self.episode_record.step_records[step_id]
-        self.renderer.render(step_record.maze_state, step_record.maze_action, step_record.step_event_log, **kwargs)
+        self.renderer.render(
+            step_record.maze_state,
+            step_record.maze_action,
+            step_record.step_event_log,
+            **kwargs,
+        )

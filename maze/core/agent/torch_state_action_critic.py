@@ -1,22 +1,31 @@
 """Encapsulation of multiple torch state action critics for training in structured environments."""
+
+from __future__ import annotations
+
 import copy
 import itertools
 from abc import abstractmethod
-from typing import Mapping, Union, List, Dict
+from collections.abc import Mapping
+
+from maze.core.agent.state_action_critic import StateActionCritic
+from maze.core.agent.torch_model import TorchModel
+from maze.core.annotations import override
+from maze.core.wrappers.observation_preprocessing.preprocessors.one_hot import (
+    OneHotPreProcessor,
+)
+from maze.perception.blocks.inference import InferenceBlock
+from maze.perception.perception_utils import (
+    convert_to_numpy,
+    convert_to_torch,
+    flatten_spaces,
+)
+from maze.perception.weight_init import make_module_init_normc
+from maze.utils.bcolors import BColors
 
 import torch
 from gymnasium import spaces
 from torch import nn
 from torch.distributions.utils import logits_to_probs
-
-from maze.core.agent.state_action_critic import StateActionCritic
-from maze.core.agent.torch_model import TorchModel
-from maze.core.annotations import override
-from maze.core.wrappers.observation_preprocessing.preprocessors.one_hot import OneHotPreProcessor
-from maze.perception.blocks.inference import InferenceBlock
-from maze.perception.perception_utils import flatten_spaces, convert_to_numpy, convert_to_torch
-from maze.perception.weight_init import make_module_init_normc
-from maze.utils.bcolors import BColors
 
 
 class TorchStateActionCritic(TorchModel, StateActionCritic):
@@ -31,10 +40,14 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
 
     target_key = '_target'
 
-    def __init__(self, networks: Mapping[Union[str, int], nn.Module], num_policies: int, device: str,
-                 only_discrete_spaces: Dict[Union[str, int], bool],
-                 action_spaces_dict: Dict[Union[str, int], spaces.Dict]):
-
+    def __init__(
+        self,
+        networks: Mapping[str | int, nn.Module],
+        num_policies: int,
+        device: str,
+        only_discrete_spaces: dict[str | int, bool],
+        action_spaces_dict: dict[str | int, spaces.Dict],
+    ):
         # TODO: make this a hyperparameter
         self._num_critics_per_step = 2
         self.step_critic_keys = list(networks.keys())
@@ -44,8 +57,8 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
         networks.update({(old_name, self.target_key): copy.deepcopy(critic) for old_name, critic in networks.items()})
 
         # Add multi q networks
-        self.critic_key_mapping = dict()
-        new_networks = dict()
+        self.critic_key_mapping = {}
+        new_networks = {}
         for old_name, step_critic in networks.items():
             tmp_critics = {(old_name, idx): copy.deepcopy(step_critic) for idx in range(self._num_critics_per_step)}
             self.critic_key_mapping[old_name] = list(tmp_critics.keys())
@@ -54,23 +67,31 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
 
         self.num_policies = num_policies
         self.only_discrete_spaces = only_discrete_spaces
-        self._preprocessors = dict()
+        self._preprocessors = {}
         for step_key, only_discrete in self.only_discrete_spaces.items():
             if not only_discrete:
-                discrete_spaces_keys = [key for key, value in action_spaces_dict[step_key].spaces.items()
-                                        if isinstance(value, spaces.Discrete)]
+                discrete_spaces_keys = [
+                    key
+                    for key, value in action_spaces_dict[step_key].spaces.items()
+                    if isinstance(value, spaces.Discrete)
+                ]
                 for action_key in discrete_spaces_keys:
                     for critic_key in [step_key, (step_key, self.target_key)]:
                         if critic_key not in self._preprocessors:
-                            self._preprocessors[critic_key] = dict()
+                            self._preprocessors[critic_key] = {}
                         self._preprocessors[critic_key][action_key] = OneHotPreProcessor(
-                            action_spaces_dict[step_key][action_key])
+                            action_spaces_dict[step_key][action_key]
+                        )
 
         TorchModel.__init__(self, device=device)
         self.re_init_networks()
 
-    def compute_state_action_value_step(self, observation: Dict[str, torch.Tensor], action: Dict[str, torch.Tensor],
-                                        critic_id: Union[str, int, tuple]) -> List[torch.Tensor]:
+    def compute_state_action_value_step(
+        self,
+        observation: dict[str, torch.Tensor],
+        action: dict[str, torch.Tensor],
+        critic_id: str | int | tuple,
+    ) -> list[torch.Tensor]:
         """Predict the value with specified step_key, step_observation and action.
 
         :param observation: The observation for the current step.
@@ -85,19 +106,24 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
                 if action_key in self._preprocessors[critic_id]:
                     np_action = convert_to_numpy(action_value, cast=None, in_place=False)
                     processed_action = self._preprocessors[critic_id][action_key].process(np_action)
-                    action[action_key] = convert_to_torch(processed_action, device=self.device, cast=torch.float32,
-                                                          in_place=False)
+                    action[action_key] = convert_to_torch(
+                        processed_action,
+                        device=self.device,
+                        cast=torch.float32,
+                        in_place=False,
+                    )
         observation.update(action)
 
         sub_critic_keys = self.critic_key_mapping[critic_id]
         q_values = []
-        for idx, sub_critic_key in enumerate(sub_critic_keys):
+        for _, sub_critic_key in enumerate(sub_critic_keys):
             q_values.append(self.networks[sub_critic_key](observation)['q_value'].squeeze(-1))
 
         return q_values
 
-    def compute_state_action_values_step(self, observation: Dict[str, torch.Tensor],
-                                         critic_id: Union[str, int, tuple]) -> List[Dict[str, torch.Tensor]]:
+    def compute_state_action_values_step(
+        self, observation: dict[str, torch.Tensor], critic_id: str | int | tuple
+    ) -> list[dict[str, torch.Tensor]]:
         """Predict the value with specified step_key, step_observation and action for discrete actions only.
 
         :param observation: The observation for the current step.
@@ -108,7 +134,7 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
 
         sub_critic_keys = self.critic_key_mapping[critic_id]
         q_values = []
-        for idx, sub_critic_key in enumerate(sub_critic_keys):
+        for _, sub_critic_key in enumerate(sub_critic_keys):
             net_out = self.networks[sub_critic_key](observation)
             for value in net_out.values():
                 value.unsqueeze(-1)
@@ -118,19 +144,23 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
 
     @override(StateActionCritic)
     @abstractmethod
-    def predict_q_values(self, observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                         actions: Dict[Union[str, int], Dict[str, torch.Tensor]], gather_output: bool) -> \
-            Dict[Union[str, int], List[Union[torch.Tensor, Dict[str, torch.Tensor]]]]:
-        """implementation of :class:`~maze.core.agent.state_action_critic.StateActionCritic`
-        """
+    def predict_q_values(
+        self,
+        observations: dict[str | int, dict[str, torch.Tensor]],
+        actions: dict[str | int, dict[str, torch.Tensor]],
+        gather_output: bool,
+    ) -> dict[str | int, list[torch.Tensor | dict[str, torch.Tensor]]]:
+        """implementation of :class:`~maze.core.agent.state_action_critic.StateActionCritic`"""
 
     @abstractmethod
-    def predict_next_q_values(self, next_observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions_logits: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions_log_probs: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              alpha: Dict[Union[str, int], torch.Tensor]) \
-            -> Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]]:
+    def predict_next_q_values(
+        self,
+        next_observations: dict[str | int, dict[str, torch.Tensor]],
+        next_actions: dict[str | int, dict[str, torch.Tensor]],
+        next_actions_logits: dict[str | int, dict[str, torch.Tensor]],
+        next_actions_log_probs: dict[str | int, dict[str, torch.Tensor]],
+        alpha: dict[str | int, torch.Tensor],
+    ) -> dict[str | int, torch.Tensor | dict[str, torch.Tensor]]:
         """Predict the target q value for the next step.  :math:`V (st) := E_{at∼π}[Q(st, at) − α log(π(at |st))]`.
 
         :param next_observations: The next observations.
@@ -149,7 +179,7 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
         :return: Number of critic networks.
         """
 
-    def per_critic_parameters(self) -> List[List[torch.Tensor]]:
+    def per_critic_parameters(self) -> list[list[torch.Tensor]]:
         """Retrieve all trainable critic parameters (to be assigned to optimizers).
         :return: List of lists holding all parameters for the base critic corresponding to number of critic per step.
         """
@@ -163,22 +193,23 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
         return params
 
     def update_target_weights(self, tau: float) -> None:
-        """Preform a soft or hard update depending on the tau value chosen. tau==1 results in a hard update
+        """Perform a soft or hard update depending on the tau value chosen. tau==1 results in a hard update
 
         :param tau: Parameter weighting the soft update of the target network.
         """
         for step_key in self.step_critic_keys:
-            for critic_key, target_critic_key in zip(self.critic_key_mapping[step_key],
-                                                     self.critic_key_mapping[(step_key, self.target_key)]):
+            for critic_key, target_critic_key in zip(
+                self.critic_key_mapping[step_key], self.critic_key_mapping[(step_key, self.target_key)], strict=False
+            ):
                 # Copy from q-critic to q-target-critic
-                for target_param, source_param in zip(self.networks[target_critic_key].parameters(),
-                                                      self.networks[critic_key].parameters()):
+                for target_param, source_param in zip(
+                    self.networks[target_critic_key].parameters(), self.networks[critic_key].parameters(), strict=False
+                ):
                     target_param.data.copy_(target_param.data * (1.0 - tau) + source_param.data * tau)
 
     @override(TorchModel)
-    def parameters(self) -> List[torch.Tensor]:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+    def parameters(self) -> list[torch.Tensor]:
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         params = []
         for critic in self.networks.values():
             params.extend(list(critic.parameters()))
@@ -186,37 +217,32 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
 
     @override(TorchModel)
     def eval(self) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         for critic in self.networks.values():
             critic.eval()
 
     @override(TorchModel)
     def train(self) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         for critic in self.networks.values():
             critic.train()
 
     @override(TorchModel)
     def to(self, device: str) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         self._device = device
         for critic in self.networks.values():
             critic.to(device)
 
     @property
     def device(self) -> str:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
         return self._device
 
     @override(TorchModel)
-    def state_dict(self) -> Dict:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
-        state_dict_critics = dict()
+    def state_dict(self) -> dict:
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
+        state_dict_critics = {}
 
         for key, critic in self.networks.items():
             state_dict_critics[key] = critic.state_dict()
@@ -224,14 +250,13 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
         return dict(q_critics=state_dict_critics)
 
     @override(TorchModel)
-    def load_state_dict(self, state_dict: Dict) -> None:
-        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`
-        """
-        if "q_critics" in state_dict:
-            state_dict_critics = state_dict["q_critics"]
+    def load_state_dict(self, state_dict: dict) -> None:
+        """implementation of :class:`~maze.core.agent.torch_model.TorchModel`"""
+        if 'q_critics' in state_dict:
+            state_dict_critics = state_dict['q_critics']
 
             for key, critic in self.networks.items():
-                assert key in state_dict_critics, f"Could not find state dict for critic ID: {key}"
+                assert key in state_dict_critics, f'Could not find state dict for critic ID: {key}'
                 critic.load_state_dict(state_dict_critics[key])
 
     def re_init_networks(self) -> None:
@@ -251,8 +276,11 @@ class TorchStateActionCritic(TorchModel, StateActionCritic):
                         if block_key == 'q_value' or block_key.endswith('_q_values'):
                             inference_blocks[0].perception_dict[block_key].apply(make_module_init_normc(0.01))
                 else:
-                    BColors.print_colored(f'More or less than one inference block was found for'
-                                          f' {key}, therefore the model could not be reinitialized', BColors.WARNING)
+                    BColors.print_colored(
+                        f'More or less than one inference block was found for'
+                        f' {key}, therefore the model could not be reinitialized',
+                        BColors.WARNING,
+                    )
 
 
 class TorchSharedStateActionCritic(TorchStateActionCritic):
@@ -262,9 +290,12 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
     """
 
     @override(TorchStateActionCritic)
-    def predict_q_values(self, observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                         actions: Dict[Union[str, int], Dict[str, torch.Tensor]], gather_output: bool) -> \
-            Dict[Union[str, int], List[Union[torch.Tensor, Dict[str, torch.Tensor]]]]:
+    def predict_q_values(
+        self,
+        observations: dict[str | int, dict[str, torch.Tensor]],
+        actions: dict[str | int, dict[str, torch.Tensor]],
+        gather_output: bool,
+    ) -> dict[str | int, list[torch.Tensor | dict[str, torch.Tensor]]]:
         """implementation of
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
         """
@@ -278,9 +309,16 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
             out = self.compute_state_action_values_step(flattened_observations, step_id)
             # output shape List[Dict[str, (rollout_length, batch_dim)]]
             if gather_output:
-                out = [{action_key: action_value.gather(-1, flattened_actions[
-                    action_key.replace('_q_values', '')].long().unsqueeze(-1)).squeeze(-1)
-                        for action_key, action_value in critic_out.items()} for critic_out in out]
+                out = [
+                    {
+                        action_key: action_value.gather(
+                            -1,
+                            flattened_actions[action_key.replace('_q_values', '')].long().unsqueeze(-1),
+                        ).squeeze(-1)
+                        for action_key, action_value in critic_out.items()
+                    }
+                    for critic_out in out
+                ]
             q_value = out
         else:
             q_value = self.compute_state_action_value_step(flattened_observations, flattened_actions, step_id)
@@ -289,12 +327,14 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
         return q_values
 
     @override(TorchStateActionCritic)
-    def predict_next_q_values(self, next_observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions_logits: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions_log_probs: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              alpha: Dict[Union[str, int], torch.Tensor]) \
-            -> Dict[Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]]:
+    def predict_next_q_values(
+        self,
+        next_observations: dict[str | int, dict[str, torch.Tensor]],
+        next_actions: dict[str | int, dict[str, torch.Tensor]],
+        next_actions_logits: dict[str | int, dict[str, torch.Tensor]],
+        next_actions_log_probs: dict[str | int, dict[str, torch.Tensor]],
+        alpha: dict[str | int, torch.Tensor],
+    ) -> dict[str | int, torch.Tensor | dict[str, torch.Tensor]]:
         """implementation of
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
         """
@@ -309,10 +349,11 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
         alpha = sum(alpha.values())
 
         if all(self.only_discrete_spaces.values()):
-            next_q_values = self.compute_state_action_values_step(flattened_next_observations,
-                                                                  critic_id=(step_id, self.target_key))
+            next_q_values = self.compute_state_action_values_step(
+                flattened_next_observations, critic_id=(step_id, self.target_key)
+            )
             transpose_next_q_value = {k: [dic[k] for dic in next_q_values] for k in next_q_values[0]}
-            next_q_value = dict()
+            next_q_value = {}
             for q_action_head, q_values in transpose_next_q_value.items():
                 action_key = q_action_head.replace('_q_values', '')
                 tmp_q_value = torch.stack(q_values).min(dim=0).values
@@ -320,16 +361,24 @@ class TorchSharedStateActionCritic(TorchStateActionCritic):
                 next_action_log_probs = torch.log(next_action_probs + (next_action_probs == 0.0).float() * 1e-8)
 
                 # output shape of V(st) is (rollout_length, batch_dim)
-                next_q_value[action_key] = torch.matmul(
-                    next_action_probs.unsqueeze(-2),
-                    (tmp_q_value - alpha * next_action_log_probs).unsqueeze(-1)).squeeze(-1).squeeze(-1)
+                next_q_value[action_key] = (
+                    torch.matmul(
+                        next_action_probs.unsqueeze(-2),
+                        (tmp_q_value - alpha * next_action_log_probs).unsqueeze(-1),
+                    )
+                    .squeeze(-1)
+                    .squeeze(-1)
+                )
 
         else:
-            next_q_value = self.compute_state_action_value_step(flattened_next_observations,
-                                                                flattened_next_actions,
-                                                                (step_id, self.target_key))
-            next_q_value = torch.stack(next_q_value).min(dim=0).values - alpha * \
-                            torch.stack(list(flattened_next_action_log_probs.values())).mean(dim=0)
+            next_q_value = self.compute_state_action_value_step(
+                flattened_next_observations,
+                flattened_next_actions,
+                (step_id, self.target_key),
+            )
+            next_q_value = torch.stack(next_q_value).min(dim=0).values - alpha * torch.stack(
+                list(flattened_next_action_log_probs.values())
+            ).mean(dim=0)
 
         return {step_id: next_q_value}
 
@@ -349,47 +398,61 @@ class TorchStepStateActionCritic(TorchStateActionCritic):
     """
 
     @override(TorchStateActionCritic)
-    def predict_q_values(self, observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                         actions: Dict[Union[str, int], Dict[str, torch.Tensor]], gather_output: bool) -> \
-            Dict[Union[str, int], List[Union[torch.Tensor, Dict[str, torch.Tensor]]]]:
+    def predict_q_values(
+        self,
+        observations: dict[str | int, dict[str, torch.Tensor]],
+        actions: dict[str | int, dict[str, torch.Tensor]],
+        gather_output: bool,
+    ) -> dict[str | int, list[torch.Tensor | dict[str, torch.Tensor]]]:
         """implementation of
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
         """
 
-        q_values = dict()
+        q_values = {}
         for step_id in observations.keys():
             if self.only_discrete_spaces[step_id]:
                 out = self.compute_state_action_values_step(observations[step_id], step_id)
                 # output shape List[Dict[str, (rollout_length, batch_dim)]]
                 if gather_output:
-                    out = [{action_key: action_value.gather(-1, actions[step_id][
-                        action_key.replace('_q_values', '')].long().unsqueeze(-1)).squeeze(-1)
-                            for action_key, action_value in critic_out.items()} for critic_out in out]
+                    out = [
+                        {
+                            action_key: action_value.gather(
+                                -1,
+                                actions[step_id][action_key.replace('_q_values', '')].long().unsqueeze(-1),
+                            ).squeeze(-1)
+                            for action_key, action_value in critic_out.items()
+                        }
+                        for critic_out in out
+                    ]
                 q_values[step_id] = out
             else:
-                q_values[step_id] = self.compute_state_action_value_step(observations[step_id], actions[step_id],
-                                                                         step_id)
+                q_values[step_id] = self.compute_state_action_value_step(
+                    observations[step_id], actions[step_id], step_id
+                )
 
         return q_values
 
     @override(TorchStateActionCritic)
-    def predict_next_q_values(self, next_observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions_logits: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              next_actions_log_probs: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                              alpha: Dict[Union[str, int], torch.Tensor]) -> Dict[
-        Union[str, int], Union[torch.Tensor, Dict[str, torch.Tensor]]]:
+    def predict_next_q_values(
+        self,
+        next_observations: dict[str | int, dict[str, torch.Tensor]],
+        next_actions: dict[str | int, dict[str, torch.Tensor]],
+        next_actions_logits: dict[str | int, dict[str, torch.Tensor]],
+        next_actions_log_probs: dict[str | int, dict[str, torch.Tensor]],
+        alpha: dict[str | int, torch.Tensor],
+    ) -> dict[str | int, torch.Tensor | dict[str, torch.Tensor]]:
         """implementation of
         :class:`~maze.core.agent.torch_state_action_critic.TorchStateActionCritic`
         """
 
-        next_q_values = dict()
+        next_q_values = {}
         for step_id in next_observations.keys():
             if self.only_discrete_spaces[step_id]:
-                next_q_value = self.compute_state_action_values_step(next_observations[step_id],
-                                                                     critic_id=(step_id, self.target_key))
+                next_q_value = self.compute_state_action_values_step(
+                    next_observations[step_id], critic_id=(step_id, self.target_key)
+                )
                 transpose_next_q_value = {k: [dic[k] for dic in next_q_value] for k in next_q_value[0]}
-                next_q_values[step_id] = dict()
+                next_q_values[step_id] = {}
                 for q_action_head, q_values in transpose_next_q_value.items():
                     action_key = q_action_head.replace('_q_values', '')
                     tmp_q_value = torch.stack(q_values).min(dim=0).values
@@ -397,16 +460,24 @@ class TorchStepStateActionCritic(TorchStateActionCritic):
                     next_action_log_probs = torch.log(next_action_probs + (next_action_probs == 0.0).float() * 1e-8)
                     # output shape of V(st) is (rollout_length, batch_dim)
 
-                    next_q_values[step_id][action_key] = torch.matmul(
-                        next_action_probs.unsqueeze(-2),
-                        (tmp_q_value - alpha[step_id] * next_action_log_probs).unsqueeze(-1)).squeeze(-1).squeeze(-1)
+                    next_q_values[step_id][action_key] = (
+                        torch.matmul(
+                            next_action_probs.unsqueeze(-2),
+                            (tmp_q_value - alpha[step_id] * next_action_log_probs).unsqueeze(-1),
+                        )
+                        .squeeze(-1)
+                        .squeeze(-1)
+                    )
             else:
-                next_q_value = self.compute_state_action_value_step(next_observations[step_id],
-                                                                    next_actions[step_id],
-                                                                    (step_id, self.target_key))
+                next_q_value = self.compute_state_action_value_step(
+                    next_observations[step_id],
+                    next_actions[step_id],
+                    (step_id, self.target_key),
+                )
                 # output shape of V(st) is (rollout_length, batch_size)
-                next_q_values[step_id] = torch.stack(next_q_value).min(dim=0).values - alpha[step_id] * \
-                                         torch.stack(list(next_actions_log_probs[step_id].values())).mean(dim=0)
+                next_q_values[step_id] = torch.stack(next_q_value).min(dim=0).values - alpha[step_id] * torch.stack(
+                    list(next_actions_log_probs[step_id].values())
+                ).mean(dim=0)
 
         return next_q_values
 

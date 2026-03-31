@@ -1,8 +1,10 @@
 """Record of either agent actions or maze action objects."""
+
+from __future__ import annotations
+
 import os
 import pickle
 from collections import defaultdict
-from typing import Dict
 
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.maze_action import MazeActionType
@@ -17,14 +19,14 @@ class ActionRecord:
 
     def __init__(self, seed: int):
         self.seed = seed
-        self.maze_actions: Dict[int, MazeActionType] = dict()
-        self.agent_actions: Dict[int, Dict[ActorID, ActionType]] = defaultdict(dict)
+        self.maze_actions: dict[int, MazeActionType] = {}
+        self.agent_actions: dict[int, dict[ActorID, ActionType]] = defaultdict(dict)
 
         # corresponding reward for action record (useful for deterministic replay checks)
         self.cum_action_record_reward = None
 
     @classmethod
-    def load(cls, dump_file: str) -> "ActionRecord":
+    def load(cls, dump_file: str) -> ActionRecord:
         """Load existing action record from file.
 
         :param dump_file: Path to dumped action record.
@@ -85,8 +87,6 @@ class ActionRecord:
 
         :param max_items: Maximum number of items in action record.
         """
-        self.maze_actions = dict([(key, value) for key, value in
-                                  list(self.maze_actions.items())[:max_items]])
+        self.maze_actions = {key: value for key, value in list(self.maze_actions.items())[:max_items]}
 
-        self.agent_actions = dict([(key, value) for key, value in
-                                   list(self.agent_actions.items())[:max_items]])
+        self.agent_actions = {key: value for key, value in list(self.agent_actions.items())[:max_items]}

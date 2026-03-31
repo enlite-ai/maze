@@ -1,7 +1,9 @@
 """Additional arguments exposed by the renderer for more complex envs."""
 
-from abc import abstractmethod, ABC
-from typing import Union, Any, Tuple, List
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import Any
 
 
 class RendererArg(ABC):
@@ -42,12 +44,13 @@ class IntRangeArg(RendererArg):
     def create_widget(self):
         """Build an int slider widget."""
         import ipywidgets as widgets
+
         return widgets.IntSlider(
             description=self.title,
             min=self.min_value,
             max=self.max_value,
             step=1,
-            continuous_update=False
+            continuous_update=False,
         )
 
 
@@ -58,14 +61,12 @@ class OptionsArrayArg(RendererArg):
       or an array of tuples, each in the form of `(value_displayed_to_the_user, value_passed_to_renderer)`
     """
 
-    def __init__(self, name: str, title: str, options: List[Union[Any, Tuple[str, Any]]]):
+    def __init__(self, name: str, title: str, options: list[Any | tuple[str, Any]]):
         super().__init__(name, title)
         self.options = options
 
     def create_widget(self):
         """Build a dropdown widget."""
         import ipywidgets as widgets
-        return widgets.Dropdown(
-            description=self.title,
-            options=self.options
-        )
+
+        return widgets.Dropdown(description=self.title, options=self.options)

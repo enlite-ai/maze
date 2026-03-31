@@ -1,5 +1,7 @@
 """Event logs are written out through event log writer objects registered via the global event log writer registry."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 from maze.core.log_events.episode_event_log import EpisodeEventLog

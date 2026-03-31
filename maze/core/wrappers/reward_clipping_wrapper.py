@@ -1,4 +1,7 @@
 """Contains a reward clipping wrapper."""
+
+from __future__ import annotations
+
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
@@ -28,6 +31,6 @@ class RewardClippingWrapper(RewardWrapper[MazeEnv]):
         return min(max(self.min_val, reward), self.max_val)
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'RewardClippingWrapper') -> None:
+    def clone_from(self, env: RewardClippingWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self.env.clone_from(env)

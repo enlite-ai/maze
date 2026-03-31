@@ -1,10 +1,9 @@
 """Contains a gif rendering export wrapper."""
-from datetime import datetime
-from typing import Optional, Tuple, Dict, Union, Any
 
-import gymnasium as gym
-import imageio.v2 as imageio
-import matplotlib.pyplot as plt
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -17,6 +16,10 @@ from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.wrappers.maze_gym_env_wrapper import GymCoreEnv
 from maze.core.wrappers.wrapper import Wrapper
 
+import gymnasium as gym
+import imageio.v2 as imageio
+import matplotlib.pyplot as plt
+
 
 class ExportGifWrapper(Wrapper[MazeEnv]):
     """Dumps step renderings of environments as .gif files.
@@ -25,7 +28,8 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
     Otherwise it will dump a lot off rollout GIFs to your disk.
 
     To convert the GIF into a mp4 video run:
-    ffmpeg -r 1 -i <file-path>.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" <file-path>.mp4
+    ffmpeg -r 1 -i <file-path>.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2"
+    <file-path>.mp4
 
     :param env: The environment to wrap.
     :param duration: Duration in seconds between consecutive image frames.
@@ -44,7 +48,7 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         self._is_gym_env = isinstance(self.env, gym.Env)
 
     @override(BaseEnv)
-    def step(self, action: MazeActionType) -> Tuple[ObservationType, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action: MazeActionType) -> tuple[ObservationType, Any, bool, bool, dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
         observation, reward, terminated, truncated, info = self.env.step(action)
 
@@ -55,7 +59,7 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         return observation, reward, terminated, truncated, info
 
     @override(BaseEnv)
-    def reset(self) -> Tuple[MazeActionType, dict]:
+    def reset(self) -> tuple[MazeActionType, dict]:
         """Intercept ``BaseEnv.reset`` and map observation."""
 
         # reset wrapped env
@@ -67,8 +71,8 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
                 self._writer.close()
 
             # init new writer
-            self._time_stamp = datetime.now().strftime("%d-%b-%Y_%H-%M-%S-%f")
-            gif_name = f"rollout_{self._time_stamp}.gif"
+            self._time_stamp = datetime.now().strftime('%d-%b-%Y_%H-%M-%S-%f')
+            gif_name = f'rollout_{self._time_stamp}.gif'
             self._writer = imageio.get_writer(gif_name, mode='I', duration=self._duration)
 
             # render initial state
@@ -78,8 +82,7 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         return observation, info
 
     def _render(self) -> None:
-        """Render state to rgb image and append image stack.
-        """
+        """Render state to rgb image and append image stack."""
 
         # Gym style rendering
         if self._is_gym_env:
@@ -88,13 +91,17 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         # Maze style rendering
         else:
             renderer = self.env.get_renderer()
-            renderer.render(maze_state=self.env.get_maze_state(), maze_action=None, events=self._events)
+            renderer.render(
+                maze_state=self.env.get_maze_state(),
+                maze_action=None,
+                events=self._events,
+            )
             fig = plt.gcf()
             # img = np.array(fig.canvas.renderer.buffer_rgba())
 
             # Note that the individual images are kept, because jumping to a specific step is inconvenient in
             # GIF playback.
-            image_file_name = f"rollout_{self._time_stamp}_step_{self.env.get_env_time()}.png"
+            image_file_name = f'rollout_{self._time_stamp}_step_{self.env.get_env_time()}.png'
             plt.savefig(image_file_name)
             img = imageio.imread(image_file_name)
 
@@ -104,13 +111,16 @@ class ExportGifWrapper(Wrapper[MazeEnv]):
         self._writer.append_data(img[:, :, :3])
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType], first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         raise NotImplementedError
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'ExportGifWrapper') -> None:
+    def clone_from(self, env: ExportGifWrapper) -> None:  # noqa: ARG002
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         raise RuntimeError("Cloning the 'ExportGifWrapper' is not supported.")
 

@@ -1,6 +1,8 @@
 """Contains a base class for torch models."""
+
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import List, Dict
 
 import torch
 
@@ -26,7 +28,7 @@ class TorchModel:
         return self._device
 
     @abstractmethod
-    def parameters(self) -> List[torch.Tensor]:
+    def parameters(self) -> list[torch.Tensor]:
         """Returns all parameters of all networks."""
 
     @abstractmethod
@@ -44,11 +46,11 @@ class TorchModel:
         """
 
     @abstractmethod
-    def state_dict(self) -> Dict:
+    def state_dict(self) -> dict:
         """Return state dict composed of state dicts of all encapsulated networks."""
 
     @abstractmethod
-    def load_state_dict(self, state_dict: Dict) -> None:
+    def load_state_dict(self, state_dict: dict) -> None:
         """Set state dict of all encapsulated networks.
         :param state_dict: The torch state dictionary.
         """

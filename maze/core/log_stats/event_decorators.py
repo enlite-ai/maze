@@ -1,12 +1,15 @@
 """Event decorators can be used to compactly define logging statistics in event interfaces."""
+
+from __future__ import annotations
+
 import inspect
 from collections import defaultdict
-from typing import Callable, Optional, List, Dict
+from collections.abc import Callable
 
 from maze.core.log_stats.log_stats import LogStatsLevel
 
 
-def _get_all_input_names(level: LogStatsLevel, func_obj: Callable) -> List[str]:
+def _get_all_input_names(level: LogStatsLevel, func_obj: Callable) -> list[str]:
     """
     Obtain all valid input names for a specific event method.
 
@@ -24,15 +27,14 @@ def _get_all_input_names(level: LogStatsLevel, func_obj: Callable) -> List[str]:
     elif level is LogStatsLevel.EPOCH:
         previous_dict = getattr(func_obj, LogStatsLevel.EPISODE.name, None)
     else:
-        raise ValueError("invalid level {}".format(level))
+        raise ValueError(f'invalid level {level}')
 
     if not previous_dict:
         return event_attributes
 
-    return [output_name
-            for agg_list in previous_dict.values()
-            for agg_fn, output_name, group_by, cumulative in agg_list
-            ]
+    return [
+        output_name for agg_list in previous_dict.values() for agg_fn, output_name, group_by, cumulative in agg_list
+    ]
 
 
 def _check_input_name(level: LogStatsLevel, func_obj: Callable, input_name: str) -> None:
@@ -44,31 +46,35 @@ def _check_input_name(level: LogStatsLevel, func_obj: Callable, input_name: str)
 
     # check if the input name is existing
     if input_name not in input_names:
-        raise ValueError("unknown input {}, expected on of {}".format(input_name, input_names))
+        raise ValueError(f'unknown input {input_name}, expected on of {input_names}')
 
 
-def _check_output_name(input_name: Optional[str],
-                       output_name: Optional[str],
-                       input_to_reducers: Dict[str, list]) -> str:
+def _check_output_name(
+    input_name: str | None,
+    output_name: str | None,
+    input_to_reducers: dict[str, list],
+) -> str:
     # reuse the input name for the output name per default
     if output_name is None:
         output_name = input_name
 
     if output_name in input_to_reducers:
         if output_name is None:
-            raise ValueError("non-unique output name, please specify the output_name")
+            raise ValueError('non-unique output name, please specify the output_name')
 
-        raise ValueError("duplicated output name {}".format(output_name))
+        raise ValueError(f'duplicated output name {output_name}')
 
     return output_name
 
 
-def _decorator_factory(level: LogStatsLevel,
-                       reduce_function: Callable,
-                       input_name: Optional[str],
-                       output_name: Optional[str],
-                       group_by: Optional[str],
-                       cumulative: bool = False) -> Callable:
+def _decorator_factory(
+    level: LogStatsLevel,
+    reduce_function: Callable,
+    input_name: str | None,
+    output_name: str | None,
+    group_by: str | None,
+    cumulative: bool = False,
+) -> Callable:
     """
     Aggregation decorator factory
 
@@ -106,9 +112,11 @@ def _decorator_factory(level: LogStatsLevel,
         _check_input_name(level, func_obj, input_name)
 
         # check if the output_name is valid
-        _output_name = _check_output_name(input_name=input_name,
-                                          output_name=output_name,
-                                          input_to_reducers=input_to_reducers)
+        _output_name = _check_output_name(
+            input_name=input_name,
+            output_name=output_name,
+            input_to_reducers=input_to_reducers,
+        )
 
         # add the new aggregation to the dictionary
         input_to_reducers[input_name].append((reduce_function, _output_name, group_by, cumulative))
@@ -118,11 +126,13 @@ def _decorator_factory(level: LogStatsLevel,
     return decorator
 
 
-def define_step_stats(reduce_function: Optional[Callable],
-                      input_name: Optional[str] = None,
-                      output_name: Optional[str] = None,
-                      group_by: Optional[str] = None,
-                      cumulative: bool = False) -> Callable:
+def define_step_stats(
+    reduce_function: Callable | None,
+    input_name: str | None = None,
+    output_name: str | None = None,
+    group_by: str | None = None,
+    cumulative: bool = False,
+) -> Callable:
     """
     Event method decorator, defines a new step statistics calculation for this event.
 
@@ -153,14 +163,23 @@ def define_step_stats(reduce_function: Optional[Callable],
 
     :return: The decorator function
     """
-    return _decorator_factory(LogStatsLevel.STEP, reduce_function, input_name, output_name, group_by, cumulative)
+    return _decorator_factory(
+        LogStatsLevel.STEP,
+        reduce_function,
+        input_name,
+        output_name,
+        group_by,
+        cumulative,
+    )
 
 
-def define_episode_stats(reduce_function: Callable,
-                         input_name: Optional[str] = None,
-                         output_name: Optional[str] = None,
-                         group_by: Optional[str] = None,
-                         cumulative: bool = False) -> Callable:
+def define_episode_stats(
+    reduce_function: Callable,
+    input_name: str | None = None,
+    output_name: str | None = None,
+    group_by: str | None = None,
+    cumulative: bool = False,
+) -> Callable:
     """
     Event method decorator, defines a new episode statistics calculation for this event.
 
@@ -188,14 +207,23 @@ def define_episode_stats(reduce_function: Callable,
 
     :return: The decorator function
     """
-    return _decorator_factory(LogStatsLevel.EPISODE, reduce_function, input_name, output_name, group_by, cumulative)
+    return _decorator_factory(
+        LogStatsLevel.EPISODE,
+        reduce_function,
+        input_name,
+        output_name,
+        group_by,
+        cumulative,
+    )
 
 
-def define_epoch_stats(reduce_function: Callable,
-                       input_name: Optional[str] = None,
-                       output_name: Optional[str] = None,
-                       group_by: Optional[str] = None,
-                       cumulative: bool = False) -> Callable:
+def define_epoch_stats(
+    reduce_function: Callable,
+    input_name: str | None = None,
+    output_name: str | None = None,
+    group_by: str | None = None,
+    cumulative: bool = False,
+) -> Callable:
     """
     Event method decorator, defines a new epoch statistics calculation for this event.
 
@@ -224,7 +252,14 @@ def define_epoch_stats(reduce_function: Callable,
 
     :return: The decorator function
     """
-    return _decorator_factory(LogStatsLevel.EPOCH, reduce_function, input_name, output_name, group_by, cumulative)
+    return _decorator_factory(
+        LogStatsLevel.EPOCH,
+        reduce_function,
+        input_name,
+        output_name,
+        group_by,
+        cumulative,
+    )
 
 
 def define_stats_grouping(*group_by: str) -> Callable:
@@ -241,10 +276,10 @@ def define_stats_grouping(*group_by: str) -> Callable:
         :param func_obj: The actual function to be decorated
         :return The unmodified function object (required by the Python decorator semantics)
         """
-        existing_group_by = getattr(func_obj, "group_by", None)
-        assert existing_group_by is None, "more than one stats_grouping decorator detected"
+        existing_group_by = getattr(func_obj, 'group_by', None)
+        assert existing_group_by is None, 'more than one stats_grouping decorator detected'
 
-        setattr(func_obj, "group_by", group_by)
+        func_obj.group_by = group_by
 
         return func_obj
 
@@ -262,12 +297,12 @@ def define_plot(create_figure_function: Callable, input_name: str = None) -> Cal
         :param func_obj: The actual function to be decorated
         :return The unmodified function object (required by the Python decorator semantics)
         """
-        render_figure_dict = getattr(func_obj, "tensorboard_render_figure_dict", None)
+        render_figure_dict = getattr(func_obj, 'tensorboard_render_figure_dict', None)
 
         # create dict if not existing
         if not render_figure_dict:
-            render_figure_dict = dict()
-            setattr(func_obj, "tensorboard_render_figure_dict", render_figure_dict)
+            render_figure_dict = {}
+            func_obj.tensorboard_render_figure_dict = render_figure_dict
 
         render_figure_dict[input_name] = create_figure_function
 
@@ -287,6 +322,6 @@ def define_shared_event(func_obj: Callable) -> Callable:
     shared_event_ = getattr(func_obj, 'shared_event', None)
     assert shared_event_ is None, 'more than one "shared_event" decorator detected'
 
-    setattr(func_obj, 'shared_event', True)
+    func_obj.shared_event = True
 
     return func_obj

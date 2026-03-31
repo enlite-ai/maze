@@ -29,7 +29,7 @@ def filter_dict(el: Dict, callback: Callable[[str], bool]) -> Dict:
     return {key: el[key] for key in keys}
 
 
-def filter_dict_starts_with(el: Dict, start_with: Union[str, List[str]]) -> Dict:
+def filter_dict_starts_with(el: Dict, start_with: str | List[str]) -> Dict:
     """
     Filters a dict by key using the startswith command
 
@@ -92,7 +92,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         self._sub_step_index = 0
         return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0']), info
 
-    def step(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict]]:
+    def step(self, action) -> Tuple[Dict, float, bool, bool, Dict | None]:
         """Generic sub-step function.
 
         :return: state, reward, terminated, truncated, info
@@ -147,16 +147,16 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         return self._observation_spaces_dict[self._sub_step_index]
 
     @property
-    def action_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Dict]:
+    def action_spaces_dict(self) -> Dict[int | str, gym.spaces.Dict]:
         """Override the action spaces according to the introduced sub steps."""
         return self._action_spaces_dict
 
     @property
-    def observation_spaces_dict(self) -> Dict[Union[int, str], gym.spaces.Dict]:
+    def observation_spaces_dict(self) -> Dict[int | str, gym.spaces.Dict]:
         """Override the observation spaces according to the introduced sub steps."""
         return self._observation_spaces_dict
 
-    def _action0(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict[str, np.ndarray]]]:
+    def _action0(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
         """
         Returns the first action
 
@@ -165,7 +165,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         # Only the second sub step actually steps the underlying core env
         return filter_dict_starts_with(self.last_obs, ['action_1', 'observation_1']), 1, False, False, {}
 
-    def _action1(self, action) -> Tuple[Dict, float, bool, bool, Optional[Dict[str, np.ndarray]]]:
+    def _action1(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
         """
         Returns the second action
 

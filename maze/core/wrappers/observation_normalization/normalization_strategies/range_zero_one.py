@@ -1,11 +1,14 @@
 """Contains a  range [0, 1] observation normalization strategy"""
-from typing import List
 
-import numpy as np
+from __future__ import annotations
 
 from maze.core.annotations import override
-from maze.core.wrappers.observation_normalization.normalization_strategies.base import \
-    ObservationNormalizationStrategy, StatisticsType
+from maze.core.wrappers.observation_normalization.normalization_strategies.base import (
+    ObservationNormalizationStrategy,
+    StatisticsType,
+)
+
+import numpy as np
 
 
 class RangeZeroOneObservationNormalizationStrategy(ObservationNormalizationStrategy):
@@ -17,7 +20,7 @@ class RangeZeroOneObservationNormalizationStrategy(ObservationNormalizationStrat
     """
 
     @override(ObservationNormalizationStrategy)
-    def estimate_stats(self, observations: List[np.ndarray]) -> StatisticsType:
+    def estimate_stats(self, observations: list[np.ndarray]) -> StatisticsType:
         """Implementation of
         :class:`~maze.core.wrappers.observation_normalization.normalization_strategies.base.ObservationNormalizationStrategy`
         interface.
@@ -37,7 +40,7 @@ class RangeZeroOneObservationNormalizationStrategy(ObservationNormalizationStrat
             min_val = np.asarray(min_val, np.float32)
             max_val = np.asarray(max_val, np.float32)
 
-        statistics = {"min": min_val, "max": max_val}
+        statistics = {'min': min_val, 'max': max_val}
 
         return statistics
 
@@ -47,4 +50,4 @@ class RangeZeroOneObservationNormalizationStrategy(ObservationNormalizationStrat
         :class:`~maze.core.wrappers.observation_normalization.normalization_strategies.base.ObservationNormalizationStrategy`
         interface.
         """
-        return (value - self._statistics["min"]) / (self._statistics["max"] - self._statistics["min"])
+        return (value - self._statistics['min']) / (self._statistics['max'] - self._statistics['min'])

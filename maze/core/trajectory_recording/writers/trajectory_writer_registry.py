@@ -3,9 +3,11 @@ Trajectory writers need to be globally registered in order to receive episode tr
 environments.
 """
 
-from typing import List
+from __future__ import annotations
 
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.records.trajectory_record import (
+    StateTrajectoryRecord,
+)
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 
 
@@ -16,7 +18,7 @@ class TrajectoryWriterRegistry:
     """
 
     # List of registered writers
-    writers: List[TrajectoryWriter] = []
+    writers: list[TrajectoryWriter] = []
 
     @classmethod
     def register_writer(cls, writer: TrajectoryWriter) -> None:

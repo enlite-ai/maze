@@ -22,7 +22,7 @@ from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 
 class CustomGymCoreEnv(GymCoreEnv):
 
-    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, Union[float, np.ndarray, Any], bool, bool, Dict[Any, Any]]:
+    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, float | np.ndarray | Any, bool, bool, Dict[Any, Any]]:
         """Intercept ``CoreEnv.step``"""
         self._investigate_step_function_parts = {'main_part': 0, 'other_part': 0}
 
@@ -46,7 +46,7 @@ class CustomGymMazeEnv(MazeEnv):
     :param env: The gym environment to wrap or the environment id.
     """
 
-    def __init__(self, env: Union[str, gym.Env]):
+    def __init__(self, env: str | gym.Env):
         if not isinstance(env, gym.Env):
             env = gym.make(env)
 

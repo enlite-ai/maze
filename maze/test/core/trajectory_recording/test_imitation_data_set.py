@@ -40,10 +40,10 @@ class _MockObservationStackWrapper(ObservationWrapper):
         self.last_observation_value = observation_value
         return stacked_observation
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
+    def get_observation_and_action_dicts(self, maze_state: MazeStateType | None,
+                                         maze_action: MazeActionType | None,
                                          first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+            -> Tuple[Dict[int | str, Any] | None, Dict[int | str, Any] | None]:
         """If this is the first step in an episode, reset the observation stack."""
         if first_step_in_episode:
             self.last_observation_value = None

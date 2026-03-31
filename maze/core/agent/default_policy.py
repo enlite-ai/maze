@@ -1,6 +1,8 @@
 """Default implementation of structured policy."""
 
-from typing import Tuple, Sequence, Optional
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.agent.flat_policy import FlatPolicy
 from maze.core.agent.policy import Policy
@@ -10,7 +12,7 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID
-from maze.core.utils.factory import Factory, CollectionOfConfigType
+from maze.core.utils.factory import CollectionOfConfigType, Factory
 
 
 class DefaultPolicy(Policy):
@@ -33,31 +35,37 @@ class DefaultPolicy(Policy):
         pass
 
     @override(Policy)
-    def compute_action(self,
-                       observation: ObservationType,
-                       maze_state: Optional[MazeStateType] = None,
-                       env: Optional[BaseEnv] = None,
-                       actor_id: Optional[ActorID] = None,
-                       deterministic: bool = False) -> ActionType:
+    def compute_action(
+        self,
+        observation: ObservationType,
+        maze_state: MazeStateType | None = None,  # noqa: ARG002
+        env: BaseEnv | None = None,  # noqa: ARG002
+        actor_id: ActorID | None = None,
+        deterministic: bool = False,
+    ) -> ActionType:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface"""
         return self.policy_for(actor_id).compute_action(observation, deterministic=deterministic)
 
-    def policy_for(self, actor_id: Optional[ActorID]) -> FlatPolicy:
+    def policy_for(self, actor_id: ActorID | None) -> FlatPolicy:
         """Return policy corresponding to the given actor ID (or the single available policy if no actor ID is provided)
 
         :param actor_id: Actor ID to get policy for
         :return: Flat policy corresponding to the actor ID
         """
         if actor_id is None:
-            assert len(self.policies.items()) == 1, "no policy ID provided but multiple policies are available"
+            assert len(self.policies.items()) == 1, 'no policy ID provided but multiple policies are available'
             return list(self.policies.values())[0]
         else:
             return self.policies[actor_id.step_key]
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: Optional[int],
-                                      maze_state: Optional[MazeStateType], env: Optional[BaseEnv],
-                                      actor_id: Optional[ActorID] = None) \
-            -> Tuple[Sequence[ActionType], Sequence[float]]:
+    def compute_top_action_candidates(
+        self,
+        observation: ObservationType,
+        num_candidates: int | None,
+        maze_state: MazeStateType | None,
+        env: BaseEnv | None,
+        actor_id: ActorID | None = None,
+    ) -> tuple[Sequence[ActionType], Sequence[float]]:
         """implementation of :class:`~maze.core.agent.policy.Policy` interface"""
         raise NotImplementedError

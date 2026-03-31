@@ -1,11 +1,14 @@
 """Simple serialization of trajectory data using Pickle."""
 
+from __future__ import annotations
+
 import pickle
 from pathlib import Path
-from typing import Union
 
 from maze.core.annotations import override
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord
+from maze.core.trajectory_recording.records.trajectory_record import (
+    StateTrajectoryRecord,
+)
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 
 
@@ -19,7 +22,7 @@ class TrajectoryWriterFile(TrajectoryWriter):
     :param log_dir: Where trajectory data should be logged.
     """
 
-    def __init__(self, log_dir: Union[str, Path] = Path("./trajectory_data")):
+    def __init__(self, log_dir: str | Path = Path('./trajectory_data')):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -30,6 +33,6 @@ class TrajectoryWriterFile(TrajectoryWriter):
 
         :param episode_record: Episode trajectory data
         """
-        filename = episode_record.seed_id + ".pkl"
-        with open(self.log_dir / filename, "wb") as out_f:
+        filename = episode_record.seed_id + '.pkl'
+        with open(self.log_dir / filename, 'wb') as out_f:
             pickle.dump(episode_record, out_f)

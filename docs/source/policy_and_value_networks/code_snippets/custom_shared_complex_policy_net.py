@@ -22,7 +22,7 @@ class CustomSharedComplexPolicyNet(nn.Module, CustomComplexLatentNet):
     """
 
     def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logits_shapes: Dict[str, Sequence[int]],
-                 non_lin: Union[str, type(nn.Module)], hidden_units: List[int]):
+                 non_lin: str | type(nn.Module), hidden_units: List[int]):
         nn.Module.__init__(self)
         CustomComplexLatentNet.__init__(self, obs_shapes, non_lin, hidden_units)
 

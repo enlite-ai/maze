@@ -35,7 +35,7 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
 
     def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
                  in_shapes: Union[Sequence[int], List[Sequence[int]]], num_heads: int,
-                 dropout: Optional[float], add_input_to_output: bool, bias: bool):
+                 dropout: float | None, add_input_to_output: bool, bias: bool):
 
         in_keys = in_keys if isinstance(in_keys, List) else [in_keys]
         out_keys = out_keys if isinstance(out_keys, List) else [out_keys]

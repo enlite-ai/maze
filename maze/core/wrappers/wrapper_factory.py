@@ -2,13 +2,15 @@
 Registry for wrapper classes.
 """
 
-from typing import Union, TypeVar
+from __future__ import annotations
+
+from typing import TypeVar
 
 from maze.core.env.base_env import BaseEnv
-from maze.core.utils.factory import Factory, CollectionOfConfigType
+from maze.core.utils.factory import CollectionOfConfigType, Factory
 from maze.core.wrappers.wrapper import Wrapper
 
-T = TypeVar("T", bound=BaseEnv)
+T = TypeVar('T', bound=BaseEnv)
 
 
 class WrapperFactory(Factory[Wrapper]):
@@ -20,11 +22,7 @@ class WrapperFactory(Factory[Wrapper]):
         super().__init__(base_type=Wrapper)
 
     @classmethod
-    def wrap_from_config(
-            cls,
-            env: T,
-            wrapper_config: CollectionOfConfigType
-    ) -> Union[Wrapper, T]:
+    def wrap_from_config(cls, env: T, wrapper_config: CollectionOfConfigType) -> Wrapper | T:
         """
         Wraps environment in wrappers specified in wrapper_config.
 
@@ -33,12 +31,16 @@ class WrapperFactory(Factory[Wrapper]):
         :return: Wrapped environment of type Wrapper.
         """
 
-        wrapped_env: Union[Wrapper, T] = env
+        wrapped_env: Wrapper | T = env
         for wrapper_module in wrapper_config:
-            wrapped_env = Factory(Wrapper).type_from_name(wrapper_module).wrap(
-                wrapped_env,
-                # Pass on additional arguments
-                **wrapper_config[wrapper_module]
+            wrapped_env = (
+                Factory(Wrapper)
+                .type_from_name(wrapper_module)
+                .wrap(
+                    wrapped_env,
+                    # Pass on additional arguments
+                    **wrapper_config[wrapper_module],
+                )
             )
 
         return wrapped_env

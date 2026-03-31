@@ -1,8 +1,16 @@
 """Extension of gym Wrapper to support environment interfaces"""
+
+from __future__ import annotations
+
 import logging
 import time
-from abc import abstractmethod, ABC
-from typing import Generator, TypeVar, Generic, Type, Union, Dict, Tuple, Any, Optional, List
+from abc import ABC, abstractmethod
+from collections.abc import Generator
+from typing import (
+    Any,
+    Generic,
+    TypeVar,
+)
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
@@ -13,7 +21,9 @@ from maze.core.env.maze_state import MazeStateType
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.log_events.env_profiling_events import EnvProfilingEvents
 
-EnvType = TypeVar("EnvType")
+# ruff: noqa: SLF001
+
+EnvType = TypeVar('EnvType')
 
 logger = logging.getLogger('WRAPPER')
 logger.setLevel(logging.INFO)
@@ -81,7 +91,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         # In case a skipping wrapper is used, this timing needs to be dealt with separately.
         self._cumulative_time_for_skipping_wrapper = 0
         # Used as a placeholder to keep track of the full wrapper stack used.
-        self._full_wrapper_stack: List[str] = []
+        self._full_wrapper_stack: list[str] = []
 
         # Notify the sub-wrappers with the full stack of wrappers uses.
         self.notify_full_wrapper_stack(self.get_full_wrapper_stack())
@@ -96,7 +106,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
         # wrap step function in callbacks (i.e., replace it with self.step_with_callbacks call)
         # env context is necessary to correctly detect when callbacks should be triggered
-        if hasattr(env, "context") and isinstance(env.context, EnvironmentContext):
+        if hasattr(env, 'context') and isinstance(env.context, EnvironmentContext):
             self.__step = self.step
             self.step = self.step_with_callbacks
 
@@ -105,8 +115,10 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         (i.e., detects whether this is the outermost wrapper). Triggers the post-step callbacks if required."""
         self._first_step_started = True
 
-        if (self.context.current_wrapper_pos is not None and
-                self.position_in_wrapper_stack() >= self.context.current_wrapper_pos):
+        if (
+            self.context.current_wrapper_pos is not None
+            and self.position_in_wrapper_stack() >= self.context.current_wrapper_pos
+        ):
             if self.log_profiling_events:
                 self._record_profiling_events()
             self.context.current_wrapper_pos = None
@@ -169,8 +181,11 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
                 current_run_time = current_run_time - skipping_cum_time
             name = type(current_env).__name__
             recorded_wrappers.remove(name)
-            self.__profiling_events.wrapper_step_time(wrapper_name=name, time=current_run_time,
-                                                      per=current_run_time / total_time)
+            self.__profiling_events.wrapper_step_time(
+                wrapper_name=name,
+                time=current_run_time,
+                per=current_run_time / total_time,
+            )
             current_env = step_down_env
             step_down_env = current_env.env
 
@@ -184,15 +199,21 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         maze_env_run_time = current_env._last_profiling_time
         core_env_run_time = current_env.profiling_times['core_env']
         maze_env_run_time_diff = (
-                maze_env_run_time - core_env_run_time - current_env.profiling_times['observation_conversion'] -
-                current_env.profiling_times['action_conversion'])
+            maze_env_run_time
+            - core_env_run_time
+            - current_env.profiling_times['observation_conversion']
+            - current_env.profiling_times['action_conversion']
+        )
         self.__profiling_events.maze_env_step_time(time=maze_env_run_time_diff, per=maze_env_run_time_diff / total_time)
         self.__profiling_events.core_env_step_time(time=core_env_run_time, per=core_env_run_time / total_time)
         self.__profiling_events.observation_conv_time(
             time=current_env.profiling_times['observation_conversion'],
-            per=current_env.profiling_times['observation_conversion'] / total_time)
-        self.__profiling_events.action_conv_time(time=current_env.profiling_times['action_conversion'],
-                                                 per=current_env.profiling_times['action_conversion'] / total_time)
+            per=current_env.profiling_times['observation_conversion'] / total_time,
+        )
+        self.__profiling_events.action_conv_time(
+            time=current_env.profiling_times['action_conversion'],
+            per=current_env.profiling_times['action_conversion'] / total_time,
+        )
 
         # In case the reserved dictionary is used in the core env, retrieve the values and log them.
         if hasattr(self, '_investigate_step_function_parts'):
@@ -215,7 +236,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
     def is_initialized(self) -> bool:
         """True if the initialization has been completed (i.e., after the `__init__` and `wrap` methods
         have finished). The `_is_initialized` flag is set at the end of the `wrap` method."""
-        return "_is_initialized" in self.__dict__ and self.__dict__["_is_initialized"]
+        return '_is_initialized' in self.__dict__ and self.__dict__['_is_initialized']
 
     def __setattr__(self, name, value):
         """Complementary to the overridden `__getattr__` above. Outside of wrapper initialization, if the attribute
@@ -223,13 +244,13 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
         # Set the attribute directly on this wrapper only (1) during initialization, or (2) if this wrapper already
         # has an attribute of this name
-        if not self.is_initialized or name in self.__dict__ or name == "env":
+        if not self.is_initialized or name in self.__dict__ or name == 'env':
             self.__dict__[name] = value
             return
 
         # If none of the conditions above hold, attempt to set the attribute on the wrapped env,
         # falling back to self if the env is not available.
-        env = self.__dict__.get("env", None)
+        env = self.__dict__.get('env', None)
         if not env:
             self.__dict__[name] = value
             return
@@ -241,7 +262,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         """Return true if the given env is a wrapper."""
         return isinstance(env, Wrapper)
 
-    def get_full_wrapper_stack(self) -> List[str]:
+    def get_full_wrapper_stack(self) -> list[str]:
         """Get a list of the full wrapper stack.
 
         :return: A list of wrapper from this wrapper going to the maze env.
@@ -254,7 +275,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         # Since the MazeEnv inherits from wrapper is counts as a wrapper and needs to be excluded.
         return wrapper_stack[:-1]
 
-    def notify_full_wrapper_stack(self, wrapper_names: List[str]):
+    def notify_full_wrapper_stack(self, wrapper_names: list[str]):
         """Pass the full list of wrappers used down to every wrapper, such that each wrapper has the full list.
 
         :param wrapper_names: List of wrapper names used.
@@ -291,7 +312,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
             current_env = current_env.env
         return len(recorded_wrappers) == 0
 
-    def record_skipping_time(self, recorded_wrappers: List[str], total_time: float) -> None:
+    def record_skipping_time(self, recorded_wrappers: list[str], total_time: float) -> None:
         """Record the skipping time if necessary.
 
         :param recorded_wrappers: List of wrapper names used.
@@ -306,14 +327,14 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
                 cur_env = cur_env.env
 
     @classmethod
-    def _base_classes(cls, env: BaseEnv) -> Generator[BaseEnv, None, None]:
+    def _base_classes(cls, env: BaseEnv) -> Generator[BaseEnv]:
         # start collecting all base classes by traversing the wrapping hierarchy
         inner_env = env
         while True:
             yield type(inner_env)
 
             # rely on duck typing
-            if not hasattr(inner_env, "env"):
+            if not hasattr(inner_env, 'env'):
                 break
 
             inner_env = inner_env.env
@@ -328,15 +349,15 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
     # Type to be returned when using the inheritable .wrap() method. See:
     # https://stackoverflow.com/questions/39205527/can-you-annotate-return-type-when-value-is-instance-of-cls/39205612#39205612
-    WrapperType = TypeVar("WrapperType", bound='Wrapper')
+    WrapperType = TypeVar('WrapperType', bound='Wrapper')
 
     # specific env type, ensures that we don't use details about our type
-    T = TypeVar("T")
+    T = TypeVar('T')
 
     @classmethod
-    def wrap(cls: Type[WrapperType], env: T, **kwargs) -> Union[T, WrapperType]:
-        """Creation method providing appropriate type hints. Preferred method to construct the wrapper compared to calling
-        the class constructor directly.
+    def wrap(cls: type[WrapperType], env: T, **kwargs) -> T | WrapperType:
+        """Creation method providing appropriate type hints. Preferred method to construct the wrapper compared to
+        calling the class constructor directly.
 
         Note: If you are overriding this method, do not forget to set the `_is_initialized` flag at the end.
 
@@ -345,7 +366,8 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         :return: A newly created wrapper instance. Since we want to allow sub-classes to use .wrap() without having to
                  reimplement them and still facilitate proper typing hints, we use a generic to represent the type
                  of cls. See:
-                 https://stackoverflow.com/questions/39205527/can-you-annotate-return-type-when-value-is-instance-of-cls/39205612#39205612
+                 https://stackoverflow.com/questions/39205527/can-you-annotate-return-type-when-value-is-instance-of-
+                 cls/39205612#39205612
                  on why/how to use this to indicate that an instance of cls is returned.
         """
         instance = cls(env, **kwargs)
@@ -354,10 +376,12 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
 
     # implementing the interfaces below is optional for use cases where you actually need them
 
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Convert MazeState and MazeAction back into raw action and observation.
 
         This method is mostly used when working with trajectory data, e.g. for imitation learning. As part
@@ -443,12 +467,12 @@ class ObservationWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the environments observation."""
 
     @override(BaseEnv)
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Intercept ``BaseEnv.reset`` and map observation."""
         observation, info = self.env.reset()
         return self.observation(observation), info
 
-    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map observation."""
         observation, reward, terminated, truncated, info = self.env.step(action)
         return self.observation(observation), reward, terminated, truncated, info
@@ -458,10 +482,12 @@ class ObservationWrapper(Wrapper[EnvType], ABC):
         """Observation mapping method."""
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Convert the observations, keep actions the same."""
         obs_dict, act_dict = self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
         if obs_dict is not None:
@@ -473,7 +499,7 @@ class ActionWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the agents action."""
 
     @override(BaseEnv)
-    def step(self, action) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map action."""
         return self.env.step(self.action(action))
 
@@ -486,10 +512,12 @@ class ActionWrapper(Wrapper[EnvType], ABC):
         """Abstract action reverse mapping method."""
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Reverse the actions, keep the observations the same."""
         obs_dict, act_dict = self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
         if act_dict is not None:
@@ -500,7 +528,7 @@ class ActionWrapper(Wrapper[EnvType], ABC):
 class RewardWrapper(Wrapper[EnvType], ABC):
     """A Wrapper with typing support modifying the reward before passed to the agent."""
 
-    def step(self, action) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
         """Intercept ``BaseEnv.step`` and map rewards."""
         observation, reward, terminated, truncated, info = self.env.step(action)
         return observation, self.reward(reward), terminated, truncated, info
@@ -510,9 +538,11 @@ class RewardWrapper(Wrapper[EnvType], ABC):
         """Reward mapping method."""
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """Keep both actions and observation the same."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)

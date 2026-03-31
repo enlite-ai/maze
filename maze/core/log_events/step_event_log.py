@@ -1,6 +1,8 @@
 """StepEventLog keeps logs from one particular step. Belongs to episode event log."""
 
-from typing import Iterable, Optional
+from __future__ import annotations
+
+from collections.abc import Iterable
 
 from maze.core.events.event_collection import EventCollection
 from maze.core.events.event_service import EventRecord
@@ -13,7 +15,7 @@ class StepEventLog:
     :param events: Events dispatched by an environment during one particular step.
     """
 
-    def __init__(self, env_time: int, events: Optional[EventCollection] = None):
+    def __init__(self, env_time: int, events: EventCollection | None = None):
         self.events = events if events is not None else EventCollection()
         self.env_time = env_time
 

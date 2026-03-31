@@ -34,5 +34,5 @@ class ESAlgorithmConfig(AlgorithmConfig):
     noise_stddev: float
     """The scaling factor of the random noise applied during training."""
 
-    policy_wrapper: Optional[Policy]
+    policy_wrapper: Policy | None
     """Support for simulation logic or heuristics on top of a TorchPolicy."""

@@ -1,13 +1,15 @@
 """Internal auxiliary class"""
+
+from __future__ import annotations
+
 from abc import ABC
-from typing import Callable, Type
+from collections.abc import Callable
 
 
-class EventRecord(object):
-    """This auxiliary class is used to record calls to the event interface
-    """
+class EventRecord:
+    """This auxiliary class is used to record calls to the event interface"""
 
-    def __init__(self, interface_class: Type[ABC], interface_method: Callable, attributes: dict):
+    def __init__(self, interface_class: type[ABC], interface_method: Callable, attributes: dict):
         """
         Constructor
 
@@ -28,26 +30,26 @@ class EventRecord(object):
         """
 
         # this is required for deep copying the env context e.g., when calling clone_from on a CoreEnv.
-        if argument_name == "__deepcopy__":
+        if argument_name == '__deepcopy__':
             return None
 
         return self.attributes[argument_name]
 
     def __repr__(self):
-        result = f"EventRecord {self.interface_method}:\n"
+        result = f'EventRecord {self.interface_method}:\n'
         for key, value in self.attributes.items():
             # represent value as string
             value_str = str(value)
             # indent every line by 4 characters
-            value_str = "\n".join([" " * 4 + s for s in value_str.split('\n')])
+            value_str = '\n'.join([' ' * 4 + s for s in value_str.split('\n')])
 
-            result += f"- {key}: {value_str}\n"
+            result += f'- {key}: {value_str}\n'
 
         return result
 
     # Pickle support
     # --------------
-    # Methods below need to be overriden because pickle attempts to call them first (before the default
+    # Methods below need to be overridden because pickle attempts to call them first (before the default
     # methods), and they get caught by the __getattr__ accessor above otherwise.
 
     def __getstate__(self):

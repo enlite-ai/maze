@@ -23,7 +23,7 @@ class Interface(ABC):
         """Optionally document instance variables."""
 
         # provide type hints if the type can not be inferred from the initial assignment
-        self.typed_instance_variable: Optional[str] = None
+        self.typed_instance_variable: str | None = None
 
     @abstractmethod
     def interface_method(self, param1: List[int]) -> str:

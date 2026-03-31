@@ -1,7 +1,9 @@
-""" Implements random resetting as an environment wrapper. """
-from typing import Any, Union, Optional, Dict, Tuple
+"""Implements random resetting as an environment wrapper."""
 
-import numpy as np
+from __future__ import annotations
+
+from typing import Any
+
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_action import MazeActionType
@@ -11,10 +13,12 @@ from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.utils.seeding import MazeSeeding
-from maze.core.wrappers.wrapper import Wrapper, EnvType
+from maze.core.wrappers.wrapper import EnvType, Wrapper
+
+import numpy as np
 
 
-class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
+class RandomResetWrapper(Wrapper[StructuredEnv | EnvType]):
     """A wrapper skipping the first few steps by taking random actions.
     This is useful for skipping irrelevant initial parts of a trajectory or for introducing randomness in the training
     process.
@@ -24,7 +28,12 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
     :param max_skip_steps: Maximum number of steps to skip.
     """
 
-    def __init__(self, env: Union[StructuredEnvSpacesMixin, MazeEnv], min_skip_steps: int, max_skip_steps: int):
+    def __init__(
+        self,
+        env: StructuredEnvSpacesMixin | MazeEnv,
+        min_skip_steps: int,
+        max_skip_steps: int,
+    ):
         super().__init__(env)
         assert min_skip_steps <= max_skip_steps
 
@@ -36,8 +45,7 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
 
     @override(StructuredEnv)
     def seed(self, seed: int) -> None:
-        """Apply seed to wrappers rng, and pass the seed forward to the env
-        """
+        """Apply seed to wrappers rng, and pass the seed forward to the env"""
         # Create new random state for sampling the random steps
         self.wrapper_rng = np.random.RandomState(seed)
         # Set seed of action space for sampling actions
@@ -46,9 +54,8 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         return self.env.seed(seed)
 
     @override(BaseEnv)
-    def reset(self) -> Tuple[Any, dict]:
-        """Override BaseEnv.reset to reset the step count.
-        """
+    def reset(self) -> tuple[Any, dict]:
+        """Override BaseEnv.reset to reset the step count."""
 
         # sample number of steps to skip and reset env
         skip_steps = self.wrapper_rng.randint(self.min_skip_steps, self.max_skip_steps + 1)
@@ -58,20 +65,24 @@ class RandomResetWrapper(Wrapper[Union[StructuredEnv, EnvType]]):
         for _ in range(skip_steps):
             action = self.action_space.sample()
             obs, rew, terminated, truncated, info = self.env.step(action)
-            assert not (terminated or truncated), ("Your environment was done during random resetting. "
-                                                   "This should not happen! Make sure you set a valid number of skipping steps.")
+            assert not (terminated or truncated), (
+                'Your environment was done during random resetting. '
+                'This should not happen! Make sure you set a valid number of skipping steps.'
+            )
 
         return obs, info
 
     @override(Wrapper)
-    def get_observation_and_action_dicts(self, maze_state: Optional[MazeStateType],
-                                         maze_action: Optional[MazeActionType],
-                                         first_step_in_episode: bool) \
-            -> Tuple[Optional[Dict[Union[int, str], Any]], Optional[Dict[Union[int, str], Any]]]:
+    def get_observation_and_action_dicts(
+        self,
+        maze_state: MazeStateType | None,
+        maze_action: MazeActionType | None,
+        first_step_in_episode: bool,
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """This wrapper does not modify observations and actions."""
         return self.env.get_observation_and_action_dicts(maze_state, maze_action, first_step_in_episode)
 
     @override(SimulatedEnvMixin)
-    def clone_from(self, env: 'RandomResetWrapper') -> None:
+    def clone_from(self, env: RandomResetWrapper) -> None:
         """implementation of :class:`~maze.core.env.simulated_env_mixin.SimulatedEnvMixin`."""
         self.env.clone_from(env)

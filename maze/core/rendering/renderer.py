@@ -1,14 +1,15 @@
 """Renderer is the main interface for renderer classes that render current state of an env."""
 
-from abc import abstractmethod, ABC
-from typing import List, Optional, Union
+from __future__ import annotations
 
-import numpy as np
+from abc import ABC, abstractmethod
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer_args import RendererArg
+
+import numpy as np
 
 
 class Renderer(ABC):
@@ -18,7 +19,7 @@ class Renderer(ABC):
     """
 
     @staticmethod
-    def arguments() -> List[RendererArg]:
+    def arguments() -> list[RendererArg]:
         """List the additional arguments that the renderer supports (beyond maze_state and maze_action), if any.
 
         Exposing available argument options like this makes it possible to create appropriate user controls
@@ -40,8 +41,13 @@ class Renderer(ABC):
         return []
 
     @abstractmethod
-    def render(self, maze_state: MazeStateType, maze_action: Optional[MazeActionType], events: StepEventLog,
-               **kwargs) -> Union[None, np.ndarray]:
+    def render(
+        self,
+        maze_state: MazeStateType,
+        maze_action: MazeActionType | None,
+        events: StepEventLog,
+        **kwargs,
+    ) -> None | np.ndarray:
         """Render the current state as a matplotlib figure.
 
         Note that the maze_action is optional -- it is None for the last (terminal) state in the episode!

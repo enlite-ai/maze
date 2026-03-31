@@ -1,4 +1,7 @@
 """Executes the provided policies in an Agent Deployment setting."""
+
+from __future__ import annotations
+
 import traceback
 from collections import namedtuple
 from queue import Queue
@@ -8,8 +11,8 @@ from maze.core.agent.policy import Policy
 from maze.core.agent_deployment.external_core_env import ExternalCoreEnv
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 
-ExceptionReport = namedtuple("ExceptionReport", "exception traceback")
-"""Tuple for passing error back to the main thread."""
+ExceptionReport = namedtuple('ExceptionReport', 'exception traceback')
+# Tuple for passing error back to the main thread.
 
 
 class PolicyExecutor:
@@ -24,11 +27,13 @@ class PolicyExecutor:
     :param rollout_done_event: event indicating that the rollout has been finished.
     """
 
-    def __init__(self,
-                 env: ExternalCoreEnv,
-                 policy: Policy,
-                 rollout_done_event: Event,
-                 exception_queue: Queue):
+    def __init__(
+        self,
+        env: ExternalCoreEnv,
+        policy: Policy,
+        rollout_done_event: Event,
+        exception_queue: Queue,
+    ):
         self.env = env
         self.policy = policy
         self.rollout_done_event = rollout_done_event
@@ -51,7 +56,8 @@ class PolicyExecutor:
                     maze_state=maze_state,
                     env=env,
                     actor_id=actor_id,
-                    deterministic=True)
+                    deterministic=True,
+                )
 
                 observation, _, terminated, truncated, _ = self.env.step(action)
             # Final reset required to notify all wrappers.

@@ -1,11 +1,12 @@
-""" Contains a flattening pre-processor. """
-from typing import Tuple
+"""Contains a flattening pre-processor."""
+
+from __future__ import annotations
+
+from maze.core.annotations import override
+from maze.core.wrappers.observation_preprocessing.preprocessors.base import PreProcessor
 
 import numpy as np
 from gymnasium import spaces
-
-from maze.core.wrappers.observation_preprocessing.preprocessors.base import PreProcessor
-from maze.core.annotations import override
 
 
 class FlattenPreProcessor(PreProcessor):
@@ -20,16 +21,16 @@ class FlattenPreProcessor(PreProcessor):
         self.num_flatten_dims = num_flatten_dims
 
     @override(PreProcessor)
-    def processed_shape(self) -> Tuple[int, ...]:
-        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor` interface
-        """
-        num_flattened_features = np.prod(self._original_observation_space.shape[-self.num_flatten_dims:])
-        return tuple(list(self._original_observation_space.shape[:-self.num_flatten_dims]) + [num_flattened_features])
+    def processed_shape(self) -> tuple[int, ...]:
+        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor`
+        interface"""
+        num_flattened_features = np.prod(self._original_observation_space.shape[-self.num_flatten_dims :])
+        return tuple(list(self._original_observation_space.shape[: -self.num_flatten_dims]) + [num_flattened_features])
 
     @override(PreProcessor)
     def processed_space(self) -> spaces.Box:
-        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor` interface
-        """
+        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor`
+        interface"""
         processed_shape = self.processed_shape()
 
         low = self._original_observation_space.low.copy()
@@ -42,6 +43,6 @@ class FlattenPreProcessor(PreProcessor):
 
     @override(PreProcessor)
     def process(self, observation: np.ndarray) -> np.ndarray:
-        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor` interface
-        """
+        """implementation of :class:`~maze.core.wrappers.observation_preprocessing.preprocessors.base.PreProcessor`
+        interface"""
         return observation.reshape(self.processed_shape())

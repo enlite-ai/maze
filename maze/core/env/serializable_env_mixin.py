@@ -3,8 +3,10 @@ Interface for environments to expose internal components for serialization besid
 Useful e.g. for trajectory data recording.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any
 
 
 class SerializableEnvMixin(ABC):
@@ -16,7 +18,7 @@ class SerializableEnvMixin(ABC):
     """
 
     @abstractmethod
-    def get_serializable_components(self) -> Dict[str, Any]:
+    def get_serializable_components(self) -> dict[str, Any]:
         """
         Return all modules that should be serialized as part of the env besides state.
 
@@ -24,7 +26,7 @@ class SerializableEnvMixin(ABC):
          - All returned modules should support serialization using pickle. For most objects, this is possible
            out-of-the-box without any special changes. However, there are some notable exceptions like
            event interfaces -- if any of the modules (or their attributes) keeps reference to an abstract object
-           like events interface, the `__getstate__` method will need to be overriden to exclude these
+           like events interface, the `__getstate__` method will need to be overridden to exclude these
            from pickling.
 
         :return: Dict in the format of { "serializable_module_name": serializable_module }

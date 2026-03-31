@@ -1,11 +1,12 @@
 """Abstract class for rollout runners."""
+
+from __future__ import annotations
+
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, List, Any
-
-import numpy as np
-from omegaconf import DictConfig, OmegaConf
+from collections.abc import Callable
+from typing import Any
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
@@ -13,12 +14,15 @@ from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.utils.config_utils import EnvFactory, SwitchWorkingDirectoryToInput
-from maze.core.utils.factory import Factory, ConfigType, CollectionOfConfigType
+from maze.core.utils.factory import CollectionOfConfigType, ConfigType, Factory
 from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
 from maze.runner import Runner
 from maze.utils.bcolors import BColors
+
+import numpy as np
+from omegaconf import DictConfig, OmegaConf
 
 
 class RolloutRunner(Runner, ABC):
@@ -35,27 +39,34 @@ class RolloutRunner(Runner, ABC):
     :param record_event_logs: Whether to record event logs.
     """
 
-    def __init__(self,
-                 n_episodes: int,
-                 max_episode_steps: int,
-                 deterministic: bool,
-                 record_trajectory: bool,
-                 record_event_logs: bool):
+    def __init__(
+        self,
+        n_episodes: int,
+        max_episode_steps: int,
+        deterministic: bool,
+        record_trajectory: bool,
+        record_event_logs: bool,
+    ):
         self.n_episodes = n_episodes
         self.max_episode_steps = max_episode_steps
         self.deterministic = deterministic
         self.record_trajectory = record_trajectory
         self.record_event_logs = record_event_logs
-        self._cfg: Optional[DictConfig] = None
+        self._cfg: DictConfig | None = None
 
         # keep track of the input directory
         self.input_dir = None
 
         # Generate a random state used for sampling random seeds for the envs and agents
-        self.maze_seeding = MazeSeeding(env_seed=np.random.randint(np.iinfo(np.int32).max),
-                                        agent_seed=np.random.randint(np.iinfo(np.int32).max),
-                                        cudnn_determinism_flag=False, explicit_env_seeds=None,
-                                        explicit_env_eval_seeds=None, explicit_agent_seeds=None, shuffle_seeds=False)
+        self.maze_seeding = MazeSeeding(
+            env_seed=np.random.randint(np.iinfo(np.int32).max),
+            agent_seed=np.random.randint(np.iinfo(np.int32).max),
+            cudnn_determinism_flag=False,
+            explicit_env_seeds=None,
+            explicit_env_eval_seeds=None,
+            explicit_agent_seeds=None,
+            shuffle_seeds=False,
+        )
 
     @override(Runner)
     def setup(self, cfg: DictConfig) -> None:
@@ -67,30 +78,41 @@ class RolloutRunner(Runner, ABC):
         self.input_dir = cfg.input_dir
 
         # Generate a random state used for sampling random seeds for the envs and agents
-        self.maze_seeding = MazeSeeding(env_seed=cfg.seeding.env_base_seed, agent_seed=cfg.seeding.agent_base_seed,
-                                        cudnn_determinism_flag=cfg.seeding.cudnn_determinism_flag,
-                                        explicit_env_eval_seeds=cfg.seeding.explicit_env_eval_seeds,
-                                        explicit_env_seeds=cfg.seeding.explicit_env_seeds,
-                                        explicit_agent_seeds=cfg.seeding.explicit_agent_seeds,
-                                        shuffle_seeds=cfg.seeding.shuffle_seeds)
-
+        self.maze_seeding = MazeSeeding(
+            env_seed=cfg.seeding.env_base_seed,
+            agent_seed=cfg.seeding.agent_base_seed,
+            cudnn_determinism_flag=cfg.seeding.cudnn_determinism_flag,
+            explicit_env_eval_seeds=cfg.seeding.explicit_env_eval_seeds,
+            explicit_env_seeds=cfg.seeding.explicit_env_seeds,
+            explicit_agent_seeds=cfg.seeding.explicit_agent_seeds,
+            shuffle_seeds=cfg.seeding.shuffle_seeds,
+        )
 
         # Use the configs from an input directory (used for training)
         if 'use_input_dir_config' in cfg and cfg['use_input_dir_config'] is not None:
             config_path = os.path.join(self.input_dir, 'hydra_config.yaml')
             if os.path.isfile(config_path):
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     input_dir_config = OmegaConf.load(f)
 
                 # Override the env config
-                if 'use_input_dir_env' in cfg['use_input_dir_config'] and cfg['use_input_dir_config']['use_input_dir_env']:
+                if (
+                    'use_input_dir_env' in cfg['use_input_dir_config']
+                    and cfg['use_input_dir_config']['use_input_dir_env']
+                ):
                     cfg.env = input_dir_config.env
 
                 # Override the wrappers config
-                if 'use_input_dir_wrappers' in cfg['use_input_dir_config'] and cfg['use_input_dir_config']['use_input_dir_wrappers']:
+                if (
+                    'use_input_dir_wrappers' in cfg['use_input_dir_config']
+                    and cfg['use_input_dir_config']['use_input_dir_wrappers']
+                ):
                     cfg.wrappers = input_dir_config.wrappers
 
-                if 'use_input_dir_model' in cfg['use_input_dir_config'] and cfg['use_input_dir_config']['use_input_dir_model']:
+                if (
+                    'use_input_dir_model' in cfg['use_input_dir_config']
+                    and cfg['use_input_dir_config']['use_input_dir_model']
+                ):
                     cfg.model = input_dir_config.model
                     cfg.policy.model = input_dir_config.model
 
@@ -108,7 +130,11 @@ class RolloutRunner(Runner, ABC):
         # locations, we will change the dir back to the original working dir for the initialization
         # (and then change it back so that all later script output lands in the hydra output dir as expected)
         start_time = time.time()
-        self.run_with(self._cfg.env, self._cfg.wrappers if "wrappers" in self._cfg else {}, self._cfg.policy)
+        self.run_with(
+            self._cfg.env,
+            self._cfg.wrappers if 'wrappers' in self._cfg else {},
+            self._cfg.policy,
+        )
         print(f'Rollout took {time.time() - start_time:.3f} seconds')
 
     @abstractmethod
@@ -128,11 +154,13 @@ class RolloutRunner(Runner, ABC):
         """
 
     @staticmethod
-    def init_env_and_agent(env_config: DictConfig,
-                           wrappers_config: CollectionOfConfigType,
-                           max_episode_steps: int,
-                           agent_config: DictConfig,
-                           input_dir: str) -> (MazeEnv, Policy):
+    def init_env_and_agent(
+        env_config: DictConfig,
+        wrappers_config: CollectionOfConfigType,
+        max_episode_steps: int,
+        agent_config: DictConfig,
+        input_dir: str,
+    ) -> (MazeEnv, Policy):
         """Build the environment (including wrappers) and agent according to given configuration.
 
         :param env_config: Environment config.
@@ -154,15 +182,21 @@ class RolloutRunner(Runner, ABC):
                 env = TimeLimitWrapper.wrap(env)
                 env.set_max_episode_steps(max_episode_steps)
             elif max_episode_steps != 0:
-                BColors.print_colored("TimeLimitWrapper already applied to the environment! "
-                                      "Ignoring runner.max_episode_steps.", BColors.WARNING)
+                BColors.print_colored(
+                    'TimeLimitWrapper already applied to the environment! Ignoring runner.max_episode_steps.',
+                    BColors.WARNING,
+                )
 
         return env, agent
 
     @staticmethod
-    def run_episode(env: StructuredEnv, obs: ObservationType, agent: Policy,
-                    deterministic: bool,
-                    render: bool) -> None:
+    def run_episode(
+        env: StructuredEnv,
+        obs: ObservationType,
+        agent: Policy,
+        deterministic: bool,
+        render: bool,
+    ) -> None:
         """Helper function for running a single episode.
 
         :param env: Environment to run.
@@ -175,24 +209,35 @@ class RolloutRunner(Runner, ABC):
         episode_done = False
         while not episode_done:
             # inject the MazeEnv state if desired by the policy
-            action = agent.compute_action(observation=obs,
-                                          actor_id=env.actor_id(),
-                                          maze_state=env.get_maze_state() if agent.needs_state() else None,
-                                          env=env if agent.needs_env() else None,
-                                          deterministic=deterministic)
+            action = agent.compute_action(
+                observation=obs,
+                actor_id=env.actor_id(),
+                maze_state=env.get_maze_state() if agent.needs_state() else None,
+                env=env if agent.needs_env() else None,
+                deterministic=deterministic,
+            )
 
             obs, rew, terminated, truncated, info = env.step(action)
             episode_done = terminated or truncated
 
             if render:
-                assert isinstance(env, TrajectoryRecordingWrapper), "Rendering is supported only when " \
-                                                                    "trajectory recording is enabled."
+                assert isinstance(env, TrajectoryRecordingWrapper), (
+                    'Rendering is supported only when trajectory recording is enabled.'
+                )
                 env.render()
 
     @classmethod
-    def run_interaction_loop(cls, env: StructuredEnv, agent: Policy, n_episodes: int,
-                             env_seeds: List[Any], agent_seeds: List[Any], deterministic: bool,
-                             render: bool = False, after_reset_callback: Callable = None) -> None:
+    def run_interaction_loop(
+        cls,
+        env: StructuredEnv,
+        agent: Policy,
+        n_episodes: int,
+        env_seeds: list[Any],
+        agent_seeds: list[Any],
+        deterministic: bool,
+        render: bool = False,
+        after_reset_callback: Callable = None,
+    ) -> None:
         """Helper function for running the agent-environment interaction loop for specified number of steps
         and episodes.
 
@@ -213,19 +258,28 @@ class RolloutRunner(Runner, ABC):
                 obs, _ = env.reset()
                 agent.reset()
             except Exception as exception:
-                BColors.print_colored(f'A error was encountered during reset on the env_seed: {env_seed} with '
-                                      f'agent_seed: {agent_seed}', BColors.FAIL)
+                BColors.print_colored(
+                    f'A error was encountered during reset on the env_seed: {env_seed} with agent_seed: {agent_seed}',
+                    BColors.FAIL,
+                )
                 raise exception
 
             if idx > 0:
                 after_reset_callback()
 
             try:
-                cls.run_episode(env=env, obs=obs, agent=agent,
-                                deterministic=deterministic, render=render)
+                cls.run_episode(
+                    env=env,
+                    obs=obs,
+                    agent=agent,
+                    deterministic=deterministic,
+                    render=render,
+                )
             except Exception as exception:
-                BColors.print_colored(f'A error was encountered during rollout on the env_seed: {env_seed} with '
-                                      f'agent_seed: {agent_seed}', BColors.FAIL)
+                BColors.print_colored(
+                    f'A error was encountered during rollout on the env_seed: {env_seed} with agent_seed: {agent_seed}',
+                    BColors.FAIL,
+                )
                 raise exception
 
         # Reset env and agent at the very end in order to collect the statistics

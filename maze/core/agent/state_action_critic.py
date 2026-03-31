@@ -1,8 +1,9 @@
 """Encapsulates state action critic and queries them for values according to the provided policy ID, observation
 and action."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Union, Dict, List
 
 import torch
 
@@ -15,9 +16,12 @@ class StateActionCritic(ABC):
     """
 
     @abstractmethod
-    def predict_q_values(self, observations: Dict[Union[str, int], Dict[str, torch.Tensor]],
-                         actions: Dict[Union[str, int], Dict[str, torch.Tensor]], gather_output: bool) -> \
-            Dict[Union[str, int], List[Union[torch.Tensor, Dict[str, torch.Tensor]]]]:
+    def predict_q_values(
+        self,
+        observations: dict[str | int, dict[str, torch.Tensor]],
+        actions: dict[str | int, dict[str, torch.Tensor]],
+        gather_output: bool,
+    ) -> dict[str | int, list[torch.Tensor | dict[str, torch.Tensor]]]:
         """Predict the Q value based on the observations and actions.
 
         :param observations: The observation for the current step.

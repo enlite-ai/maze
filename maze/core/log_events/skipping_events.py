@@ -1,10 +1,18 @@
 """File holding events related to (sub step) skipping."""
+
 from __future__ import annotations
 
 from abc import ABC
 
+from maze.core.log_stats.event_decorators import (
+    define_episode_stats,
+    define_epoch_stats,
+    define_step_stats,
+)
+
 import numpy as np
-from maze.core.log_stats.event_decorators import define_episode_stats, define_epoch_stats, define_step_stats
+
+# ruff: noqa: B027, B024
 
 
 class SkipEvent(ABC):

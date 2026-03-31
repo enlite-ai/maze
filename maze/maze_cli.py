@@ -111,7 +111,7 @@ def _run_multirun_job(cfg: DictConfig) -> float:
 
 
 @version_based_hydra_main(config_path="conf", config_name="conf_rollout")
-def maze_run(cfg: DictConfig) -> Optional[float]:
+def maze_run(cfg: DictConfig) -> float | None:
     """
     Run a CLI task based on the provided configuration.
 

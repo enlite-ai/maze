@@ -45,9 +45,9 @@ class MazeLocalLauncher(Launcher):
     """
 
     def __init__(self, n_jobs: int):
-        self.config: Optional[DictConfig] = None
-        self.hydra_context: Optional[Any] = None
-        self.task_function: Optional[TaskFunction] = None
+        self.config: DictConfig | None = None
+        self.hydra_context: Any | None = None
+        self.task_function: TaskFunction | None = None
 
         # determine number of parallel jobs
         self._n_jobs = multiprocessing.cpu_count() if n_jobs == -1 else n_jobs

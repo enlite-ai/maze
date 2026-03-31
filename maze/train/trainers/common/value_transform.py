@@ -13,8 +13,8 @@ class ValueTransform(ABC):
     """
 
     @abstractmethod
-    def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
+            float | np.ndarray | torch.Tensor:
         """Scale values.
 
         :param x: Values to be scaled.
@@ -22,8 +22,8 @@ class ValueTransform(ABC):
         """
 
     @abstractmethod
-    def transform_value_inv(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
+    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> \
+            float | np.ndarray | torch.Tensor:
         """Invert scaling of values.
 
         :param x: Values where scaling should be inverted.
@@ -36,15 +36,15 @@ class ClipZeroOneValueTransform(ValueTransform):
     """
 
     @override(ValueTransform)
-    def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
+            float | np.ndarray | torch.Tensor:
         """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
         """
         return x
 
     @override(ValueTransform)
-    def transform_value_inv(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
+    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> \
+            float | np.ndarray | torch.Tensor:
         """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
         """
         return np.clip(x, 0, 1)
@@ -58,15 +58,15 @@ class LinearScaleValueTransform(ValueTransform):
         self._offset = offset
 
     @override(ValueTransform)
-    def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
+            float | np.ndarray | torch.Tensor:
         """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
         """
         return x * self._scale + self._offset
 
     @override(ValueTransform)
-    def transform_value_inv(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
+    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> \
+            float | np.ndarray | torch.Tensor:
         """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
         """
         return (x - self._offset) / self._scale
@@ -82,8 +82,8 @@ class ReduceScaleValueTransform(ValueTransform):
         self.epsilon = epsilon
 
     @override(ValueTransform)
-    def transform_value(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
+            float | np.ndarray | torch.Tensor:
         """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
         """
         if isinstance(x, torch.Tensor):

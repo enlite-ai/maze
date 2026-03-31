@@ -65,7 +65,7 @@ def clear_global_state():
     GlobalLogState.global_log_stats_writers = []
 
 
-def setup_logging(job_config: Union[DictConfig, str, None], log_dir: str = ".") -> None:
+def setup_logging(job_config: DictConfig | str | None, log_dir: str = ".") -> None:
     """Setup tensorboard logging, derive the logging directory from the script name.
 
     :param job_config: Configuration written as text to tensorboard (experiment config).

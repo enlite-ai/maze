@@ -13,7 +13,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_key')
-    def policy_loss(self, step_key: Union[int, str], value: float) -> None:
+    def policy_loss(self, step_key: int | str, value: float) -> None:
         """Record the policy loss.
 
         :param step_key: The step_key of the multi-step env.
@@ -22,7 +22,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_key')
-    def policy_grad_norm(self, step_key: Union[int, str], value: float) -> None:
+    def policy_grad_norm(self, step_key: int | str, value: float) -> None:
         """Record the gradient norm.
 
         :param step_key: The step_key of the multi-step env.
@@ -31,7 +31,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_key')
-    def policy_entropy(self, step_key: Union[int, str], value: float) -> None:
+    def policy_entropy(self, step_key: int | str, value: float) -> None:
         """Record the policy entropy.
 
         :param step_key: The step_key of the multi-step env.
@@ -40,7 +40,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_key')
-    def policy_mean_logp(self, step_key: Union[int, str], value: float) -> None:
+    def policy_mean_logp(self, step_key: int | str, value: float) -> None:
         """Record the mean policy logp.
 
         :param step_key: The step_key of the multi-step env.
@@ -49,7 +49,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('critic_key')
-    def errors_between_critics(self, critic_key: Union[int, str], value: float) -> None:
+    def errors_between_critics(self, critic_key: int | str, value: float) -> None:
         """Record the error between critic and target critic.
 
         :param critic_key: The key of the critic.
@@ -58,7 +58,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('critic_key')
-    def critic_value(self, critic_key: Union[int, str], value: float) -> None:
+    def critic_value(self, critic_key: int | str, value: float) -> None:
         """Record the critic value.
 
         :param critic_key: The key of the critic.
@@ -67,7 +67,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('critic_key')
-    def critic_value_loss(self, critic_key: Union[int, str], value: float) -> None:
+    def critic_value_loss(self, critic_key: int | str, value: float) -> None:
         """Record the critic value loss.
 
         :param critic_key: The key of the critic.
@@ -76,7 +76,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('critic_key')
-    def critic_grad_norm(self, critic_key: Union[int, str], value: float) -> None:
+    def critic_grad_norm(self, critic_key: int | str, value: float) -> None:
         """Record the critic gradient norm.
 
         :param critic_key: The key of the critic.
@@ -123,7 +123,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_key')
-    def entropy_coef(self, step_key: Union[str, int], value: float) -> None:
+    def entropy_coef(self, step_key: str | int, value: float) -> None:
         """Record the current entropy coefficient, interesting when using entropy tuning.
 
         :param step_key: The step_key of the multi-step env.
@@ -132,7 +132,7 @@ class SACEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_key')
-    def entropy_loss(self, step_key: Union[str, int], value: float) -> None:
+    def entropy_loss(self, step_key: str | int, value: float) -> None:
         """Record the current entropy loss, interesting when using entropy tuning.
 
         :param step_key: The step_key of the multi-step env.
