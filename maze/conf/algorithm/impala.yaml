@@ -42,7 +42,7 @@ device: "cpu"
 # Impala specific events ----------------------
 
 # this factor multiplied by the actor_batch_size gives the size of the queue for
-# the agents output collected by the learner. Therefor if the all rollouts computed can be at most
+# the agents output collected by the learner. Therefore if the all rollouts computed can be at most
 # (queue_out_of_sync_factor + num_agents/actor_batch_size) out of sync with learner policy
 queue_out_of_sync_factor: 1
 
