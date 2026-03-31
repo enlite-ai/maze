@@ -1,13 +1,16 @@
 """Training statistics for imitation learning algorithms."""
 
+from __future__ import annotations
+
 from abc import ABC
-from typing import Union
+
+from maze.core.log_events.log_create_figure_functions import create_violin_distribution
+from maze.core.log_stats.event_decorators import define_epoch_stats, define_plot, define_stats_grouping
+from maze.core.log_stats.reducer_functions import histogram
 
 import numpy as np
 
-from maze.core.log_events.log_create_figure_functions import create_violin_distribution
-from maze.core.log_stats.event_decorators import define_stats_grouping, define_epoch_stats, define_plot
-from maze.core.log_stats.reducer_functions import histogram
+# ruff: noqa: B027, B024
 
 
 class ImitationEvents(ABC):
@@ -34,7 +37,7 @@ class ImitationEvents(ABC):
         """Gradient norm of the step policies."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id', "subspace_name", 'agent_id')
+    @define_stats_grouping('step_id', 'subspace_name', 'agent_id')
     def discrete_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for discrete (categorical) subspaces."""
 
@@ -50,7 +53,7 @@ class ImitationEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('step_id')
-    def mean_step_policy_l2_norm(self, step_id: str | int,value: float):
+    def mean_step_policy_l2_norm(self, step_id: str | int, value: float):
         """L2 norm of the step policies."""
 
     @define_epoch_stats(np.nanmean)
@@ -64,32 +67,32 @@ class ImitationEvents(ABC):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping("subspace_name")
+    @define_stats_grouping('subspace_name')
     def mean_step_discrete_action_rank(self, subspace_name: str, value: int):
         """Rank of target action in discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id', "subspace_name", 'agent_id')
+    @define_stats_grouping('step_id', 'subspace_name', 'agent_id')
     def discrete_top_5_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id', "subspace_name", 'agent_id')
+    @define_stats_grouping('step_id', 'subspace_name', 'agent_id')
     def discrete_top_10_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id', "subspace_name", 'agent_id')
+    @define_stats_grouping('step_id', 'subspace_name', 'agent_id')
     def discrete_action_rank(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Rank of target action in discrete (categorical) subspaces."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id', "subspace_name", 'agent_id')
+    @define_stats_grouping('step_id', 'subspace_name', 'agent_id')
     def multi_binary_accuracy(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Accuracy for multi-binary subspaces."""
 
     @define_epoch_stats(np.nanmean)
-    @define_stats_grouping('step_id', "subspace_name", 'agent_id')
+    @define_stats_grouping('step_id', 'subspace_name', 'agent_id')
     def box_mean_abs_deviation(self, step_id: str | int, agent_id: int, subspace_name: str, value: int):
         """Mean absolute deviation for box (continuous) subspaces."""
 
@@ -101,32 +104,32 @@ class ImitationEvents(ABC):
 class CriticImitationEvents(ABC):
     """Event interface defining statistics emitted by the imitation learning trainers."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     def logits(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Actual network output logits"""
 
-    @define_epoch_stats(np.nanmean, input_name='value', output_name="mean")
-    @define_epoch_stats(np.nanmean, input_name='per', output_name="mean_per")
+    @define_epoch_stats(np.nanmean, input_name='value', output_name='mean')
+    @define_epoch_stats(np.nanmean, input_name='per', output_name='mean_per')
     def logits_greater_zero(self, substep_key: int, agent_id: int, per: float, value: float):
         """When using a support range, this gives the avg number of logits that a greater than 0."""
 
-    @define_epoch_stats(np.nanmean, input_name='value', output_name="mean")
-    @define_epoch_stats(np.nanmean, input_name='per', output_name="mean_per")
+    @define_epoch_stats(np.nanmean, input_name='value', output_name='mean')
+    @define_epoch_stats(np.nanmean, input_name='per', output_name='mean_per')
     def logits_smaller_zero(self, substep_key: int, agent_id: int, per: float, value: float):
         """When using a support range, this gives the avg number of logits that a smaller than 0."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     @define_stats_grouping('substep_key', 'agent_id')
     def actual_value(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Actual (transformed) value of the step critics."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     @define_stats_grouping('substep_key')
     def mean_step_actual_value(self, substep_key: int, mean: float, min: float, max: float):
         """Actual (transformed) value of the step critics at the flat step level."""
@@ -155,45 +158,47 @@ class CriticImitationEvents(ABC):
     def support_hist(self, substep_key: str, agent_id: str, value: float):
         """A histogram of the true target support for visualization."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     @define_stats_grouping('substep_key', 'agent_id')
     def actual_value_original(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Actual value of the step critics."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     @define_stats_grouping('substep_key')
     def mean_step_actual_value_original(self, substep_key: int, mean: float, min: float, max: float):
         """Actual value of the step critics at the flat step level."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     @define_stats_grouping('substep_key', 'agent_id')
     def value(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Predicted (transformed) value of the step critics."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     @define_stats_grouping('substep_key')
-    def mean_step_value(self, substep_key: int,  mean: float, min: float, max: float):
+    def mean_step_value(self, substep_key: int, mean: float, min: float, max: float):
         """Predicted (transformed) value of the step critics across all the actors."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
     @define_stats_grouping('substep_key', 'agent_id')
     def value_original(self, substep_key: int, agent_id: int, mean: float, min: float, max: float):
         """Predicted value of the step critics."""
 
-    @define_epoch_stats(np.nanmean, input_name='mean', output_name="mean")
-    @define_epoch_stats(np.nanmin, input_name='min', output_name="min")
-    @define_epoch_stats(np.nanmax, input_name='max', output_name="max")
-    @define_stats_grouping('substep_key',)
+    @define_epoch_stats(np.nanmean, input_name='mean', output_name='mean')
+    @define_epoch_stats(np.nanmin, input_name='min', output_name='min')
+    @define_epoch_stats(np.nanmax, input_name='max', output_name='max')
+    @define_stats_grouping(
+        'substep_key',
+    )
     def mean_step_value_original(self, substep_key: int, mean: float, min: float, max: float):
         """Predicted value of the step critics across all the actors."""
 
@@ -244,7 +249,7 @@ class CriticImitationEvents(ABC):
 
     @define_epoch_stats(np.nanmean)
     @define_stats_grouping('substep_key')
-    def mean_step_mean_overestimation_deviation(self, substep_key: int,  value: float):
+    def mean_step_mean_overestimation_deviation(self, substep_key: int, value: float):
         """Avg. mean overestimation deviation for actual value."""
 
     @define_epoch_stats(np.nanmean)
@@ -257,22 +262,22 @@ class CriticImitationEvents(ABC):
     def mean_step_mean_underestimation_deviation(self, substep_key: int, value: float):
         """Avg. step mean underestimation deviation for actual value."""
 
-    @define_epoch_stats(np.nanmean, input_name='value', output_name="mean")
+    @define_epoch_stats(np.nanmean, input_name='value', output_name='mean')
     @define_stats_grouping('substep_key', 'agent_id')
     def per_overestimated_wrt_error_greater_01(self, substep_key: int, agent_id: int, value: float):
         """Percent of overestimated values."""
 
-    @define_epoch_stats(np.nanmean, input_name='value', output_name="mean")
+    @define_epoch_stats(np.nanmean, input_name='value', output_name='mean')
     @define_stats_grouping('substep_key')
     def mean_step_per_overestimated_wrt_error_greater_01(self, substep_key: int, value: float):
         """Avg. step percent of overestimated values."""
 
-    @define_epoch_stats(np.nanmean, input_name='value', output_name="mean")
+    @define_epoch_stats(np.nanmean, input_name='value', output_name='mean')
     @define_stats_grouping('substep_key', 'agent_id')
     def per_estimation_error_greater_01(self, substep_key: int, agent_id: int, value: float):
         """Percent of sampled value with an error > 1 percent."""
 
-    @define_epoch_stats(np.nanmean, input_name='value', output_name="mean")
+    @define_epoch_stats(np.nanmean, input_name='value', output_name='mean')
     @define_stats_grouping('substep_key')
     def mean_step_per_estimation_error_greater_01(self, substep_key: int, value: float):
         """Avg. step percent of sampled value with an error > 1 percent."""

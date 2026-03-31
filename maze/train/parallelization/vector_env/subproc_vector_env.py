@@ -1,10 +1,9 @@
+from __future__ import annotations
+
 import logging
 import multiprocessing
-from typing import Callable, List, Iterable, Any, Tuple, Dict, Optional
-
-import cloudpickle
-import matplotlib
-import numpy as np
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
@@ -16,10 +15,14 @@ from maze.train.parallelization.vector_env.structured_vector_env import Structur
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.parallelization.vector_env.vector_env_utils import disable_epoch_level_stats
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
-from maze.utils.bcolors import BColors
+
+import cloudpickle
+import matplotlib
+import numpy as np
 
 logger = logging.getLogger('SubProcVecEnv')
 logger.setLevel(logging.DEBUG)
+
 
 def _worker(remote, parent_remote, env_fn_wrapper):
     # switch to non-interactive matplotlib backend
@@ -51,8 +54,19 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                     info['terminal_observation'] = observation
                     remote.send((None, reward, terminated, truncated, info, None, None, None, None))
                 else:
-                    remote.send((observation, reward, terminated, truncated, info, actor_done, actor_id, episode_stats,
-                                 env.get_env_time()))
+                    remote.send(
+                        (
+                            observation,
+                            reward,
+                            terminated,
+                            truncated,
+                            info,
+                            actor_done,
+                            actor_id,
+                            episode_stats,
+                            env.get_env_time(),
+                        )
+                    )
             elif cmd == 'seed':
                 env.seed(data)
             elif cmd == 'reset':
@@ -61,8 +75,16 @@ def _worker(remote, parent_remote, env_fn_wrapper):
                 observation, info = env.reset()
                 actor_done = env.is_actor_done()
                 actor_id = env.actor_id()
-                remote.send((observation, info, actor_done, actor_id, env.get_stats(LogStatsLevel.EPISODE).last_stats,
-                             env.get_env_time()))
+                remote.send(
+                    (
+                        observation,
+                        info,
+                        actor_done,
+                        actor_id,
+                        env.get_stats(LogStatsLevel.EPISODE).last_stats,
+                        env.get_env_time(),
+                    )
+                )
             elif cmd == 'close':
                 remote.close()
                 break
@@ -83,7 +105,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
             break
 
 
-class CloudpickleWrapper(object):
+class CloudpickleWrapper:
     """
     Uses cloudpickle to serialize contents (otherwise multiprocessing tries to use pickle).
 
@@ -123,10 +145,9 @@ class SubprocVectorEnv(StructuredVectorEnv):
            Defaults to 'forkserver' on available platforms, and 'spawn' otherwise.
     """
 
-    def __init__(self,
-                 env_factories: List[Callable[[], MazeEnv]],
-                 logging_prefix: str | None = None,
-                 start_method: str = None):
+    def __init__(
+        self, env_factories: list[Callable[[], MazeEnv]], logging_prefix: str | None = None, start_method: str = None
+    ):
         self.waiting = False
         self.closed = False
         n_envs = len(env_factories)
@@ -139,9 +160,9 @@ class SubprocVectorEnv(StructuredVectorEnv):
             start_method = 'forkserver' if forkserver_available else 'spawn'
         ctx = multiprocessing.get_context(start_method)
 
-        self.remotes, self.work_remotes = zip(*[ctx.Pipe(duplex=True) for _ in range(n_envs)])
+        self.remotes, self.work_remotes = zip(*[ctx.Pipe(duplex=True) for _ in range(n_envs)], strict=False)
         self.processes = []
-        for work_remote, remote, env_fn in zip(self.work_remotes, self.remotes, env_factories):
+        for work_remote, remote, env_fn in zip(self.work_remotes, self.remotes, env_factories, strict=False):
             args = (work_remote, remote, CloudpickleWrapper(env_fn))
             # daemon=True: if the main process crashes, we should not cause things to hang
             process = ctx.Process(target=_worker, args=args, daemon=True)  # pytype:disable=attribute-error
@@ -157,7 +178,7 @@ class SubprocVectorEnv(StructuredVectorEnv):
             action_spaces_dict=action_spaces_dict,
             observation_spaces_dict=observation_spaces_dict,
             agent_counts_dict=agent_counts_dict,
-            logging_prefix=logging_prefix
+            logging_prefix=logging_prefix,
         )
 
     @override(StructuredVectorEnv)
@@ -174,7 +195,9 @@ class SubprocVectorEnv(StructuredVectorEnv):
         rewards = np.stack(rewards, axis=1).astype(np.float32)
         return rewards
 
-    def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def step(
+        self, actions: ActionType
+    ) -> tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
@@ -184,7 +207,7 @@ class SubprocVectorEnv(StructuredVectorEnv):
         self._step_async(actions)
         return self._step_wait()
 
-    def reset(self) -> Tuple[Dict[str, np.ndarray], dict]:
+    def reset(self) -> tuple[dict[str, np.ndarray], dict]:
         """VectorEnv implementation"""
         self._next_seed_idx = 0
 
@@ -192,23 +215,23 @@ class SubprocVectorEnv(StructuredVectorEnv):
             remote.send(('reset', self.get_next_seed()))
         results = [remote.recv() for remote in self.remotes]
         # Unpack worker reset response
-        obs_list, infos, actor_dones, actor_ids, episode_stats, env_times = zip(*results)
+        obs_list, infos, actor_dones, actor_ids, episode_stats, env_times = zip(*results, strict=False)
 
         self._env_times = np.stack(env_times)
         self._actor_dones = np.stack(actor_dones)
         self._actor_ids = actor_ids
 
-        aggregated_info = {"remote_infos": list(infos), "episode_stats": []}
+        aggregated_info = {'remote_infos': list(infos), 'episode_stats': []}
         # collect episode statistics
         for stat in episode_stats:
             if stat is not None:
                 self.epoch_stats.receive(stat)
-                aggregated_info["episode_stats"].append(stat)
+                aggregated_info['episode_stats'].append(stat)
 
         return stack_numpy_dict_list(obs_list), aggregated_info
 
     @override(VectorEnv)
-    def seed(self, seeds: List[Any]) -> None:
+    def seed(self, seeds: list[Any]) -> None:
         """VectorEnv implementation"""
         self.seeds = seeds
         self._next_seed_idx = 0
@@ -239,15 +262,16 @@ class SubprocVectorEnv(StructuredVectorEnv):
         You should not call this if a step_async run is
         already pending.
         """
-        for remote, action in zip(self.remotes, actions):
+        for remote, action in zip(self.remotes, actions, strict=False):
             remote.send(('step', action))
         self.waiting = True
 
-    def _step_wait(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def _step_wait(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray, np.ndarray, Iterable[dict[Any, Any]]]:
         """
         Wait for the step taken with step_async().
 
-        :return: ([int] or [float], [float], [bool], [bool], dict) observation, reward, terminated, truncated, information
+        :return: ([int] or [float], [float], [bool], [bool], dict) observation, reward, terminated, truncated,
+                 information
         """
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
@@ -261,20 +285,23 @@ class SubprocVectorEnv(StructuredVectorEnv):
 
         new_results = [self.remotes[remote_idx].recv() for remote_idx in finished_envs_indexes]
 
-        for org_idx, new_result in zip(finished_envs_indexes, new_results):
+        for org_idx, new_result in zip(finished_envs_indexes, new_results, strict=False):
             # Reset response: (observation, info, actor_done, actor_id, episode_stats, env_time)
-            results[org_idx] = (new_result[0],  # fresh obs from reset
-                                results[org_idx][1],  # rew (from finished step)
-                                results[org_idx][2],  # terminated (from finished step)
-                                results[org_idx][3],  # truncated (from finished step)
-                                results[org_idx][4],  # infos (from finished step)
-                                new_result[2],  # actor_dones (from reset)
-                                new_result[3],  # actor_ids (from reset)
-                                new_result[4],  # episode_stats (from reset)
-                                new_result[5])  # env_times (from reset)
+            results[org_idx] = (
+                new_result[0],  # fresh obs from reset
+                results[org_idx][1],  # rew (from finished step)
+                results[org_idx][2],  # terminated (from finished step)
+                results[org_idx][3],  # truncated (from finished step)
+                results[org_idx][4],  # infos (from finished step)
+                new_result[2],  # actor_dones (from reset)
+                new_result[3],  # actor_ids (from reset)
+                new_result[4],  # episode_stats (from reset)
+                new_result[5],
+            )  # env_times (from reset)
 
         obs, rews, env_terminated, env_truncated, infos, actor_dones, actor_ids, episode_stats, env_times = zip(
-            *results)
+            *results, strict=False
+        )
 
         self._env_times = np.stack(env_times)
         self._actor_dones = np.stack(actor_dones)

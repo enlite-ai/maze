@@ -1,23 +1,25 @@
 """Dummy distributed workers. Ran sequentially in the main process."""
+
+from __future__ import annotations
+
 import time
-from typing import Tuple, Dict
 
 from maze.core.annotations import override
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.parallelization.broadcasting_container import BroadcastingContainer
-from maze.train.parallelization.distributed_actors.base_distributed_workers_with_buffer import \
-    BaseDistributedWorkersWithBuffer
+from maze.train.parallelization.distributed_actors.base_distributed_workers_with_buffer import (
+    BaseDistributedWorkersWithBuffer,
+)
 
 
 class DummyDistributedWorkersWithBuffer(BaseDistributedWorkersWithBuffer):
     """Dummy implementation of distributed workers with buffer creates the workers as a list. Once the outputs are to
-        be collected, it simply rolls them out in a loop until is has enough to be added to the buffer.
+    be collected, it simply rolls them out in a loop until is has enough to be added to the buffer.
     """
 
     @override(BaseDistributedWorkersWithBuffer)
     def _init_workers(self):
-
         self.broadcasting_container = BroadcastingContainer()
         self.current_worker_idx = 0
 
@@ -41,43 +43,48 @@ class DummyDistributedWorkersWithBuffer(BaseDistributedWorkersWithBuffer):
         pass
 
     @override(BaseDistributedWorkersWithBuffer)
-    def broadcast_updated_policy(self, state_dict: Dict) -> None:
+    def broadcast_updated_policy(self, state_dict: dict) -> None:
         """Store the newest policy in the shared network object"""
-        converted_state_dict = convert_to_torch(state_dict, in_place=False, cast=None,
-                                                device=self._worker_policy.device)
+        converted_state_dict = convert_to_torch(
+            state_dict, in_place=False, cast=None, device=self._worker_policy.device
+        )
         self.broadcasting_container.set_policy_state_dict(converted_state_dict)
 
     @override(BaseDistributedWorkersWithBuffer)
-    def collect_rollouts(self) -> Tuple[float, float, float]:
+    def collect_rollouts(self) -> tuple[float, float, float]:
         """implementation of
         :class:`~maze.train.parallelization.distributed_actors.base_distributed_workers_with_buffer.BaseDistributedWorkersWithBuffer`
         interface
         """
 
-        assert len(self.replay_buffer) >= self.batch_size, \
-            f'The replay buffer should hold more transitions ({len(self.replay_buffer)}) than the batch size ' \
+        assert len(self.replay_buffer) >= self.batch_size, (
+            f'The replay buffer should hold more transitions ({len(self.replay_buffer)}) than the batch size '
             f'({self.batch_size}) at all times'
+        )
 
         start_wait_time = time.time()
 
-        for i in range(self.rollouts_per_iteration):
+        for _ in range(self.rollouts_per_iteration):
             # Update the policy if a new version of the policy has been published by the learner
             current_version, state_dict, aux_data = self.broadcasting_container.get_current_policy(
-                last_version=self.policy_version_counter)
+                last_version=self.policy_version_counter
+            )
             if self.policy_version_counter < current_version:
                 self._worker_policy.load_state_dict(state_dict)
                 self.policy_version_counter = current_version
 
-            trajectory = self.workers[self.current_worker_idx].rollout(policy=self._worker_policy,
-                                                                       n_steps=self.n_rollout_steps)
+            trajectory = self.workers[self.current_worker_idx].rollout(
+                policy=self._worker_policy, n_steps=self.n_rollout_steps
+            )
 
             if self.split_rollouts_into_transitions:
                 self.replay_buffer.add_rollout(trajectory)
             else:
                 self.replay_buffer.add_transition(trajectory)
 
-            self.current_worker_idx = self.current_worker_idx + 1 if self.current_worker_idx < len(
-                self.workers) - 1 else 0
+            self.current_worker_idx = (
+                self.current_worker_idx + 1 if self.current_worker_idx < len(self.workers) - 1 else 0
+            )
 
             # collect episode statistics
             for step_record in trajectory.step_records:

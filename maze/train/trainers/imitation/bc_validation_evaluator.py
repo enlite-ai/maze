@@ -1,21 +1,20 @@
 """Behavioral cloning evaluation."""
 
-from typing import Optional
-
-import numpy as np
-import torch
-from torch.utils.data import DataLoader
+from __future__ import annotations
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
-from maze.core.env.structured_env import ActorID
-from maze.core.log_stats.log_stats import LogStatsLevel, LogStatsAggregator, get_stats_logger
+from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 from maze.train.utils.train_utils import debatch_actor_ids
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
 
 
 class BCValidationEvaluator(Evaluator):
@@ -29,12 +28,14 @@ class BCValidationEvaluator(Evaluator):
     :param log_substep_events: Whether to log the individual substep events or not.
     """
 
-    def __init__(self,
-                 loss: BCLoss,
-                 model_selection: ModelSelectionBase | None,
-                 data_loader: DataLoader,
-                 log_substep_events: bool,
-                 logging_prefix: str | None = "eval"):
+    def __init__(
+        self,
+        loss: BCLoss,
+        model_selection: ModelSelectionBase | None,
+        data_loader: DataLoader,
+        log_substep_events: bool,
+        logging_prefix: str | None = 'eval',
+    ):
         self.loss = loss
         self.data_loader = data_loader
         self.model_selection = model_selection
@@ -56,7 +57,7 @@ class BCValidationEvaluator(Evaluator):
         with torch.no_grad():
             total_loss = []
 
-            for iteration, data in enumerate(self.data_loader, 0):
+            for _, data in enumerate(self.data_loader, 0):
                 observations, actions, actor_ids = data[0], data[1], data[-1]
                 action_logits = None if len(data) == 3 else data[2]
                 actor_ids = debatch_actor_ids(actor_ids)
@@ -67,9 +68,16 @@ class BCValidationEvaluator(Evaluator):
                     convert_to_torch(action_logits, device=policy.device, cast=None, in_place=True)
 
                 total_loss.append(
-                    self.loss.calculate_loss(policy=policy, observations=observations, actions=actions,
-                                             events=self.eval_events, actor_ids=actor_ids, action_logits=action_logits,
-                                             log_substep_events=self.log_substep_events).item())
+                    self.loss.calculate_loss(
+                        policy=policy,
+                        observations=observations,
+                        actions=actions,
+                        events=self.eval_events,
+                        actor_ids=actor_ids,
+                        action_logits=action_logits,
+                        log_substep_events=self.log_substep_events,
+                    ).item()
+                )
 
             if self.model_selection:
                 self.model_selection.update(-np.mean(total_loss).item())

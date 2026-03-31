@@ -1,7 +1,6 @@
 """Evaluation rollouts in the supplied env."""
-from typing import Optional
 
-import numpy as np
+from __future__ import annotations
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
@@ -10,6 +9,8 @@ from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
 from maze.train.trainers.common.model_selection.model_selection_base import ModelSelectionBase
+
+import numpy as np
 
 
 class RolloutEvaluator(Evaluator):
@@ -22,11 +23,13 @@ class RolloutEvaluator(Evaluator):
     :param deterministic: deterministic or stochastic action sampling (selection).
     """
 
-    def __init__(self,
-                 eval_env: StructuredVectorEnv,
-                 n_episodes: int,
-                 model_selection: ModelSelectionBase | None,
-                 deterministic: bool = False):
+    def __init__(
+        self,
+        eval_env: StructuredVectorEnv,
+        n_episodes: int,
+        model_selection: ModelSelectionBase | None,
+        deterministic: bool = False,
+    ):
         self.eval_env = eval_env
         self.n_episodes = n_episodes
         self.model_selection = model_selection
@@ -48,8 +51,9 @@ class RolloutEvaluator(Evaluator):
 
         while n_done_episodes < self.n_episodes:
             # Sample action and take the step
-            sampled_action = policy.compute_action(observations, actor_id=self.eval_env.actor_id(), maze_state=None,
-                                                   deterministic=self.deterministic)
+            sampled_action = policy.compute_action(
+                observations, actor_id=self.eval_env.actor_id(), maze_state=None, deterministic=self.deterministic
+            )
             observations, rewards, terminated_lst, truncated_lst, infos = self.eval_env.step(sampled_action)
 
             # Count done episodes
@@ -61,5 +65,5 @@ class RolloutEvaluator(Evaluator):
 
         # Notify the model selection if available
         if self.model_selection:
-            reward = self.eval_env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name="mean")
+            reward = self.eval_env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='mean')
             self.model_selection.update(reward)

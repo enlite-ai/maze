@@ -1,6 +1,6 @@
 """Evaluating a policy using multiple evaluators in sequence."""
 
-from typing import List
+from __future__ import annotations
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
@@ -16,7 +16,7 @@ class MultiEvaluator(Evaluator):
     :param evaluators: Evaluators to run.
     """
 
-    def __init__(self, evaluators: List[Evaluator]):
+    def __init__(self, evaluators: list[Evaluator]):
         self.evaluators = evaluators
 
     @override(Evaluator)

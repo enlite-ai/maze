@@ -1,9 +1,11 @@
 """Numpy implementation of ES optimizers, based on https://github.com/openai/evolution-strategies-starter"""
-from typing import Optional
 
-import numpy as np
+from __future__ import annotations
+
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.train.trainers.es.optimizers.base_optimizer import Optimizer
+
+import numpy as np
 
 
 class Adam(Optimizer):
@@ -30,7 +32,7 @@ class Adam(Optimizer):
         self.v = np.zeros(self.dim, dtype=np.float32)
 
     def _compute_step(self, global_gradient: np.ndarray) -> np.ndarray:
-        a = self.step_size * np.sqrt(1 - self.beta2 ** self.t) / (1 - self.beta1 ** self.t)
+        a = self.step_size * np.sqrt(1 - self.beta2**self.t) / (1 - self.beta1**self.t)
         self.m = self.beta1 * self.m + (1 - self.beta1) * global_gradient
         self.v = self.beta2 * self.v + (1 - self.beta2) * (global_gradient * global_gradient)
         step = -a * self.m / (np.sqrt(self.v) + self.epsilon)

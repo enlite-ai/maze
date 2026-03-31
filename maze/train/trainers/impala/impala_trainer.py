@@ -1,9 +1,10 @@
 """Multi-step IMPALA implementation."""
+
+from __future__ import annotations
+
 import time
 from collections import defaultdict
-from typing import Optional
 
-import torch
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
@@ -17,17 +18,20 @@ from maze.train.trainers.impala import impala_vtrace
 from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmConfig
 from maze.train.trainers.impala.impala_events import ImpalaEvents
 
+import torch
+
 
 class IMPALA(ActorCritic):
-    """Multi step advantage actor critic.
-    """
+    """Multi step advantage actor critic."""
 
-    def __init__(self,
-                 algorithm_config: ImpalaAlgorithmConfig,
-                 rollout_generator: DistributedActors,
-                 evaluator: RolloutEvaluator | None,
-                 model: TorchActorCritic,
-                 model_selection: BestModelSelection | None):
+    def __init__(
+        self,
+        algorithm_config: ImpalaAlgorithmConfig,
+        rollout_generator: DistributedActors,
+        evaluator: RolloutEvaluator | None,
+        model: TorchActorCritic,
+        model_selection: BestModelSelection | None,
+    ):
         super().__init__(algorithm_config, rollout_generator, evaluator, model, model_selection)
 
         # inject statistics directly into the epoch log
@@ -59,7 +63,7 @@ class IMPALA(ActorCritic):
     @override(ActorCritic)
     def _update(self) -> None:
         """Perform update. That is collect the actor trajectories, compute the learner action logits, compute the loss
-            and backprob it thought the networks
+        and backprob it thought the networks
         """
 
         # Collect self.actor_batch_size actor outputs from the queue (all in time major - 1 dim rollout_length,
@@ -86,8 +90,9 @@ class IMPALA(ActorCritic):
 
         vtrace_returns = impala_vtrace.from_logits(
             behaviour_policy_logits=map_nested_structure(record.logits, lambda x: x[:-1], in_place=True),
-            target_policy_logits=map_nested_structure(learner_policy_output.action_logits, lambda x: x[:-1],
-                                                      in_place=True),
+            target_policy_logits=map_nested_structure(
+                learner_policy_output.action_logits, lambda x: x[:-1], in_place=True
+            ),
             actions=map_nested_structure(record.actions, lambda x: x[:-1], in_place=True),
             distribution_mapper=self.model.policy.distribution_mapper,
             discounts=map_nested_structure(discounts, lambda x: x[:-1], in_place=False),
@@ -96,18 +101,25 @@ class IMPALA(ActorCritic):
             bootstrap_value=bootstrap_value,
             clip_rho_threshold=self.algorithm_config.vtrace_clip_rho_threshold,
             clip_pg_rho_threshold=self.algorithm_config.vtrace_clip_pg_rho_threshold,
-            device=self.model.device)
+            device=self.model.device,
+        )
 
         # Compute loss as a weighted sum of the baseline loss, the policy gradient
         # loss and an entropy regularization term.
 
         # The policy gradients loss
         policy_losses = []
-        for step_pg_adv, step_target_log_probs in zip(vtrace_returns.pg_advantages,
-                                                      vtrace_returns.target_action_log_probs):
+        for step_pg_adv, step_target_log_probs in zip(
+            vtrace_returns.pg_advantages, vtrace_returns.target_action_log_probs, strict=False
+        ):
             step_p_loss = -torch.sum(
-                torch.stack([(target_action_log_prob * step_pg_adv).mean() for target_action_log_prob in
-                             step_target_log_probs.values()]))
+                torch.stack(
+                    [
+                        (target_action_log_prob * step_pg_adv).mean()
+                        for target_action_log_prob in step_target_log_probs.values()
+                    ]
+                )
+            )
             policy_losses.append(step_p_loss)
 
         # compute value loss
@@ -115,7 +127,7 @@ class IMPALA(ActorCritic):
         if self.model.critic.num_critics == 1:
             value_losses = [(shifted_values[0] - vtrace_returns.vs[0]).pow(2.0).mean()]
         else:
-            value_losses = [(vv - vt).pow(2).mean() for vv, vt in zip(shifted_values, vtrace_returns.vs)]
+            value_losses = [(vv - vt).pow(2).mean() for vv, vt in zip(shifted_values, vtrace_returns.vs, strict=False)]
 
         value_losses = list(map(lambda x: x / 2.0, value_losses))
 
@@ -130,9 +142,16 @@ class IMPALA(ActorCritic):
         # collect training stats for logging
         policy_train_stats = defaultdict(lambda: defaultdict(list))
         critic_train_stats = defaultdict(lambda: defaultdict(list))
-        self._append_train_stats(policy_train_stats, critic_train_stats,
-                                 record.actor_ids, policy_losses, entropy_losses,
-                                 learner_critic_output.detached_values, value_losses, vtrace_returns.vs)
+        self._append_train_stats(
+            policy_train_stats,
+            critic_train_stats,
+            record.actor_ids,
+            policy_losses,
+            entropy_losses,
+            learner_critic_output.detached_values,
+            value_losses,
+            vtrace_returns.vs,
+        )
 
         # fire logging events
         self._log_train_stats(policy_train_stats, critic_train_stats)
@@ -141,15 +160,17 @@ class IMPALA(ActorCritic):
         time_backprob = time.time() - after_loss_computation_time
         self.impala_events.time_backprob(time=time_backprob, percent=time_backprob / total_update_time)
         time_collecting_actors_total = after_collection_time - start_update_time
-        self.impala_events.time_collecting_actors(time=time_collecting_actors_total,
-                                                  percent=time_collecting_actors_total / total_update_time)
-        self.impala_events.time_dequeuing_actors(time=time_deq_actors,
-                                                 percent=time_deq_actors / total_update_time)
+        self.impala_events.time_collecting_actors(
+            time=time_collecting_actors_total, percent=time_collecting_actors_total / total_update_time
+        )
+        self.impala_events.time_dequeuing_actors(time=time_deq_actors, percent=time_deq_actors / total_update_time)
         time_learner_rollout = after_learner_rollout_time - after_collection_time
-        self.impala_events.time_learner_rollout(time=time_learner_rollout,
-                                                percent=time_learner_rollout / total_update_time)
+        self.impala_events.time_learner_rollout(
+            time=time_learner_rollout, percent=time_learner_rollout / total_update_time
+        )
         time_loss_computation = after_loss_computation_time - after_learner_rollout_time
-        self.impala_events.time_loss_computation(time=time_loss_computation,
-                                                 percent=time_loss_computation / total_update_time)
+        self.impala_events.time_loss_computation(
+            time=time_loss_computation, percent=time_loss_computation / total_update_time
+        )
 
         self.rollout_generator.broadcast_updated_policy(self.model.state_dict())

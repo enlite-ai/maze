@@ -1,12 +1,16 @@
 """Interfaces for vectorised environments."""
-from abc import ABC, abstractmethod
-from typing import Iterable, Any, Tuple, Dict, List
 
-import numpy as np
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from typing import Any
 
 from maze.core.env.action_conversion import ActionType
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.observation_conversion import ObservationType
+
+import numpy as np
 
 
 class VectorEnv(BaseEnv, ABC):
@@ -31,8 +35,9 @@ class VectorEnv(BaseEnv, ABC):
         self.n_envs = n_envs
 
     @abstractmethod
-    def step(self, actions: ActionType
-             ) -> Tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def step(
+        self, actions: ActionType
+    ) -> tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
@@ -40,14 +45,14 @@ class VectorEnv(BaseEnv, ABC):
         """
 
     @abstractmethod
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Reset all the environments and return respective observations and info dicts in env-aggregated form.
 
         :return: observations and info dicts in env-aggregated form.
         """
 
     @abstractmethod
-    def seed(self, seeds: List[Any]) -> None:
+    def seed(self, seeds: list[Any]) -> None:
         """Sets the seed for this vectorised env's random number generator(s) and its contained parallel envs."""
 
     def _get_indices(self, indices):

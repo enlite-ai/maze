@@ -1,8 +1,8 @@
-""" Contains the base replay buffer interface."""
-from abc import abstractmethod
-from typing import Union, List
+"""Contains the base replay buffer interface."""
 
-import numpy as np
+from __future__ import annotations
+
+from abc import abstractmethod
 
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
@@ -12,14 +12,16 @@ class BaseReplayBuffer:
     """Abstract interface for all replay buffer implementations."""
 
     @abstractmethod
-    def add_rollout(self, rollout: SpacesTrajectoryRecord | List[StructuredSpacesRecord]) -> None:
+    def add_rollout(self, rollout: SpacesTrajectoryRecord | list[StructuredSpacesRecord]) -> None:
         """Add an actor rollout to the buffer.
 
         :param rollout: A single actor rollout consisting of n_rollout_steps transitions.
         """
 
     @abstractmethod
-    def sample_batch(self, n_samples: int, learner_device: str) -> List[StructuredSpacesRecord | SpacesTrajectoryRecord]:
+    def sample_batch(
+        self, n_samples: int, learner_device: str
+    ) -> list[StructuredSpacesRecord | SpacesTrajectoryRecord]:
         """Sample mini-batch randomly from the buffer.
 
         :param n_samples: The number of samples to draw.

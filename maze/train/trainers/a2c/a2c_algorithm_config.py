@@ -1,4 +1,7 @@
 """Algorithm parameters for multi-step A2C model."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from maze.train.trainers.common.config_classes import AlgorithmConfig
@@ -7,7 +10,7 @@ from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvalu
 
 @dataclass
 class A2CAlgorithmConfig(AlgorithmConfig):
-    """ Algorithm parameters for multi-step A2C model."""
+    """Algorithm parameters for multi-step A2C model."""
 
     n_epochs: int
     """number of epochs to train"""

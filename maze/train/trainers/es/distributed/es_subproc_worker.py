@@ -1,27 +1,30 @@
+from __future__ import annotations
+
 import multiprocessing
 import signal
-
-import cloudpickle
-import torch
 
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 from maze.train.parallelization.broadcasting_container import BroadcastingContainer
-from maze.train.trainers.es.distributed.es_rollout_wrapper import ESRolloutWorkerWrapper, ESAbortException
+from maze.train.trainers.es.distributed.es_rollout_wrapper import ESAbortException, ESRolloutWorkerWrapper
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
+
+import cloudpickle
+import torch
 
 
 class ESSubprocWorker:
-    def __init__(self,
-                 pickled_env_factory: bytes,
-                 pickled_policy: bytes,
-                 shared_noise: SharedNoiseTable,
-                 output_queue: multiprocessing.Queue,
-                 broadcasting_container: BroadcastingContainer,
-                 env_seed: int,
-                 agent_seed: int,
-                 is_eval_worker: bool
-                 ):
+    def __init__(
+        self,
+        pickled_env_factory: bytes,
+        pickled_policy: bytes,
+        shared_noise: SharedNoiseTable,
+        output_queue: multiprocessing.Queue,
+        broadcasting_container: BroadcastingContainer,
+        env_seed: int,
+        agent_seed: int,
+        is_eval_worker: bool,
+    ):
         self.policy = cloudpickle.loads(pickled_policy)
         self.policy_version_counter = -1
         self.aux_data = None
@@ -44,9 +47,9 @@ class ESSubprocWorker:
             self._update_policy_if_available()
 
             # limit the step count according to the task specification
-            self.env.set_max_episode_steps(self.aux_data["max_steps"])
-            if self.aux_data["normalization_stats"] is not None:
-                self.env.set_normalization_statistics(self.aux_data["normalization_stats"])
+            self.env.set_max_episode_steps(self.aux_data['max_steps'])
+            if self.aux_data['normalization_stats'] is not None:
+                self.env.set_normalization_statistics(self.aux_data['normalization_stats'])
 
             try:
                 signal.signal(signal.SIGUSR1, self._abort_handler)
@@ -54,7 +57,7 @@ class ESSubprocWorker:
                     if self.is_eval_worker:
                         result = self.env.generate_evaluation(self.policy)
                     else:
-                        result = self.env.generate_training(self.policy, noise_stddev=self.aux_data["noise_stddev"])
+                        result = self.env.generate_training(self.policy, noise_stddev=self.aux_data['noise_stddev'])
 
                 # Ignore abort during communication
                 signal.signal(signal.SIGUSR1, signal.SIG_IGN)
@@ -67,7 +70,8 @@ class ESSubprocWorker:
 
     def _update_policy_if_available(self) -> None:
         current_version, state_dict, aux_data = self.broadcasting_container.get_current_policy(
-            last_version=self.policy_version_counter)
+            last_version=self.policy_version_counter
+        )
         if self.policy_version_counter < current_version:
             self.policy_version_counter = current_version
             self.policy.load_state_dict(state_dict)

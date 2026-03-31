@@ -28,29 +28,36 @@ target_policy_logits and actions parameters in the entry point
 multi_from_logits method accepts lists of tensors instead of just
 tensors.
 """
-import collections
-from typing import List, Tuple, Union
 
-import torch
+from __future__ import annotations
+
+import collections
 
 from maze.core.env.action_conversion import TorchActionType
 from maze.distributions.dict import DictProbabilityDistribution
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch
 
+import torch
+
 VTraceFromLogitsReturns = collections.namedtuple(
     'VTraceFromLogitsReturns',
-    ['vs', 'pg_advantages', 'log_rhos',
-     'behaviour_action_log_probs', 'target_action_log_probs', 'target_step_action_dists'])
+    [
+        'vs',
+        'pg_advantages',
+        'log_rhos',
+        'behaviour_action_log_probs',
+        'target_action_log_probs',
+        'target_step_action_dists',
+    ],
+)
 
-VTraceReturns = collections.namedtuple("VTraceReturns", "vs pg_advantages")
+VTraceReturns = collections.namedtuple('VTraceReturns', 'vs pg_advantages')
 
 
 def log_probs_from_logits_and_actions_and_spaces(
-        policy_logits: List[TorchActionType],
-        actions: List[TorchActionType],
-        distribution_mapper: DistributionMapper) \
-        -> Tuple[List[TorchActionType], List[DictProbabilityDistribution]]:
+    policy_logits: list[TorchActionType], actions: list[TorchActionType], distribution_mapper: DistributionMapper
+) -> tuple[list[TorchActionType], list[DictProbabilityDistribution]]:
     """Computes action log-probs from policy logits, actions and acton_spaces.
 
     In the notation used throughout documentation and comments, T refers to the
@@ -70,25 +77,28 @@ def log_probs_from_logits_and_actions_and_spaces(
     """
     log_probs = []
     step_action_dists = []
-    for step_policy_logits, step_actions in zip(policy_logits, actions):
-        step_action_dist = distribution_mapper.logits_dict_to_distribution(logits_dict=step_policy_logits,
-                                                                           temperature=1.0)
+    for step_policy_logits, step_actions in zip(policy_logits, actions, strict=False):
+        step_action_dist = distribution_mapper.logits_dict_to_distribution(
+            logits_dict=step_policy_logits, temperature=1.0
+        )
         log_probs.append(step_action_dist.log_prob(step_actions))
         step_action_dists.append(step_action_dist)
     return log_probs, step_action_dists
 
 
-def from_logits(behaviour_policy_logits: List[TorchActionType],
-                target_policy_logits: List[TorchActionType],
-                actions: List[TorchActionType],
-                distribution_mapper: DistributionMapper,
-                discounts: torch.Tensor,
-                rewards: torch.Tensor,
-                values: List[torch.Tensor],
-                bootstrap_value: List[torch.Tensor],
-                clip_rho_threshold: float | None,
-                clip_pg_rho_threshold: float | None,
-                device: str | None) -> VTraceFromLogitsReturns:
+def from_logits(
+    behaviour_policy_logits: list[TorchActionType],
+    target_policy_logits: list[TorchActionType],
+    actions: list[TorchActionType],
+    distribution_mapper: DistributionMapper,
+    discounts: torch.Tensor,
+    rewards: torch.Tensor,
+    values: list[torch.Tensor],
+    bootstrap_value: list[torch.Tensor],
+    clip_rho_threshold: float | None,
+    clip_pg_rho_threshold: float | None,
+    device: str | None,
+) -> VTraceFromLogitsReturns:
     r"""V-trace for softmax policies.
 
     Calculates V-trace actor critic targets for softmax polices as described in
@@ -140,16 +150,19 @@ def from_logits(behaviour_policy_logits: List[TorchActionType],
              w.r.t. to the target policy
     """
 
-    behaviour_action_log_probs, _ = \
-        log_probs_from_logits_and_actions_and_spaces(behaviour_policy_logits, actions, distribution_mapper)
-    target_action_log_probs, target_step_action_dists = \
-        log_probs_from_logits_and_actions_and_spaces(target_policy_logits, actions, distribution_mapper)
+    behaviour_action_log_probs, _ = log_probs_from_logits_and_actions_and_spaces(
+        behaviour_policy_logits, actions, distribution_mapper
+    )
+    target_action_log_probs, target_step_action_dists = log_probs_from_logits_and_actions_and_spaces(
+        target_policy_logits, actions, distribution_mapper
+    )
 
-    log_rhos = get_log_rhos(target_action_log_probs=target_action_log_probs,
-                            behaviour_action_log_probs=behaviour_action_log_probs)
+    log_rhos = get_log_rhos(
+        target_action_log_probs=target_action_log_probs, behaviour_action_log_probs=behaviour_action_log_probs
+    )
     vss = []
     pg_advantagess = []
-    for step_log_rhos, step_values, step_bootstrap_values in zip(log_rhos, values, bootstrap_value):
+    for step_log_rhos, step_values, step_bootstrap_values in zip(log_rhos, values, bootstrap_value, strict=False):
         vs, pg_advantages = from_importance_weights(
             log_rhos=step_log_rhos,
             discounts=discounts,
@@ -157,7 +170,8 @@ def from_logits(behaviour_policy_logits: List[TorchActionType],
             values=step_values,
             bootstrap_value=step_bootstrap_values,
             clip_rho_threshold=clip_rho_threshold,
-            clip_pg_rho_threshold=clip_pg_rho_threshold)
+            clip_pg_rho_threshold=clip_pg_rho_threshold,
+        )
         vss.append(vs.to(device) if device is not None else vs)
         pg_advantagess.append(pg_advantages.to(device) if device is not None else pg_advantages)
 
@@ -165,16 +179,21 @@ def from_logits(behaviour_policy_logits: List[TorchActionType],
         log_rhos=log_rhos,
         behaviour_action_log_probs=behaviour_action_log_probs,
         target_action_log_probs=target_action_log_probs,
-        vs=vss, pg_advantages=pg_advantagess, target_step_action_dists=target_step_action_dists)
+        vs=vss,
+        pg_advantages=pg_advantagess,
+        target_step_action_dists=target_step_action_dists,
+    )
 
 
-def from_importance_weights(log_rhos: torch.Tensor,
-                            discounts: torch.Tensor,
-                            rewards: torch.Tensor,
-                            values: torch.Tensor,
-                            bootstrap_value: torch.Tensor,
-                            clip_rho_threshold: float | None,
-                            clip_pg_rho_threshold: float | None) -> VTraceReturns:
+def from_importance_weights(
+    log_rhos: torch.Tensor,
+    discounts: torch.Tensor,
+    rewards: torch.Tensor,
+    values: torch.Tensor,
+    bootstrap_value: torch.Tensor,
+    clip_rho_threshold: float | None,
+    clip_pg_rho_threshold: float | None,
+) -> VTraceReturns:
     r"""V-trace from log importance weights.
 
     Calculates V-trace actor critic targets as described in
@@ -217,8 +236,7 @@ def from_importance_weights(log_rhos: torch.Tensor,
     # Make sure tensor ranks are consistent.
     rho_rank = len(log_rhos.size())  # Usually 2.
     assert rho_rank == len(values.size())
-    assert rho_rank - 1 == len(bootstrap_value.size()), \
-        "must have rank {}".format(rho_rank - 1)
+    assert rho_rank - 1 == len(bootstrap_value.size()), f'must have rank {rho_rank - 1}'
     assert rho_rank == len(discounts.size())
     assert rho_rank == len(rewards.size())
 
@@ -231,11 +249,10 @@ def from_importance_weights(log_rhos: torch.Tensor,
 
     cs = torch.clamp_max(rhos, 1.0)
     # Append bootstrapped value to get [v1, ..., v_t+1]
-    values_t_plus_1 = torch.cat(
-        [values[1:], torch.unsqueeze(bootstrap_value, 0)], dim=0)
+    values_t_plus_1 = torch.cat([values[1:], torch.unsqueeze(bootstrap_value, 0)], dim=0)
     deltas = clipped_rhos * (rewards + discounts * values_t_plus_1 - values)
 
-    vs_minus_v_xs: List = [torch.zeros_like(bootstrap_value)]
+    vs_minus_v_xs: list = [torch.zeros_like(bootstrap_value)]
     for i in reversed(range(len(discounts))):
         discount_t, c_t, delta_t = discounts[i], cs[i], deltas[i]
         vs_minus_v_xs.append(delta_t + discount_t * c_t * vs_minus_v_xs[-1])
@@ -246,22 +263,20 @@ def from_importance_weights(log_rhos: torch.Tensor,
     vs = vs_minus_v_xs + values
 
     # Advantage for policy gradient.
-    vs_t_plus_1 = torch.cat(
-        [vs[1:], torch.unsqueeze(bootstrap_value, 0)], dim=0)
+    vs_t_plus_1 = torch.cat([vs[1:], torch.unsqueeze(bootstrap_value, 0)], dim=0)
     if clip_pg_rho_threshold is not None:
         clipped_pg_rhos = torch.clamp_max(rhos, clip_pg_rho_threshold)
     else:
         clipped_pg_rhos = rhos
-    pg_advantages = (
-            clipped_pg_rhos * (rewards + discounts * vs_t_plus_1 - values))
+    pg_advantages = clipped_pg_rhos * (rewards + discounts * vs_t_plus_1 - values)
 
     # Make sure no gradients backpropagated through the returned values.
     return VTraceReturns(vs=vs.detach(), pg_advantages=pg_advantages.detach())
 
 
-def get_log_rhos(target_action_log_probs: List[TorchActionType],
-                 behaviour_action_log_probs: List[TorchActionType]) \
-        -> List[torch.Tensor]:
+def get_log_rhos(
+    target_action_log_probs: list[TorchActionType], behaviour_action_log_probs: list[TorchActionType]
+) -> list[torch.Tensor]:
     """With the selected log_probs for multi-discrete actions of behavior
     and target policies we compute the log_rhos for calculating the vtrace.
 
@@ -275,8 +290,9 @@ def get_log_rhos(target_action_log_probs: List[TorchActionType],
     log_rhos = []
     # TODO: Consider doing this for each individual action
     with torch.no_grad():
-        for step_target_action_log_probs, step_behaviour_action_log_probs in zip(target_action_log_probs,
-                                                                                 behaviour_action_log_probs):
+        for step_target_action_log_probs, step_behaviour_action_log_probs in zip(
+            target_action_log_probs, behaviour_action_log_probs, strict=False
+        ):
             target = torch.stack(list(step_target_action_log_probs.values()))
             behaviour = torch.stack(list(step_behaviour_action_log_probs.values()))
 

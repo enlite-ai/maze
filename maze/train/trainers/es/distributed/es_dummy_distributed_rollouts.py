@@ -1,5 +1,8 @@
 """Simplest possible implementation of the distributed rollout interface."""
-from typing import Generator, Optional, Union
+
+from __future__ import annotations
+
+from collections.abc import Generator
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_model import TorchModel
@@ -16,22 +19,25 @@ from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 class ESDummyDistributedRollouts(ESDistributedRollouts):
     """Implementation of the ES distribution by running the rollouts synchronously in the same process."""
 
-    def __init__(self, env: StructuredEnv, n_eval_rollouts: int, shared_noise: SharedNoiseTable,
-                 agent_instance_seed: int):
+    def __init__(
+        self, env: StructuredEnv, n_eval_rollouts: int, shared_noise: SharedNoiseTable, agent_instance_seed: int
+    ):
         env = TimeLimitWrapper.wrap(env)
         env = LogStatsWrapper.wrap(env)
-        self.env = ESRolloutWorkerWrapper.wrap(env=env, shared_noise=shared_noise,
-                                               agent_instance_seed=agent_instance_seed)
+        self.env = ESRolloutWorkerWrapper.wrap(
+            env=env, shared_noise=shared_noise, agent_instance_seed=agent_instance_seed
+        )
 
         self.n_eval_rollouts = n_eval_rollouts
 
     @override(ESDistributedRollouts)
-    def generate_rollouts(self,
-                          policy: Policy | TorchModel,
-                          max_steps: int | None,
-                          noise_stddev: float,
-                          normalization_stats: StructuredStatisticsType
-                          ) -> Generator[ESRolloutResult, None, None]:
+    def generate_rollouts(
+        self,
+        policy: Policy | TorchModel,
+        max_steps: int | None,
+        noise_stddev: float,
+        normalization_stats: StructuredStatisticsType,
+    ) -> Generator[ESRolloutResult, None, None]:
         """First execute a fixed number of eval rollouts and then continue with producing training samples."""
         self.env.set_max_episode_steps(max_steps)
         if normalization_stats:

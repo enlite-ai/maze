@@ -1,14 +1,17 @@
 """Place for useful helpers to avoid duplicated code in the respective trainers."""
+
+from __future__ import annotations
+
 from collections import defaultdict
-from typing import List, Dict, Iterable, Union
+from collections.abc import Iterable
+
+from maze.core.env.structured_env import ActorID
 
 import numpy as np
 import torch
 
-from maze.core.env.structured_env import ActorID
 
-
-def stack_numpy_dict_list(dict_list: List[Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
+def stack_numpy_dict_list(dict_list: list[dict[str, np.ndarray]]) -> dict[str, np.ndarray]:
     """Stack list of dictionaries holding numpy arrays as values.
 
     :param dict_list: A list of identical dictionaries to be stacked, e.g. [{a: 1}, {a: 2}]
@@ -26,7 +29,7 @@ def stack_numpy_dict_list(dict_list: List[Dict[str, np.ndarray]]) -> Dict[str, n
     return stacked_dict
 
 
-def unstack_numpy_list_dict(list_dict: Dict[str, np.ndarray]) -> List[Dict[str, np.ndarray]]:
+def unstack_numpy_list_dict(list_dict: dict[str, np.ndarray]) -> list[dict[str, np.ndarray]]:
     """Inverse of :func:`~maze.train.utils.train_utils.stack_numpy_dict_list`.
 
     Converts a dict of stacked lists (e.g. {a : [1, 2]}) into a list of dicts (e.g. [{a: 1}, {a: 2}]).
@@ -62,13 +65,14 @@ def compute_gradient_norm(params: Iterable[torch.Tensor]) -> float:
         if p.requires_grad and np.prod(p.shape) > 0:
             param_norm = p.grad.data.norm(2)
             total_norm += param_norm.item() ** 2
-    total_norm = total_norm ** (1. / 2)
+    total_norm = total_norm ** (1.0 / 2)
 
     return total_norm
 
 
-def stack_torch_dict_list(dict_list: List[Dict[str, torch.Tensor | np.ndarray]], dim: int = 0)\
-        -> Dict[str, torch.Tensor]:
+def stack_torch_dict_list(
+    dict_list: list[dict[str, torch.Tensor | np.ndarray]], dim: int = 0
+) -> dict[str, torch.Tensor]:
     """Stack list of dictionaries holding torch tensors as values.
 
     Similar to :func:`~maze.train.utils.train_utils.stack_numpy_dict_list`, but for tensors.
@@ -90,8 +94,9 @@ def stack_torch_dict_list(dict_list: List[Dict[str, torch.Tensor | np.ndarray]],
     return stacked_dict
 
 
-def stack_torch_array_list(array_list: List[np.ndarray | torch.Tensor], expand: bool = False, dim: int = 0) \
-        -> torch.Tensor:
+def stack_torch_array_list(
+    array_list: list[np.ndarray | torch.Tensor], expand: bool = False, dim: int = 0
+) -> torch.Tensor:
     """Batch together a list of arrays (either torch or numpy) after converting them to torch. That is ether stack them
         if the batch dimension does not exists, otherwise concatenate them in the batch dimension (2)
 
@@ -102,7 +107,7 @@ def stack_torch_array_list(array_list: List[np.ndarray | torch.Tensor], expand: 
     :return: the batched input
     """
     list_array = []
-    for idx, array in enumerate(array_list):
+    for _, array in enumerate(array_list):
         list_array.append(torch.from_numpy(array) if isinstance(array, np.ndarray) else array)
 
     if expand:
@@ -113,10 +118,10 @@ def stack_torch_array_list(array_list: List[np.ndarray | torch.Tensor], expand: 
     return stacked_list
 
 
-def debatch_actor_ids(actor_ids: List[ActorID]) -> List[ActorID]:
+def debatch_actor_ids(actor_ids: list[ActorID]) -> list[ActorID]:
     """If actor ids are returned by the dataloader they are batched in the step_key and agent_id fields. Since a single
-        batch of value should correlate in agent_id and step key, this holds redundant information and should be
-        reversed for it to work properly with all other parts of the framework. """
+    batch of value should correlate in agent_id and step key, this holds redundant information and should be
+    reversed for it to work properly with all other parts of the framework."""
     for idx in range(len(actor_ids)):
         actor_id_tmp = actor_ids[idx]
 

@@ -1,12 +1,14 @@
 """Base class for distributed actor modules."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import Tuple, Callable, Optional, Union, Dict
+from collections.abc import Callable
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, LogStatsValue
+from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, LogStatsValue, get_stats_logger
 from maze.core.log_stats.log_stats_env import LogStatsEnv
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 
@@ -24,12 +26,14 @@ class DistributedActors:
     :param batch_size: Size of the batch the rollouts are collected in.
     """
 
-    def __init__(self,
-                 env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
-                 policy: TorchPolicy,
-                 n_rollout_steps: int,
-                 n_actors: int,
-                 batch_size: int):
+    def __init__(
+        self,
+        env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
+        policy: TorchPolicy,
+        n_rollout_steps: int,
+        n_actors: int,
+        batch_size: int,
+    ):
         self.env_factory = env_factory
         self.policy = policy
         self.n_rollout_steps = n_rollout_steps
@@ -50,14 +54,14 @@ class DistributedActors:
         raise NotImplementedError
 
     @abstractmethod
-    def broadcast_updated_policy(self, state_dict: Dict) -> None:
+    def broadcast_updated_policy(self, state_dict: dict) -> None:
         """Broadcast the newest version of the policy to the actors.
 
         :param state_dict: State of the new policy version to broadcast."""
         raise NotImplementedError
 
     @abstractmethod
-    def collect_outputs(self, learner_device: str) -> Tuple[StructuredSpacesRecord, float, float, float]:
+    def collect_outputs(self, learner_device: str) -> tuple[StructuredSpacesRecord, float, float, float]:
         """Collect `self.batch_size` actor outputs from the queue and return them batched where the first dim is
         time and the second is the batch size.
 
@@ -71,10 +75,7 @@ class DistributedActors:
         """Return the collected epoch stats aggregator"""
         return self.epoch_stats
 
-    def get_stats_value(self,
-                        event: Callable,
-                        level: LogStatsLevel,
-                        name: str | None = None) -> LogStatsValue:
+    def get_stats_value(self, event: Callable, level: LogStatsLevel, name: str | None = None) -> LogStatsValue:
         """Obtain a single value from the epoch statistics dict.
 
         :param event: The event interface method of the value in question.

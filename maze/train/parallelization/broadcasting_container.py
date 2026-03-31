@@ -1,7 +1,10 @@
 """Broadcasting container for synchronizing policy updates across workers on local machine."""
+
+from __future__ import annotations
+
 from multiprocessing import RLock
 from multiprocessing.managers import BaseManager
-from typing import Dict, NoReturn
+from typing import NoReturn
 
 import cloudpickle
 
@@ -39,7 +42,7 @@ class BroadcastingContainer:
         with self._lock:
             self._stop_flag = True
 
-    def set_policy_state_dict(self, state_dict: Dict, aux_data: Dict = None) -> NoReturn:
+    def set_policy_state_dict(self, state_dict: dict, aux_data: dict = None) -> NoReturn:
         """Store new policy version.
 
         :param state_dict: New state dict to store
@@ -50,7 +53,7 @@ class BroadcastingContainer:
             self._policy_version_counter += 1
             self._aux_data = aux_data
 
-    def get_current_policy(self, last_version: int) -> (int, Dict, Dict):
+    def get_current_policy(self, last_version: int) -> (int, dict, dict):
         """Check if new policy version is available, and if so, return the state_dict and aux_data.
 
         :param last_version: Last version known to the worker/agent.
@@ -71,4 +74,5 @@ class BroadcastingContainer:
 
 class BroadcastingManager(BaseManager):
     """A wrapper around BaseManager, used for managing the broadcasting container in multiprocessing scenarios."""
+
     pass

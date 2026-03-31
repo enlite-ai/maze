@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC
+
+# ruff: noqa: B027, B024
 
 
 class ModelSelectionBase(ABC):

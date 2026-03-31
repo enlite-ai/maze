@@ -1,33 +1,36 @@
+from __future__ import annotations
+
 import logging
 import multiprocessing
 import os
 import signal
+from collections.abc import Callable, Generator
 from multiprocessing.context import BaseContext
-from typing import Union, Optional, Generator, Callable, List
-
-import cloudpickle
 
 from maze.core.agent.policy import Policy
 from maze.core.agent.torch_model import TorchModel
 from maze.core.annotations import override
 from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.observation_normalization.normalization_strategies.base import StructuredStatisticsType
-from maze.train.parallelization.broadcasting_container import BroadcastingManager, BroadcastingContainer
+from maze.train.parallelization.broadcasting_container import BroadcastingContainer, BroadcastingManager
 from maze.train.trainers.es.distributed.es_distributed_rollouts import ESDistributedRollouts, ESRolloutResult
 from maze.train.trainers.es.distributed.es_subproc_worker import ESSubprocWorker
 from maze.train.trainers.es.es_shared_noise_table import SharedNoiseTable
 
+import cloudpickle
+
 
 class ESSubprocDistributedRollouts(ESDistributedRollouts):
-    def __init__(self,
-                 env_factory: Callable[[], MazeEnv],
-                 n_training_workers: int,
-                 n_eval_workers: int,
-                 shared_noise: SharedNoiseTable,
-                 env_seeds: List[int],
-                 agent_seed: int,
-                 start_method: str = None
-                 ):
+    def __init__(
+        self,
+        env_factory: Callable[[], MazeEnv],
+        n_training_workers: int,
+        n_eval_workers: int,
+        shared_noise: SharedNoiseTable,
+        env_seeds: list[int],
+        agent_seed: int,
+        start_method: str = None,
+    ):
         self.env_factory = env_factory
         self.n_training_workers = n_training_workers
         self.n_eval_workers = n_eval_workers
@@ -41,20 +44,17 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
         self._workers_started = False
 
     @override(ESDistributedRollouts)
-    def generate_rollouts(self,
-                          policy: Policy | TorchModel,
-                          max_steps: int | None,
-                          noise_stddev: float,
-                          normalization_stats: StructuredStatisticsType
-                          ) -> Generator[ESRolloutResult, None, None]:
+    def generate_rollouts(
+        self,
+        policy: Policy | TorchModel,
+        max_steps: int | None,
+        noise_stddev: float,
+        normalization_stats: StructuredStatisticsType,
+    ) -> Generator[ESRolloutResult, None, None]:
         """First execute a fixed number of eval rollouts and then continue with producing training samples."""
         self.broadcasting_container.set_policy_state_dict(
             state_dict=policy.state_dict(),
-            aux_data=dict(
-                normalization_stats=normalization_stats,
-                max_steps=max_steps,
-                noise_stddev=noise_stddev
-            )
+            aux_data=dict(normalization_stats=normalization_stats, max_steps=max_steps, noise_stddev=noise_stddev),
         )
         current_policy_version = self.broadcasting_container.policy_version()
 
@@ -79,16 +79,19 @@ class ESSubprocDistributedRollouts(ESDistributedRollouts):
         for worker_id in range(self.n_eval_workers + self.n_training_workers):
             pickled_env_factory = cloudpickle.dumps(self.env_factory)
             pickled_policy = cloudpickle.dumps(policy)
-            process = self.ctx.Process(target=self._launch_worker, kwargs=dict(
-                pickled_env_factory=pickled_env_factory,
-                pickled_policy=pickled_policy,
-                shared_noise=self.shared_noise,
-                output_queue=self.worker_output_queue,
-                broadcasting_container=self.broadcasting_container,
-                env_seed=self.env_seeds[worker_id],
-                agent_seed=self.agent_seed,
-                is_eval_worker=worker_id < self.n_eval_workers,
-            ))
+            process = self.ctx.Process(
+                target=self._launch_worker,
+                kwargs=dict(
+                    pickled_env_factory=pickled_env_factory,
+                    pickled_policy=pickled_policy,
+                    shared_noise=self.shared_noise,
+                    output_queue=self.worker_output_queue,
+                    broadcasting_container=self.broadcasting_container,
+                    env_seed=self.env_seeds[worker_id],
+                    agent_seed=self.agent_seed,
+                    is_eval_worker=worker_id < self.n_eval_workers,
+                ),
+            )
             self.workers.append(process)
             process.start()
 

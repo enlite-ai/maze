@@ -1,7 +1,12 @@
 """Abstract interface for policy evaluation."""
+
+from __future__ import annotations
+
 import abc
 
 from maze.core.agent.torch_policy import TorchPolicy
+
+# ruff: noqa: B027, B024
 
 
 class Evaluator(abc.ABC):

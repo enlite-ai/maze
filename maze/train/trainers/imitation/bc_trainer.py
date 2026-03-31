@@ -1,15 +1,9 @@
 """Trainer class for behavioral cloning."""
 
-from dataclasses import dataclass
-from typing import Dict, Union, Optional, List
+from __future__ import annotations
 
 import os
-import torch
-
-from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
-from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
-from torch.optim import Optimizer
-from torch.utils.data import DataLoader
+from dataclasses import dataclass
 from typing import BinaryIO
 
 from maze.core.agent.torch_policy import TorchPolicy
@@ -22,11 +16,17 @@ from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, get_stats_logger, increment_log_step
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.trainers.common.evaluators.evaluator import Evaluator
+from maze.train.trainers.common.evaluators.multi_evaluator import MultiEvaluator
+from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.train.trainers.common.trainer import Trainer
 from maze.train.trainers.imitation.bc_algorithm_config import BCAlgorithmConfig
 from maze.train.trainers.imitation.bc_loss import BCLoss
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 from maze.train.utils.train_utils import compute_gradient_norm, debatch_actor_ids
+
+import torch
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 
 
 @dataclass
@@ -51,19 +51,19 @@ class BCTrainer(Trainer):
     loss: BCLoss
     """Class providing the training loss function."""
 
-    train_stats: LogStatsAggregator = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger("train"))
+    train_stats: LogStatsAggregator = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger('train'))
     """Training statistics"""
 
     imitation_events: ImitationEvents = train_stats.create_event_topic(ImitationEvents)
     """Imitation-specific training events"""
 
     def __init__(
-            self,
-            algorithm_config: BCAlgorithmConfig,
-            data_loader: DataLoader,
-            policy: TorchPolicy,
-            optimizer: Optimizer,
-            loss: BCLoss
+        self,
+        algorithm_config: BCAlgorithmConfig,
+        data_loader: DataLoader,
+        policy: TorchPolicy,
+        optimizer: Optimizer,
+        loss: BCLoss,
     ):
         super().__init__(algorithm_config)
 
@@ -74,11 +74,10 @@ class BCTrainer(Trainer):
         self.log_substep_events = self.algorithm_config.log_substep_events
         # log events stats to file.
         if self.algorithm_config.dump_events_to_file:
-            log_events_path = os.path.abspath(".") + "/event_logs"
+            log_events_path = os.path.abspath('.') + '/event_logs'
             LogEventsWriterRegistry.register_writer(LogEventsWriterTSV(log_dir=log_events_path))
 
-
-    def _run_evaluation(self,evaluator: Evaluator, run_rollout: bool) -> None:
+    def _run_evaluation(self, evaluator: Evaluator, run_rollout: bool) -> None:
         """Evaluate the evaluators if needed.
         :param evaluator: Evaluator to evaluate.
         :param run_rollout: Whether to run the rollout evaluator or not.
@@ -92,7 +91,7 @@ class BCTrainer(Trainer):
 
     @override(Trainer)
     def train(
-            self, evaluator: Evaluator, n_epochs: int | None = None, eval_every_k_iterations: int | None = None
+        self, evaluator: Evaluator, n_epochs: int | None = None, eval_every_k_iterations: int | None = None
     ) -> None:
         """
         Run training.
@@ -108,10 +107,11 @@ class BCTrainer(Trainer):
             eval_every_k_iterations = self.algorithm_config.eval_every_k_iterations
 
         for epoch in range(n_epochs):
-            print(f"\n********** Epoch {epoch + 1} started **********")
-            eval_with_rollout = (epoch >= self.algorithm_config.eval_start_epoch and
-                                 epoch % self.algorithm_config.eval_frequency == 0)
-            self._run_evaluation(evaluator, eval_with_rollout )
+            print(f'\n********** Epoch {epoch + 1} started **********')
+            eval_with_rollout = (
+                epoch >= self.algorithm_config.eval_start_epoch and epoch % self.algorithm_config.eval_frequency == 0
+            )
+            self._run_evaluation(evaluator, eval_with_rollout)
             increment_log_step()
 
             for iteration, data in enumerate(self.data_loader, 0):
@@ -119,17 +119,18 @@ class BCTrainer(Trainer):
                 self._run_iteration(observations=observations, actions=actions, actor_ids=actor_ids)
 
                 # Evaluate after each k iterations if set
-                if eval_every_k_iterations is not None and \
-                        iteration % eval_every_k_iterations == (eval_every_k_iterations - 1):
-                    print(f"\n********** Epoch {epoch + 1}: Iteration {iteration + 1} **********")
+                if eval_every_k_iterations is not None and iteration % eval_every_k_iterations == (
+                    eval_every_k_iterations - 1
+                ):
+                    print(f'\n********** Epoch {epoch + 1}: Iteration {iteration + 1} **********')
                     evaluator.evaluate(self.policy)
                     increment_log_step()
 
-        print(f"\n********** Final evaluation **********")
+        print('\n********** Final evaluation **********')
         self._run_evaluation(evaluator, True)
         increment_log_step()
 
-    def load_state_dict(self, state_dict: Dict) -> None:
+    def load_state_dict(self, state_dict: dict) -> None:
         """Set the model and optimizer state.
         :param state_dict: The state dict.
         """
@@ -137,19 +138,21 @@ class BCTrainer(Trainer):
 
     @override(Trainer)
     def state_dict(self):
-        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
-        """
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`"""
         return self.policy.state_dict()
 
     @override(Trainer)
     def load_state(self, file_path: str | BinaryIO) -> None:
-        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
-        """
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`"""
         state_dict = torch.load(file_path, map_location=torch.device(self.policy.device))
         self.load_state_dict(state_dict)
 
-    def _run_iteration(self, observations: List[ObservationType | TorchObservationType],
-                       actions: List[ActionType | TorchActionType], actor_ids: List[ActorID]) -> None:
+    def _run_iteration(
+        self,
+        observations: list[ObservationType | TorchObservationType],
+        actions: list[ActionType | TorchActionType],
+        actor_ids: list[ActorID],
+    ) -> None:
         """Run a single training iterations of the behavioural cloning.
 
         :param observations: A list (w.r.t. the substeps/agents) of batched observations.
@@ -164,9 +167,15 @@ class BCTrainer(Trainer):
 
         # Convert only actions to torch, since observations are converted in policy.compute_substep_policy_output method
         actions = convert_to_torch(actions, device=self.policy.device, cast=None, in_place=True)
-        total_loss = self.loss.calculate_loss(policy=self.policy, observations=observations,
-                                              actions=actions, actor_ids=actor_ids, events=self.imitation_events,
-                                              action_logits=None, log_substep_events=self.log_substep_events)
+        total_loss = self.loss.calculate_loss(
+            policy=self.policy,
+            observations=observations,
+            actions=actions,
+            actor_ids=actor_ids,
+            events=self.imitation_events,
+            action_logits=None,
+            log_substep_events=self.log_substep_events,
+        )
         total_loss.backward()
         self.optimizer.step()
 
@@ -176,10 +185,12 @@ class BCTrainer(Trainer):
             grad_norm = compute_gradient_norm(self.policy.network_for(actor_id).parameters())
 
             if self.log_substep_events:
-                self.imitation_events.policy_l2_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                                     value=l2_norm.item())
-                self.imitation_events.policy_grad_norm(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                                       value=grad_norm)
+                self.imitation_events.policy_l2_norm(
+                    step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=l2_norm.item()
+                )
+                self.imitation_events.policy_grad_norm(
+                    step_id=actor_id.step_key, agent_id=actor_id.agent_id, value=grad_norm
+                )
 
             self.imitation_events.mean_step_policy_l2_norm(step_id=actor_id.step_key, value=l2_norm.item())
             self.imitation_events.mean_step_policy_grad_norm(step_id=actor_id.step_key, value=grad_norm)

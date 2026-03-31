@@ -1,6 +1,9 @@
 """Algorithm parameters for evolution strategies model."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from maze.core.agent.policy import Policy
 from maze.train.trainers.common.config_classes import AlgorithmConfig

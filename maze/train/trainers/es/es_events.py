@@ -1,7 +1,10 @@
 """Definition of Evolution Strategies training statistics"""
-import numpy as np
+
+from __future__ import annotations
 
 from maze.core.log_stats.event_decorators import define_epoch_stats, define_stats_grouping
+
+import numpy as np
 
 
 class ESEvents:
@@ -17,8 +20,8 @@ class ESEvents:
     def policy_norm(self, policy_id: int, value: float):
         """l2 norm of the step policy parameters"""
 
-    @define_epoch_stats(np.sum, output_name="real_time")
-    @define_epoch_stats(np.sum, output_name="total_real_time", cumulative=True)
+    @define_epoch_stats(np.sum, output_name='real_time')
+    @define_epoch_stats(np.sum, output_name='total_real_time', cumulative=True)
     def real_time(self, value: float):
         """elapsed real time per iteration (=epoch)"""
 

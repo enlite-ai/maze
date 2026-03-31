@@ -1,22 +1,18 @@
 """Base class for distributing workers with an intermediate buffer to sample transitions from"""
 
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import Callable, Optional, Union, Dict, Tuple, List
+from collections.abc import Callable
 
-from omegaconf import DictConfig
-
-from maze.core.agent.policy import Policy
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_stats.log_stats import LogStatsAggregator, LogStatsLevel, LogStatsValue, get_stats_logger
 from maze.core.log_stats.log_stats_env import LogStatsEnv
-from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
-from maze.core.utils.factory import Factory
 from maze.train.trainers.common.replay_buffer.replay_buffer import BaseReplayBuffer
-from maze.train.trainers.common.replay_buffer.uniform_replay_buffer import UniformReplayBuffer
 
 
 class BaseDistributedWorkersWithBuffer:
@@ -37,17 +33,18 @@ class BaseDistributedWorkersWithBuffer:
     :param replay_buffer: The replay buffer to use.
     """
 
-    def __init__(self,
-                 env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
-                 worker_policy: TorchPolicy,
-                 n_rollout_steps: int,
-                 n_workers: int,
-                 batch_size: int,
-                 rollouts_per_iteration: int,
-                 split_rollouts_into_transitions: bool,
-                 env_instance_seeds: List[int],
-                 replay_buffer: BaseReplayBuffer):
-
+    def __init__(
+        self,
+        env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
+        worker_policy: TorchPolicy,
+        n_rollout_steps: int,
+        n_workers: int,
+        batch_size: int,
+        rollouts_per_iteration: int,
+        split_rollouts_into_transitions: bool,
+        env_instance_seeds: list[int],
+        replay_buffer: BaseReplayBuffer,
+    ):
         self.env_factory = env_factory
         self._worker_policy = worker_policy
         self.n_rollout_steps = n_rollout_steps
@@ -82,7 +79,7 @@ class BaseDistributedWorkersWithBuffer:
         self.stop()
 
     @abstractmethod
-    def broadcast_updated_policy(self, state_dict: Dict) -> None:
+    def broadcast_updated_policy(self, state_dict: dict) -> None:
         """Broadcast the newest version of the policy to the workers.
 
         :param state_dict: State of the new policy version to broadcast.
@@ -104,7 +101,7 @@ class BaseDistributedWorkersWithBuffer:
             return SpacesTrajectoryRecord.stack_trajectories(batch).stack().to_torch(learner_device)
 
     @abstractmethod
-    def collect_rollouts(self) -> Tuple[float, float, float]:
+    def collect_rollouts(self) -> tuple[float, float, float]:
         """Collect worker outputs from the queue and add it to the buffer.
 
         :return: A tuple of (1) queue size before de-queueing,
@@ -116,10 +113,7 @@ class BaseDistributedWorkersWithBuffer:
         """Return the collected epoch stats aggregator"""
         return self.epoch_stats
 
-    def get_stats_value(self,
-                        event: Callable,
-                        level: LogStatsLevel,
-                        name: str | None = None) -> LogStatsValue:
+    def get_stats_value(self, event: Callable, level: LogStatsLevel, name: str | None = None) -> LogStatsValue:
         """Obtain a single value from the epoch statistics dict.
 
         :param event: The event interface method of the value in question.

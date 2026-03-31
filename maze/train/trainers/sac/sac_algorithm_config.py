@@ -1,7 +1,8 @@
 """Argument parser for SAC algorithm and training"""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Union, List, Optional
 
 from maze.core.agent.policy import Policy
 from maze.core.utils.factory import ConfigType
@@ -53,7 +54,7 @@ class SACAlgorithmConfig(AlgorithmConfig):
     target_entropy_multiplier: float
     """Specify an optional multiplier for the target entropy.
     This value is multiplied with the default target entropy computation (called alpha tuning in the paper):
-        
+
         - discrete spaces: target_entropy = target_entropy_multiplier * ( - 0.98 * (-log (1 / cardinality(A)))
         - continues spaces: target_entropy = target_entropy_multiplier * (- dim(A)) (e.g., -6 for HalfCheetah-v1)"""
 

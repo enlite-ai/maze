@@ -2,11 +2,15 @@
 Classes reflecting component configuration.
 """
 
+from __future__ import annotations
+
 from abc import ABC
 from dataclasses import dataclass
-from typing import Dict, Optional, Any
-from omegaconf import DictConfig
+from typing import Any
+
 from maze.runner import Runner
+
+from omegaconf import DictConfig
 
 
 @dataclass
@@ -23,9 +27,9 @@ class ModelConfig:
 
     As with TrainConfig this class enables type hinting, but is not actually instantiated."""
 
-    policies: Dict[Any, Any]
-    critics: Dict[Any, Any] | None
-    distribution_mapper: Dict[Any, Any]
+    policies: dict[Any, Any]
+    critics: dict[Any, Any] | None
+    distribution_mapper: dict[Any, Any]
 
 
 @dataclass
@@ -49,4 +53,3 @@ class TrainConfig:
     model: ModelConfig
     algorithm: AlgorithmConfig
     runner: Runner
-

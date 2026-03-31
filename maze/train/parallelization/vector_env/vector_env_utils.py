@@ -1,4 +1,6 @@
-from maze.core.log_stats.log_stats import LogStatsConsumer, LogStats, LogStatsLevel
+from __future__ import annotations
+
+from maze.core.log_stats.log_stats import LogStats, LogStatsConsumer, LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 
 

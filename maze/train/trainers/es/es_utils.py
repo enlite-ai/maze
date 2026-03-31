@@ -1,7 +1,10 @@
 """helper functions for ES"""
-import torch
+
+from __future__ import annotations
 
 from maze.core.agent.torch_model import TorchModel
+
+import torch
 
 
 def get_flat_parameters(policy: TorchModel) -> torch.Tensor:

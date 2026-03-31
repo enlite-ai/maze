@@ -1,5 +1,7 @@
 """Algorithm parameters for behavioral cloning."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -25,7 +27,7 @@ class BCAlgorithmConfig(AlgorithmConfig):
 
     n_epochs: int
     """number of epochs to train"""
-    
+
     eval_every_k_iterations: int
     """Number of iterations after which to run evaluation (in addition to evaluations at the end of
        each epoch, which are run automatically). If set to None, evaluations will run on epoch end only."""

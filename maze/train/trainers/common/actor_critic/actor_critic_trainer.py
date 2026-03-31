@@ -1,19 +1,17 @@
 """Multi-step Actor Critic implementation."""
+
+from __future__ import annotations
+
 import sys
 import time
 from abc import ABC, abstractmethod
-from typing import List, Union, Dict, Optional, BinaryIO
-
-import numpy as np
-import torch
-import torch.nn as nn
-from tqdm import tqdm
+from typing import BinaryIO
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.annotations import override
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.structured_env import ActorID
-from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
+from maze.core.log_stats.log_stats import LogStatsLevel, increment_log_step
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
@@ -27,6 +25,11 @@ from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 from maze.train.utils.train_utils import compute_gradient_norm
 from maze.utils.bcolors import BColors
 
+import numpy as np
+import torch
+import torch.nn as nn
+from tqdm import tqdm
+
 
 class ActorCritic(Trainer, ABC):
     """Base class for actor critic trainers. Suitable for multi-step and multi-agent training.
@@ -39,12 +42,12 @@ class ActorCritic(Trainer, ABC):
     """
 
     def __init__(
-            self,
-            algorithm_config: A2CAlgorithmConfig | PPOAlgorithmConfig | ImpalaAlgorithmConfig,
-            rollout_generator: RolloutGenerator | DistributedActors,
-            evaluator: RolloutEvaluator | None,
-            model: TorchActorCritic,
-            model_selection: BestModelSelection | None
+        self,
+        algorithm_config: A2CAlgorithmConfig | PPOAlgorithmConfig | ImpalaAlgorithmConfig,
+        rollout_generator: RolloutGenerator | DistributedActors,
+        evaluator: RolloutEvaluator | None,
+        model: TorchActorCritic,
+        model_selection: BestModelSelection | None,
     ):
         super().__init__(algorithm_config)
 
@@ -95,7 +98,7 @@ class ActorCritic(Trainer, ABC):
 
         for epoch in range(n_epochs):
             start = time.time()
-            print("Update epoch - {}".format(epoch))
+            print(f'Update epoch - {epoch}')
 
             # check for critic burn in and reset coefficient to only update the critic
             if epoch < self.algorithm_config.critic_burn_in_epochs:
@@ -118,11 +121,13 @@ class ActorCritic(Trainer, ABC):
                     try:
                         if len(self.model.critic.networks) == 1:
                             stopping_metric = self.rollout_generator.env.epoch_stats.last_stats[
-                                (ActorCriticEvents.critic_value, None, (0,))]
+                                (ActorCriticEvents.critic_value, None, (0,))
+                            ]
                         else:
-                            stopping_metric = self.rollout_generator.get_stats_value(BaseEnvEvents.reward,
-                                                                                     LogStatsLevel.EPOCH, name="mean")
-                            print(f'Could not retrieve critic value for model dumping, using reward instead.')
+                            stopping_metric = self.rollout_generator.get_stats_value(
+                                BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='mean'
+                            )
+                            print('Could not retrieve critic value for model dumping, using reward instead.')
 
                     except Exception as e:
                         print(f'Could not retrieve statistic for model selection due to error: {e}. Please check this.')
@@ -131,10 +136,14 @@ class ActorCritic(Trainer, ABC):
                 self.model_selection.update(stopping_metric)
 
             # early stopping
-            if self.algorithm_config.patience and \
-                    self.model_selection.last_improvement > self.algorithm_config.patience:
-                BColors.print_colored("-> no improvement since {} epochs: EARLY STOPPING!"
-                                      .format(self.algorithm_config.patience), color=BColors.WARNING)
+            if (
+                self.algorithm_config.patience
+                and self.model_selection.last_improvement > self.algorithm_config.patience
+            ):
+                BColors.print_colored(
+                    f'-> no improvement since {self.algorithm_config.patience} epochs: EARLY STOPPING!',
+                    color=BColors.WARNING,
+                )
                 increment_log_step()
                 break
 
@@ -150,7 +159,7 @@ class ActorCritic(Trainer, ABC):
             # increase step counter (which in turn triggers the log statistics writing)
             increment_log_step()
 
-            print("Time required for epoch: {:.2f}s".format(epoch_time))
+            print(f'Time required for epoch: {epoch_time:.2f}s')
 
     def evaluate(self) -> None:
         """Perform evaluation on eval env."""
@@ -158,11 +167,10 @@ class ActorCritic(Trainer, ABC):
 
     @override(Trainer)
     def state_dict(self):
-        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
-        """
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`"""
         return self.model.state_dict()
 
-    def load_state_dict(self, state_dict: Dict) -> None:
+    def load_state_dict(self, state_dict: dict) -> None:
         """Set the model and optimizer state.
         :param state_dict: The state dict.
         """
@@ -170,19 +178,18 @@ class ActorCritic(Trainer, ABC):
 
     @override(Trainer)
     def load_state(self, file_path: str | BinaryIO) -> None:
-        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
-        """
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`"""
         state_dict = torch.load(file_path, map_location=torch.device(self.algorithm_config.device))
         self.load_state_dict(state_dict)
 
     @abstractmethod
     def _update(self) -> None:
-        """Perform policy and critic update.
-        """
+        """Perform policy and critic update."""
         raise NotImplementedError
 
-    def _gradient_step(self, policy_losses: List[torch.Tensor], entropies: List[torch.Tensor],
-                       value_losses: List[torch.Tensor]) -> None:
+    def _gradient_step(
+        self, policy_losses: list[torch.Tensor], entropies: list[torch.Tensor], value_losses: list[torch.Tensor]
+    ) -> None:
         """Perform gradient step based on given losses.
 
         :param policy_losses: List of policy losses.
@@ -222,15 +229,17 @@ class ActorCritic(Trainer, ABC):
         self.ac_events.time_rollout(value=time.time() - start_time)
         return trajectory.stack().to_torch(device=self.algorithm_config.device)
 
-    def _append_train_stats(self,
-                            policy_train_stats: List[Dict[str, List[float]]],
-                            critic_train_stats: List[Dict[str, List[float]]],
-                            actor_ids: List[ActorID],
-                            policy_losses: List[torch.Tensor],
-                            entropies: List[torch.Tensor],
-                            detached_values: List[torch.Tensor],
-                            value_losses: List[torch.Tensor],
-                            discounted_returns: List[torch.Tensor]) -> None:
+    def _append_train_stats(
+        self,
+        policy_train_stats: list[dict[str, list[float]]],
+        critic_train_stats: list[dict[str, list[float]]],
+        actor_ids: list[ActorID],
+        policy_losses: list[torch.Tensor],
+        entropies: list[torch.Tensor],
+        detached_values: list[torch.Tensor],
+        value_losses: list[torch.Tensor],
+        discounted_returns: list[torch.Tensor],
+    ) -> None:
         """Append logging statistics for policies and critic.
 
         :param policy_train_stats: List of policy training statistics.
@@ -243,31 +252,33 @@ class ActorCritic(Trainer, ABC):
         """
 
         # Policies
-        for actor_id, substep_loss, substep_entropies in zip(actor_ids, policy_losses, entropies):
-            policy_train_stats[actor_id[0]]["policy_loss"].append(substep_loss.detach().item())
-            policy_train_stats[actor_id[0]]["policy_entropy"].append(substep_entropies.detach().item())
+        for actor_id, substep_loss, substep_entropies in zip(actor_ids, policy_losses, entropies, strict=False):
+            policy_train_stats[actor_id[0]]['policy_loss'].append(substep_loss.detach().item())
+            policy_train_stats[actor_id[0]]['policy_entropy'].append(substep_entropies.detach().item())
 
             grad_norm = compute_gradient_norm(self.model.policy.network_for(actor_id).parameters())
-            policy_train_stats[actor_id[0]]["policy_grad_norm"].append(grad_norm)
+            policy_train_stats[actor_id[0]]['policy_grad_norm'].append(grad_norm)
 
         # Critic(s)
         #  - if there is just one critic, report only values from the first sub-step.
         #  - otherwise, use sub-step keys to identify the critics.
         first_critic_id = list(self.model.critic.networks.keys())[-1]
         critic_ids = [first_critic_id] if self.model.critic.num_critics == 1 else list(map(lambda x: x[0], actor_ids))
-        for critic_id, substep_detached_values, substep_losses, substep_discounted_returns in zip(critic_ids,
-                                                                                                  detached_values,
-                                                                                                  value_losses,
-                                                                                                  discounted_returns):
-            critic_train_stats[critic_id]["critic_value"].append(substep_detached_values.mean().item())
-            critic_train_stats[critic_id]["critic_value_loss"].append(substep_losses.detach().item())
+        for critic_id, substep_detached_values, substep_losses, substep_discounted_returns in zip(
+            critic_ids, detached_values, value_losses, discounted_returns, strict=False
+        ):
+            critic_train_stats[critic_id]['critic_value'].append(substep_detached_values.mean().item())
+            critic_train_stats[critic_id]['critic_value_loss'].append(substep_losses.detach().item())
 
             grad_norm = compute_gradient_norm(self.model.critic.networks[critic_id].parameters())
-            critic_train_stats[critic_id]["critic_grad_norm"].append(grad_norm)
+            critic_train_stats[critic_id]['critic_grad_norm'].append(grad_norm)
             critic_train_stats[critic_id]['discounted_returns'].append(substep_discounted_returns.mean().item())
 
-    def _log_train_stats(self, policy_train_stats: Dict[str | int, Dict[str, List[float]]],
-                         critic_train_stats: Dict[str | int, Dict[str, List[float]]]) -> None:
+    def _log_train_stats(
+        self,
+        policy_train_stats: dict[str | int, dict[str, list[float]]],
+        critic_train_stats: dict[str | int, dict[str, list[float]]],
+    ) -> None:
         """Fire logging events for training statistics.
 
         :param policy_train_stats: Dict of policy training statistics.
@@ -279,19 +290,19 @@ class ActorCritic(Trainer, ABC):
 
         # policies
         for substep_key, stats in policy_train_stats.items():
-            self.ac_events.policy_loss(substep_key=substep_key, value=np.mean(stats["policy_loss"]))
-            self.ac_events.policy_grad_norm(substep_key=substep_key, value=np.mean(stats["policy_grad_norm"]))
-            self.ac_events.policy_entropy(substep_key=substep_key, value=np.mean(stats["policy_entropy"]))
+            self.ac_events.policy_loss(substep_key=substep_key, value=np.mean(stats['policy_loss']))
+            self.ac_events.policy_grad_norm(substep_key=substep_key, value=np.mean(stats['policy_grad_norm']))
+            self.ac_events.policy_entropy(substep_key=substep_key, value=np.mean(stats['policy_entropy']))
 
         # critic
         for critic_id, stats in critic_train_stats.items():
-            self.ac_events.critic_value(critic_id=critic_id, value=np.mean(stats["critic_value"]))
-            self.ac_events.critic_value_loss(critic_id=critic_id, value=np.mean(stats["critic_value_loss"]))
-            self.ac_events.critic_grad_norm(critic_id=critic_id, value=np.mean(stats["critic_grad_norm"]))
+            self.ac_events.critic_value(critic_id=critic_id, value=np.mean(stats['critic_value']))
+            self.ac_events.critic_value_loss(critic_id=critic_id, value=np.mean(stats['critic_value_loss']))
+            self.ac_events.critic_grad_norm(critic_id=critic_id, value=np.mean(stats['critic_grad_norm']))
             self.ac_events.discounted_returns(critic_id=critic_id, value=np.mean(stats['discounted_returns']))
 
     @classmethod
-    def _normalize_advantages(cls, advantages: List[torch.Tensor]) -> List[torch.Tensor]:
+    def _normalize_advantages(cls, advantages: list[torch.Tensor]) -> list[torch.Tensor]:
         """Normalize advantages.
 
         :param advantages: List of advantages.
@@ -300,7 +311,7 @@ class ActorCritic(Trainer, ABC):
         return [(a - a.mean()) / (a.std() + 1e-8) for a in advantages]
 
     @classmethod
-    def _compile_actions_dict_list(cls, sampled_action: Dict[str, np.ndarray]) -> List[Dict[str, np.ndarray]]:
+    def _compile_actions_dict_list(cls, sampled_action: dict[str, np.ndarray]) -> list[dict[str, np.ndarray]]:
         action_keys = list(sampled_action.keys())
         actions_dict_list = []
         for j in range(len(sampled_action[action_keys[0]])):

@@ -1,10 +1,14 @@
 """IMPALA Events"""
 
+from __future__ import annotations
+
 from abc import ABC
+
+from maze.core.log_stats.event_decorators import define_epoch_stats
 
 import numpy as np
 
-from maze.core.log_stats.event_decorators import define_epoch_stats
+# ruff: noqa: B027, B024
 
 
 class ImpalaEvents(ABC):

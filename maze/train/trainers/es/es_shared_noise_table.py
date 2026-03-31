@@ -1,4 +1,7 @@
 """ES shared noise implementation based on https://github.com/openai/evolution-strategies-starter"""
+
+from __future__ import annotations
+
 import ctypes
 import itertools
 import multiprocessing
@@ -6,7 +9,7 @@ import multiprocessing
 import numpy as np
 
 
-class SharedNoiseTable(object):
+class SharedNoiseTable:
     """A fixed length vector of deterministically generated pseudo-random floats.
 
     This enables a communication strategy for the distributed training, that allows to transfer noise table indices
@@ -18,7 +21,7 @@ class SharedNoiseTable(object):
     def __init__(self, count: int = 250_000_000, context=None):
         seed = 123
         # default is 1 gigabyte of 32-bit numbers
-        print('Sampling {} random numbers with seed {}'.format(count, seed))
+        print(f'Sampling {count} random numbers with seed {seed}')
 
         # We use lock=False to avoid the SemLock error in Python 3.12
         if context is None:
@@ -48,7 +51,7 @@ class SharedNoiseTable(object):
             if end == count:
                 break
 
-        print('Sampled {} bytes'.format(self.noise.size * 4))
+        print(f'Sampled {self.noise.size * 4} bytes')
 
     def get(self, i: int, dim: int) -> np.ndarray:
         """Get the pseudo-random sequence at table index i.

@@ -1,9 +1,14 @@
 """Definition of actor critic training statistics"""
+
+from __future__ import annotations
+
 from abc import ABC
+
+from maze.core.log_stats.event_decorators import define_epoch_stats, define_stats_grouping
 
 import numpy as np
 
-from maze.core.log_stats.event_decorators import define_stats_grouping, define_epoch_stats
+# ruff: noqa: B027, B024
 
 
 class ActorCriticEvents(ABC):

@@ -1,11 +1,11 @@
-"""Training code for OpenAI Evolution Strategies, based on https://github.com/openai/evolution-strategies-starter """
+"""Training code for OpenAI Evolution Strategies, based on https://github.com/openai/evolution-strategies-starter"""
+
+from __future__ import annotations
+
 import itertools
 import logging
 import time
-from typing import Optional, Iterable, Generator, Tuple, Union, Dict
-
-import numpy as np
-import torch
+from collections.abc import Generator, Iterable
 from typing import BinaryIO
 
 from maze.core.agent.policy import Policy
@@ -25,6 +25,9 @@ from maze.train.trainers.es.es_utils import get_flat_parameters
 from maze.train.trainers.es.optimizers.base_optimizer import Optimizer
 from maze.utils.bcolors import BColors
 
+import numpy as np
+import torch
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,11 +40,13 @@ class ESTrainer(Trainer):
     :param normalization_stats: Normalization statistics as calculated by the NormalizeObservationWrapper.
     """
 
-    def __init__(self,
-                 algorithm_config: ESAlgorithmConfig,
-                 torch_policy: TorchPolicy,
-                 shared_noise: SharedNoiseTable,
-                 normalization_stats: Dict[str, Tuple[np.ndarray, np.ndarray]] | None) -> None:
+    def __init__(
+        self,
+        algorithm_config: ESAlgorithmConfig,
+        torch_policy: TorchPolicy,
+        shared_noise: SharedNoiseTable,
+        normalization_stats: dict[str, tuple[np.ndarray, np.ndarray]] | None,
+    ) -> None:
         super().__init__(algorithm_config)
 
         # --- training setup ---
@@ -56,17 +61,17 @@ class ESTrainer(Trainer):
         self.optimizer.setup(self.policy)
 
         # prepare statistics collection
-        self.eval_stats = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger("eval"))
-        self.train_stats = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger("train"))
+        self.eval_stats = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger('eval'))
+        self.train_stats = LogStatsAggregator(LogStatsLevel.EPOCH, get_stats_logger('train'))
         # injection of ES-specific events
         self.es_events = self.train_stats.create_event_topic(ESEvents)
 
     @override(Trainer)
     def train(
-            self,
-            distributed_rollouts: ESDistributedRollouts,
-            n_epochs: int | None = None,
-            model_selection: ModelSelectionBase | None = None
+        self,
+        distributed_rollouts: ESDistributedRollouts,
+        n_epochs: int | None = None,
+        model_selection: ModelSelectionBase | None = None,
     ) -> None:
         """
         Run the ES training loop.
@@ -83,7 +88,7 @@ class ESTrainer(Trainer):
             if n_epochs and epoch == n_epochs:
                 break
 
-            print('********** Iteration {} **********'.format(epoch))
+            print(f'********** Iteration {epoch} **********')
 
             step_start_time = time.time()
 
@@ -99,7 +104,7 @@ class ESTrainer(Trainer):
             # update the epoch count
             increment_log_step()
 
-    def load_state_dict(self, state_dict: Dict) -> None:
+    def load_state_dict(self, state_dict: dict) -> None:
         """Set the model and optimizer state.
         :param state_dict: The state dict.
         """
@@ -107,14 +112,12 @@ class ESTrainer(Trainer):
 
     @override(Trainer)
     def state_dict(self):
-        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
-        """
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`"""
         return self.policy.state_dict()
 
     @override(Trainer)
     def load_state(self, file_path: str | BinaryIO) -> None:
-        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`
-        """
+        """implementation of :class:`~maze.train.trainers.common.trainer.Trainer`"""
         state_dict = torch.load(file_path, map_location=torch.device(self.policy.device))
         self.load_state_dict(state_dict)
 
@@ -130,7 +133,8 @@ class ESTrainer(Trainer):
             policy=self.policy,
             max_steps=self.algorithm_config.max_steps,
             noise_stddev=self.algorithm_config.noise_stddev,
-            normalization_stats=self.normalization_stats)
+            normalization_stats=self.normalization_stats,
+        )
 
         # collect eval and training rollouts
         for result in rollouts_generator:
@@ -149,33 +153,35 @@ class ESTrainer(Trainer):
                 self.train_stats.receive(e)
 
                 n_train_episodes += 1
-                n_timesteps_popped += e[(BaseEnvEvents.reward, "count", None)]
+                n_timesteps_popped += e[(BaseEnvEvents.reward, 'count', None)]
 
             # continue until we collected enough episodes and timesteps
-            if (n_train_episodes >= self.algorithm_config.n_rollouts_per_update and
-                    n_timesteps_popped >= self.algorithm_config.n_timesteps_per_update):
+            if (
+                n_train_episodes >= self.algorithm_config.n_rollouts_per_update
+                and n_timesteps_popped >= self.algorithm_config.n_timesteps_per_update
+            ):
                 break
 
         # notify the model selection of the evaluation results
         if self.model_selection:
             eval_stats = self.eval_stats.reduce()
             train_stats = self.train_stats.reduce()
-            reward = eval_stats.get((BaseEnvEvents.reward, "mean", None), None)
+            reward = eval_stats.get((BaseEnvEvents.reward, 'mean', None), None)
 
             if reward is None:
-                reward = train_stats.get((BaseEnvEvents.reward, "mean", None), None)
+                reward = train_stats.get((BaseEnvEvents.reward, 'mean', None), None)
 
             if reward is not None:
                 self.model_selection.update(reward)
             else:
-                BColors.print_colored("ES Trainer: updating model selection skipped due to the lack of reward.",
-                                      BColors.WARNING)
-
+                BColors.print_colored(
+                    'ES Trainer: updating model selection skipped due to the lack of reward.', BColors.WARNING
+                )
 
         # prepare returns, reshape the positive/negative antithetic estimation as (rollouts, 2)
-        returns_n2 = np.array(
-            [e[(BaseEnvEvents.reward, "sum", None)] for e in epoch_results.episode_stats]
-        ).reshape(-1, 2)
+        returns_n2 = np.array([e[(BaseEnvEvents.reward, 'sum', None)] for e in epoch_results.episode_stats]).reshape(
+            -1, 2
+        )
 
         # improve robustness: weight by rank, not by reward
         proc_returns_n2 = self._compute_centered_ranks(returns_n2)
@@ -184,7 +190,7 @@ class ESTrainer(Trainer):
         g = self._batched_weighted_sum(
             proc_returns_n2[:, 0] - proc_returns_n2[:, 1],
             (self.shared_noise.get(idx, self.policy.num_params) for idx in epoch_results.noise_indices),
-            batch_size=500
+            batch_size=500,
         )
 
         g /= n_train_episodes / 2.0
@@ -201,7 +207,7 @@ class ESTrainer(Trainer):
             self.es_events.policy_norm(policy_id=i, value=np.square(theta).sum() ** 0.5)
 
     @classmethod
-    def _iter_groups(cls, items: Iterable, group_size: int) -> Generator[Tuple, None, None]:
+    def _iter_groups(cls, items: Iterable, group_size: int) -> Generator[tuple, None, None]:
         assert group_size >= 1
         group = []
         for x in items:
@@ -213,16 +219,16 @@ class ESTrainer(Trainer):
             yield tuple(group)
 
     @classmethod
-    def _batched_weighted_sum(cls,
-                              weights: Iterable[float],
-                              vectors: Iterable[np.ndarray],
-                              batch_size: int) -> np.ndarray:
+    def _batched_weighted_sum(
+        cls, weights: Iterable[float], vectors: Iterable[np.ndarray], batch_size: int
+    ) -> np.ndarray:
         """calculate a weighted sum of the given vectors, in steps of at most `batch_size` vectors"""
         # start with float, at the first operation numpy broadcasting takes care of the correct shape
-        total: np.array | float = 0.
+        total: np.array | float = 0.0
 
-        for batch_weights, batch_vectors in zip(cls._iter_groups(weights, batch_size),
-                                                cls._iter_groups(vectors, batch_size)):
+        for batch_weights, batch_vectors in zip(
+            cls._iter_groups(weights, batch_size), cls._iter_groups(vectors, batch_size), strict=False
+        ):
             assert len(batch_weights) == len(batch_vectors) <= batch_size
             total += np.dot(np.asarray(batch_weights, dtype=np.float32), np.asarray(batch_vectors, dtype=np.float32))
 
@@ -242,6 +248,6 @@ class ESTrainer(Trainer):
     @classmethod
     def _compute_centered_ranks(cls, x):
         y = cls._compute_ranks(x.ravel()).reshape(x.shape).astype(np.float32)
-        y /= (x.size - 1)
-        y -= .5
+        y /= x.size - 1
+        y -= 0.5
         return y

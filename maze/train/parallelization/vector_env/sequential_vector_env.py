@@ -1,7 +1,9 @@
 """Implementation of the trivial distribution strategy of calling each environment in sequence in a single thread."""
-from typing import List, Callable, Iterable, Any, Tuple, Dict, Optional
 
-import numpy as np
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.action_conversion import ActionType
@@ -12,6 +14,8 @@ from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.train.parallelization.vector_env.structured_vector_env import StructuredVectorEnv
 from maze.train.parallelization.vector_env.vector_env import VectorEnv
 from maze.train.utils.train_utils import stack_numpy_dict_list, unstack_numpy_list_dict
+
+import numpy as np
 
 
 class SequentialVectorEnv(StructuredVectorEnv):
@@ -24,8 +28,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
     :param env_factories: A list of functions that will create the environments
     """
 
-    def __init__(self, env_factories: List[Callable[[], MazeEnv]],
-                 logging_prefix: str | None = None):
+    def __init__(self, env_factories: list[Callable[[], MazeEnv]], logging_prefix: str | None = None):
         self.envs = [LogStatsWrapper.wrap(env_fn()) for env_fn in env_factories]
 
         super().__init__(
@@ -33,17 +36,27 @@ class SequentialVectorEnv(StructuredVectorEnv):
             action_spaces_dict=self.envs[0].action_spaces_dict,
             observation_spaces_dict=self.envs[0].observation_spaces_dict,
             agent_counts_dict=self.envs[0].agent_counts_dict,
-            logging_prefix=logging_prefix
+            logging_prefix=logging_prefix,
         )
 
-    def step(self, actions: ActionType) -> Tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[Dict[Any, Any]]]:
+    def step(
+        self, actions: ActionType
+    ) -> tuple[ObservationType, np.ndarray, np.ndarray, np.ndarray, Iterable[dict[Any, Any]]]:
         """Step the environments with the given actions.
 
         :param actions: the list of actions for the respective envs.
         :return: observations, rewards, dones, information-dicts all in env-aggregated form.
         """
         actions = unstack_numpy_list_dict(actions)
-        observations, rewards, env_terminated_rec, env_truncated_rec, infos, actor_dones, actor_ids = [], [], [], [], [], [], []
+        observations, rewards, env_terminated_rec, env_truncated_rec, infos, actor_dones, actor_ids = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
 
         for i, env in enumerate(self.envs):
             obs, rew, env_terminated, env_truncated, i = env.step(actions[i])
@@ -67,7 +80,6 @@ class SequentialVectorEnv(StructuredVectorEnv):
         env_terminated_rec = np.hstack(env_terminated_rec)
         env_truncated_rec = np.hstack(env_truncated_rec)
 
-
         self._env_times = np.array([env.get_env_time() for env in self.envs])
         self._actor_dones = np.hstack(actor_dones)
         self._actor_ids = actor_ids
@@ -88,7 +100,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
         rewards = np.stack(rewards, axis=1).astype(np.float32)
         return rewards
 
-    def reset(self) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+    def reset(self) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
         """VectorEnv implementation"""
         observations = []
         infos = []
@@ -109,7 +121,7 @@ class SequentialVectorEnv(StructuredVectorEnv):
         return stack_numpy_dict_list(observations), stack_numpy_dict_list(infos)
 
     @override(VectorEnv)
-    def seed(self, seeds: List[Any]) -> None:
+    def seed(self, seeds: list[Any]) -> None:
         """VectorEnv implementation"""
         self.seeds = seeds
         self._next_seed_idx = 0

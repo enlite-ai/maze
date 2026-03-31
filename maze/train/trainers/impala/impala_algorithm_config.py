@@ -1,5 +1,7 @@
 """Argument parser for Impala algorithm and training"""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from maze.train.trainers.common.config_classes import AlgorithmConfig
@@ -48,7 +50,7 @@ class ImpalaAlgorithmConfig(AlgorithmConfig):
 
     queue_out_of_sync_factor: float
     """this factor multiplied by the actor_batch_size gives the size of the queue for
-       the agents output collected by the learner. Therefor if the all rollouts computed can be at most
+       the agents output collected by the learner. Therefore if the all rollouts computed can be at most
        (queue_out_of_sync_factor + num_agents/actor_batch_size) out of sync with learner policy"""
 
     actors_batch_size: int

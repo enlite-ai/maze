@@ -1,11 +1,8 @@
 """Loss function for behavioral cloning."""
-from dataclasses import dataclass
-from typing import Dict, Union, List, Optional
 
-import gymnasium as gym
-import torch
-import torch.nn as nn
-import torch.nn.functional
+from __future__ import annotations
+
+from dataclasses import dataclass
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.env.action_conversion import TorchActionType
@@ -13,12 +10,17 @@ from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID
 from maze.train.trainers.imitation.imitation_events import ImitationEvents
 
+import gymnasium as gym
+import torch
+import torch.nn as nn
+import torch.nn.functional
+
 
 @dataclass
 class BCLoss:
     """Loss function for behavioral cloning."""
 
-    action_spaces_dict: Dict[int | str, gym.spaces.Dict]
+    action_spaces_dict: dict[int | str, gym.spaces.Dict]
     """Action space we are training on (used to determine appropriate loss functions)"""
 
     entropy_coef: float
@@ -33,15 +35,16 @@ class BCLoss:
     loss_multi_binary: nn.Module = nn.BCEWithLogitsLoss()
     """Loss function used for multi-binary spaces"""
 
-    def calculate_loss(self,
-                       policy: TorchPolicy,
-                       observations: List[ObservationType],
-                       actions: List[TorchActionType],
-                       action_logits: List[TorchActionType] | None,
-                       actor_ids: List[ActorID],
-                       events: ImitationEvents,
-                       log_substep_events: bool
-                       ) -> torch.Tensor:
+    def calculate_loss(
+        self,
+        policy: TorchPolicy,
+        observations: list[ObservationType],
+        actions: list[TorchActionType],
+        action_logits: list[TorchActionType] | None,
+        actor_ids: list[ActorID],
+        events: ImitationEvents,
+        log_substep_events: bool,
+    ) -> torch.Tensor:
         """Calculate and return the training loss for one step (= multiple sub-steps in structured scenarios).
 
         :param policy: Structured policy to evaluate.
@@ -59,12 +62,19 @@ class BCLoss:
         assert len(actor_ids) == len(actions)
         assert len(actor_ids) == len(observations)
         target_dict = actions if action_logits is None else action_logits
-        for actor_id, observation, policy_target, policy_target_action in zip(actor_ids, observations, target_dict,
-                                                                              actions):
+        for actor_id, observation, policy_target, policy_target_action in zip(
+            actor_ids, observations, target_dict, actions, strict=False
+        ):
             policy_output = policy.compute_substep_policy_output(observation, actor_id=actor_id)
-            substep_losses = self._get_substep_loss(actor_id, policy_output.action_logits, policy_target,
-                                                    policy_target_action, self.action_spaces_dict[actor_id.step_key],
-                                                    events=events, log_substep_events=log_substep_events)
+            substep_losses = self._get_substep_loss(
+                actor_id,
+                policy_output.action_logits,
+                policy_target,
+                policy_target_action,
+                self.action_spaces_dict[actor_id.step_key],
+                events=events,
+                log_substep_events=log_substep_events,
+            )
 
             losses.append(substep_losses)
 
@@ -78,13 +88,16 @@ class BCLoss:
 
         return sum(losses)
 
-    def _get_substep_loss(self, actor_id: ActorID,
-                          logits_dict: Dict[str, torch.Tensor],
-                          target_dict: Dict[str, torch.Tensor],
-                          target_actions_dict: Dict[str, torch.Tensor],
-                          action_spaces_dict: gym.spaces.Dict,
-                          events: ImitationEvents,
-                          log_substep_events: bool) -> torch.Tensor:
+    def _get_substep_loss(
+        self,
+        actor_id: ActorID,
+        logits_dict: dict[str, torch.Tensor],
+        target_dict: dict[str, torch.Tensor],
+        target_actions_dict: dict[str, torch.Tensor],
+        action_spaces_dict: gym.spaces.Dict,
+        events: ImitationEvents,
+        log_substep_events: bool,
+    ) -> torch.Tensor:
         """Iterate over the action space of a given policy and calculate the loss based on the types of the
         subspaces.
 
@@ -110,48 +123,85 @@ class BCLoss:
 
                 if log_substep_events:
                     events.discrete_accuracy(
-                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                        value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
+                        step_id=actor_id.step_key,
+                        agent_id=actor_id.agent_id,
+                        subspace_name=subspace_id,
+                        value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item(),
+                    )
 
-                events.mean_step_discrete_accuracy(step_id=actor_id.step_key,
-                    value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item())
+                events.mean_step_discrete_accuracy(
+                    step_id=actor_id.step_key,
+                    value=torch.eq(logits.argmax(dim=-1), target_actions).float().mean().item(),
+                )
 
                 if logits.shape[-1] > 10:
                     events.discrete_top_5_accuracy(
-                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target_actions).float() for i in
-                                   range(1, min(5 + 1, logits.shape[-1]))]).float().mean().item())
+                        step_id=actor_id.step_key,
+                        agent_id=actor_id.agent_id,
+                        subspace_name=subspace_id,
+                        value=sum(
+                            [
+                                torch.eq(logits.argsort(-1)[:, -i], target_actions).float()
+                                for i in range(1, min(5 + 1, logits.shape[-1]))
+                            ]
+                        )
+                        .float()
+                        .mean()
+                        .item(),
+                    )
 
                 if logits.shape[-1] > 20:
                     events.discrete_top_10_accuracy(
-                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                        value=sum([torch.eq(logits.argsort(-1)[:, -i], target_actions).float() for i in
-                                   range(1, min(10 + 1, logits.shape[-1]))]).float().mean().item())
+                        step_id=actor_id.step_key,
+                        agent_id=actor_id.agent_id,
+                        subspace_name=subspace_id,
+                        value=sum(
+                            [
+                                torch.eq(logits.argsort(-1)[:, -i], target_actions).float()
+                                for i in range(1, min(10 + 1, logits.shape[-1]))
+                            ]
+                        )
+                        .float()
+                        .mean()
+                        .item(),
+                    )
 
-                batch_ranks = \
-                    torch.where(torch.argsort(logits, dim=-1, descending=True) == target_actions.unsqueeze(-1))[1]
+                batch_ranks = torch.where(
+                    torch.argsort(logits, dim=-1, descending=True) == target_actions.unsqueeze(-1)
+                )[1]
                 if log_substep_events:
                     events.discrete_action_rank(
-                        step_id=actor_id.step_key, agent_id=actor_id.agent_id, subspace_name=subspace_id,
-                        value=batch_ranks.float().mean().item())
-                events.mean_step_discrete_action_rank(subspace_name=subspace_id, value=batch_ranks.float().mean().item())
+                        step_id=actor_id.step_key,
+                        agent_id=actor_id.agent_id,
+                        subspace_name=subspace_id,
+                        value=batch_ranks.float().mean().item(),
+                    )
+                events.mean_step_discrete_action_rank(
+                    subspace_name=subspace_id, value=batch_ranks.float().mean().item()
+                )
             # Multi-binary (multi-binary spaces)
             elif isinstance(action_space, gym.spaces.MultiBinary):
                 losses.append(self.loss_multi_binary(logits, target))
-                events.multi_binary_accuracy(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                             subspace_name=subspace_id,
-                                             value=torch.eq(logits > 0, target_actions).float().mean().item())
+                events.multi_binary_accuracy(
+                    step_id=actor_id.step_key,
+                    agent_id=actor_id.agent_id,
+                    subspace_name=subspace_id,
+                    value=torch.eq(logits > 0, target_actions).float().mean().item(),
+                )
 
             # Continuous (box spaces)
             elif isinstance(action_space, gym.spaces.Box):
                 pred, _ = torch.chunk(logits, chunks=2, dim=-1)
                 losses.append(self.loss_box(pred.float(), target.float()))
-                events.box_mean_abs_deviation(step_id=actor_id.step_key, agent_id=actor_id.agent_id,
-                                              subspace_name=subspace_id,
-                                              value=target.sub(pred).abs().mean().item())
+                events.box_mean_abs_deviation(
+                    step_id=actor_id.step_key,
+                    agent_id=actor_id.agent_id,
+                    subspace_name=subspace_id,
+                    value=target.sub(pred).abs().mean().item(),
+                )
 
             else:
-                raise NotImplementedError("Only Discrete, Box, and MultiBinary action spaces are supported.")
+                raise NotImplementedError('Only Discrete, Box, and MultiBinary action spaces are supported.')
 
         loss = sum(losses)
         if log_substep_events:

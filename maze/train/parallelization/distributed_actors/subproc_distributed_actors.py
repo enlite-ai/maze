@@ -1,10 +1,9 @@
 """Actors distributed across multiple processing using multiprocessing."""
 
-import time
-from typing import Callable, Union, Tuple, Dict, List
+from __future__ import annotations
 
-import cloudpickle
-from torch import multiprocessing
+import time
+from collections.abc import Callable
 
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
@@ -15,10 +14,12 @@ from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
 from maze.perception.perception_utils import convert_to_torch
-from maze.train.parallelization.broadcasting_container import BroadcastingContainer, \
-    BroadcastingManager
+from maze.train.parallelization.broadcasting_container import BroadcastingContainer, BroadcastingManager
 from maze.train.parallelization.distributed_actors.distributed_actors import DistributedActors
 from maze.utils.exception_report import ExceptionReport
+
+import cloudpickle
+from torch import multiprocessing
 
 
 class SubprocDistributedActors(DistributedActors):
@@ -34,16 +35,18 @@ class SubprocDistributedActors(DistributedActors):
     :param actor_agent_seeds: A list of seed for each actors' policy.
     """
 
-    def __init__(self,
-                 env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
-                 policy: TorchPolicy,
-                 n_rollout_steps: int,
-                 n_actors: int,
-                 batch_size: int,
-                 queue_out_of_sync_factor: float,
-                 start_method: str,
-                 actor_env_seeds: List[int],
-                 actor_agent_seeds: List[int]):
+    def __init__(
+        self,
+        env_factory: Callable[[], StructuredEnv | StructuredEnvSpacesMixin | LogStatsEnv],
+        policy: TorchPolicy,
+        n_rollout_steps: int,
+        n_actors: int,
+        batch_size: int,
+        queue_out_of_sync_factor: float,
+        start_method: str,
+        actor_env_seeds: list[int],
+        actor_agent_seeds: list[int],
+    ):
         super().__init__(env_factory, policy, n_rollout_steps, n_actors, batch_size)
 
         self.queue_out_of_sync_factor = queue_out_of_sync_factor
@@ -58,11 +61,18 @@ class SubprocDistributedActors(DistributedActors):
         self.broadcasting_container = manager.BroadcastingContainer(context=ctx)
 
         self.actors = []
-        for env_seed, agent_seed in zip(actor_env_seeds, actor_agent_seeds):
+        for env_seed, agent_seed in zip(actor_env_seeds, actor_agent_seeds, strict=False):
             pickled_env_factory = cloudpickle.dumps(env_factory)
             pickled_policy = cloudpickle.dumps(self.policy)
-            args = (pickled_env_factory, pickled_policy, n_rollout_steps,
-                    self.actor_output_queue, self.broadcasting_container, env_seed, agent_seed)
+            args = (
+                pickled_env_factory,
+                pickled_policy,
+                n_rollout_steps,
+                self.actor_output_queue,
+                self.broadcasting_container,
+                env_seed,
+                agent_seed,
+            )
             self.actors.append(ctx.Process(target=_actor_worker, args=args))
 
     @override(DistributedActors)
@@ -81,13 +91,13 @@ class SubprocDistributedActors(DistributedActors):
         self.actor_output_queue.close()
 
     @override(DistributedActors)
-    def broadcast_updated_policy(self, state_dict: Dict) -> None:
+    def broadcast_updated_policy(self, state_dict: dict) -> None:
         """Store the newest policy in the shared network object"""
         converted_state_dict = convert_to_torch(state_dict, in_place=False, cast=None, device=self.policy.device)
         self.broadcasting_container.set_policy_state_dict(converted_state_dict)
 
     @override(DistributedActors)
-    def collect_outputs(self, learner_device: str) -> Tuple[StructuredSpacesRecord, float, float, float]:
+    def collect_outputs(self, learner_device: str) -> tuple[StructuredSpacesRecord, float, float, float]:
         """Collect actor outputs from the multiprocessing queue."""
         trajectories = []
 
@@ -97,8 +107,9 @@ class SubprocDistributedActors(DistributedActors):
         while len(trajectories) < self.batch_size:
             trajectory_report: SpacesTrajectoryRecord | ExceptionReport = self.actor_output_queue.get()
             if isinstance(trajectory_report, ExceptionReport):
-                raise RuntimeError("An actor encountered the following error:\n"
-                                   + trajectory_report.traceback) from trajectory_report.exception
+                raise RuntimeError(
+                    'An actor encountered the following error:\n' + trajectory_report.traceback
+                ) from trajectory_report.exception
 
             trajectories.append(trajectory_report)
 
@@ -125,7 +136,7 @@ class SubprocDistributedActors(DistributedActors):
         :return:
         """
 
-        fork_available = 'fork' in multiprocessing.get_all_start_methods() and self.policy.device == "cpu"
+        fork_available = 'fork' in multiprocessing.get_all_start_methods() and self.policy.device == 'cpu'
         forkserver_available = 'forkserver' in multiprocessing.get_all_start_methods()
         if fork_available and start_method == 'fork':
             start_method_used = 'fork'
@@ -134,16 +145,23 @@ class SubprocDistributedActors(DistributedActors):
         elif start_method == 'spawn':
             start_method_used = 'spawn'
         else:
-            raise Exception('Please provide a valid start method. Options are for this system: {}'.format(
-                multiprocessing.get_all_start_methods()
-            ))
+            raise Exception(
+                f'Please provide a valid start method. Options are for this system: '
+                f'{multiprocessing.get_all_start_methods()}'
+            )
 
         return multiprocessing.get_context(start_method_used)
 
 
-def _actor_worker(pickled_env_factory: bytes, pickled_policy: bytes,
-                  n_rollout_steps: int, actor_output_queue: multiprocessing.Queue,
-                  broadcasting_container: BroadcastingContainer, env_seed: int, agent_seed: int):
+def _actor_worker(
+    pickled_env_factory: bytes,
+    pickled_policy: bytes,
+    n_rollout_steps: int,
+    actor_output_queue: multiprocessing.Queue,
+    broadcasting_container: BroadcastingContainer,
+    env_seed: int,
+    agent_seed: int,
+):
     """Worker function for the actors. This Method is called with a new process. Its task is to initialize the,
         before going into a loop - updating its policy if necessary, computing a rollout and putting the result into
         the shared queue.
@@ -170,7 +188,8 @@ def _actor_worker(pickled_env_factory: bytes, pickled_policy: bytes,
         while not broadcasting_container.stop_flag():
             # Update the policy if new version is available
             current_version, state_dict, aux_data = broadcasting_container.get_current_policy(
-                last_version=policy_version_counter)
+                last_version=policy_version_counter
+            )
             if policy_version_counter < current_version:
                 policy.load_state_dict(state_dict)
                 policy_version_counter = current_version

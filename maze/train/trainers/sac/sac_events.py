@@ -1,11 +1,14 @@
 """SAC Events"""
 
+from __future__ import annotations
+
 from abc import ABC
-from typing import Union
+
+from maze.core.log_stats.event_decorators import define_epoch_stats, define_stats_grouping
 
 import numpy as np
 
-from maze.core.log_stats.event_decorators import define_stats_grouping, define_epoch_stats
+# ruff: noqa: B027, B024
 
 
 class SACEvents(ABC):
@@ -81,7 +84,7 @@ class SACEvents(ABC):
 
         :param critic_key: The key of the critic.
         :param value: The value.
-       """
+        """
 
     @define_epoch_stats(np.nanmean, input_name='time')
     @define_epoch_stats(np.nanmean, input_name='percent')

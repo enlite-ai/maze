@@ -1,11 +1,13 @@
 """Numpy implementation of ES optimizers, based on https://github.com/openai/evolution-strategies-starter"""
-from abc import ABC, abstractmethod
-from typing import Optional
 
-import numpy as np
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 
 from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.es.es_utils import get_flat_parameters, set_flat_parameters
+
+import numpy as np
 
 
 class Optimizer(ABC):

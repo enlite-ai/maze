@@ -1,10 +1,12 @@
 """Contains an interface for trainers."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Union, Optional, TypeVar, Dict
+from typing import BinaryIO, TypeVar
 
 from maze.core.agent.torch_model import TorchModel
 from maze.train.trainers.common.config_classes import AlgorithmConfig
-from typing import BinaryIO
 
 
 class Trainer(ABC):
@@ -14,8 +16,8 @@ class Trainer(ABC):
     :param model: Model to train.
     """
 
-    AlgorithmConfigType: TypeVar = TypeVar("AlgorithmConfigType", bound=AlgorithmConfig)
-    _TorchModelType: TypeVar = TypeVar("_TorchModelType", bound=TorchModel)
+    AlgorithmConfigType: TypeVar = TypeVar('AlgorithmConfigType', bound=AlgorithmConfig)
+    _TorchModelType: TypeVar = TypeVar('_TorchModelType', bound=TorchModel)
 
     def __init__(self, algorithm_config: AlgorithmConfigType, model: TorchModel | None = None):
         """
@@ -36,7 +38,7 @@ class Trainer(ABC):
         """
 
     @abstractmethod
-    def state_dict(self) -> Dict:
+    def state_dict(self) -> dict:
         """Returns the state dict composed of all encapsulated trainer components.
 
         :return: The trainer's state dict.

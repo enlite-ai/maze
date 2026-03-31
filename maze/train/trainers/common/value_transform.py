@@ -1,20 +1,21 @@
 """Contains value transformations."""
-from abc import ABC, abstractmethod
-from typing import Union, Tuple
 
-import numpy as np
-import torch
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+
 from maze.core.annotations import override
 from maze.utils.bcolors import BColors
 
+import numpy as np
+import torch
+
 
 class ValueTransform(ABC):
-    """Value transformation (e.g. useful for training the critic in Alpha(Mu)Zero).
-    """
+    """Value transformation (e.g. useful for training the critic in Alpha(Mu)Zero)."""
 
     @abstractmethod
-    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
-            float | np.ndarray | torch.Tensor:
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
         """Scale values.
 
         :param x: Values to be scaled.
@@ -22,8 +23,7 @@ class ValueTransform(ABC):
         """
 
     @abstractmethod
-    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> \
-            float | np.ndarray | torch.Tensor:
+    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
         """Invert scaling of values.
 
         :param x: Values where scaling should be inverted.
@@ -32,21 +32,16 @@ class ValueTransform(ABC):
 
 
 class ClipZeroOneValueTransform(ValueTransform):
-    """Clipping the value to 0, 1 for testing purposes.
-    """
+    """Clipping the value to 0, 1 for testing purposes."""
 
     @override(ValueTransform)
-    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
-            float | np.ndarray | torch.Tensor:
-        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
-        """
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface"""
         return x
 
     @override(ValueTransform)
-    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> \
-            float | np.ndarray | torch.Tensor:
-        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
-        """
+    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface"""
         return np.clip(x, 0, 1)
 
 
@@ -58,17 +53,13 @@ class LinearScaleValueTransform(ValueTransform):
         self._offset = offset
 
     @override(ValueTransform)
-    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
-            float | np.ndarray | torch.Tensor:
-        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
-        """
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface"""
         return x * self._scale + self._offset
 
     @override(ValueTransform)
-    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> \
-            float | np.ndarray | torch.Tensor:
-        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
-        """
+    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface"""
         return (x - self._offset) / self._scale
 
 
@@ -82,29 +73,28 @@ class ReduceScaleValueTransform(ValueTransform):
         self.epsilon = epsilon
 
     @override(ValueTransform)
-    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> \
-            float | np.ndarray | torch.Tensor:
-        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
-        """
+    def transform_value(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface"""
         if isinstance(x, torch.Tensor):
             return torch.sign(x) * (torch.sqrt(torch.abs(x) + 1) - 1 + self.epsilon * x)
         else:
             return np.sign(x) * (np.sqrt(np.abs(x) + 1) - 1 + self.epsilon * x)
 
     @override(ValueTransform)
-    def transform_value_inv(self, x: Union[float, np.ndarray, torch.Tensor]) -> \
-            Union[float, np.ndarray, torch.Tensor]:
-        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface
-        """
+    def transform_value_inv(self, x: float | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+        """implementation of :class:`~maze.train.trainers.common.value_transform.ValueTransform` interface"""
         if isinstance(x, torch.Tensor):
-            return torch.sign(x) * (((torch.sqrt(1 + 4 * self.epsilon * (torch.abs(x) + 1 + self.epsilon)) - 1)
-                                     / (2 * self.epsilon)) ** 2 - 1)
+            return torch.sign(x) * (
+                ((torch.sqrt(1 + 4 * self.epsilon * (torch.abs(x) + 1 + self.epsilon)) - 1) / (2 * self.epsilon)) ** 2
+                - 1
+            )
         else:
-            return np.sign(x) * (((np.sqrt(1 + 4 * self.epsilon * (np.abs(x) + 1 + self.epsilon)) - 1)
-                                  / (2 * self.epsilon)) ** 2 - 1)
+            return np.sign(x) * (
+                ((np.sqrt(1 + 4 * self.epsilon * (np.abs(x) + 1 + self.epsilon)) - 1) / (2 * self.epsilon)) ** 2 - 1
+            )
 
 
-def support_to_scalar(logits: torch.Tensor, support_range: Tuple[int, int]) -> torch.Tensor:
+def support_to_scalar(logits: torch.Tensor, support_range: tuple[int, int]) -> torch.Tensor:
     """Convert support vector to scalar by probability weighted interpolation.
 
     :param logits: Logits fed into a softmax to get probabilities in range [0, 1].
@@ -123,7 +113,7 @@ def support_to_scalar(logits: torch.Tensor, support_range: Tuple[int, int]) -> t
     return torch.sum(support * probabilities, dim=-1)
 
 
-def support_to_scalar_normalized(probs: torch.Tensor, support_range: Tuple[int, int]) -> torch.Tensor:
+def support_to_scalar_normalized(probs: torch.Tensor, support_range: tuple[int, int]) -> torch.Tensor:
     """Convert support vector to scalar by probability weighted interpolation without applying softmax first.
 
     :param probs: Softmax normalized probabilities.
@@ -139,7 +129,7 @@ def support_to_scalar_normalized(probs: torch.Tensor, support_range: Tuple[int, 
     return torch.sum(support * probs, dim=-1)
 
 
-def scalar_to_support(scalar: torch.Tensor, support_range: Tuple[int, int]) -> torch.Tensor:
+def scalar_to_support(scalar: torch.Tensor, support_range: tuple[int, int]) -> torch.Tensor:
     """Converts tensor of scalars into probability support vectors corresponding to the provided range.
 
     :param scalar: Tensor of scalars to be converted
@@ -148,8 +138,11 @@ def scalar_to_support(scalar: torch.Tensor, support_range: Tuple[int, int]) -> t
     """
 
     if not torch.all(torch.ge(scalar, support_range[0])) or not torch.all(torch.le(scalar, support_range[1])):
-        print(BColors.print_colored(f"WARNING: scalar {scalar} is out of support range {support_range}!",
-                                    color=BColors.WARNING))
+        print(
+            BColors.print_colored(
+                f'WARNING: scalar {scalar} is out of support range {support_range}!', color=BColors.WARNING
+            )
+        )
 
     # make sure scalar lives within supported range
     scalar = torch.clamp(scalar, support_range[0], support_range[1])

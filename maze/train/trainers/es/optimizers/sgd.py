@@ -1,10 +1,12 @@
 """Numpy implementation of ES optimizers, based on https://github.com/openai/evolution-strategies-starter"""
-from typing import Optional
 
-import numpy as np
+from __future__ import annotations
+
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.annotations import override
 from maze.train.trainers.es.optimizers.base_optimizer import Optimizer
+
+import numpy as np
 
 
 class SGD(Optimizer):
@@ -28,6 +30,6 @@ class SGD(Optimizer):
 
     @override(Optimizer)
     def _compute_step(self, global_gradient: np.ndarray) -> np.ndarray:
-        self.v = self.momentum * self.v + (1. - self.momentum) * global_gradient
+        self.v = self.momentum * self.v + (1.0 - self.momentum) * global_gradient
         step = -self.step_size * self.v
         return step
