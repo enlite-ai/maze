@@ -36,7 +36,7 @@ def test_mlp_and_concat():
 
     in_dict = build_multi_input_dict(dims=[[100, 1, 16], [100, 1, 8]])
 
-    feat_dict = dict()
+    feat_dict = {}
     for in_key, in_tensor in in_dict.items():
         # compile network block
         net = DenseBlock(in_keys=in_key, out_keys=f"{in_key}_feat",

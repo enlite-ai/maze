@@ -20,7 +20,7 @@ class CustomPytorchModel(nn.Module):
 
     def forward(self, in_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """ Forward method """
-        out_dict = dict()
+        out_dict = {}
 
         out_dict['out_key_0'] = self.cnn(in_dict['in_key_0'])
         out_dict['out_key_1'] = self.dense(in_dict['in_key_1'])

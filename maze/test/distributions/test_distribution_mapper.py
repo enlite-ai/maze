@@ -34,7 +34,7 @@ def test_distribution_mapper():
     repr(distribution_mapper)
 
     # assign action heads to registered distributions
-    logits_dict = dict()
+    logits_dict = {}
     for action_head in act_space.spaces.keys():
         logits_shape = distribution_mapper.required_logits_shape(action_head)
 

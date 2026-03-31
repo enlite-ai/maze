@@ -17,8 +17,8 @@ class ESRolloutResult:
                            won't be set.
         """
         self.is_eval: bool = is_eval
-        self.noise_indices: List[int] = list()
-        self.episode_stats: List[LogStats] = list()
+        self.noise_indices: List[int] = []
+        self.episode_stats: List[LogStats] = []
 
 
 class ESDistributedRollouts(ABC):

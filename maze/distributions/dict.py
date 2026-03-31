@@ -34,7 +34,7 @@ class DictProbabilityDistribution(ProbabilityDistribution):
     def log_prob(self, actions: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
         """
-        log_prob = dict()
+        log_prob = {}
         for k, dist in self.distribution_dict.items():
             log_prob[k] = dist.log_prob(actions[k])
         return log_prob
@@ -69,7 +69,7 @@ class DictProbabilityDistribution(ProbabilityDistribution):
     def sample(self) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
         """
-        sample = dict()
+        sample = {}
         for k, dist in self.distribution_dict.items():
             sample[k] = dist.sample()
         return sample
@@ -78,7 +78,7 @@ class DictProbabilityDistribution(ProbabilityDistribution):
     def deterministic_sample(self) -> Dict[str, torch.Tensor]:
         """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
         """
-        sample = dict()
+        sample = {}
         for k, dist in self.distribution_dict.items():
             sample[k] = dist.deterministic_sample()
         return sample

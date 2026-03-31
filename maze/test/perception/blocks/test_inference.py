@@ -13,7 +13,7 @@ def build_perception_dict():
     """ helper function """
     in_dict = build_multi_input_dict(dims=[[100, 1, 16], [100, 1, 8]])
 
-    perception_dict = dict()
+    perception_dict = {}
     for in_key, in_tensor in in_dict.items():
         # compile network block
         net = DenseBlock(in_keys=in_key, out_keys=f"{in_key}_feat",

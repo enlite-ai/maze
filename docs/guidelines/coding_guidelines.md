@@ -152,7 +152,7 @@ The action space dictionary holds the actual sub-action spaces (gymnasium.spaces
 as mapping of string action keys to gym spaces:
 
 ```
-action_dict = dict()
+action_dict = {}
 action_dict["action_0"] = gymnasium.spaces.MultiBinary(5)
 action_dict["action_1"] = gymnasium.spaces.Categorical(5)
 
@@ -166,7 +166,7 @@ identifying the respective observation. The datatype of the gymnasium.spaces.Box
 the beginning. Also make sure to set low and high bounds properly.
 
 ```
-observation_dict: dict = dict()
+observation_dict: dict = {}
 observation_dict["observation_0"] = gymnasium.spaces.Box(low=0, high=10, shape=(100,), dtype=np.float32)
 observation_dict["observation_1"] = gymnasium.spaces.Box(low=0, high=1, shape=(5,), dtype=np.float32)
 

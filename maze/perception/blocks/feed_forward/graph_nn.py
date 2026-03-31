@@ -1,13 +1,18 @@
-""" Contains a graph neural network block. """
-from typing import Any, List, Tuple, Union, Sequence, Dict
+"""Contains a graph neural network block."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Any
+
+from maze.core.annotations import override
+from maze.core.utils.factory import Factory
+from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 import numpy as np
 import torch
 from torch import nn
 
-from maze.core.annotations import override
-from maze.core.utils.factory import Factory
-from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 def scatter_native(src, index, dim, dim_size, reduce):
     """
@@ -34,44 +39,45 @@ def scatter_native(src, index, dim, dim_size, reduce):
         # Already same ndim as src (possibly same shape), just expand
         index_expanded = index.expand_as(src)
 
-    if reduce in ("sum", "add"):
+    if reduce in ('sum', 'add'):
         out = src.new_zeros(out_shape)
         return out.scatter_add_(dim, index_expanded, src)
 
-    if reduce == "mean":
+    if reduce == 'mean':
         out = src.new_zeros(out_shape)
         out.scatter_add_(dim, index_expanded, src)
         counts = src.new_zeros(out_shape)
         counts.scatter_add_(dim, index_expanded, torch.ones_like(src))
         return out / counts.clamp_min(1)
 
-    if reduce == "max":
+    if reduce == 'max':
         out = src.new_full(out_shape, float('-inf'))
-        out = out.scatter_reduce_(dim, index_expanded, src, reduce="amax", include_self=True)
+        out = out.scatter_reduce_(dim, index_expanded, src, reduce='amax', include_self=True)
         out = torch.where(out == float('-inf'), src.new_zeros(out_shape), out)
         return out
 
-    if reduce == "min":
+    if reduce == 'min':
         out = src.new_full(out_shape, float('inf'))
-        out = out.scatter_reduce_(dim, index_expanded, src, reduce="amin", include_self=True)
+        out = out.scatter_reduce_(dim, index_expanded, src, reduce='amin', include_self=True)
         out = torch.where(out == float('inf'), src.new_zeros(out_shape), out)
         return out
 
-    if reduce == "mul":
+    if reduce == 'mul':
         out = src.new_ones(out_shape)
-        return out.scatter_reduce_(dim, index_expanded, src, reduce="prod", include_self=True)
+        return out.scatter_reduce_(dim, index_expanded, src, reduce='prod', include_self=True)
 
-    raise ValueError(f"Unsupported reduce: {reduce}")
+    raise ValueError(f'Unsupported reduce: {reduce}')
+
 
 class AggregationLayer(nn.Module):
-    """Aggregation layer for message passing withing GNN.
+    """Aggregation layer for message passing within GNN.
 
     :param aggregate: The aggregation function to use (max, mean, sum).
     :param pooling_mask: Multiplicative pooling mask for efficient aggregation computation.
     """
 
     def __init__(self, aggregate: str, pooling_mask: torch.Tensor):
-        super(AggregationLayer, self).__init__()
+        super().__init__()
 
         self.aggregate_str = aggregate
         self.aggregate = self._aggregation_fun(self.aggregate_str)
@@ -81,11 +87,11 @@ class AggregationLayer(nn.Module):
 
     @override(nn.Module)
     def forward(self, t: torch.Tensor) -> torch.Tensor:
-        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
-        """
+        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
         row, col = self.edges.to(t.device)
-        aggr = scatter_native(src=t[:, row], index=col, dim=-2, dim_size=self.pooling_mask.shape[1],
-                       reduce=self.aggregate_str)
+        aggr = scatter_native(
+            src=t[:, row], index=col, dim=-2, dim_size=self.pooling_mask.shape[1], reduce=self.aggregate_str
+        )
 
         # kept for debugging purposes
         # self._assert_scatter_output(t, aggr)
@@ -116,13 +122,15 @@ class AggregationLayer(nn.Module):
         :param aggregate: The aggregation function string.
         :return: The actual torch aggregation function.
         """
-        if aggregate == "max":
+        if aggregate == 'max':
+
             def maximum(a, dim):
                 return torch.max(a, dim=dim)[0]
+
             return maximum
-        elif aggregate == "mean":
+        elif aggregate == 'mean':
             return torch.nanmean
-        elif aggregate == "sum":
+        elif aggregate == 'sum':
             return torch.nansum
         else:
             raise ValueError
@@ -156,24 +164,26 @@ class GNNBlock(ShapeNormalizationBlock):
     :param with_edge_embedding: If True the edge embedding is computed.
     """
 
-    def __init__(self,
-                 in_keys: Union[str, List[str]],
-                 out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 edges: List[Tuple[int, int]],
-                 aggregate: str,
-                 hidden_units: List[int],
-                 non_lin: Union[str, type(nn.Module)],
-                 with_layer_norm: bool,
-                 node2node_aggr: bool,
-                 edge2node_aggr: bool,
-                 node2edge_aggr: bool,
-                 edge2edge_aggr: bool,
-                 with_node_embedding: bool,
-                 with_edge_embedding: bool
-                 ):
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes,
-                         in_num_dims=[3, 3], out_num_dims=[3, 3])
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        edges: list[tuple[int, int]],
+        aggregate: str,
+        hidden_units: list[int],
+        non_lin: str | type(nn.Module),
+        with_layer_norm: bool,
+        node2node_aggr: bool,
+        edge2node_aggr: bool,
+        node2edge_aggr: bool,
+        edge2edge_aggr: bool,
+        with_node_embedding: bool,
+        with_edge_embedding: bool,
+    ):
+        super().__init__(
+            in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3, 3], out_num_dims=[3, 3]
+        )
 
         edge_list = np.vstack(edges).T
 
@@ -204,7 +214,6 @@ class GNNBlock(ShapeNormalizationBlock):
         if with_node_embedding or node2edge_aggr or edge2node_aggr:
             self.node_layers = nn.ModuleList()
             for i in range(self.n_layers):
-
                 if i == 0:
                     in_dim = self.num_node_features
                 else:
@@ -221,7 +230,6 @@ class GNNBlock(ShapeNormalizationBlock):
         if with_edge_embedding or edge2node_aggr or node2edge_aggr:
             self.edge_layers = nn.ModuleList()
             for i in range(self.n_layers):
-
                 if i == 0:
                     in_dim = self.num_edge_features
                 else:
@@ -243,9 +251,8 @@ class GNNBlock(ShapeNormalizationBlock):
         self.e2e_aggregation = AggregationLayer(aggregate=aggregate, pooling_mask=pooling_matrices[3])
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         # check input tensor
         node_tensor = block_input[self.in_keys[0]]
@@ -261,7 +268,7 @@ class GNNBlock(ShapeNormalizationBlock):
         assert edge_embedding.ndim == self.out_num_dims[1]
 
         # prepare layer output
-        out_dict = dict()
+        out_dict = {}
 
         if self.with_node_embedding:
             out_dict[self.out_keys[0]] = node_embedding
@@ -272,7 +279,7 @@ class GNNBlock(ShapeNormalizationBlock):
 
         return out_dict
 
-    def _compute_embeddings(self, n: torch.Tensor, e: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _compute_embeddings(self, n: torch.Tensor, e: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Computes the embeddings of node and edge feature matrices.
 
         :param n: The initial node feature matrix.
@@ -287,10 +294,8 @@ class GNNBlock(ShapeNormalizationBlock):
             last_layer = i == self.n_layers - 1
 
             if self.with_node_embedding or self.node2edge_aggr or self.edge2node_aggr:
-
                 # message passing: node -> node
                 if not first_layer:
-
                     if self.node2node_aggr:
                         n2n = self.n2n_aggregation(prev_n)
                         n = torch.cat((n, n2n), dim=-1)
@@ -304,9 +309,7 @@ class GNNBlock(ShapeNormalizationBlock):
                     n = self.node_layers[i](n)
 
             if self.with_edge_embedding or self.edge2node_aggr or self.node2edge_aggr:
-
                 if not first_layer:
-
                     if self.edge2edge_aggr:
                         e2e = self.e2e_aggregation(prev_e)
                         e = torch.cat((e, e2e), dim=-1)
@@ -324,7 +327,7 @@ class GNNBlock(ShapeNormalizationBlock):
 
         return n, e
 
-    def _prepare_pooling_matrices(self) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _prepare_pooling_matrices(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Prepares multiplicative pooling matrices for efficient feature aggregation.
 
         :return: Tuple holding the four pooling matrices.
@@ -367,8 +370,12 @@ class GNNBlock(ShapeNormalizationBlock):
 
         for i in range(self.num_edges):
             e = self.edge_list[:, i]
-            idxs = (self.edge_list[0, :] == e[0]) | (self.edge_list[0, :] == e[1]) \
-                   | (self.edge_list[1, :] == e[0]) | (self.edge_list[1, :] == e[1])
+            idxs = (
+                (self.edge_list[0, :] == e[0])
+                | (self.edge_list[0, :] == e[1])
+                | (self.edge_list[1, :] == e[0])
+                | (self.edge_list[1, :] == e[1])
+            )
             e2e_pooling_mask[i, idxs] = 1.0
             e2e_pooling_mask[idxs, i] = 1.0
 
@@ -392,20 +399,19 @@ class GNNBlock(ShapeNormalizationBlock):
         return nn.Sequential(*sub_layers)
 
     def __repr__(self):
-
-        mp = ""
+        mp = ''
         if self.node2node_aggr:
-            mp += " n2n"
+            mp += ' n2n'
         if self.edge2edge_aggr:
-            mp += " e2e"
+            mp += ' e2e'
         if self.node2edge_aggr:
-            mp += " n2e"
+            mp += ' n2e'
         if self.edge2node_aggr:
-            mp += " e2n"
+            mp += ' e2n'
 
-        txt = f"{GNNBlock.__name__}"
-        txt += f"\n\tIn Shapes: {self.in_shapes}"
-        txt += f"\n\thidden_units: {self.hidden_units}, aggr: {self.aggregate}"
-        txt += f"\n\tmessage passing:{mp}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt = f'{GNNBlock.__name__}'
+        txt += f'\n\tIn Shapes: {self.in_shapes}'
+        txt += f'\n\thidden_units: {self.hidden_units}, aggr: {self.aggregate}'
+        txt += f'\n\tmessage passing:{mp}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

@@ -1,10 +1,13 @@
-""" Contains general perception blocks. """
-from typing import Union, List, Dict, Sequence
+"""Contains general perception blocks."""
 
-import torch
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import torch
 
 
 class ConcatenationBlock(PerceptionBlock):
@@ -16,16 +19,20 @@ class ConcatenationBlock(PerceptionBlock):
     :param concat_dim: The index of the concatenation dimension.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], concat_dim: int):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        concat_dim: int,
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
         self.concat_dim = concat_dim
         assert len(self.out_keys) == 1
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
-        """
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         # check input tensor
         input_tensors = [block_input[key] for key in self.in_keys]
@@ -37,6 +44,6 @@ class ConcatenationBlock(PerceptionBlock):
 
     def __repr__(self):
         txt = ConcatenationBlock.__name__
-        txt += f"\n\tconcat_dim: {self.concat_dim}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tconcat_dim: {self.concat_dim}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

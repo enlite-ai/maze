@@ -1,38 +1,49 @@
-""" Contains an implementation of the point net block from https://arxiv.org/abs/1612.00593 and its components. """
-from collections import OrderedDict
-from typing import Union, List, Dict, Sequence, Optional
+"""Contains an implementation of the point net block from https://arxiv.org/abs/1612.00593 and its components."""
 
-import torch
-from torch import nn as nn
+from __future__ import annotations
+
+from collections import OrderedDict
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.blocks.general.masked_global_pooling import MaskedGlobalPoolingBlock
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
+import torch
+from torch import nn as nn
+
 
 class PointNetFeatureTransformNet(nn.Module):
     """Feature Transform Net as proposed in https://arxiv.org/abs/1612.00593. This Module implements three
-       convolutional stacks, each consisting of a 1d Convolution (kernel size =1) followed by an optional batch
-       normalization and a specified non-linearity. The resulting output of the convolutions is then pooled in the
-       point dimension (N) with the specified pooling method. Next two fully connected layers (again with optional
-       batch norm and non linearity) are process the now two dimensional data. Finally one fully connected layer is
-       applied before reshaping the data into the output format: BxKxK, where B is the batch dimension, N is the number
-       of points and K is the number of features. The input to the module should have the shape BxKxN.
+    convolutional stacks, each consisting of a 1d Convolution (kernel size =1) followed by an optional batch
+    normalization and a specified non-linearity. The resulting output of the convolutions is then pooled in the
+    point dimension (N) with the specified pooling method. Next two fully connected layers (again with optional
+    batch norm and non linearity) are process the now two dimensional data. Finally one fully connected layer is
+    applied before reshaping the data into the output format: BxKxK, where B is the batch dimension, N is the number
+    of points and K is the number of features. The input to the module should have the shape BxKxN.
 
-       :param num_features: Number of input features (K).
-       :param num_points: Number of input points (N).
-       :param embedding_dim: The embedding dimension to use (Paper: 1024).
-       :param pooling_func_name: A string in ('max', 'mean', 'sum') specifying the pooling function to use. (Paper:
-       'max')
-       :param use_batch_norm: Specify whether to use batch_norm (like in original paper).
-       :param non_lin: The non-linearity to apply after each fully connected layer.
-       :param use_masking: Specify whether to use masking.
+    :param num_features: Number of input features (K).
+    :param num_points: Number of input points (N).
+    :param embedding_dim: The embedding dimension to use (Paper: 1024).
+    :param pooling_func_name: A string in ('max', 'mean', 'sum') specifying the pooling function to use. (Paper:
+    'max')
+    :param use_batch_norm: Specify whether to use batch_norm (like in original paper).
+    :param non_lin: The non-linearity to apply after each fully connected layer.
+    :param use_masking: Specify whether to use masking.
 
-        """
+    """
 
-    def __init__(self, num_features: int, num_points: int, embedding_dim: int, pooling_func_name: str,
-                 use_batch_norm: bool, non_lin: str | type(nn.Module), use_masking: bool):
+    def __init__(
+        self,
+        num_features: int,
+        num_points: int,
+        embedding_dim: int,
+        pooling_func_name: str,
+        use_batch_norm: bool,
+        non_lin: str | type(nn.Module),
+        use_masking: bool,
+    ):
         super().__init__()
 
         # Init class variables
@@ -53,7 +64,9 @@ class PointNetFeatureTransformNet(nn.Module):
         self.pooling_block = MaskedGlobalPoolingBlock(
             in_keys='in_tensor' if not self.use_masking else ['in_tensor', 'mask_tensor'],
             in_shapes=tensor_in_shape if not self.use_masking else [tensor_in_shape, (self._num_points,)],
-            pooling_func=self._pooling_func_name, pooling_dim=-2, out_keys='masking_out'
+            pooling_func=self._pooling_func_name,
+            pooling_dim=-2,
+            out_keys='masking_out',
         )
 
         # Init fully connected layers
@@ -130,8 +143,7 @@ class PointNetFeatureTransformNet(nn.Module):
         out = self.fc3(out)
         # out: (BB, num_features ** 2)
 
-        identity = torch.flatten(torch.eye(self._num_features),
-                                 start_dim=-2).to(torch.float32).to(out.device)
+        identity = torch.flatten(torch.eye(self._num_features), start_dim=-2).to(torch.float32).to(out.device)
         identity = identity.repeat(batch_size, 1)
         out = out + identity
 
@@ -155,8 +167,19 @@ class PointNetFeatureTransformNet(nn.Module):
         fc2_out_shape = f'({batch_size}x{self._embedding_dim // 4})'
         fc3_out_shape = f'({batch_size}x{self._num_features * self._num_features})'
         out_shape = f'({batch_size}x{self._num_features}x{self._num_features})'
-        return '->'.join([input_shape, conv1_out_shape, conv2_out_shape, conv3_out_shape, pooling_out_shape,
-                          fc1_out_shape, fc2_out_shape, fc3_out_shape, out_shape])
+        return '->'.join(
+            [
+                input_shape,
+                conv1_out_shape,
+                conv2_out_shape,
+                conv3_out_shape,
+                pooling_out_shape,
+                fc1_out_shape,
+                fc2_out_shape,
+                fc3_out_shape,
+                out_shape,
+            ]
+        )
 
 
 class PointNetFeatureBlock(ShapeNormalizationBlock):
@@ -179,18 +202,26 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
     :param non_lin: The non-linearity to apply after each layer.
     """
 
-    def __init__(self, in_keys: str | List[str], out_keys: str | List[str],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], embedding_dim: int, pooling_func_name: str,
-                 use_feature_transform: bool, use_batch_norm: bool, non_lin: str | type(nn.Module)):
-
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        embedding_dim: int,
+        pooling_func_name: str,
+        use_feature_transform: bool,
+        use_batch_norm: bool,
+        non_lin: str | type(nn.Module),
+    ):
         # Infer number of input dimension depending if mask is provided
-        in_keys = in_keys if isinstance(in_keys, List) else [in_keys]
+        in_keys = in_keys if isinstance(in_keys, list) else [in_keys]
         in_num_dims = 3 if len(in_keys) == 1 else [3, 2]
-        out_keys = out_keys if isinstance(out_keys, List) else [out_keys]
+        out_keys = out_keys if isinstance(out_keys, list) else [out_keys]
         self._return_features = len(out_keys) > 1
         out_num_dims = 2 if not self._return_features else [2, 3]
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
-                         out_num_dims=out_num_dims)
+        super().__init__(
+            in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims, out_num_dims=out_num_dims
+        )
 
         # Input parameter assertions: checks if the first input (X) has 2 dimensions (NN, KK).
         assert len(self.in_shapes[0]) == 2
@@ -198,8 +229,9 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
             # checks that the mask has only one input dimension (NN)
             assert len(self.in_shapes[1]) == 1
             #  checks that the point dimension in X and Mask are the same
-            assert self.in_shapes[0][-2] == self.in_shapes[1][-1], f'Point dimension should fit: {self.in_shapes[0]} ' \
-                                                                   f'vs {self.in_shapes[1]}'
+            assert self.in_shapes[0][-2] == self.in_shapes[1][-1], (
+                f'Point dimension should fit: {self.in_shapes[0]} vs {self.in_shapes[1]}'
+            )
 
         # Init class variables
         self._use_feature_transform = use_feature_transform
@@ -210,12 +242,23 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         self._use_masking = len(self.in_keys) > 1
 
         self.input_transform = PointNetFeatureTransformNet(
-            self._num_in_features, self._num_points, non_lin=non_lin, use_batch_norm=self._use_batch_norm,
-            embedding_dim=embedding_dim, pooling_func_name=pooling_func_name, use_masking=self._use_masking)
+            self._num_in_features,
+            self._num_points,
+            non_lin=non_lin,
+            use_batch_norm=self._use_batch_norm,
+            embedding_dim=embedding_dim,
+            pooling_func_name=pooling_func_name,
+            use_masking=self._use_masking,
+        )
         if self._use_feature_transform:
             self.feature_transform = PointNetFeatureTransformNet(
-                embedding_dim // 16, self._num_points, non_lin=non_lin, use_batch_norm=self._use_batch_norm,
-                embedding_dim=embedding_dim, pooling_func_name=pooling_func_name, use_masking=self._use_masking
+                embedding_dim // 16,
+                self._num_points,
+                non_lin=non_lin,
+                use_batch_norm=self._use_batch_norm,
+                embedding_dim=embedding_dim,
+                pooling_func_name=pooling_func_name,
+                use_masking=self._use_masking,
             )
 
         self.conv1 = torch.nn.Conv1d(self._num_in_features, embedding_dim // 16, 1)
@@ -236,7 +279,9 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         self.pooling_block = MaskedGlobalPoolingBlock(
             in_keys='in_tensor' if not self._use_masking else ['in_tensor', self.in_keys[1]],
             in_shapes=tensor_in_shape if not self._use_masking else [tensor_in_shape, self.in_shapes[1]],
-            pooling_func=pooling_func_name, pooling_dim=-2, out_keys='masking_out'
+            pooling_func=pooling_func_name,
+            pooling_dim=-2,
+            out_keys='masking_out',
         )
 
         self.pooling_func_str = pooling_func_name
@@ -248,16 +293,16 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         self.print_internal_shape_representation = False
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         # check input tensor
         input_tensor = block_input[self.in_keys[0]]
         mask_tensor = None if not self._use_masking else block_input[self.in_keys[1]]
         assert input_tensor.ndim == self.in_num_dims[0]
-        assert input_tensor.shape[-1] == self._num_in_features, f'failed for obs {self.in_keys[0]} because ' \
-                                                                f'{input_tensor.shape[-1]} != {self._num_in_features}'
+        assert input_tensor.shape[-1] == self._num_in_features, (
+            f'failed for obs {self.in_keys[0]} because {input_tensor.shape[-1]} != {self._num_in_features}'
+        )
         # forward pass
         # input: (BB, NN, KK)
         input_tensor = input_tensor.transpose(2, 1)
@@ -333,14 +378,14 @@ class PointNetFeatureBlock(ShapeNormalizationBlock):
         :return: A string representation of the block.
         """
 
-        txt = f"{PointNetFeatureBlock.__name__}({self.non_lin_cls.__name__})"
-        txt += f"\n\tembedding_dim: {self._embedding_dim}"
-        txt += f"\n\tpooling_func_str: {self.pooling_func_str}"
-        txt += f"\n\tuse_feature_transform: {self._use_feature_transform}"
-        txt += f"\n\tuse_batch_norm: {self._use_batch_norm}"
+        txt = f'{PointNetFeatureBlock.__name__}({self.non_lin_cls.__name__})'
+        txt += f'\n\tembedding_dim: {self._embedding_dim}'
+        txt += f'\n\tpooling_func_str: {self.pooling_func_str}'
+        txt += f'\n\tuse_feature_transform: {self._use_feature_transform}'
+        txt += f'\n\tuse_batch_norm: {self._use_batch_norm}'
 
         if self.print_internal_shape_representation:
             txt += self._get_internal_shape_inference_as_string()
 
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

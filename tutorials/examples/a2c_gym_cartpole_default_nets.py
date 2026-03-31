@@ -56,7 +56,7 @@ def main(n_epochs: int, rnn_steps: int) -> None:
     obs_modalities_mappings = {"observation": "feature"}
 
     # define how to process a modality
-    modality_config = dict()
+    modality_config = {}
     modality_config["feature"] = {"block_type": "maze.perception.blocks.DenseBlock",
                                   "block_params": {"hidden_units": [32, 32],
                                                    "non_lin": "torch.nn.Tanh"}}

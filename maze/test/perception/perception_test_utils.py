@@ -19,7 +19,7 @@ def build_input_dict(dims: Sequence[int]) -> Dict[str, torch.Tensor]:
 
 def build_multi_input_dict(dims: Sequence[Sequence[int]]) -> Dict[str, torch.Tensor]:
     """build multi input dictionary"""
-    input_dict = dict()
+    input_dict = {}
     for i, d in enumerate(dims):
         input_dict["in_key_{}".format(i)] = build_input_tensor(d)
     return input_dict

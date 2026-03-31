@@ -28,8 +28,8 @@ def get_obs_action_hash_for_env_agent(env: MazeEnv, policy: Policy, env_seed: in
     env.seed(env_seed)
     policy.seed(agent_seed)
 
-    observations: List[ObservationType] = list()
-    actions: List[ActionType] = list()
+    observations: List[ObservationType] = []
+    actions: List[ActionType] = []
 
     obs, info = env.reset()
 

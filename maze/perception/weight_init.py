@@ -1,12 +1,15 @@
-""" Contains model weight initialization components. """
-from typing import Callable
+"""Contains model weight initialization components."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+
+from maze.perception.blocks.feed_forward.graph_attention import GraphAttentionLayer
+from maze.perception.blocks.feed_forward.graph_conv import GraphConvBlock, GraphConvLayer
 
 import numpy as np
 import torch
 import torch.nn as nn
-
-from maze.perception.blocks.feed_forward.graph_attention import GraphAttentionLayer
-from maze.perception.blocks.feed_forward.graph_conv import GraphConvLayer, GraphConvBlock
 
 
 def make_param_initializer(std: float = 1.0) -> Callable[[torch.Tensor], None]:
@@ -23,6 +26,7 @@ def make_param_initializer(std: float = 1.0) -> Callable[[torch.Tensor], None]:
         """
         assert len(tensor.shape) == 1
         tensor.data = torch.normal(mean=0.0, std=std, size=(tensor.numel(),)).clamp(-1, 1)
+
     return initializer
 
 
@@ -57,11 +61,13 @@ def make_module_init_normc(std: float = 1.0) -> Callable[[torch.nn.Module], None
 
         :param m: the module to initialize.
         """
-        if isinstance(m, nn.Linear) or \
-                isinstance(m, (nn.Conv1d, nn.Conv2d, nn.Conv3d)) or \
-                isinstance(m, (nn.ConvTranspose1d, nn.ConvTranspose2d, nn.ConvTranspose3d)) or \
-                isinstance(m, GraphConvLayer) or isinstance(m, GraphAttentionLayer):
-
+        if (
+            isinstance(m, nn.Linear)
+            or isinstance(m, (nn.Conv1d, nn.Conv2d, nn.Conv3d))
+            or isinstance(m, (nn.ConvTranspose1d, nn.ConvTranspose2d, nn.ConvTranspose3d))
+            or isinstance(m, GraphConvLayer)
+            or isinstance(m, GraphAttentionLayer)
+        ):
             # initialize weights
             make_normc_initializer(std)(m.weight.data)
 

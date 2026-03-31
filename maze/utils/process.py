@@ -13,7 +13,7 @@ class Process(mp.Process):
     def __init__(self, target, args=(), kwargs=None):
         super().__init__(target=target, args=args, kwargs=kwargs or {})
         if kwargs is None:
-            kwargs = dict()
+            kwargs = {}
         if kwargs is None:
             kwargs = {}
         self._target = target

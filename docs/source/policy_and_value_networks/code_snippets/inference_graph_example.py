@@ -14,7 +14,7 @@ from maze.test.perception.perception_test_utils import build_input_tensor
 
 def build_multi_input_dict(dims: Sequence[Sequence[int]], names: Sequence[str]) -> Dict[str, torch.Tensor]:
     """build multi input dictionary"""
-    input_dict = dict()
+    input_dict = {}
     for i, d in enumerate(dims):
         input_dict[names[i]] = build_input_tensor(d)
     return input_dict
@@ -26,7 +26,7 @@ def build_perception_dict():
     in_dict = build_multi_input_dict(dims=[[1, 16], [1, 3, 64, 64]],
                                      names=obs_keys)
 
-    perception_dict = dict()
+    perception_dict = {}
 
     # --- block ---
     net = DenseBlock(in_keys="obs_inventory", out_keys="obs_inventory_latent",

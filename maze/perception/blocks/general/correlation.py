@@ -1,10 +1,13 @@
-""" Contains feature correlation blocks. """
-from typing import Union, List, Dict, Sequence
+"""Contains feature correlation blocks."""
 
-import torch
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import torch
 
 
 class CorrelationBlock(PerceptionBlock):
@@ -20,8 +23,13 @@ class CorrelationBlock(PerceptionBlock):
     :param reduce: If True a sum reduction as applied along dim=-1.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], reduce: bool):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        reduce: bool,
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
         self.reduce = reduce
         assert len(self.out_keys) == 1
@@ -29,9 +37,8 @@ class CorrelationBlock(PerceptionBlock):
         assert len(self.in_shapes) == 2
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
-        """
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         # prepare input tensor
         key_tensor = block_input[self.in_keys[0]]
@@ -41,7 +48,6 @@ class CorrelationBlock(PerceptionBlock):
         # insert additional dimensions for broadcasting
         max_dims = max(key_tensor.ndim, query_tensor.ndim)
         for d in range(max_dims):
-
             # insert broadcasting dimensions in case of dimensions mismatch
             if key_tensor.shape[d] != query_tensor.shape[d] and 1 not in [key_tensor.shape[d], query_tensor.shape[d]]:
                 if key_tensor.ndim < query_tensor.ndim:
@@ -51,7 +57,7 @@ class CorrelationBlock(PerceptionBlock):
         assert key_tensor.ndim == query_tensor.ndim
 
         # compute correlation
-        correlation = (key_tensor * query_tensor)
+        correlation = key_tensor * query_tensor
 
         if self.reduce:
             correlation = correlation.sum(dim=-1)
@@ -60,6 +66,6 @@ class CorrelationBlock(PerceptionBlock):
 
     def __repr__(self):
         txt = CorrelationBlock.__name__
-        txt += f"\n\treduce({self.reduce})"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\treduce({self.reduce})'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

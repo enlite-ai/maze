@@ -5,14 +5,17 @@
 3d data: self attention needs to use 1d convolutions to project the data to the embedding dims
 
 """
-from typing import Union, List, Sequence, Dict, Optional
 
-import torch
-from torch import nn
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 from maze.perception.weight_init import make_param_initializer
+
+import torch
+from torch import nn
 
 
 class SelfAttentionSeqBlock(ShapeNormalizationBlock):
@@ -33,13 +36,19 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
     :param bias: Add bias as module parameter.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], num_heads: int,
-                 dropout: float | None, add_input_to_output: bool, bias: bool):
-
-        in_keys = in_keys if isinstance(in_keys, List) else [in_keys]
-        out_keys = out_keys if isinstance(out_keys, List) else [out_keys]
-        in_shapes = in_shapes if isinstance(in_shapes, List) else [in_shapes]
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        num_heads: int,
+        dropout: float | None,
+        add_input_to_output: bool,
+        bias: bool,
+    ):
+        in_keys = in_keys if isinstance(in_keys, list) else [in_keys]
+        out_keys = out_keys if isinstance(out_keys, list) else [out_keys]
+        in_shapes = in_shapes if isinstance(in_shapes, list) else [in_shapes]
 
         assert isinstance(in_keys, str) or len(in_keys) in (1, 2), f'but got {in_keys}'
         assert isinstance(out_keys, str) or len(out_keys) in (1, 2), f'but got {out_keys}'
@@ -55,8 +64,9 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
         out_num_dims = [in_num_dims[0]]
         if isinstance(out_keys, list) and len(out_keys) > 1:
             out_num_dims.append(out_num_dims[0])
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
-                         out_num_dims=out_num_dims)
+        super().__init__(
+            in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims, out_num_dims=out_num_dims
+        )
 
         embed_dim = self.in_shapes[0][-1]
         self.add_input_to_output = add_input_to_output
@@ -73,16 +83,16 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
             self.postprocess = lambda x: x.transpose(0, 1)
 
         self.num_heads = num_heads
-        self.self_attn = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads,
-                                               dropout=dropout if dropout is not None else 0.0,
-                                               bias=bias)
+        self.self_attn = nn.MultiheadAttention(
+            embed_dim=embed_dim, num_heads=num_heads, dropout=dropout if dropout is not None else 0.0, bias=bias
+        )
 
         self.gamma = nn.Parameter(torch.randn(1))
         # init gamma.
         _ = make_param_initializer()(self.gamma)
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         # Get the tensors from the block input
@@ -103,8 +113,9 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
         if self.preprocess is not None:
             input_tensor = self.preprocess(input_tensor)
 
-        out, attention = self.self_attn(input_tensor, input_tensor, input_tensor, need_weights=len(self.out_keys) == 2,
-                                        attn_mask=attn_mask)
+        out, attention = self.self_attn(
+            input_tensor, input_tensor, input_tensor, need_weights=len(self.out_keys) == 2, attn_mask=attn_mask
+        )
 
         if self.postprocess is not None:
             out = self.postprocess(out)
@@ -123,12 +134,12 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
         return out_dict
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
+        txt = f'{self.__class__.__name__}'
         txt += f'\n\tnum_heads: {self.self_attn.num_heads}'
         txt += f'\n\tembed_dim: {self.self_attn.embed_dim}'
         txt += f'\n\tdropout: {self.self_attn.dropout}'
         txt += f'\n\tbias: {self.self_attn.in_proj_bias is not None}'
         txt += f'\n\tadd_input_to_output: {self.add_input_to_output}'
         txt += f'\n\tuse_attn_mask: {len(self.in_keys) > 1}'
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

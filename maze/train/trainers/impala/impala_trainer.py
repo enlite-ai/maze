@@ -102,7 +102,7 @@ class IMPALA(ActorCritic):
         # loss and an entropy regularization term.
 
         # The policy gradients loss
-        policy_losses = list()
+        policy_losses = []
         for step_pg_adv, step_target_log_probs in zip(vtrace_returns.pg_advantages,
                                                       vtrace_returns.target_action_log_probs):
             step_p_loss = -torch.sum(

@@ -81,7 +81,7 @@ def run_reproducible_rollout(env: MazeEnv, pick_action: Callable, n_steps: int =
     env.seed(1234)
 
     # seed the ActionConversion spaces
-    act_conv_spaces = dict()
+    act_conv_spaces = {}
     for policy_id, policy_act_conv in env.action_conversion_dict.items():
         # Get transformation spaces.
         policy_space = policy_act_conv.space()
@@ -91,7 +91,7 @@ def run_reproducible_rollout(env: MazeEnv, pick_action: Callable, n_steps: int =
         act_conv_spaces[policy_id] = policy_space
 
     # Store hashed step states.
-    observations: List[ObservationType] = list()
+    observations: List[ObservationType] = []
 
     env.reset()
     for step in range(n_steps):

@@ -1,14 +1,16 @@
 """Composer for critic (value function) networks."""
-from abc import abstractmethod
-from typing import Dict
 
-from gymnasium import spaces
+from __future__ import annotations
+
+from abc import abstractmethod
 
 from maze.core.agent.torch_state_critic import TorchStateCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StepKeyType
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.perception_utils import observation_spaces_to_in_shapes
+
+from gymnasium import spaces
 
 
 class BaseStateCriticComposer(CriticComposerInterface):
@@ -18,9 +20,9 @@ class BaseStateCriticComposer(CriticComposerInterface):
     """
 
     @abstractmethod
-    def __init__(self,
-                 observation_spaces_dict: Dict[StepKeyType, spaces.Dict],
-                 agent_counts_dict: Dict[StepKeyType, int]):
+    def __init__(
+        self, observation_spaces_dict: dict[StepKeyType, spaces.Dict], agent_counts_dict: dict[StepKeyType, int]
+    ):
         self._observation_spaces_dict = observation_spaces_dict
         self._agent_counts_dict = agent_counts_dict
 

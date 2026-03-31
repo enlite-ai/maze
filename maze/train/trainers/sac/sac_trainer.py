@@ -66,9 +66,9 @@ class SAC(Trainer):
 
         # Entropy tuning only supported for single step envs
         if self.algorithm_config.entropy_tuning:
-            self.target_entropy, self.curr_log_entropy_coef = dict(), dict()
+            self.target_entropy, self.curr_log_entropy_coef = {}, dict()
             for step_key in self.sub_step_keys:
-                self.target_entropy[step_key] = dict()
+                self.target_entropy[step_key] = {}
                 for action_key, space in env.action_spaces_dict[step_key].spaces.items():
                     if isinstance(space, spaces.Box):
                         self.target_entropy[step_key][action_key] = self.algorithm_config.target_entropy_multiplier * \
@@ -363,9 +363,9 @@ class SAC(Trainer):
         :param worker_output: The batched output of the workers.
         :return: Return the critic losses as a list w.r.t. the number of critics used + mean values for stats.
         """
-        next_actions = dict()
-        next_actions_logits = dict()
-        next_action_log_probs = dict()
+        next_actions = {}
+        next_actions_logits = {}
+        next_action_log_probs = {}
 
         q_values_selected = self.learner_model.critic.predict_q_values(worker_output.observations_dict,
                                                                        worker_output.actions_dict, gather_output=True)
@@ -389,7 +389,7 @@ class SAC(Trainer):
                                                                             next_action_log_probs,
                                                                             self.curr_entropy_coef)
 
-            target_q_values = dict()
+            target_q_values = {}
 
             # TODO: Take into account all rewards, not just from the last sub-step
             last_rewards = list(worker_output.rewards_dict.values())[-1]
@@ -408,14 +408,14 @@ class SAC(Trainer):
                     target_q_values[step_key] = (last_rewards + (~last_done).float() * self.algorithm_config.gamma *
                                                  next_q_value_per_step)
 
-        q_losses = dict()
+        q_losses = {}
         for step_key in q_values_selected:
-            per_critic_values = list()
+            per_critic_values = []
             for q_values_per_sub_critic in q_values_selected[step_key]:
                 target_q_values_per_step = target_q_values[step_key]
                 if self.learner_model.critic.only_discrete_spaces[step_key]:
                     assert isinstance(q_values_per_sub_critic, dict)
-                    per_action_per_critic_loss = list()
+                    per_action_per_critic_loss = []
                     for action_key, q_values_per_action in q_values_per_sub_critic.items():
                         org_action_key = action_key.replace('_q_values', '')
                         per_action_loss = (q_values_per_action - target_q_values_per_step[org_action_key]).pow(2).mean()
@@ -445,8 +445,8 @@ class SAC(Trainer):
         """
 
         # Sample actions and compute action log probabilities (continuous steps)/ action probabilities (discrete steps)
-        policy_losses, action_entropies, action_log_probs, actions_sampled = dict(), dict(), dict(), dict()
-        action_probs = dict()
+        policy_losses, action_entropies, action_log_probs, actions_sampled = {}, dict(), dict(), dict()
+        action_probs = {}
 
         for step_key in self.sub_step_keys:
             step_obs = worker_output.observations_dict[step_key]
@@ -485,7 +485,7 @@ class SAC(Trainer):
             if self.learner_model.critic.only_discrete_spaces[step_key]:
                 action_probs_step = action_probs[step_key]
 
-                policy_losses_per_action = list()
+                policy_losses_per_action = []
                 # Compute the policy loss for each individual action
                 for action_key in action_log_probs_step.keys():
                     q_action_key = action_key + '_q_values'
@@ -517,11 +517,11 @@ class SAC(Trainer):
         :param action_log_probs: The log probabilities of the individual actions.
         :return: The entropy loss.
         """
-        entropy_losses = dict()
+        entropy_losses = {}
         for step_key in self.sub_step_keys:
             if self.learner_model.critic.only_discrete_spaces[step_key]:
                 assert isinstance(self.target_entropy[step_key], dict)
-                entropy_losses_per_step = list()
+                entropy_losses_per_step = []
                 for action_key, action_probs_step in action_probs[step_key].items():
                     action_log_probs_step_action = action_log_probs[step_key][action_key]
                     entropy_loss_per_action = torch.matmul(action_probs_step.unsqueeze(-2).detach(),

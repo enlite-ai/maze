@@ -102,8 +102,8 @@ class PPO(ActorCritic):
                                     zip(returns, critic_output.values)]
 
                 # compute policy loss
-                policy_losses = list()
-                entropies = list()
+                policy_losses = []
+                entropies = []
                 for idx, substep_record in enumerate(batch_record.substep_records):
 
                     # compute entropies

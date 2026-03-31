@@ -8,7 +8,7 @@ from maze.perception.builders.concat import ConcatModelBuilder
 
 def build_dict_obs_space():
     """build dictionary observation space"""
-    space_dict = dict()
+    space_dict = {}
     space_dict["features"] = spaces.Box(low=0.0, high=1.0, shape=(24,), dtype=np.float64)
     space_dict["image"] = spaces.Box(low=0.0, high=1.0, shape=(3, 32, 32), dtype=np.float64)
 
@@ -24,7 +24,7 @@ def test_concat_model_builder() -> None:
                       "image": "image"}
 
     # set modality config
-    modality_config = dict()
+    modality_config = {}
     modality_config["feature"] = {"block_type": "maze.perception.blocks.DenseBlock",
                                   "block_params": {"hidden_units": [64, 64],
                                                    "non_lin": "torch.nn.ReLU"}}

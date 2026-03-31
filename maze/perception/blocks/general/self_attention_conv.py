@@ -7,15 +7,18 @@
         - can/should we do mulihead here as well?
 
 """
-from typing import Union, List, Sequence, Dict, Optional
 
-import numpy as np
-import torch
-from torch import nn
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
 from maze.perception.weight_init import make_param_initializer
+
+import numpy as np
+import torch
+from torch import nn
 
 
 class SelfAttentionConvBlock(PerceptionBlock):
@@ -35,9 +38,16 @@ class SelfAttentionConvBlock(PerceptionBlock):
     :param bias: Specify weather to use a bias in the projections.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 embed_dim: int, dropout: float | None, add_input_to_output: bool, bias: bool):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        embed_dim: int,
+        dropout: float | None,
+        add_input_to_output: bool,
+        bias: bool,
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
         # Assertions
@@ -68,7 +78,7 @@ class SelfAttentionConvBlock(PerceptionBlock):
         self.dropout = nn.Dropout(p=dropout if dropout is not None else 0.0)
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         # input_tensor.shape = (B X C X W X H)
@@ -105,11 +115,11 @@ class SelfAttentionConvBlock(PerceptionBlock):
         return out_dict
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
+        txt = f'{self.__class__.__name__}'
         txt += f'\n\tembed_dim: {self.embedding_dim}'
         txt += f'\n\tdropout: {self.dropout}'
         txt += f'\n\tbias: {self.query_conv.bias is not None}'
         txt += f'\n\tadd_input_to_output: {self.add_input_to_output}'
         txt += f'\n\tuse_attn_mask: {len(self.in_keys) > 1}'
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

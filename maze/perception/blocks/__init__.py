@@ -1,4 +1,7 @@
-""" Import blocks to enable import shortcuts. """
+"""Import blocks to enable import shortcuts."""
+
+from __future__ import annotations
+
 from maze.perception.blocks.base import PerceptionBlock
 from maze.perception.blocks.feed_forward.dense import DenseBlock
 from maze.perception.blocks.feed_forward.graph_attention import GraphAttentionBlock

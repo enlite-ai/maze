@@ -1,13 +1,15 @@
 """Composer for state action (Q) critic networks."""
-from abc import abstractmethod
-from typing import Dict, Union
 
-from gymnasium import spaces
+from __future__ import annotations
+
+from abc import abstractmethod
 
 from maze.core.agent.torch_state_action_critic import TorchStateActionCritic
 from maze.core.annotations import override
 from maze.perception.models.critics.critic_composer_interface import CriticComposerInterface
 from maze.perception.perception_utils import observation_spaces_to_in_shapes
+
+from gymnasium import spaces
 
 
 class BaseStateActionCriticComposer(CriticComposerInterface):
@@ -18,8 +20,9 @@ class BaseStateActionCriticComposer(CriticComposerInterface):
     """
 
     @abstractmethod
-    def __init__(self, observation_spaces_dict: Dict[str | int, spaces.Dict],
-                 action_spaces_dict: Dict[str | int, spaces.Dict]):
+    def __init__(
+        self, observation_spaces_dict: dict[str | int, spaces.Dict], action_spaces_dict: dict[str | int, spaces.Dict]
+    ):
         self._observation_spaces_dict = observation_spaces_dict
         self._action_spaces_dict = action_spaces_dict
         # convert to observation shapes
@@ -28,9 +31,10 @@ class BaseStateActionCriticComposer(CriticComposerInterface):
         # Check whether only discrete spaces are present in each step!!!
         self._only_discrete_spaces = {step_key: True for step_key in self._obs_shapes.keys()}
         for step_key, dict_action_space in self._action_spaces_dict.items():
-            for act_key, act_space in dict_action_space.spaces.items():
-                assert isinstance(act_space, (spaces.Discrete, spaces.Box)), 'Only box and discrete spaces supported ' \
-                                                                             'thus far'
+            for _, act_space in dict_action_space.spaces.items():
+                assert isinstance(act_space, (spaces.Discrete, spaces.Box)), (
+                    'Only box and discrete spaces supported thus far'
+                )
                 if self._only_discrete_spaces[step_key] and not isinstance(act_space, spaces.Discrete):
                     self._only_discrete_spaces[step_key] = False
 

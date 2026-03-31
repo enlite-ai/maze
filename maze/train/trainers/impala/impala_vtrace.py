@@ -68,8 +68,8 @@ def log_probs_from_logits_and_actions_and_spaces(
         And a list (w.r.t. the substeps of the env) of DictProbability distributions corresponding to the step-action-
         distributions.
     """
-    log_probs = list()
-    step_action_dists = list()
+    log_probs = []
+    step_action_dists = []
     for step_policy_logits, step_actions in zip(policy_logits, actions):
         step_action_dist = distribution_mapper.logits_dict_to_distribution(logits_dict=step_policy_logits,
                                                                            temperature=1.0)
@@ -147,8 +147,8 @@ def from_logits(behaviour_policy_logits: List[TorchActionType],
 
     log_rhos = get_log_rhos(target_action_log_probs=target_action_log_probs,
                             behaviour_action_log_probs=behaviour_action_log_probs)
-    vss = list()
-    pg_advantagess = list()
+    vss = []
+    pg_advantagess = []
     for step_log_rhos, step_values, step_bootstrap_values in zip(log_rhos, values, bootstrap_value):
         vs, pg_advantages = from_importance_weights(
             log_rhos=step_log_rhos,
@@ -272,7 +272,7 @@ def get_log_rhos(target_action_log_probs: List[TorchActionType],
 
     :return: a list (w.r.t. the substeps of the env) of tensors, where each tensor is of the shape [T,B]
     """
-    log_rhos = list()
+    log_rhos = []
     # TODO: Consider doing this for each individual action
     with torch.no_grad():
         for step_target_action_log_probs, step_behaviour_action_log_probs in zip(target_action_log_probs,

@@ -1,9 +1,6 @@
 """Composer implementation for delta critic."""
-from typing import Dict, Union
 
-import numpy as np
-from gymnasium import spaces
-from torch import nn
+from __future__ import annotations
 
 from maze.core.agent.torch_state_critic import TorchDeltaStateCritic
 from maze.core.annotations import override
@@ -11,6 +8,10 @@ from maze.core.env.structured_env import StepKeyType
 from maze.core.utils.config_utils import list_to_dict
 from maze.core.utils.factory import CollectionOfConfigType, Factory
 from maze.perception.models.critics.base_state_critic_composer import BaseStateCriticComposer
+
+import numpy as np
+from gymnasium import spaces
+from torch import nn
 
 
 class DeltaStateCriticComposer(BaseStateCriticComposer):
@@ -22,21 +23,24 @@ class DeltaStateCriticComposer(BaseStateCriticComposer):
     :param observation_spaces_dict: Dict of sub-step id to observation space.
     :param networks: The single, shared critic network as defined in the config.
     """
+
     prev_value_key = 'prev_value'
     prev_value_shape = (1,)
     prev_value_space = spaces.Dict({prev_value_key: spaces.Box(0, 1, shape=prev_value_shape, dtype=np.float32)})
 
-    def __init__(self,
-                 observation_spaces_dict: Dict[str | int, spaces.Dict],
-                 agent_counts_dict: Dict[StepKeyType, int],
-                 networks: CollectionOfConfigType):
+    def __init__(
+        self,
+        observation_spaces_dict: dict[str | int, spaces.Dict],
+        agent_counts_dict: dict[StepKeyType, int],
+        networks: CollectionOfConfigType,
+    ):
         super().__init__(observation_spaces_dict, agent_counts_dict)
 
         # initialize critic
         model_registry = Factory(base_type=nn.Module)
         networks = list_to_dict(networks)
-        self._critics = dict()
-        for idx, (key, net_config) in enumerate(networks.items()):
+        self._critics = {}
+        for idx, (key, _) in enumerate(networks.items()):
             step_obs_shapes = self._obs_shapes[key]
             if idx > 0:
                 step_obs_shapes = {**step_obs_shapes, self.prev_value_key: self.prev_value_shape}
@@ -45,6 +49,6 @@ class DeltaStateCriticComposer(BaseStateCriticComposer):
     @property
     @override(BaseStateCriticComposer)
     def critic(self) -> TorchDeltaStateCritic:
-        """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
-        """
-        return TorchDeltaStateCritic(self._critics, obs_spaces_dict=self._observation_spaces_dict, device="cpu")
+        """implementation of
+        :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`"""
+        return TorchDeltaStateCritic(self._critics, obs_spaces_dict=self._observation_spaces_dict, device='cpu')

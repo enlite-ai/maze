@@ -12,7 +12,7 @@ from maze.core.wrappers.observation_normalization.normalization_strategies.range
 def get_structured_space():
     """ helper function """
 
-    space_dict = dict()
+    space_dict = {}
     space_dict["box"] = gym.spaces.Box(low=np.full(shape=(10,), fill_value=0, dtype=np.float32),
                                        high=np.full(shape=(10,), fill_value=100, dtype=np.float32),
                                        dtype=np.float32)

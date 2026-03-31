@@ -25,7 +25,7 @@ class DistributionMapper:
     """
 
     # default space to distribution mapping
-    default_mapping: Dict[type(spaces.Space), type(TorchProbabilityDistribution)] = dict()
+    default_mapping: Dict[type(spaces.Space), type(TorchProbabilityDistribution)] = {}
     default_mapping[spaces.Discrete] = CategoricalProbabilityDistribution
     default_mapping[spaces.MultiBinary] = BernoulliProbabilityDistribution
     default_mapping[spaces.Box] = DiagonalGaussianProbabilityDistribution
@@ -35,7 +35,7 @@ class DistributionMapper:
         self.action_space = action_space
 
         # mapping of action heads to distributions and configs
-        self._action_head_to_distribution: Dict[str, Tuple[type(TorchProbabilityDistribution), Dict[str, Any]]] = dict()
+        self._action_head_to_distribution: Dict[str, Tuple[type(TorchProbabilityDistribution), Dict[str, Any]]] = {}
 
         # first: apply default config to action heads
         for action_head, sub_action_space in action_space.spaces.items():
@@ -108,7 +108,7 @@ class DistributionMapper:
         """
 
         # iterate all action heads contained in logits dictionary
-        distribution_dict = dict()
+        distribution_dict = {}
         for action_head, action_logits in logits_dict.items():
             assert isinstance(action_logits, torch.Tensor)
             distribution_dict[action_head] = self.action_head_distribution(action_head=action_head,

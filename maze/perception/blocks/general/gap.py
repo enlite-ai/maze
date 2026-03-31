@@ -1,11 +1,14 @@
-""" Contains a global average pooling block. """
-from typing import Union, List, Sequence, Dict
+"""Contains a global average pooling block."""
 
-import torch
-from torch import nn as nn
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
+
+import torch
+from torch import nn as nn
 
 
 class GlobalAveragePoolingBlock(ShapeNormalizationBlock):
@@ -17,17 +20,17 @@ class GlobalAveragePoolingBlock(ShapeNormalizationBlock):
     :param in_shapes: List of input shapes.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]]):
+    def __init__(
+        self, in_keys: str | list[str], out_keys: str | list[str], in_shapes: Sequence[int] | list[Sequence[int]]
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=4, out_num_dims=2)
 
         # compile network
         self.net = nn.AdaptiveAvgPool2d(output_size=(1, 1))
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         # check input tensor
         input_tensor = block_input[self.in_keys[0]]
@@ -42,6 +45,6 @@ class GlobalAveragePoolingBlock(ShapeNormalizationBlock):
         return {self.out_keys[0]: output_tensor}
 
     def __repr__(self):
-        txt = f"{GlobalAveragePoolingBlock.__name__}"
-        txt += f"\nOut Shapes: {self.out_shapes()}"
+        txt = f'{GlobalAveragePoolingBlock.__name__}'
+        txt += f'\nOut Shapes: {self.out_shapes()}'
         return txt

@@ -1,18 +1,21 @@
-""" Contains Graph-convolutional perception blocks layers.
-    Credit is given to https://arxiv.org/abs/1609.02907 and
-    https://github.com/meliketoy/graph-cnn.pytorch/blob/master/layers.py
- """
+"""Contains Graph-convolutional perception blocks layers.
+Credit is given to https://arxiv.org/abs/1609.02907 and
+https://github.com/meliketoy/graph-cnn.pytorch/blob/master/layers.py
+"""
+
+from __future__ import annotations
+
 from collections import OrderedDict
-from typing import Union, List, Sequence, Dict, Optional, Callable
+from collections.abc import Callable, Sequence
+
+from maze.core.annotations import override
+from maze.core.utils.factory import Factory
+from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 import numpy as np
 import torch
 from torch import nn as nn
 from torch.nn.parameter import Parameter
-
-from maze.core.annotations import override
-from maze.core.utils.factory import Factory
-from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
 class GraphAdjacencyMethods:
@@ -33,7 +36,7 @@ class GraphAdjacencyMethods:
             """
             xx_np = np.random.randint(0, 2, size=in_shape).astype(np.float32)
             xx = torch.from_numpy(xx_np)
-            xx_sym = (xx + torch.transpose(xx, dim0=-2, dim1=-1))
+            xx_sym = xx + torch.transpose(xx, dim0=-2, dim1=-1)
             xx_sym[xx_sym > 0] = 1
             xx_sym = xx_sym.unsqueeze(dim=0)
             return xx_sym
@@ -41,8 +44,7 @@ class GraphAdjacencyMethods:
         return create_binary_sym_tensor
 
     @classmethod
-    def preprocess_adj_to_adj_bar(cls, adj: torch.Tensor) \
-            -> torch.Tensor | np.ndarray:
+    def preprocess_adj_to_adj_bar(cls, adj: torch.Tensor) -> torch.Tensor | np.ndarray:
         """Transform the adjacency matrix needed for the computation.
 
         Since repeated application of forward computation on the standard adjacency matrix can lead to numerical
@@ -78,9 +80,11 @@ class GraphAdjacencyMethods:
         return adj_bar
 
     @classmethod
-    def preprocess_adj_to_adj_hat(cls, adj: torch.Tensor,
-                                  self_importance_scalar: torch.Tensor | None = torch.tensor(1)) \
-            -> Union[torch.Tensor, np.ndarray]:
+    def preprocess_adj_to_adj_hat(
+        cls,
+        adj: torch.Tensor,
+        self_importance_scalar: torch.Tensor | None = torch.tensor(1),  # noqa: B008
+    ) -> torch.Tensor | np.ndarray:
         """Transform the adjacency matrix needed for the computation.
 
         Since repeated application of forward computation on the standard adjacency matrix can lead to numerical
@@ -117,7 +121,7 @@ class GraphAdjacencyMethods:
         # Row-normalize sparse matrix, so that the adjacency matrix is scaled by both rows and columns.
         rowsum = adj_bar.sum(-1)
         r_inv_sqrt = torch.pow(rowsum, -0.5)
-        r_inv_sqrt[torch.isinf(r_inv_sqrt)] = 0.
+        r_inv_sqrt[torch.isinf(r_inv_sqrt)] = 0.0
 
         r_mat_inv_sqrt = torch.diag_embed(r_inv_sqrt)
         row_norm = torch.matmul(adj_bar, r_mat_inv_sqrt)
@@ -164,9 +168,7 @@ class GraphConvLayer(nn.Module):
 
     @override(nn.Module)
     def __repr__(self):
-        txt = self.__class__.__name__ + ': (' \
-              + str(self.in_features) + ' -> ' \
-              + str(self.out_features) + ')'
+        txt = self.__class__.__name__ + ': (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
         if self.bias is not None:
             txt += ' (with bias)'
         else:
@@ -199,20 +201,27 @@ class GraphConvBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         D^bar_ii := sum_j A^bar_ij.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], hidden_features: List[int],
-                 bias: Union[bool, List[bool]], non_lins: Union[str, type(nn.Module), List[str], List[type(nn.Module)]],
-                 node_self_importance: float,
-                 trainable_node_self_importance: bool, preprocess_adj: bool):
-
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3, 3],
-                         out_num_dims=3)
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        hidden_features: list[int],
+        bias: bool | list[bool],
+        non_lins: str | type(nn.Module) | list[str] | list[type(nn.Module)],
+        node_self_importance: float,
+        trainable_node_self_importance: bool,
+        preprocess_adj: bool,
+    ):
+        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3, 3], out_num_dims=3)
 
         # Assertions
         assert len(self.in_keys) == 2, 'There should be two input keys, feature matrix + adjacency matrix'
-        assert self.in_shapes[0][-2] == self.in_shapes[1][-1], 'The node dimension of the feature matrix should be ' \
-                                                               'the same as the adjacency matrix\'s rows and ' \
-                                                               f'columns {self.in_shapes}'
+        assert self.in_shapes[0][-2] == self.in_shapes[1][-1], (
+            'The node dimension of the feature matrix should be '
+            "the same as the adjacency matrix's rows and "
+            f'columns {self.in_shapes}'
+        )
         assert self.in_shapes[1][-1] == self.in_shapes[1][-2], 'The adjacency matrix has to be a square matrix'
 
         # Specify dummy dict creation function for adjacency matrix:
@@ -227,10 +236,11 @@ class GraphConvBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
 
         # Create list of non-linearity's for each layer
         non_lins = non_lins if isinstance(non_lins, list) else [non_lins] * len(self.hidden_features)
-        self.non_lins: List[type(nn.Module)] = [Factory(base_type=nn.Module).type_from_name(non_lin)
-                                                for non_lin in non_lins]
+        self.non_lins: list[type(nn.Module)] = [
+            Factory(base_type=nn.Module).type_from_name(non_lin) for non_lin in non_lins
+        ]
         # Create list of biases for each layer
-        self.bias: List[bool] = bias if isinstance(bias, list) else [bias] * len(self.hidden_features)
+        self.bias: list[bool] = bias if isinstance(bias, list) else [bias] * len(self.hidden_features)
 
         # Initialize node-self-importance scalar
         self.node_self_importance = torch.tensor(node_self_importance, dtype=torch.float32, requires_grad=False)
@@ -250,9 +260,8 @@ class GraphConvBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         self.net = nn.Sequential(layer_dict)
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
         # check input tensor
         feat_tensor = block_input[self.in_keys[0]]
         adj_tensor = block_input[self.in_keys[1]]
@@ -260,8 +269,9 @@ class GraphConvBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         assert feat_tensor.ndim == self.in_num_dims[0]
         assert adj_tensor.ndim == self.in_num_dims[1]
 
-        assert feat_tensor.shape[-1] == self.input_features, f'Feature dimension should fit: {feat_tensor.shape[-1]} ' \
-                                                             f'vs {self.input_features}'
+        assert feat_tensor.shape[-1] == self.input_features, (
+            f'Feature dimension should fit: {feat_tensor.shape[-1]} vs {self.input_features}'
+        )
         assert feat_tensor.shape[-2] == adj_tensor.shape[-2] == adj_tensor.shape[-1], 'Node dimension should fit'
 
         # Preprocess adj matrix
@@ -293,26 +303,29 @@ class GraphConvBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         layer_dict = OrderedDict()
 
         # treat first layer
-        layer_dict["gcn_00"] = GraphConvLayer(in_features=self.input_features,
-                                              out_features=self.hidden_features[0],
-                                              bias=self.bias[0])
-        layer_dict[f"{self.non_lins[0].__name__}_00"] = self.non_lins[0]()
+        layer_dict['gcn_00'] = GraphConvLayer(
+            in_features=self.input_features, out_features=self.hidden_features[0], bias=self.bias[0]
+        )
+        layer_dict[f'{self.non_lins[0].__name__}_00'] = self.non_lins[0]()
 
         # treat remaining layers
-        for i, h in enumerate(self.hidden_features[1:], start=1):
-            layer_dict[f"conv_{i}0"] = GraphConvLayer(in_features=self.hidden_features[i - 1],
-                                                      out_features=self.hidden_features[i],
-                                                      bias=self.bias[i])
-            layer_dict[f"{self.non_lins[i].__name__}_{i}0"] = self.non_lins[i]()
+        for i, _ in enumerate(self.hidden_features[1:], start=1):
+            layer_dict[f'conv_{i}0'] = GraphConvLayer(
+                in_features=self.hidden_features[i - 1], out_features=self.hidden_features[i], bias=self.bias[i]
+            )
+            layer_dict[f'{self.non_lins[i].__name__}_{i}0'] = self.non_lins[i]()
         return layer_dict
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
-        txt += f'({self.non_lins[0].__name__})' if len(set(self.non_lins)) == 1 else \
-            f'({[non_lin.__name__ for non_lin in self.non_lins]})'
-        txt += "\n\t" + f"({self.input_features}->" + "->".join([f"{h}" for h in self.hidden_features]) + ")"
+        txt = f'{self.__class__.__name__}'
+        txt += (
+            f'({self.non_lins[0].__name__})'
+            if len(set(self.non_lins)) == 1
+            else f'({[non_lin.__name__ for non_lin in self.non_lins]})'
+        )
+        txt += '\n\t' + f'({self.input_features}->' + '->'.join([f'{h}' for h in self.hidden_features]) + ')'
         txt += f'\n\tBias: {self.bias if len(set(self.bias)) > 1 else self.bias[0]}'
         if self.node_self_importance.requires_grad:
-            txt += f'\n\tNode-self-importance-as-param: True'
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+            txt += '\n\tNode-self-importance-as-param: True'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

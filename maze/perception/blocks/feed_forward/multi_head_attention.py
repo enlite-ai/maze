@@ -1,13 +1,15 @@
-"""Implementation of Multi-Head-Attention Block
-"""
-from typing import Union, List, Sequence, Dict, Optional
+"""Implementation of Multi-Head-Attention Block"""
 
-import torch
-from torch import nn
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 from maze.perception.weight_init import make_param_initializer
+
+import torch
+from torch import nn
 
 
 class MultiHeadAttentionBlock(ShapeNormalizationBlock):
@@ -52,14 +54,24 @@ class MultiHeadAttentionBlock(ShapeNormalizationBlock):
         of features.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], num_heads: int,
-                 dropout: float | None, add_input_to_output: bool, bias: bool, add_bias_kv: bool,
-                 add_zero_attn: bool, kdim: int | None, vdim: int | None, use_key_padding_mask: bool):
-
-        in_keys = in_keys if isinstance(in_keys, List) else [in_keys]
-        out_keys = out_keys if isinstance(out_keys, List) else [out_keys]
-        in_shapes = in_shapes if isinstance(in_shapes, List) else [in_shapes]
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        num_heads: int,
+        dropout: float | None,
+        add_input_to_output: bool,
+        bias: bool,
+        add_bias_kv: bool,
+        add_zero_attn: bool,
+        kdim: int | None,
+        vdim: int | None,
+        use_key_padding_mask: bool,
+    ):
+        in_keys = in_keys if isinstance(in_keys, list) else [in_keys]
+        out_keys = out_keys if isinstance(out_keys, list) else [out_keys]
+        in_shapes = in_shapes if isinstance(in_shapes, list) else [in_shapes]
 
         assert len(in_keys) in (3, 4), f'but got {in_keys}'
         assert len(out_keys) in (1, 2), f'but got {out_keys}'
@@ -77,8 +89,9 @@ class MultiHeadAttentionBlock(ShapeNormalizationBlock):
         if isinstance(out_keys, list) and len(out_keys) > 1:
             out_num_dims.append(out_num_dims[0])
 
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
-                         out_num_dims=out_num_dims)
+        super().__init__(
+            in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims, out_num_dims=out_num_dims
+        )
 
         embed_dim = self.in_shapes[0][-1]
         self.add_input_to_output = add_input_to_output
@@ -101,30 +114,44 @@ class MultiHeadAttentionBlock(ShapeNormalizationBlock):
         self.vdim = vdim
         self.num_heads = num_heads
         self.use_key_padding_mask = use_key_padding_mask
-        assert not len(self.in_keys) == 5 or self.use_key_padding_mask, 'Key padding mask has to be true if 5 ' \
-                                                                        'in_keys are being used'
+        assert not len(self.in_keys) == 5 or self.use_key_padding_mask, (
+            'Key padding mask has to be true if 5 in_keys are being used'
+        )
 
-        self.self_attn = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads,
-                                               dropout=dropout if dropout is not None else 0.0,
-                                               bias=bias, add_bias_kv=add_bias_kv, add_zero_attn=add_zero_attn,
-                                               kdim=kdim, vdim=vdim)
+        self.self_attn = nn.MultiheadAttention(
+            embed_dim=embed_dim,
+            num_heads=num_heads,
+            dropout=dropout if dropout is not None else 0.0,
+            bias=bias,
+            add_bias_kv=add_bias_kv,
+            add_zero_attn=add_zero_attn,
+            kdim=kdim,
+            vdim=vdim,
+        )
         self.gamma = nn.Parameter(torch.randn(1))
         # init gamma.
         _ = make_param_initializer()(self.gamma)
 
-
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         # Get the tensors from the block input
         query_tensor = block_input[self.in_keys[0]]
         key_tensor = block_input[self.in_keys[1]]
         value_tensor = block_input[self.in_keys[2]]
-        attn_mask = block_input[self.in_keys[3]] if len(self.in_keys) == 4 and not self.use_key_padding_mask \
-            or len(self.in_keys) == 5 else None
-        key_padding_mask = block_input[self.in_keys[4]] if len(self.in_keys) == 5 else block_input[self.in_keys[3]] if \
-            len(self.in_keys) == 4 and self.use_key_padding_mask else None
+        attn_mask = (
+            block_input[self.in_keys[3]]
+            if len(self.in_keys) == 4 and not self.use_key_padding_mask or len(self.in_keys) == 5
+            else None
+        )
+        key_padding_mask = (
+            block_input[self.in_keys[4]]
+            if len(self.in_keys) == 5
+            else block_input[self.in_keys[3]]
+            if len(self.in_keys) == 4 and self.use_key_padding_mask
+            else None
+        )
 
         # If the attention mask is used, it has to have the shape (num_heads * batch_size, target sequence length,
         #   source sequence length). Thus we have to repeat for the number of heads.
@@ -146,8 +173,14 @@ class MultiHeadAttentionBlock(ShapeNormalizationBlock):
             key_tensor = self.preprocess(key_tensor)
             value_tensor = self.preprocess(value_tensor)
 
-        out, attention = self.self_attn(query_tensor, key_tensor, value_tensor, need_weights=len(self.out_keys) == 2,
-                                        attn_mask=attn_mask, key_padding_mask=key_padding_mask)
+        out, attention = self.self_attn(
+            query_tensor,
+            key_tensor,
+            value_tensor,
+            need_weights=len(self.out_keys) == 2,
+            attn_mask=attn_mask,
+            key_padding_mask=key_padding_mask,
+        )
 
         if self.postprocess is not None:
             out = self.postprocess(out)
@@ -166,21 +199,24 @@ class MultiHeadAttentionBlock(ShapeNormalizationBlock):
         return out_dict
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
+        txt = f'{self.__class__.__name__}'
         txt += f'\n\tnum_heads: {self.self_attn.num_heads}'
         txt += f'\n\tembed_dim: {self.self_attn.embed_dim}'
         txt += f'\n\tdropout: {self.self_attn.dropout}'
         txt += f'\n\tbias: {self.self_attn.in_proj_bias is not None}'
         txt += f'\n\tadd_input_to_output: {self.add_input_to_output}'
-        txt += f'\n\tuse_attn_mask: ' \
-               f'{len(self.in_keys) == 4 and not self.use_key_padding_mask or len(self.in_keys) == 5}'
-        txt += f'\n\tuse_key_padding_mask: ' \
-               f'{len(self.in_keys) == 4 and self.use_key_padding_mask or len(self.in_keys) == 5}'
+        txt += (
+            f'\n\tuse_attn_mask: {len(self.in_keys) == 4 and not self.use_key_padding_mask or len(self.in_keys) == 5}'
+        )
+        txt += (
+            f'\n\tuse_key_padding_mask: '
+            f'{len(self.in_keys) == 4 and self.use_key_padding_mask or len(self.in_keys) == 5}'
+        )
         txt += f'\n\tadd_bias_kv: {self.add_bias_kv}'
         txt += f'\n\tadd_zero_attn: {self.add_zero_attn}'
         if self.kdim is not None:
             txt += f'\n\tkdim: {self.kdim}'
         if self.vdim is not None:
             txt += f'\n\tvdim: {self.vdim}'
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

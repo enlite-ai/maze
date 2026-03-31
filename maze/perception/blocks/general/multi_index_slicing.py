@@ -1,10 +1,13 @@
-""" Contains a MulitIndexSlicingBlock """
-from typing import Union, List, Sequence, Dict
+"""Contains a MulitIndexSlicingBlock"""
 
-import torch
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import torch
 
 
 class MultiIndexSlicingBlock(PerceptionBlock):
@@ -18,16 +21,21 @@ class MultiIndexSlicingBlock(PerceptionBlock):
     :param select_idxs: The index or indices to select.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], select_dim: int,
-                 select_idxs: Union[int, Sequence[int]]):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        select_dim: int,
+        select_idxs: int | Sequence[int],
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
         self.selection_dim = select_dim
         self.selection_idxs = torch.tensor(select_idxs, requires_grad=False)
         assert self.selection_idxs.ndim == 1
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass, slicing the input tensor as defined by the selection_dim and select_idxs.
 
         :param block_input: The block's input dictionary.
@@ -44,7 +52,7 @@ class MultiIndexSlicingBlock(PerceptionBlock):
         return {self.out_keys[0]: output_tensor}
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
-        txt += f"\n\tselection_dim: {self.selection_dim}, selection_idxs: {self.selection_idxs.tolist()}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt = f'{self.__class__.__name__}'
+        txt += f'\n\tselection_dim: {self.selection_dim}, selection_idxs: {self.selection_idxs.tolist()}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

@@ -20,7 +20,7 @@ class DummyBaseNet(nn.Module):
     def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: type(nn.Module)):
         nn.Module.__init__(self)
         self.obs_shapes = obs_shapes
-        perception_dict: Dict[str, PerceptionBlock] = dict()
+        perception_dict: Dict[str, PerceptionBlock] = {}
 
         for in_key, in_shape in self.obs_shapes.items():
             if len(in_shape) > 1:

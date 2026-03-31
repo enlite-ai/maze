@@ -1,15 +1,16 @@
 """Composer implementation for shared critic."""
-from typing import Dict
 
-from gymnasium import spaces
-from torch import nn
+from __future__ import annotations
 
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
 from maze.core.annotations import override
 from maze.core.env.structured_env import StepKeyType
-from maze.core.utils.factory import Factory, ConfigType
+from maze.core.utils.factory import ConfigType, Factory
 from maze.core.utils.structured_env_utils import flat_structured_shapes, stacked_shapes
 from maze.perception.models.critics.base_state_critic_composer import BaseStateCriticComposer
+
+from gymnasium import spaces
+from torch import nn
 
 
 class SharedStateCriticComposer(BaseStateCriticComposer):
@@ -22,11 +23,13 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
     :param networks: The single, shared critic network as defined in the config.
     """
 
-    def __init__(self,
-                 observation_spaces_dict: Dict[StepKeyType, spaces.Dict],
-                 agent_counts_dict: Dict[StepKeyType, int],
-                 networks: ConfigType,
-                 stack_observations: bool):
+    def __init__(
+        self,
+        observation_spaces_dict: dict[StepKeyType, spaces.Dict],
+        agent_counts_dict: dict[StepKeyType, int],
+        networks: ConfigType,
+        stack_observations: bool,
+    ):
         super().__init__(observation_spaces_dict, agent_counts_dict)
         assert len(networks) == 1
         self.stack_observations = stack_observations
@@ -45,7 +48,11 @@ class SharedStateCriticComposer(BaseStateCriticComposer):
     @property
     @override(BaseStateCriticComposer)
     def critic(self) -> TorchSharedStateCritic:
-        """implementation of :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`
-        """
-        return TorchSharedStateCritic(self._critics, obs_spaces_dict=self._observation_spaces_dict, device="cpu",
-                                      stack_observations=self.stack_observations)
+        """implementation of
+        :class:`~maze.perception.models.critics.base_state_critic_composer.BaseStateCriticComposer`"""
+        return TorchSharedStateCritic(
+            self._critics,
+            obs_spaces_dict=self._observation_spaces_dict,
+            device='cpu',
+            stack_observations=self.stack_observations,
+        )

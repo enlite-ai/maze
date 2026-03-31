@@ -1,37 +1,42 @@
-""" Contains utility functions for the perception module. """
+"""Contains utility functions for the perception module."""
+
+from __future__ import annotations
+
 from collections import defaultdict
-from collections.abc import MutableSequence
-from typing import Union, Dict, Any, Callable, Sequence, Iterable
+from collections.abc import Callable, Iterable, MutableSequence, Sequence
+from typing import Any
+
+from maze.core.env.structured_env import StepKeyType
+from maze.core.utils.structured_env_utils import flat_structured_space
 
 import gymnasium as gym
 import numpy as np
 import torch
 from gymnasium import spaces
 
-from maze.core.env.structured_env import StepKeyType
-from maze.core.utils.structured_env_utils import flat_structured_space
 
-
-def observation_spaces_to_in_shapes(observation_spaces: Dict[int | str, gym.spaces.Dict]) \
-        -> Dict[int | str, Dict[str, Sequence[int]]]:
+def observation_spaces_to_in_shapes(
+    observation_spaces: dict[int | str, gym.spaces.Dict],
+) -> dict[int | str, dict[str, Sequence[int]]]:
     """Convert an observation space to the input shapes for the neural networks
 
     :param observation_spaces: the observation spaces of a structured Env
     :return: the same structure but all the gym spaces are converted to tuples
     """
-    in_shapes = dict()
+    in_shapes = {}
     for obs_key, obs_dict in observation_spaces.items():
-        in_shapes[obs_key] = dict()
+        in_shapes[obs_key] = {}
         assert isinstance(obs_dict, gym.spaces.Dict)
         for key, value in obs_dict.spaces.items():
-            assert isinstance(value, gym.spaces.Box), 'Only box observation spaces supported at this point, but got: ' \
-                                                      f'{type(value)}'
+            assert isinstance(value, gym.spaces.Box), (
+                f'Only box observation spaces supported at this point, but got: {type(value)}'
+            )
             in_shapes[obs_key][key] = value.shape
 
     return in_shapes
 
 
-def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
+def flatten_spaces(spaces: Iterable[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
     """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
     into a single dictionary containing all the items.
 
@@ -41,7 +46,7 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch
     :param: Iterable of dictionary spaces (usually observations or actions from subsequent sub-steps).
     :return: One flat dictionary, containing all keys and values form the elements of the iterable.
     """
-    result = dict()
+    result = {}
 
     for space in spaces:
         for key, obs in space.items():
@@ -49,11 +54,15 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch
             if key in result:
                 assert result[key].shape == obs.shape
                 if isinstance(obs, np.ndarray):
-                    assert np.allclose(result[key], obs), f"Tried merging observations, but values for key {key} " \
-                                                          "differ. Did you intend to stack the observations instead?"
+                    assert np.allclose(result[key], obs), (
+                        f'Tried merging observations, but values for key {key} '
+                        'differ. Did you intend to stack the observations instead?'
+                    )
                 else:
-                    assert torch.allclose(result[key], obs), f"Tried merging observations, but values for key {key} " \
-                                                             "differ. Did you intend to stack the observations instead?"
+                    assert torch.allclose(result[key], obs), (
+                        f'Tried merging observations, but values for key {key} '
+                        'differ. Did you intend to stack the observations instead?'
+                    )
 
             # override with newest value if already existing
             result[key] = obs
@@ -61,8 +70,9 @@ def flatten_spaces(spaces: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, torch
     return result
 
 
-def stack_and_flatten_spaces(input_tensor_dict: Iterable[Dict[str, torch.Tensor]],
-                             observation_spaces_dict: Dict[StepKeyType, spaces.Dict]) -> Dict[str, torch.Tensor]:
+def stack_and_flatten_spaces(
+    input_tensor_dict: Iterable[dict[str, torch.Tensor]], observation_spaces_dict: dict[StepKeyType, spaces.Dict]
+) -> dict[str, torch.Tensor]:
     """Merges an iterable of dictionary spaces (usually observations or actions from subsequent sub-steps)
     into a single dictionary containing all the items.
 
@@ -86,9 +96,10 @@ def stack_and_flatten_spaces(input_tensor_dict: Iterable[Dict[str, torch.Tensor]
     key_0 = list(result.keys())[0]
     concat_dim = len(result[key_0][0].shape) - len(flattened_space[key_0].shape)
     for key in result.keys():
-        assert concat_dim == len(result[key][0].shape) - len(flattened_space[key].shape), \
-            f'Batch dimensions do not seem to align across observations keys.. specifically for ' \
+        assert concat_dim == len(result[key][0].shape) - len(flattened_space[key].shape), (
+            f'Batch dimensions do not seem to align across observations keys.. specifically for '
             f'{(key, result[key][0].shape)} vs {(key_0, result[key_0][0].shape)}'
+        )
 
     # Concatenate all at once for efficiency
     for obs_name, observations in result.items():
@@ -101,8 +112,7 @@ def stack_and_flatten_spaces(input_tensor_dict: Iterable[Dict[str, torch.Tensor]
     return dict(result)
 
 
-def convert_to_torch(stats: Any, device: str | None, cast: Union[torch.dtype, None],
-                     in_place: bool | str) -> Any:
+def convert_to_torch(stats: Any, device: str | None, cast: torch.dtype | None, in_place: bool | str) -> Any:
     """Converts any struct to torch.Tensors.
 
     :param stats: Any (possibly nested) struct, the values in which will be
@@ -136,7 +146,7 @@ def convert_to_torch(stats: Any, device: str | None, cast: Union[torch.dtype, No
         return map_nested_structure(stats, mapping, in_place)
 
 
-def convert_to_numpy(stats: Any, cast: Union[np.dtype, None], in_place: bool | str):
+def convert_to_numpy(stats: Any, cast: np.dtype | None, in_place: bool | str):
     """Convert torch to np
 
     :param stats: Any (possibly nested) struct, the values in which will be
@@ -163,28 +173,36 @@ def convert_to_numpy(stats: Any, cast: Union[np.dtype, None], in_place: bool | s
         return map_nested_structure(stats, mapping, in_place)
 
 
-def map_nested_structure(nested_instance: Any,
-                         mapping: Callable[[Union[torch.Tensor, np.ndarray, int, float]],
-                                           Union[torch.Tensor, np.ndarray, int, float]], in_place: bool,
-                         _depth: int = 0) -> Any:
+def map_nested_structure(
+    nested_instance: Any,
+    mapping: Callable[[torch.Tensor | np.ndarray | int | float], torch.Tensor | np.ndarray | int | float],
+    in_place: bool,
+    _depth: int = 0,
+) -> Any:
     """Apply a custom callable to an nested object where the base elements are either torch.Tensor, np.ndarray,
-        int or float.
+    int or float.
 
-        :param nested_instance: the nested instance that should be mapped.
-        :param mapping: the mapping that should be applied to the base instance.
-        :param in_place: specifies if the mapping should be done in_place (mutating the given object), if this is set
-            to true but not possible (with immutable objects) an exception is thrown.
-        :param _depth: a counter for the recursion depth
-        """
+    :param nested_instance: the nested instance that should be mapped.
+    :param mapping: the mapping that should be applied to the base instance.
+    :param in_place: specifies if the mapping should be done in_place (mutating the given object), if this is set
+        to true but not possible (with immutable objects) an exception is thrown.
+    :param _depth: a counter for the recursion depth
+    """
     # List, iterators, generators
-    if isinstance(nested_instance, torch.Tensor) or isinstance(nested_instance, np.ndarray) \
-            or isinstance(nested_instance, int) or isinstance(nested_instance, float):
+    if (
+        isinstance(nested_instance, torch.Tensor)
+        or isinstance(nested_instance, np.ndarray)
+        or isinstance(nested_instance, int)
+        or isinstance(nested_instance, float)
+    ):
         # If it is a torch.Tensor or np.ndarray object
         if in_place:
             out = mapping(nested_instance)
             if _depth == 0 and nested_instance is not out:
-                raise Exception('The given nested structure could not be mapped in-place (as specified) since '
-                                'the method had to be applied at depth 0, and the mapped results is not the same')
+                raise Exception(
+                    'The given nested structure could not be mapped in-place (as specified) since '
+                    'the method had to be applied at depth 0, and the mapped results is not the same'
+                )
             return out
         else:
             if isinstance(nested_instance, torch.Tensor):
@@ -200,7 +218,7 @@ def map_nested_structure(nested_instance: Any,
                     nested_instance[key] = map_nested_structure(value, mapping, in_place, _depth + 1)
                 return nested_instance
             else:
-                new_nested_instance = dict()
+                new_nested_instance = {}
                 for key, value in nested_instance.items():
                     new_nested_instance[key] = map_nested_structure(value, mapping, in_place, _depth + 1)
                 return new_nested_instance
@@ -219,16 +237,18 @@ def map_nested_structure(nested_instance: Any,
 
             elif isinstance(nested_instance, tuple):
                 if in_place:
-                    raise Exception('The given nested structure could not be mapped in-place (as specified) since '
-                                    'a tuple was encountered. Please revisit the function call')
+                    raise Exception(
+                        'The given nested structure could not be mapped in-place (as specified) since '
+                        'a tuple was encountered. Please revisit the function call'
+                    )
                 else:
                     new_nested_instance = type(nested_instance)()
-                    for idx, value in enumerate(nested_instance):
+                    for _, value in enumerate(nested_instance):
                         new_nested_instance += (map_nested_structure(value, mapping, in_place, _depth + 1),)
                     return new_nested_instance
 
             else:
-                raise Exception('Not supported Sequence substructure type found: {}'.format(type(nested_instance)))
+                raise Exception(f'Not supported Sequence substructure type found: {type(nested_instance)}')
 
         else:
-            raise Exception('Not supported Structure type found: {}'.format(type(nested_instance)))
+            raise Exception(f'Not supported Structure type found: {type(nested_instance)}')

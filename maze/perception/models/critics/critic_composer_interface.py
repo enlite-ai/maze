@@ -1,11 +1,13 @@
 """Composer interface for critic (value function) networks."""
-from abc import abstractmethod, ABC
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from typing import Any
 
 
 class CriticComposerInterface(ABC):
-    """Interface for critic (value function) network composers.
-    """
+    """Interface for critic (value function) network composers."""
 
     @property
     @abstractmethod

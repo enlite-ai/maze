@@ -126,7 +126,7 @@ def test_base_types():
 
 def test_convert_to_numpy():
     """ unit tests """
-    stats = dict()
+    stats = {}
     stats["key_1"] = torch.from_numpy(np.random.random(10))
     convert_to_numpy(stats=stats, cast=None, in_place=False)
     convert_to_numpy(stats=stats, cast=None, in_place=True)

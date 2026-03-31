@@ -1,14 +1,17 @@
-""" Contains a joint strided convolution, flattening dense perception block. """
-from typing import Union, List, Sequence, Dict, Tuple, Optional
+"""Contains a joint strided convolution, flattening dense perception block."""
 
-import torch
-from torch import nn as nn
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
 from maze.perception.blocks.feed_forward.dense import DenseBlock
 from maze.perception.blocks.feed_forward.strided_conv import StridedConvolutionBlock
 from maze.perception.blocks.general.flatten import FlattenBlock
+
+import torch
+from torch import nn as nn
 
 
 class StridedConvolutionDenseBlock(PerceptionBlock):
@@ -34,47 +37,57 @@ class StridedConvolutionDenseBlock(PerceptionBlock):
     :param non_lin: The non-linearity to apply after each layer.
     """
 
-    def __init__(self,
-                 in_keys: Union[str, List[str]],
-                 out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 hidden_channels: List[int],
-                 hidden_kernels: List[Union[int, Tuple[int, ...]]],
-                 convolution_dimension: int,
-                 hidden_strides: List[Union[int, Tuple[int, ...]]] | None,
-                 hidden_dilations: List[Union[int, Tuple[int, ...]]] | None,
-                 hidden_padding: List[Union[int, Tuple[int, ...]]] | None,
-                 padding_mode: str | None,
-                 hidden_units: List[int],
-                 non_lin: Union[str, type(nn.Module)]):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        hidden_channels: list[int],
+        hidden_kernels: list[int | tuple[int, ...]],
+        convolution_dimension: int,
+        hidden_strides: list[int | tuple[int, ...]] | None,
+        hidden_dilations: list[int | tuple[int, ...]] | None,
+        hidden_padding: list[int | tuple[int, ...]] | None,
+        padding_mode: str | None,
+        hidden_units: list[int],
+        non_lin: str | type(nn.Module),
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
-        out_keys_conv = [f"{k}_conv" for k in self.out_keys]
-        self.conv_block = StridedConvolutionBlock(in_keys=in_keys, out_keys=out_keys_conv, in_shapes=in_shapes,
-                                                  hidden_channels=hidden_channels,
-                                                  hidden_kernels=hidden_kernels,
-                                                  convolution_dimension=convolution_dimension,
-                                                  hidden_strides=hidden_strides,
-                                                  hidden_dilations=hidden_dilations,
-                                                  hidden_padding=hidden_padding,
-                                                  padding_mode=padding_mode,
-                                                  non_lin=non_lin)
+        out_keys_conv = [f'{k}_conv' for k in self.out_keys]
+        self.conv_block = StridedConvolutionBlock(
+            in_keys=in_keys,
+            out_keys=out_keys_conv,
+            in_shapes=in_shapes,
+            hidden_channels=hidden_channels,
+            hidden_kernels=hidden_kernels,
+            convolution_dimension=convolution_dimension,
+            hidden_strides=hidden_strides,
+            hidden_dilations=hidden_dilations,
+            hidden_padding=hidden_padding,
+            padding_mode=padding_mode,
+            non_lin=non_lin,
+        )
 
-        out_keys_flatten = [f"{k}_flat" for k in out_keys_conv] if len(hidden_units) > 0 else out_keys
-        self.flatten_block = FlattenBlock(in_keys=out_keys_conv, out_keys=out_keys_flatten,
-                                          in_shapes=self.conv_block.out_shapes(), num_flatten_dims=3)
+        out_keys_flatten = [f'{k}_flat' for k in out_keys_conv] if len(hidden_units) > 0 else out_keys
+        self.flatten_block = FlattenBlock(
+            in_keys=out_keys_conv, out_keys=out_keys_flatten, in_shapes=self.conv_block.out_shapes(), num_flatten_dims=3
+        )
 
         if len(hidden_units) > 0:
-            self.dense_block = DenseBlock(in_keys=out_keys_flatten, out_keys=out_keys,
-                                          in_shapes=self.flatten_block.out_shapes(),
-                                          hidden_units=hidden_units, non_lin=non_lin)
+            self.dense_block = DenseBlock(
+                in_keys=out_keys_flatten,
+                out_keys=out_keys,
+                in_shapes=self.flatten_block.out_shapes(),
+                hidden_units=hidden_units,
+                non_lin=non_lin,
+            )
         else:
             self.dense_block = None
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         # forward pass of submodules
         block_output = self.conv_block(block_input)
@@ -85,8 +98,8 @@ class StridedConvolutionDenseBlock(PerceptionBlock):
         return block_output
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}:"
-        txt += f"\n\n{str(self.conv_block)}"
-        txt += f"\n\n{str(self.flatten_block)}"
-        txt += f"\n\n{str(self.dense_block)}"
+        txt = f'{self.__class__.__name__}:'
+        txt += f'\n\n{str(self.conv_block)}'
+        txt += f'\n\n{str(self.flatten_block)}'
+        txt += f'\n\n{str(self.dense_block)}'
         return txt

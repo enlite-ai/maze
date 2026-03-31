@@ -1,17 +1,20 @@
 """Self attention graph conv block based on https://arxiv.org/pdf/1710.10903.pdf and
- https://github.com/meliketoy/graph-cnn.pytorch"""
-from collections import OrderedDict
-from typing import Union, List, Sequence, Dict
+https://github.com/meliketoy/graph-cnn.pytorch"""
 
-import numpy as np
-import torch
-import torch.nn.functional as F
-from torch import nn as nn
+from __future__ import annotations
+
+from collections import OrderedDict
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.blocks.feed_forward.graph_conv import GraphAdjacencyMethods
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch import nn as nn
 
 
 class GraphAttentionLayer(nn.Module):
@@ -63,9 +66,14 @@ class GraphAttentionLayer(nn.Module):
 
     @override(nn.Module)
     def __repr__(self):
-        txt = self.__class__.__name__ + ': (' \
-              + str(self.in_features) + ' -> ' \
-              + str(self.out_features) + f'), alpha: {self.alpha}, dropout: {self.dropout}'
+        txt = (
+            self.__class__.__name__
+            + ': ('
+            + str(self.in_features)
+            + ' -> '
+            + str(self.out_features)
+            + f'), alpha: {self.alpha}, dropout: {self.dropout}'
+        )
         return txt
 
 
@@ -101,7 +109,7 @@ class GraphMultiHeadAttentionLayer(nn.Module):
         :return: Output tensor.
         """
         attention_outs = []
-        for idx, att in enumerate(self.attentions):
+        for _, att in enumerate(self.attentions):
             attention_outs.append(att(xx, adj_hat))
 
         if self.avg_out:
@@ -143,21 +151,27 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
     :param attention_dropout: Specify the dropout to be within the layers applied on the computed attention.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], hidden_features: List[int],
-                 non_lins: Union[str, type(nn.Module), List[str], List[type(nn.Module)]],
-                 n_heads: Union[int, List[int]], attention_alpha: List[float] | float,
-                 avg_last_head_attentions: bool,
-                 attention_dropout: Union[float, List[float]]):
-
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3, 3],
-                         out_num_dims=3)
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        hidden_features: list[int],
+        non_lins: str | type(nn.Module) | list[str] | list[type(nn.Module)],
+        n_heads: int | list[int],
+        attention_alpha: list[float] | float,
+        avg_last_head_attentions: bool,
+        attention_dropout: float | list[float],
+    ):
+        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3, 3], out_num_dims=3)
 
         # Assertions
         assert len(self.in_keys) == 2, 'There should be two input keys, feature matrix + adjacency matrix'
-        assert self.in_shapes[0][-2] == self.in_shapes[1][-1], 'The node dimension of the feature matrix should be ' \
-                                                               'the same as the adjacency matrix\'s rows and ' \
-                                                               f'columns {self.in_shapes}'
+        assert self.in_shapes[0][-2] == self.in_shapes[1][-1], (
+            'The node dimension of the feature matrix should be '
+            "the same as the adjacency matrix's rows and "
+            f'columns {self.in_shapes}'
+        )
         assert self.in_shapes[1][-1] == self.in_shapes[1][-2], 'The adjacency matrix has to be a square matrix'
         self.avg_last_head_attentions = avg_last_head_attentions
 
@@ -169,26 +183,32 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         self.hidden_features = hidden_features
 
         # Create list of heads for each layer
-        self.n_heads: List[int] = n_heads if isinstance(n_heads, list) else [n_heads] * len(self.hidden_features)
+        self.n_heads: list[int] = n_heads if isinstance(n_heads, list) else [n_heads] * len(self.hidden_features)
 
         # The output features of this block are equivalent to the specified last hidden features if
         #   :param avg_last_head_attention is set to true, otherwise the last output will be concatenated and as such is
         #   equivalent to the number of last hidden features times the last specified number of heads
-        self.output_features = self.hidden_features[-1] if self.avg_last_head_attentions else \
-            self.hidden_features[-1] * self.n_heads[-1]
+        self.output_features = (
+            self.hidden_features[-1] if self.avg_last_head_attentions else self.hidden_features[-1] * self.n_heads[-1]
+        )
 
         # Create list of non-linearity's for each layer
         non_lins = non_lins if isinstance(non_lins, list) else [non_lins] * len(self.hidden_features)
-        self.non_lins: List[type(nn.Module)] = [Factory(base_type=nn.Module).type_from_name(non_lin)
-                                                for non_lin in non_lins]
+        self.non_lins: list[type(nn.Module)] = [
+            Factory(base_type=nn.Module).type_from_name(non_lin) for non_lin in non_lins
+        ]
 
         # Create list of dropout for each layer
-        self.attention_dropout = attention_dropout if isinstance(attention_dropout, list) \
+        self.attention_dropout = (
+            attention_dropout
+            if isinstance(attention_dropout, list)
             else [attention_dropout] * len(self.hidden_features)
+        )
 
         # Create list of alpha for each layer
-        self.attention_alpha = attention_alpha if isinstance(attention_alpha, list) \
-            else [attention_alpha] * len(self.hidden_features)
+        self.attention_alpha = (
+            attention_alpha if isinstance(attention_alpha, list) else [attention_alpha] * len(self.hidden_features)
+        )
 
         # compile layer dictionary
         layer_dict = self.build_layer_dict()
@@ -197,9 +217,8 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         self.net = nn.Sequential(layer_dict)
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
         # check input tensor
         feat_tensor = block_input[self.in_keys[0]]
         adj_tensor = block_input[self.in_keys[1]]
@@ -214,7 +233,7 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
 
         # forward pass
         output_tensor = feat_tensor
-        for idx, layer in enumerate(self.net):
+        for _, layer in enumerate(self.net):
             if isinstance(layer, GraphMultiHeadAttentionLayer):
                 output_tensor = layer(output_tensor, adj_bar_tensor)
             else:
@@ -222,8 +241,9 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
 
         # check output tensor
         assert output_tensor.ndim == self.out_num_dims[0], 'Out num_dims should fit'
-        assert output_tensor.shape[-1] == self.output_features, 'Output feature dim should fit ' \
-                                                                f'[{output_tensor.shape[-1]} vs {self.output_features})'
+        assert output_tensor.shape[-1] == self.output_features, (
+            f'Output feature dim should fit [{output_tensor.shape[-1]} vs {self.output_features})'
+        )
 
         return {self.out_keys[0]: output_tensor}
 
@@ -236,37 +256,53 @@ class GraphAttentionBlock(ShapeNormalizationBlock, GraphAdjacencyMethods):
         """
         layer_dict = OrderedDict()
         # treat first layer
-        layer_dict[f"gat_00"] = GraphMultiHeadAttentionLayer(
-            in_features=self.input_features, out_features=self.hidden_features[0], alpha=self.attention_alpha[0],
-            n_heads=self.n_heads[0], dropout=self.attention_dropout[0],
-            avg_out=self.avg_last_head_attentions and len(self.hidden_features) == 1
+        layer_dict['gat_00'] = GraphMultiHeadAttentionLayer(
+            in_features=self.input_features,
+            out_features=self.hidden_features[0],
+            alpha=self.attention_alpha[0],
+            n_heads=self.n_heads[0],
+            dropout=self.attention_dropout[0],
+            avg_out=self.avg_last_head_attentions and len(self.hidden_features) == 1,
         )
-        layer_dict[f"{self.non_lins[0].__name__}_00"] = self.non_lins[0]()
+        layer_dict[f'{self.non_lins[0].__name__}_00'] = self.non_lins[0]()
 
         # treat remaining layers
-        for i, h in enumerate(self.hidden_features[1:], start=1):
+        for i, _ in enumerate(self.hidden_features[1:], start=1):
             # Mulit-head attention
-            layer_dict[f"gat_{i}0"] = GraphMultiHeadAttentionLayer(
-                in_features=self.hidden_features[i - 1] * self.n_heads[i - 1], out_features=self.hidden_features[i],
-                alpha=self.attention_alpha[i], n_heads=self.n_heads[i], dropout=self.attention_dropout[i],
-                avg_out=self.avg_last_head_attentions and i == len(self.hidden_features) - 1
+            layer_dict[f'gat_{i}0'] = GraphMultiHeadAttentionLayer(
+                in_features=self.hidden_features[i - 1] * self.n_heads[i - 1],
+                out_features=self.hidden_features[i],
+                alpha=self.attention_alpha[i],
+                n_heads=self.n_heads[i],
+                dropout=self.attention_dropout[i],
+                avg_out=self.avg_last_head_attentions and i == len(self.hidden_features) - 1,
             )
             # Non-lin
-            layer_dict[f"{self.non_lins[i].__name__}_{i}0"] = self.non_lins[i]()
+            layer_dict[f'{self.non_lins[i].__name__}_{i}0'] = self.non_lins[i]()
 
         return layer_dict
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
-        txt += f'({self.non_lins[0].__name__})' if len(set(self.non_lins)) == 1 else \
-            f'({[non_lin.__name__ for non_lin in self.non_lins]})'
-        txt += "\n\t" + f"({self.input_features}->" + "->".join([f"{h} x {self.n_heads[idx]}"
-                                                                 for idx, h in enumerate(self.hidden_features)]) \
-               + f'->{self.output_features})'
-        txt += f'\n\talpha: ({self.attention_alpha})' if len(
-            set(self.attention_alpha)) == 1 else f'({[aa for aa in self.attention_alpha]})'
-        txt += f'\n\tavg last head attentions: ' + str(self.avg_last_head_attentions)
-        txt += f'\n\tdropout:' + (
-            f'{self.attention_dropout}' if len(set(self.attention_dropout)) > 1 else f'{self.attention_dropout[0]}')
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt = f'{self.__class__.__name__}'
+        txt += (
+            f'({self.non_lins[0].__name__})'
+            if len(set(self.non_lins)) == 1
+            else f'({[non_lin.__name__ for non_lin in self.non_lins]})'
+        )
+        txt += (
+            '\n\t'
+            + f'({self.input_features}->'
+            + '->'.join([f'{h} x {self.n_heads[idx]}' for idx, h in enumerate(self.hidden_features)])
+            + f'->{self.output_features})'
+        )
+        txt += (
+            f'\n\talpha: ({self.attention_alpha})'
+            if len(set(self.attention_alpha)) == 1
+            else f'({[aa for aa in self.attention_alpha]})'
+        )
+        txt += '\n\tavg last head attentions: ' + str(self.avg_last_head_attentions)
+        txt += '\n\tdropout:' + (
+            f'{self.attention_dropout}' if len(set(self.attention_dropout)) > 1 else f'{self.attention_dropout[0]}'
+        )
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

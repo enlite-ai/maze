@@ -17,7 +17,7 @@ class LogStatsWriterExtract(LogStatsWriterConsole):
     """
 
     def __init__(self):
-        self.data = dict()
+        self.data = {}
 
     def write(self, path: str, step: int, stats: LogStats) -> None:
         """see LogStatsWriter.write"""

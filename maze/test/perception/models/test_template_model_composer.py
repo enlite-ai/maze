@@ -34,7 +34,7 @@ def build_single_step_with_critic_type(critics_composer_type: type(BaseStateCrit
     # map observations to a modality
     obs_modalities = {obs_key: "feature" for obs_key in observation_space.spaces.keys()}
     # define how to process a modality
-    modality_config = dict()
+    modality_config = {}
     modality_config["feature"] = {"block_type": "maze.perception.blocks.DenseBlock",
                                   "block_params": {"hidden_units": [32, 32],
                                                    "non_lin": "torch.nn.ReLU"}}
@@ -126,7 +126,7 @@ def build_structured_with_critic_type(env,
                       DeltaStateCriticComposer.prev_value_key: 'feature'}
 
     # define how to process a modality
-    modality_config = dict()
+    modality_config = {}
     modality_config["feature"] = {"block_type": "maze.perception.blocks.DenseBlock",
                                   "block_params": {"hidden_units": [32, 32],
                                                    "non_lin": "torch.nn.ReLU"}}

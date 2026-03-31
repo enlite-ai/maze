@@ -13,7 +13,7 @@ def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_lis
     """
 
     if not assert_member_list:
-        assert_member_list = list()
+        assert_member_list = []
 
     # init main and cloned env
     main_env = make_env()

@@ -19,7 +19,7 @@ def stack_numpy_dict_list(dict_list: List[Dict[str, np.ndarray]]) -> Dict[str, n
         for k, v in d.items():
             list_dict[k].append(v)
 
-    stacked_dict = dict()
+    stacked_dict = {}
     for k in list_dict.keys():
         stacked_dict[k] = np.stack(list_dict[k])
 
@@ -43,7 +43,7 @@ def unstack_numpy_list_dict(list_dict: Dict[str, np.ndarray]) -> List[Dict[str, 
     dict_list = []
 
     for i in range(n_items):
-        action_dict = dict()
+        action_dict = {}
         for k in keys:
             action_dict[k] = list_dict[k][i]
         dict_list.append(action_dict)
@@ -83,7 +83,7 @@ def stack_torch_dict_list(dict_list: List[Dict[str, torch.Tensor | np.ndarray]],
         for k, v in d.items():
             list_dict[k].append(torch.from_numpy(v) if isinstance(v, np.ndarray) else v)
 
-    stacked_dict = dict()
+    stacked_dict = {}
     for k in list_dict.keys():
         stacked_dict[k] = torch.stack(list_dict[k], dim=dim)
 

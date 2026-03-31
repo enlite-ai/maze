@@ -1,13 +1,16 @@
-""" Contains a dense layer block. """
-from collections import OrderedDict
-from typing import Union, List, Dict, Sequence
+"""Contains a dense layer block."""
 
-import torch
-from torch import nn as nn
+from __future__ import annotations
+
+from collections import OrderedDict
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
+
+import torch
+from torch import nn as nn
 
 
 class DenseBlock(ShapeNormalizationBlock):
@@ -21,9 +24,14 @@ class DenseBlock(ShapeNormalizationBlock):
     :param non_lin: The non-linearity to apply after each layer.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], hidden_units: List[int],
-                 non_lin: Union[str, type(nn.Module)]):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        hidden_units: list[int],
+        non_lin: str | type(nn.Module),
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=2, out_num_dims=2)
         self.input_units = self.in_shapes[0][-1]
         self.hidden_units = hidden_units
@@ -37,15 +45,15 @@ class DenseBlock(ShapeNormalizationBlock):
         self.net = nn.Sequential(layer_dict)
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         # check input tensor
         input_tensor = block_input[self.in_keys[0]]
         assert input_tensor.ndim == self.in_num_dims[0]
-        assert input_tensor.shape[-1] == self.input_units, f'failed for obs {self.in_keys[0]} because ' \
-                                                           f'{input_tensor.shape[-1]} != {self.input_units}'
+        assert input_tensor.shape[-1] == self.input_units, (
+            f'failed for obs {self.in_keys[0]} because {input_tensor.shape[-1]} != {self.input_units}'
+        )
         # forward pass
         output_tensor = self.net(input_tensor)
 
@@ -65,18 +73,18 @@ class DenseBlock(ShapeNormalizationBlock):
         layer_dict = OrderedDict()
 
         # treat first layer
-        layer_dict["linear_0"] = nn.Linear(self.input_units, self.hidden_units[0])
-        layer_dict[f"{self.non_lin.__name__}_0"] = self.non_lin()
+        layer_dict['linear_0'] = nn.Linear(self.input_units, self.hidden_units[0])
+        layer_dict[f'{self.non_lin.__name__}_0'] = self.non_lin()
 
         # treat remaining layers
-        for i, h in enumerate(self.hidden_units[1:], start=1):
-            layer_dict[f"linear_{i}"] = nn.Linear(self.hidden_units[i - 1], self.hidden_units[i])
-            layer_dict[f"{self.non_lin.__name__}_{i}"] = self.non_lin()
+        for i, _ in enumerate(self.hidden_units[1:], start=1):
+            layer_dict[f'linear_{i}'] = nn.Linear(self.hidden_units[i - 1], self.hidden_units[i])
+            layer_dict[f'{self.non_lin.__name__}_{i}'] = self.non_lin()
 
         return layer_dict
 
     def __repr__(self):
-        txt = f"{DenseBlock.__name__}({self.non_lin.__name__})"
-        txt += "\n\t" + f"({self.input_units}->" + "->".join([f"{h}" for h in self.hidden_units]) + ")"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt = f'{DenseBlock.__name__}({self.non_lin.__name__})'
+        txt += '\n\t' + f'({self.input_units}->' + '->'.join([f'{h}' for h in self.hidden_units]) + ')'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

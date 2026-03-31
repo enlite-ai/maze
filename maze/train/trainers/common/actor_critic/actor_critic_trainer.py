@@ -304,7 +304,7 @@ class ActorCritic(Trainer, ABC):
         action_keys = list(sampled_action.keys())
         actions_dict_list = []
         for j in range(len(sampled_action[action_keys[0]])):
-            action_dict = dict()
+            action_dict = {}
             for k in action_keys:
                 action_dict[k] = sampled_action[k][j]
             actions_dict_list.append(action_dict)

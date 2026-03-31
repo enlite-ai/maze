@@ -1,12 +1,15 @@
-""" Contains shape normalization blocks. """
-from abc import ABC, abstractmethod
-from typing import Dict, Union, List, Tuple, Sequence
+"""Contains shape normalization blocks."""
 
-import numpy as np
-import torch
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import numpy as np
+import torch
 
 
 class ShapeNormalizationBlock(PerceptionBlock, ABC):
@@ -22,15 +25,20 @@ class ShapeNormalizationBlock(PerceptionBlock, ABC):
     :param out_num_dims: Required number of dimensions for corresponding output.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 in_num_dims: Union[int, List[int]], out_num_dims: Union[int, List[int]]):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        in_num_dims: int | list[int],
+        out_num_dims: int | list[int],
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
-        self.in_num_dims: List[int] = in_num_dims if isinstance(in_num_dims, List) else [in_num_dims]
-        self.out_num_dims: List[int] = out_num_dims if isinstance(out_num_dims, List) else [out_num_dims]
+        self.in_num_dims: list[int] = in_num_dims if isinstance(in_num_dims, list) else [in_num_dims]
+        self.out_num_dims: list[int] = out_num_dims if isinstance(out_num_dims, list) else [out_num_dims]
 
     @abstractmethod
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Shape normalized forward pass called in the actual forward pass of this block.
 
         :param block_input: The block's shape normalized input dictionary.
@@ -38,30 +46,27 @@ class ShapeNormalizationBlock(PerceptionBlock, ABC):
         """
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
-        """
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         # normalize input tensors
         normalized_block_input, original_in_batch_shape = self._normalize(block_input)
 
         # forward pass on shape normalized input
-        out_dict: Dict[str, torch.Tensor] = self.normalized_forward(normalized_block_input)
+        out_dict: dict[str, torch.Tensor] = self.normalized_forward(normalized_block_input)
 
         # reshape output tensors to original batch dimensions
         return self._de_normalize(out_dict, original_in_batch_shape)
 
-    def _normalize(self, tensor_dict: Dict[str, torch.Tensor]) -> Tuple[Dict[str, torch.Tensor], Sequence[int]]:
-        """Normalizes the tensor dictionary to the requested dimensions.
-        """
+    def _normalize(self, tensor_dict: dict[str, torch.Tensor]) -> tuple[dict[str, torch.Tensor], Sequence[int]]:
+        """Normalizes the tensor dictionary to the requested dimensions."""
 
         # prepare all input tensors
-        normalized_block_input = dict()
-        original_shapes = dict()
+        normalized_block_input = {}
+        original_shapes = {}
         original_in_batch_shapes = []
 
         for i, in_key in enumerate(self.in_keys):
-
             # collect original input shape
             in_tensor = tensor_dict[in_key]
             original_shapes[in_key] = list(in_tensor.shape)
@@ -83,15 +88,15 @@ class ShapeNormalizationBlock(PerceptionBlock, ABC):
             normalized_block_input[in_key] = in_tensor
             original_in_batch_shapes.append(original_batch_shape)
 
-        assert all([original_in_batch_shapes[0] == b for b in original_in_batch_shapes[1:]]), \
+        assert all([original_in_batch_shapes[0] == b for b in original_in_batch_shapes[1:]]), (
             'All inputs should have the same batch dimension'
+        )
         original_in_batch_shape = original_in_batch_shapes[0]
 
         return normalized_block_input, original_in_batch_shape
 
-    def _de_normalize(self, tensor_dict: Dict[str, torch.Tensor], original_in_batch_shape: Sequence[int]):
-        """De-normalizes the tensor dictionary to the original batch dimensions.
-        """
+    def _de_normalize(self, tensor_dict: dict[str, torch.Tensor], original_in_batch_shape: Sequence[int]):
+        """De-normalizes the tensor dictionary to the original batch dimensions."""
 
         # extract common batch dimension of input tensors
         original_batch_shape = list(original_in_batch_shape)

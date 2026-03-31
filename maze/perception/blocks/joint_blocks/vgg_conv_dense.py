@@ -1,14 +1,17 @@
-""" Contains a joint vgg convolution, flattening dense perception block. """
-from typing import Union, List, Sequence, Dict
+"""Contains a joint vgg convolution, flattening dense perception block."""
 
-import torch
-from torch import nn as nn
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
 from maze.perception.blocks.feed_forward.dense import DenseBlock
 from maze.perception.blocks.feed_forward.vgg_conv import VGGConvolutionBlock
 from maze.perception.blocks.general.flatten import FlattenBlock
+
+import torch
+from torch import nn as nn
 
 
 class VGGConvolutionDenseBlock(PerceptionBlock):
@@ -28,35 +31,46 @@ class VGGConvolutionDenseBlock(PerceptionBlock):
     :param use_batch_norm_conv: Whether to apply batch normalization after convolution.
     """
 
-    def __init__(self,
-                 in_keys: Union[str, List[str]],
-                 out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 hidden_channels: List[int],
-                 hidden_units: List[int],
-                 non_lin: Union[str, type(nn.Module)],
-                 use_batch_norm_conv: bool):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        hidden_channels: list[int],
+        hidden_units: list[int],
+        non_lin: str | type(nn.Module),
+        use_batch_norm_conv: bool,
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
-        out_keys_conv = [f"{k}_conv" for k in self.out_keys]
-        self.conv_block = VGGConvolutionBlock(in_keys=in_keys, out_keys=out_keys_conv, in_shapes=in_shapes,
-                                              hidden_channels=hidden_channels, non_lin=non_lin,
-                                              use_batch_norm=use_batch_norm_conv)
+        out_keys_conv = [f'{k}_conv' for k in self.out_keys]
+        self.conv_block = VGGConvolutionBlock(
+            in_keys=in_keys,
+            out_keys=out_keys_conv,
+            in_shapes=in_shapes,
+            hidden_channels=hidden_channels,
+            non_lin=non_lin,
+            use_batch_norm=use_batch_norm_conv,
+        )
 
-        out_keys_flatten = [f"{k}_flat" for k in out_keys_conv] if len(hidden_units) > 0 else out_keys
-        self.flatten_block = FlattenBlock(in_keys=out_keys_conv, out_keys=out_keys_flatten,
-                                          in_shapes=self.conv_block.out_shapes(), num_flatten_dims=3)
+        out_keys_flatten = [f'{k}_flat' for k in out_keys_conv] if len(hidden_units) > 0 else out_keys
+        self.flatten_block = FlattenBlock(
+            in_keys=out_keys_conv, out_keys=out_keys_flatten, in_shapes=self.conv_block.out_shapes(), num_flatten_dims=3
+        )
 
         self.dense_block = None
         if len(hidden_units) > 0:
-            self.dense_block = DenseBlock(in_keys=out_keys_flatten, out_keys=out_keys,
-                                          in_shapes=self.flatten_block.out_shapes(),
-                                          hidden_units=hidden_units, non_lin=non_lin)
+            self.dense_block = DenseBlock(
+                in_keys=out_keys_flatten,
+                out_keys=out_keys,
+                in_shapes=self.flatten_block.out_shapes(),
+                hidden_units=hidden_units,
+                non_lin=non_lin,
+            )
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         # forward pass of submodules
         block_output = self.conv_block(block_input)
@@ -67,8 +81,8 @@ class VGGConvolutionDenseBlock(PerceptionBlock):
         return block_output
 
     def __repr__(self):
-        txt = f"{VGGConvolutionDenseBlock.__name__}:"
-        txt += f"\n\n{str(self.conv_block)}"
-        txt += f"\n\n{str(self.flatten_block)}"
-        txt += f"\n\n{str(self.dense_block)}"
+        txt = f'{VGGConvolutionDenseBlock.__name__}:'
+        txt += f'\n\n{str(self.conv_block)}'
+        txt += f'\n\n{str(self.flatten_block)}'
+        txt += f'\n\n{str(self.dense_block)}'
         return txt

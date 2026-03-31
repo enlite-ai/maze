@@ -6,7 +6,7 @@ import numpy as np
 
 def build_dict_obs_space():
     """build dictionary observation space"""
-    space_dict = dict()
+    space_dict = {}
     space_dict["features"] = gym.spaces.Box(low=0.0, high=1.0, shape=(24,), dtype=np.float64)
     space_dict["stacked_features"] = gym.spaces.Box(low=0.0, high=1.0, shape=(100, 24, 2), dtype=np.float64)
     space_dict["feature_series"] = gym.spaces.Box(low=0.0, high=1.0, shape=(64, 24), dtype=np.float64)

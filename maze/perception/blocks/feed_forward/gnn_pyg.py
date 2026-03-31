@@ -1,15 +1,18 @@
-""" Contains a gnn block that uses Pytorch Geometric to support different types of GNNs"""
+"""Contains a gnn block that uses Pytorch Geometric to support different types of GNNs"""
+
+from __future__ import annotations
+
 from collections import OrderedDict
-from typing import Sequence, Callable, Any, Union
-
-import torch
-from torch import nn as nn
-
-from torch_geometric.nn import GCNConv, SAGEConv, GraphConv, GATConv
+from collections.abc import Callable, Sequence
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
+
+import torch
+from torch import nn as nn
+from torch_geometric.nn import GATConv, GCNConv, GraphConv, SAGEConv
 
 
 def _dummy_edge_index_factory(shape: Sequence[int], n_nodes: int) -> Callable[[], torch.Tensor]:
@@ -20,6 +23,7 @@ def _dummy_edge_index_factory(shape: Sequence[int], n_nodes: int) -> Callable[[]
     :param n_nodes: The number of nodes in the edge tensor
     :return: A function that creates a dummy edge index tensor
     """
+
     def create_dummy_edge_index_tensor() -> torch.Tensor:
         """
         Create a dummy edge index tensor
@@ -31,6 +35,7 @@ def _dummy_edge_index_factory(shape: Sequence[int], n_nodes: int) -> Callable[[]
 
 
 SUPPORTED_GNNS = ['gcn', 'sage', 'graph_conv', 'gat']
+
 
 class GNNLayerPyG(nn.Module):
     """Simple graph neural network layer.
@@ -56,30 +61,14 @@ class GNNLayerPyG(nn.Module):
         self.gnn_kwargs = gnn_kwargs if gnn_kwargs is not None else {}
 
         if self.gnn_type == 'gcn':
-            self.gnn_layer = GCNConv(
-                in_channels=in_features,
-                out_channels=out_features,
-                **self.gnn_kwargs
-            )
+            self.gnn_layer = GCNConv(in_channels=in_features, out_channels=out_features, **self.gnn_kwargs)
         elif self.gnn_type == 'sage':
-            self.gnn_layer = SAGEConv(
-                in_channels=in_features,
-                out_channels=out_features,
-                **self.gnn_kwargs
-            )
+            self.gnn_layer = SAGEConv(in_channels=in_features, out_channels=out_features, **self.gnn_kwargs)
         elif self.gnn_type == 'graph_conv':
-            self.gnn_layer = GraphConv(
-                in_channels=in_features,
-                out_channels=out_features,
-                **self.gnn_kwargs
-            )
+            self.gnn_layer = GraphConv(in_channels=in_features, out_channels=out_features, **self.gnn_kwargs)
         elif self.gnn_type == 'gat':
             # For GAT with edge attributes, set "edge_dim" in gnn_kwargs.
-            self.gnn_layer = GATConv(
-                in_channels=in_features,
-                out_channels=out_features,
-                **self.gnn_kwargs
-            )
+            self.gnn_layer = GATConv(in_channels=in_features, out_channels=out_features, **self.gnn_kwargs)
         else:
             raise ValueError(f'Unsupported GNN type: {gnn_type}. Supported GNNs are {SUPPORTED_GNNS}')
 
@@ -89,7 +78,7 @@ class GNNLayerPyG(nn.Module):
         Compute the forward pass.
 
         :param x: Node feature matrix, [n_nodes, in_features] or [B, n_nodes, in_features].
-        :param edge_index: The graph connectivity in COO format, [2, E] or [B, 2, E].
+        :param edge_index: The graph connectivity in COUP format, [2, E] or [B, 2, E].
         :param edge_attr: The edge attributes, [E, D] or [B, E, D]. D is the edge attribute dimension.
         :return: Output tensor.
         """
@@ -136,11 +125,13 @@ class GNNLayerPyG(nn.Module):
         elif self.gnn_type == 'gat':
             # GATConv can use edge_attr if "edge_dim" is provided in gnn_kwargs
             if self.gnn_layer.edge_dim is not None:
-                assert edge_attr_flat.shape[-1] == self.gnn_layer.edge_dim, \
-                    f'The edge feature size: {edge_attr_flat.shape[-1]} must match the edge_dim: {self.gnn_layer.edge_dim}'
+                assert edge_attr_flat.shape[-1] == self.gnn_layer.edge_dim, (
+                    f'The edge feature size: {edge_attr_flat.shape[-1]} '
+                    f'must match the edge_dim: {self.gnn_layer.edge_dim}'
+                )
             out_flat = self.gnn_layer(x_flat, edge_index_flat, edge_attr=edge_attr_flat)
         else:
-            raise ValueError(f"Unsupported GNN type: {self.gnn_type}")
+            raise ValueError(f'Unsupported GNN type: {self.gnn_type}')
 
         # Reshape back to (B, n_nodes, out_features)
         out = out_flat.view(batch_size, n_nodes, -1)
@@ -174,28 +165,30 @@ class GNNBlockPyG(ShapeNormalizationBlock):
         self,
         in_keys: str | list[str],
         out_keys: str | list[str],
-        in_shapes: Union[Sequence[int], list[Sequence[int]]],
+        in_shapes: Sequence[int] | list[Sequence[int]],
         hidden_features: list[int],
         non_lin: str | nn.Module,
         gnn_type: str,
         gnn_kwargs: dict[str | Any, None],
     ):
-
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3]*3, out_num_dims=3)
+        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=[3] * 3, out_num_dims=3)
 
         self.gnn_type = gnn_type
         self.gnn_kwargs = gnn_kwargs if gnn_kwargs is not None else {}
 
-        assert len(self.in_keys) == 3, \
-            f"Expected three input keys, got {len(self.in_keys)}: {self.in_keys}"
+        assert len(self.in_keys) == 3, f'Expected three input keys, got {len(self.in_keys)}: {self.in_keys}'
 
         # Specify dummy dict creation function for edge_index:
         self.dummy_dict_creators[1] = _dummy_edge_index_factory(self.in_shapes[1], self.in_shapes[0][0])
 
         self.input_features = self.in_shapes[0][-1]
 
-        if (gnn_type == 'gat' and gnn_kwargs is not None and 'heads' in gnn_kwargs
-                and ('concat' not in gnn_kwargs or gnn_kwargs['concat'])):
+        if (
+            gnn_type == 'gat'
+            and gnn_kwargs is not None
+            and 'heads' in gnn_kwargs
+            and ('concat' not in gnn_kwargs or gnn_kwargs['concat'])
+        ):
             self.output_features = hidden_features[-1] * gnn_kwargs['heads']
         else:
             self.output_features = hidden_features[-1]
@@ -220,11 +213,13 @@ class GNNBlockPyG(ShapeNormalizationBlock):
         assert edge_index.ndim == self.in_num_dims[1]
         assert edge_attr.ndim == self.in_num_dims[2]
 
-        assert node_feat.shape[-1] == self.input_features, \
-            f"Mismatch in node feature dimension: {node_feat.shape[-1]} vs expected {self.input_features}"
-        assert edge_index.shape[-1] == edge_attr.shape[-2], \
-            (f"Number of edges (E) must be consistent between edge_index: {edge_index.shape[-1]} "
-             f"and edge_attr: {edge_attr.shape[-2]}")
+        assert node_feat.shape[-1] == self.input_features, (
+            f'Mismatch in node feature dimension: {node_feat.shape[-1]} vs expected {self.input_features}'
+        )
+        assert edge_index.shape[-1] == edge_attr.shape[-2], (
+            f'Number of edges (E) must be consistent between edge_index: {edge_index.shape[-1]} '
+            f'and edge_attr: {edge_attr.shape[-2]}'
+        )
 
         # Forward pass
         x = node_feat
@@ -235,10 +230,12 @@ class GNNBlockPyG(ShapeNormalizationBlock):
                 x = layer(x)
 
         # check output tensor
-        assert x.ndim == self.out_num_dims[0], \
-            f"The output number of dimensions {x.ndim} must be {self.out_num_dims[0]}"
-        assert x.shape[-1] == self.output_features, \
-            f"The output feature dimension size {x.shape[-1]} must be {self.output_features}"
+        assert x.ndim == self.out_num_dims[0], (
+            f'The output number of dimensions {x.ndim} must be {self.out_num_dims[0]}'
+        )
+        assert x.shape[-1] == self.output_features, (
+            f'The output feature dimension size {x.shape[-1]} must be {self.output_features}'
+        )
 
         return {self.out_keys[0]: x}
 
@@ -250,20 +247,19 @@ class GNNBlockPyG(ShapeNormalizationBlock):
         in_feats = self.input_features
 
         for layer_idx, out_feats in enumerate(self.hidden_features):
-
             layer_dict[f'{self.gnn_type}_{layer_idx}'] = GNNLayerPyG(
-                in_features=in_feats,
-                out_features=out_feats,
-                gnn_type=self.gnn_type,
-                gnn_kwargs=self.gnn_kwargs
+                in_features=in_feats, out_features=out_feats, gnn_type=self.gnn_type, gnn_kwargs=self.gnn_kwargs
             )
             # Insert activation function after each hidden layer except the last
             if layer_idx < len(self.hidden_features) - 1:
                 layer_name = f'activation_{layer_idx}_{self.non_lin.__name__}'
                 layer_dict[layer_name] = self.non_lin()
 
-            if self.gnn_type == 'gat' and 'heads' in self.gnn_kwargs and \
-                    ('concat' not in self.gnn_kwargs or self.gnn_kwargs['concat']):
+            if (
+                self.gnn_type == 'gat'
+                and 'heads' in self.gnn_kwargs
+                and ('concat' not in self.gnn_kwargs or self.gnn_kwargs['concat'])
+            ):
                 in_feats = out_feats * self.gnn_kwargs['heads']
             else:
                 in_feats = out_feats
@@ -272,10 +268,10 @@ class GNNBlockPyG(ShapeNormalizationBlock):
 
     def __repr__(self):
         txt = (
-            f"{self.__class__.__name__}({self.non_lin.__name__})\n"
-            f"{self.gnn_type}\n"
-            f"\t({self.input_features}->" + "->".join([f"{h}" for h in self.hidden_features]) + ")\n"
+            f'{self.__class__.__name__}({self.non_lin.__name__})\n'
+            f'{self.gnn_type}\n'
+            f'\t({self.input_features}->' + '->'.join([f'{h}' for h in self.hidden_features]) + ')\n'
         )
-        txt += f"\n\tGNN kwargs: {self.gnn_kwargs}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tGNN kwargs: {self.gnn_kwargs}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

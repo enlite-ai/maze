@@ -1,10 +1,14 @@
-""" Contains a TorchModelBlock """
-from typing import Union, List, Sequence, Dict
+"""Contains a TorchModelBlock"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from maze.core.annotations import override
+from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 import torch
 import torch.nn as nn
-from maze.core.annotations import override
-from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
 
 
 class TorchModelBlock(ShapeNormalizationBlock):
@@ -19,18 +23,24 @@ class TorchModelBlock(ShapeNormalizationBlock):
                 and must return a Tensor output dict)
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 in_num_dims: Union[int, List[int]], out_num_dims: Union[int, List[int]], net: nn.Module,):
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims,
-                         out_num_dims=out_num_dims)
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        in_num_dims: int | list[int],
+        out_num_dims: int | list[int],
+        net: nn.Module,
+    ):
+        super().__init__(
+            in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_num_dims, out_num_dims=out_num_dims
+        )
 
         self.net = net
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         for i, in_key in enumerate(self.in_keys):
             assert block_input[in_key].ndim == self.in_num_dims[i]
@@ -44,6 +54,6 @@ class TorchModelBlock(ShapeNormalizationBlock):
         return block_output
 
     def __repr__(self):
-        txt = f"{TorchModelBlock.__name__}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt = f'{TorchModelBlock.__name__}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

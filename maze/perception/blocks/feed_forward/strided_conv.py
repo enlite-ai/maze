@@ -1,13 +1,16 @@
-""" Contains convolution perception blocks. """
-from collections import OrderedDict
-from typing import Union, List, Sequence, Dict, Tuple, Optional
+"""Contains convolution perception blocks."""
 
-import torch
-from torch import nn as nn
+from __future__ import annotations
+
+from collections import OrderedDict
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.core.utils.factory import Factory
 from maze.perception.blocks.shape_normalization import ShapeNormalizationBlock
+
+import torch
+from torch import nn as nn
 from torch.nn import ZeroPad2d
 
 
@@ -30,19 +33,20 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
     :param padding_mode: 'zeros', 'reflect', 'replicate' or 'circular'.
     """
 
-    def __init__(self,
-                 in_keys: Union[str, List[str]],
-                 out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 hidden_channels: List[int],
-                 hidden_kernels: List[Union[int, Tuple[int, ...]]],
-                 non_lin: Union[str, type(nn.Module)],
-                 convolution_dimension: int,
-                 hidden_strides: List[Union[int, Tuple[int, ...]]] | None,
-                 hidden_dilations: List[Union[int, Tuple[int, ...]]] | None,
-                 hidden_padding: List[Union[int, Tuple[int, ...]]] | None,
-                 padding_mode: str | None):
-
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        hidden_channels: list[int],
+        hidden_kernels: list[int | tuple[int, ...]],
+        non_lin: str | type(nn.Module),
+        convolution_dimension: int,
+        hidden_strides: list[int | tuple[int, ...]] | None,
+        hidden_dilations: list[int | tuple[int, ...]] | None,
+        hidden_padding: list[int | tuple[int, ...]] | None,
+        padding_mode: str | None,
+    ):
         assert convolution_dimension in [1, 2, 3]
         if convolution_dimension == 1:
             self.convolution_nn = nn.Conv1d
@@ -60,8 +64,13 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
             for hk in hidden_kernels:
                 assert isinstance(hk, int) or len(hk) == 3
 
-        super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes, in_num_dims=in_out_num_dims,
-                         out_num_dims=in_out_num_dims)
+        super().__init__(
+            in_keys=in_keys,
+            out_keys=out_keys,
+            in_shapes=in_shapes,
+            in_num_dims=in_out_num_dims,
+            out_num_dims=in_out_num_dims,
+        )
 
         self.convolutional_dim = convolution_dimension
         self.input_channels = self.in_shapes[0][-(in_out_num_dims - 1)]
@@ -91,15 +100,15 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
         self.net = nn.Sequential(layer_dict)
 
     @override(ShapeNormalizationBlock)
-    def normalized_forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface
-        """
+    def normalized_forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.shape_normalization.ShapeNormalizationBlock` interface"""
 
         # check input tensor
         input_tensor = block_input[self.in_keys[0]]
         assert input_tensor.ndim == self.in_num_dims[0]
-        assert input_tensor.shape[1] == self.input_channels, f'input_tensor.shape[1] {input_tensor.shape[1]}, ' \
-                                                             f'self.input_channels {self.input_channels}'
+        assert input_tensor.shape[1] == self.input_channels, (
+            f'input_tensor.shape[1] {input_tensor.shape[1]}, self.input_channels {self.input_channels}'
+        )
         # forward pass
         output_tensor = self.net(input_tensor)
 
@@ -119,46 +128,53 @@ class StridedConvolutionBlock(ShapeNormalizationBlock):
         layer_dict = OrderedDict()
 
         # treat first layer
-        layer_dict["conv_0"] = self.convolution_nn(in_channels=self.input_channels,
-                                                   out_channels=self.hidden_channels[0],
-                                                   kernel_size=self.hidden_kernels[0],
-                                                   stride=self.hidden_strides[0],
-                                                   padding=self.hidden_padding[0],
-                                                   dilation=self.hidden_dilations[0],
-                                                   padding_mode=self.padding_mode)
-        layer_dict[f"{self.non_lin.__name__}_0"] = self.non_lin()
+        layer_dict['conv_0'] = self.convolution_nn(
+            in_channels=self.input_channels,
+            out_channels=self.hidden_channels[0],
+            kernel_size=self.hidden_kernels[0],
+            stride=self.hidden_strides[0],
+            padding=self.hidden_padding[0],
+            dilation=self.hidden_dilations[0],
+            padding_mode=self.padding_mode,
+        )
+        layer_dict[f'{self.non_lin.__name__}_0'] = self.non_lin()
 
         # treat remaining layers
         for ii in range(1, len(self.hidden_channels)):
             padding_to_use = self.hidden_padding[ii]
-            if isinstance(self.hidden_padding[ii], list) and len(self.hidden_padding[ii]) == 4 and \
-                    self.padding_mode == 'zeros':
+            if (
+                isinstance(self.hidden_padding[ii], list)
+                and len(self.hidden_padding[ii]) == 4
+                and self.padding_mode == 'zeros'
+            ):
                 layer_dict[f'padding_{ii}'] = ZeroPad2d(self.hidden_padding[ii])
                 padding_to_use = 0
 
-            layer_dict[f"conv_{ii}"] = self.convolution_nn(in_channels=self.hidden_channels[ii - 1],
-                                                           out_channels=self.hidden_channels[ii],
-                                                           kernel_size=self.hidden_kernels[ii],
-                                                           stride=self.hidden_strides[ii],
-                                                           padding=padding_to_use,
-                                                           dilation=self.hidden_dilations[ii],
-                                                           padding_mode=self.padding_mode)
-            layer_dict[f"{self.non_lin.__name__}_{ii}"] = self.non_lin()
+            layer_dict[f'conv_{ii}'] = self.convolution_nn(
+                in_channels=self.hidden_channels[ii - 1],
+                out_channels=self.hidden_channels[ii],
+                kernel_size=self.hidden_kernels[ii],
+                stride=self.hidden_strides[ii],
+                padding=padding_to_use,
+                dilation=self.hidden_dilations[ii],
+                padding_mode=self.padding_mode,
+            )
+            layer_dict[f'{self.non_lin.__name__}_{ii}'] = self.non_lin()
 
         return layer_dict
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__.replace('Conv', f'-{self.convolutional_dim}D-Conv')}({self.non_lin.__name__})"
-        txt += f"\n\tFeature Maps: {self.input_channels}->" + "->".join([f"{h}" for h in self.hidden_channels])
-        txt += f"\n\tKernel Sizes : " + '->'.join([f'{h}' for h in self.hidden_kernels])
+        txt = f'{self.__class__.__name__.replace("Conv", f"-{self.convolutional_dim}D-Conv")}({self.non_lin.__name__})'
+        txt += f'\n\tFeature Maps: {self.input_channels}->' + '->'.join([f'{h}' for h in self.hidden_channels])
+        txt += '\n\tKernel Sizes : ' + '->'.join([f'{h}' for h in self.hidden_kernels])
         num_layers = len(self.hidden_kernels)
         if self.hidden_strides != [1 for _ in range(num_layers)]:
-            txt += f"\n\tStrides: " + '->'.join([f'{h}' for h in self.hidden_strides])
+            txt += '\n\tStrides: ' + '->'.join([f'{h}' for h in self.hidden_strides])
         if self.hidden_padding != [1 for _ in range(num_layers)]:
-            txt += f"\n\tPadding: " + '->'.join([f'{h}' for h in self.hidden_padding])
+            txt += '\n\tPadding: ' + '->'.join([f'{h}' for h in self.hidden_padding])
         if self.hidden_dilations != [1 for _ in range(num_layers)]:
-            txt += f"\n\tDilation: " + '->'.join([f'{h}' for h in self.hidden_dilations])
+            txt += '\n\tDilation: ' + '->'.join([f'{h}' for h in self.hidden_dilations])
         if self.padding_mode != 'zeros':
-            txt += f"\n\tPadding Mode: {self.padding_mode}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+            txt += f'\n\tPadding Mode: {self.padding_mode}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

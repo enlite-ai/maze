@@ -1,10 +1,13 @@
-""" Contains a RepeatToMatch block. """
-from typing import Union, List, Sequence, Dict
+"""Contains a RepeatToMatch block."""
 
-import torch
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import torch
 
 
 class RepeatToMatchBlock(PerceptionBlock):
@@ -22,8 +25,9 @@ class RepeatToMatchBlock(PerceptionBlock):
     :param repeat_at_idx: Specify the dimension that should be matched between the tensors.
     """
 
-    def __init__(self, in_keys: List[str], out_keys: Union[str, List[str]],
-                 in_shapes: List[Sequence[int]], repeat_at_idx: int):
+    def __init__(
+        self, in_keys: list[str], out_keys: str | list[str], in_shapes: list[Sequence[int]], repeat_at_idx: int
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
         assert isinstance(in_keys, list), f'in_keys should be a list not {type(in_keys)}'
@@ -37,7 +41,7 @@ class RepeatToMatchBlock(PerceptionBlock):
         self.repeat_at_idx = repeat_at_idx
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass, repeat the first tensor to match the second one in the given dimension
 
         :param block_input: The block's input dictionary.
@@ -46,9 +50,11 @@ class RepeatToMatchBlock(PerceptionBlock):
 
         # check input tensor
         tensor_to_repeat = block_input[self.in_keys[0]]
-        assert tensor_to_repeat.shape[self.repeat_at_idx] == 1, f'tensor_0.shape[self.repat_at_idx] should be 1, but ' \
-                                                                f'got {tensor_to_repeat.shape[self.repeat_at_idx]} (' \
-                                                                f'full shape: {tensor_to_repeat.shape})'
+        assert tensor_to_repeat.shape[self.repeat_at_idx] == 1, (
+            f'tensor_0.shape[self.repat_at_idx] should be 1, but '
+            f'got {tensor_to_repeat.shape[self.repeat_at_idx]} ('
+            f'full shape: {tensor_to_repeat.shape})'
+        )
 
         num_of_repeats = block_input[self.in_keys[1]].shape[self.repeat_at_idx]
 
@@ -61,7 +67,7 @@ class RepeatToMatchBlock(PerceptionBlock):
         return {self.out_keys[0]: output_tensor}
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
-        txt += f"\n\trepeat_at_idx: {self.repeat_at_idx}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt = f'{self.__class__.__name__}'
+        txt += f'\n\trepeat_at_idx: {self.repeat_at_idx}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

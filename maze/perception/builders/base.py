@@ -1,13 +1,17 @@
-""" Contains interfaces for perception model builders. """
-from abc import abstractmethod, ABC
-from typing import Dict, Union, Any, Optional, List, Iterable
+"""Contains interfaces for perception model builders."""
 
-import numpy as np
-from gymnasium import spaces
-from omegaconf import ListConfig, DictConfig
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from typing import Any
 
 from maze.core.env.structured_env import StepKeyType
 from maze.perception.blocks.inference import InferenceBlock
+
+import numpy as np
+from gymnasium import spaces
+from omegaconf import DictConfig, ListConfig
 
 
 class BaseModelBuilder(ABC):
@@ -24,9 +28,12 @@ class BaseModelBuilder(ABC):
         specify the input keys to the critic network in this step.
     """
 
-    def __init__(self, modality_config: Dict[str, Union[str, Dict[str, Any]]],
-                 observation_modality_mapping: Dict[str, str],
-                 shared_embedding_keys: Union[List[str], Dict[str, List[str]]] | None):
+    def __init__(
+        self,
+        modality_config: dict[str, str | dict[str, Any]],
+        observation_modality_mapping: dict[str, str],
+        shared_embedding_keys: list[str] | dict[str, list[str]] | None,
+    ):
         self.modality_config = modality_config
         self.observation_modality_mapping = observation_modality_mapping
 
@@ -40,16 +47,19 @@ class BaseModelBuilder(ABC):
         :param step_keys: the step keys of the environment steps
         """
         # Init shared embedding keys
-        self.shared_embedding_keys = list() if self.shared_embedding_keys is None else self.shared_embedding_keys
+        self.shared_embedding_keys = [] if self.shared_embedding_keys is None else self.shared_embedding_keys
         if isinstance(self.shared_embedding_keys, (list, ListConfig)):
             self.shared_embedding_keys = {step_key: list(self.shared_embedding_keys) for step_key in step_keys}
         else:
-            assert isinstance(self.shared_embedding_keys, (dict, DictConfig)), f'type: ' \
-                                                                                f'{type(self.shared_embedding_keys)}'
-            self.shared_embedding_keys = {step_key: list(shared_keys) for step_key, shared_keys in
-                                          self.shared_embedding_keys.items()}
-        self.use_shared_embedding: Dict[StepKeyType, bool] = {step_key: len(shared_keys) > 0 for step_key, shared_keys
-                                                              in self.shared_embedding_keys.items()}
+            assert isinstance(self.shared_embedding_keys, (dict, DictConfig)), (
+                f'type: {type(self.shared_embedding_keys)}'
+            )
+            self.shared_embedding_keys = {
+                step_key: list(shared_keys) for step_key, shared_keys in self.shared_embedding_keys.items()
+            }
+        self.use_shared_embedding: dict[StepKeyType, bool] = {
+            step_key: len(shared_keys) > 0 for step_key, shared_keys in self.shared_embedding_keys.items()
+        }
 
     @classmethod
     def to_recurrent_gym_space(cls, observation_space: spaces.Dict, rnn_steps: int) -> spaces.Dict:
@@ -61,7 +71,7 @@ class BaseModelBuilder(ABC):
         """
         assert rnn_steps > 1
 
-        rnn_dict = dict()
+        rnn_dict = {}
         for key, space in observation_space.spaces.items():
             assert isinstance(space, spaces.Box)
             rnn_low = np.repeat(space.low[np.newaxis], axis=0, repeats=rnn_steps)

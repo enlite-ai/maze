@@ -1,12 +1,15 @@
-""" Contains a Functional block. """
+"""Contains a Functional block."""
+
+from __future__ import annotations
+
 import inspect
 import types
-from typing import Union, List, Sequence, Dict, Callable
-
-import torch
+from collections.abc import Callable, Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import torch
 
 
 class FunctionalBlock(PerceptionBlock):
@@ -21,15 +24,18 @@ class FunctionalBlock(PerceptionBlock):
         tensors.
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 func: Callable[[Union[torch.Tensor, Sequence[torch.Tensor]]],
-                                Union[torch.Tensor, Sequence[torch.Tensor]]]):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        func: Callable[[torch.Tensor | Sequence[torch.Tensor]], torch.Tensor | Sequence[torch.Tensor]],
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
         self.func = func
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass through the block, applying the callable to the input.
 
         :param block_input: The block's input dictionary.
@@ -43,9 +49,9 @@ class FunctionalBlock(PerceptionBlock):
         else:
             output_tensors = self.func(list(input_tensors.values())[0])
 
-        out = dict()
+        out = {}
         if len(self.out_keys) > 1:
-            for key, value in zip(self.out_keys, output_tensors):
+            for key, value in zip(self.out_keys, output_tensors, strict=False):
                 out[key] = value
         else:
             out[self.out_keys[0]] = output_tensors
@@ -53,7 +59,7 @@ class FunctionalBlock(PerceptionBlock):
         return out
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
+        txt = f'{self.__class__.__name__}'
         if isinstance(self.func, types.BuiltinFunctionType):
             func_string = self.func.__name__
         else:
@@ -67,6 +73,6 @@ class FunctionalBlock(PerceptionBlock):
         if 'def ' in func_string and '\n' in func_string:
             func_string = func_string.split('def ')[-1].split(':')[0]
 
-        txt += f"\n\t := {func_string}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\t := {func_string}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

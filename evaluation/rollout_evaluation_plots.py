@@ -106,7 +106,7 @@ def parse_experiments(experiments: List[str]) -> Dict[str, Path]:
                         even ones paths to event log dirs).
     :return: Dictionary in the format { experiment_name: event_log_dir_path }
     """
-    event_log_dirs = dict()
+    event_log_dirs = {}
     assert len(experiments) % 2 == 0, "experiments argument is wrong!"
     n_experiments = len(experiments) // 2
     for i_exp in range(n_experiments):

@@ -36,7 +36,7 @@ def test_pubsub_topic():
 
     record = subscriber.events[0]
     assert record.interface_method == DummyInterface.event1
-    assert record.attributes == dict()
+    assert record.attributes == {}
 
     record = subscriber.events[1]
     assert record.interface_method == DummyInterface.event2
@@ -59,7 +59,7 @@ def test_pubsub_multiple_publishers():
 
     record = subscriber.events[0]
     assert record.interface_method == DummyInterface.event1
-    assert record.attributes == dict()
+    assert record.attributes == {}
 
     record = subscriber.events[1]
     assert record.interface_method == DummyInterface.event2

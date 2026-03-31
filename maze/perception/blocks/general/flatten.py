@@ -1,10 +1,13 @@
-""" Contains a flattening block. """
-from typing import Union, List, Sequence, Dict
+"""Contains a flattening block."""
 
-import torch
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import torch
 
 
 class FlattenBlock(PerceptionBlock):
@@ -16,15 +19,19 @@ class FlattenBlock(PerceptionBlock):
     :param num_flatten_dims: the number of dimensions to flatten out (from right).
     """
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]], num_flatten_dims: int):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        num_flatten_dims: int,
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
         self.num_flatten_dims = num_flatten_dims
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface
-        """
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.perception.blocks.base.PerceptionBlock` interface"""
 
         # prepare input tensor
         input_tensor = block_input[self.in_keys[0]]
@@ -36,6 +43,6 @@ class FlattenBlock(PerceptionBlock):
 
     def __repr__(self):
         txt = FlattenBlock.__name__
-        txt += f"\n\tnum_flatten_dims: {self.num_flatten_dims}"
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tnum_flatten_dims: {self.num_flatten_dims}'
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt

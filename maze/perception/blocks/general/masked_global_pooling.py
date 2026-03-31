@@ -1,10 +1,13 @@
-""" Contains a Masked value mean block. """
-from typing import Union, List, Sequence, Dict
+"""Contains a Masked value mean block."""
 
-import torch
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.perception.blocks.base import PerceptionBlock
+
+import torch
 
 
 class MaskedGlobalPoolingBlock(PerceptionBlock):
@@ -19,8 +22,9 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
     """
 
     @classmethod
-    def _masked_sum(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: Union[int, Sequence[int]]) \
-            -> torch.Tensor:
+    def _masked_sum(
+        cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: int | Sequence[int]
+    ) -> torch.Tensor:
         """Compute sum of tensor along certain dimensions considering a given masking tensor.
 
         :param input_tensor: The input tensor.
@@ -40,8 +44,9 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         return masked_sum
 
     @classmethod
-    def _masked_mean(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: Union[int, Sequence[int]]) \
-            -> torch.Tensor:
+    def _masked_mean(
+        cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: int | Sequence[int]
+    ) -> torch.Tensor:
         """Compute mean of tensor along certain dimensions considering a given masking tensor.
 
         :param input_tensor: The input tensor.
@@ -64,8 +69,9 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         return masked_mean
 
     @classmethod
-    def _masked_max(cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: Union[int, Sequence[int]]) \
-            -> torch.Tensor:
+    def _masked_max(
+        cls, input_tensor: torch.Tensor, mask_tensor: torch.Tensor, dim: int | Sequence[int]
+    ) -> torch.Tensor:
         """Compute max of tensor along certain dimensions considering a given masking tensor.
 
         :param input_tensor: The input tensor.
@@ -85,36 +91,43 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         masked_max, _ = torch.max(zero_input_tensor, dim=dim)
         return masked_max
 
-    def __init__(self, in_keys: Union[str, List[str]], out_keys: Union[str, List[str]],
-                 in_shapes: Union[Sequence[int], List[Sequence[int]]],
-                 pooling_func: str, pooling_dim: Union[int, Sequence[int]]):
+    def __init__(
+        self,
+        in_keys: str | list[str],
+        out_keys: str | list[str],
+        in_shapes: Sequence[int] | list[Sequence[int]],
+        pooling_func: str,
+        pooling_dim: int | Sequence[int],
+    ):
         super().__init__(in_keys=in_keys, out_keys=out_keys, in_shapes=in_shapes)
 
         self._use_masking = len(self.in_keys) > 1
 
-        assert len(self.in_shapes[0]) >= 2, 'The first shape given to the block should be at least of dim 2, ' \
-                                            f'but got {in_shapes[0]}'
+        assert len(self.in_shapes[0]) >= 2, (
+            f'The first shape given to the block should be at least of dim 2, but got {in_shapes[0]}'
+        )
 
         if self._use_masking:
-            assert len(self.in_shapes[1]) >= 1, 'The second shape given to the block should be at least of dim 1 ' \
-                                                f'but got {in_shapes[1]}'
+            assert len(self.in_shapes[1]) >= 1, (
+                f'The second shape given to the block should be at least of dim 1 but got {in_shapes[1]}'
+            )
             assert all([self.in_shapes[0][idx] == self.in_shapes[1][idx] for idx in range(len(self.in_shapes[1]))])
 
         self._pooling_func_name = pooling_func
         # select appropriate pooling function
-        if self._pooling_func_name == "mean":
+        if self._pooling_func_name == 'mean':
             self.pooling_func = self._masked_mean
-        elif self._pooling_func_name == "sum":
+        elif self._pooling_func_name == 'sum':
             self.pooling_func = self._masked_sum
-        elif self._pooling_func_name == "max":
+        elif self._pooling_func_name == 'max':
             self.pooling_func = self._masked_max
         else:
-            raise ValueError(f"Pooling function {self._pooling_func_name} is not yet supported!")
+            raise ValueError(f'Pooling function {self._pooling_func_name} is not yet supported!')
 
         self.pooling_dim = pooling_dim
 
     @override(PerceptionBlock)
-    def forward(self, block_input: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, block_input: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass through the block, iterating over the first 2 dimensions and pooling the rest in dim=0.
 
         :param block_input: The block's input dictionary.
@@ -137,7 +150,7 @@ class MaskedGlobalPoolingBlock(PerceptionBlock):
         return {self.out_keys[0]: rep}
 
     def __repr__(self):
-        txt = f"{self.__class__.__name__}"
+        txt = f'{self.__class__.__name__}'
         txt += f'\n\tPooling func: {self._pooling_func_name}'
-        txt += f"\n\tOut Shapes: {self.out_shapes()}"
+        txt += f'\n\tOut Shapes: {self.out_shapes()}'
         return txt
