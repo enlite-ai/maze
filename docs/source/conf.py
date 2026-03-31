@@ -113,6 +113,12 @@ nitpick_ignore = [
     # Hydra data types
     ('py:class', 'hydra.core.utils.JobReturn'),
     ('py:class', 'hydra.TaskFunction'),
+    ('py:class', 'omegaconf.dictconfig.DictConfig'),
+    ('py:class', 'AlgorithmConfigType'),
+    ('py:class', 'T'),
+    ('py:class', 'pandas.core.frame.DataFrame'),
+    ('py:class', 'DictConfig'),
+    ('py:class', 'WrapperType'),
 ]
 nitpicky = True
 
@@ -121,7 +127,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'torch': ('https://pytorch.org/docs/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
-    'pandas': ('https://pandas.pydata.org/docs/', None),
+    'pandas': ('https://pandas.pydata.org/docs', None),
     'gymnasium': ('https://gymnasium.farama.org', None),
     'omegaconf': ('https://omegaconf.readthedocs.io/en/latest', None),
 }

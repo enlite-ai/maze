@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from maze.distributions.bernoulli import BernoulliProbabilityDistribution
-from maze.distributions.distribution import ProbabilityDistribution
 
 import numpy as np
-import pytest
 import torch
 from gymnasium import spaces
 

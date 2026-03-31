@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-import sys
 import logging
 import multiprocessing
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from maze.utils.process import Process
 
 from hydra import TaskFunction
 from hydra.core.config_store import ConfigStore
@@ -21,8 +23,6 @@ from hydra.core.utils import (
 )
 from hydra.plugins.launcher import Launcher
 from omegaconf import DictConfig, open_dict
-
-from maze.utils.process import Process
 
 logger = logging.getLogger(__name__)
 
