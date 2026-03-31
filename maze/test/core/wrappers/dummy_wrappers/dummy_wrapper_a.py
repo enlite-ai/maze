@@ -2,7 +2,7 @@
 Dummy wrappers for generic wrapper configuration's unit tests.
 """
 
-from typing import Union
+from __future__ import annotations
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.wrapper import Wrapper

@@ -1,4 +1,7 @@
 """Hydra plugin to register additional config packages in the search path."""
+
+from __future__ import annotations
+
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.plugins.search_path_plugin import SearchPathPlugin
 
@@ -13,6 +16,6 @@ class MazeTutorialSearchPathPlugin(SearchPathPlugin):
 
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
         """implement the SearchPathPlugin interface"""
-        search_path.append("project", "pkg://tutorial_maze_env.part03_maze_env.conf")
-        search_path.append("project", "pkg://tutorial_maze_env.part04_events.conf")
-        search_path.append("project", "pkg://tutorial_maze_env.part06_struct_env.conf")
+        search_path.append('project', 'pkg://tutorial_maze_env.part03_maze_env.conf')
+        search_path.append('project', 'pkg://tutorial_maze_env.part04_events.conf')
+        search_path.append('project', 'pkg://tutorial_maze_env.part06_struct_env.conf')

@@ -1,4 +1,7 @@
 """Contains utils required in the distribution package"""
+
+from __future__ import annotations
+
 import torch
 
 EPSILON = 1e-6

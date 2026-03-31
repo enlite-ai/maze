@@ -1,15 +1,18 @@
 """Contains unit tests for training utility functions."""
+
+from __future__ import annotations
+
 import io
 from contextlib import redirect_stdout
+
+from maze.train.trainers.common.value_transform import ReduceScaleValueTransform, scalar_to_support, support_to_scalar
 
 import numpy as np
 import torch
 
-from maze.train.trainers.common.value_transform import support_to_scalar, scalar_to_support, ReduceScaleValueTransform
-
 
 def test_transform_value():
-    """ unit test """
+    """unit test"""
     x = np.arange(-100, 100, 0.1)
     eps = 1e-7
     transform = ReduceScaleValueTransform(epsilon=eps)
@@ -18,7 +21,7 @@ def test_transform_value():
 
 
 def test_support_to_scalar():
-    """ unit test """
+    """unit test"""
 
     # single vector
     logits = np.full(11, fill_value=0, dtype=np.float32)
@@ -40,7 +43,7 @@ def test_support_to_scalar():
 
 
 def test_scalar_to_support():
-    """ unit test """
+    """unit test"""
     scalar = torch.scalar_tensor(3.7)
 
     # single scalar value
@@ -71,7 +74,7 @@ def test_scalar_to_support_out_of_range():
         scalar_to_support(scalar=scalar, support_range=(-10, 10))
 
     std_output = f.getvalue()
-    assert "WARNING: scalar 11.0 is out of support range (-10, 10)!" in std_output
+    assert 'WARNING: scalar 11.0 is out of support range (-10, 10)!' in std_output
 
     f = io.StringIO()
     with redirect_stdout(f):
@@ -79,4 +82,4 @@ def test_scalar_to_support_out_of_range():
         scalar_to_support(scalar=scalar, support_range=(-10, 10))
 
     std_output = f.getvalue()
-    assert "WARNING: scalar tensor([11.,  8.]) is out of support range (-10, 10)!" in std_output
+    assert 'WARNING: scalar tensor([11.,  8.]) is out of support range (-10, 10)!' in std_output

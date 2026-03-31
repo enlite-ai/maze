@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 ...
 from .events import InventoryEvents
 
@@ -9,8 +11,7 @@ class Inventory:
     :param inventory_events: Inventory event dispatch proxy.
     """
 
-    def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int),
-                 inventory_events: InventoryEvents):
+    def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int), inventory_events: InventoryEvents):
         ...
 
         self.inventory_events = inventory_events

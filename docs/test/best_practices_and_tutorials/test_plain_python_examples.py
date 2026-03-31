@@ -1,8 +1,10 @@
-""" Contains tests for the plain Python examples in the documentation. """
+"""Contains tests for the plain Python examples in the documentation."""
+
+from __future__ import annotations
+
 from docs.source.best_practices_and_tutorials.code_snippets import plain_python_training_low_level
 
 
 def test_plain_python_train_lowlevel():
-    """ Tests the plain Python training example. """
+    """Tests the plain Python training example."""
     assert plain_python_training_low_level.train(n_epochs=1) == 0
-

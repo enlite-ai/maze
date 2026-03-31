@@ -1,9 +1,10 @@
 """Test recording of trajectory data."""
+
+from __future__ import annotations
+
 from abc import ABC
 from copy import deepcopy
-from typing import Any, Dict, List, Type
-
-import numpy as np
+from typing import Any
 
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.events.pubsub import Pubsub
@@ -12,8 +13,6 @@ from maze.core.trajectory_recording.records.trajectory_record import StateTrajec
 from maze.core.trajectory_recording.writers.trajectory_writer import TrajectoryWriter
 from maze.core.trajectory_recording.writers.trajectory_writer_registry import TrajectoryWriterRegistry
 from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingWrapper
-from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper
-from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_reset_wrapper import StepSkipInResetWrapper
 from maze.test.shared_test_utils.dummy_env.agents.dummy_policy import DummyGreedyPolicy
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
@@ -22,18 +21,22 @@ from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructur
 from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_reset_wrapper import StepSkipInResetWrapper
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
+
+import numpy as np
 
 
 def test_records_maze_states_and_actions():
     class CustomDummyRewardAggregator(RewardAggregator):
         """Customized dummy reward aggregator subscribed to BaseEnvEvents."""
 
-        def get_interfaces(self) -> List[Type[ABC]]:
+        def get_interfaces(self) -> list[type[ABC]]:
             """
             Return events class is subscribed to.
             """
-            additional_interfaces: List[Type[ABC]] = [BaseEnvEvents]
+            additional_interfaces: list[type[ABC]] = [BaseEnvEvents]
             parent_interfaces = super().get_interfaces()
             return additional_interfaces + parent_interfaces
 
@@ -72,11 +75,11 @@ def test_records_maze_states_and_actions():
             """
             return self.maze_state
 
-        def get_serializable_components(self) -> Dict[str, Any]:
+        def get_serializable_components(self) -> dict[str, Any]:
             """
             Returns minimal dict. with components to serialize.
             """
-            return {"value": 0}
+            return {'value': 0}
 
     class TestWriter(TrajectoryWriter):
         """Mock writer checking the recorded data"""
@@ -114,7 +117,7 @@ def test_records_maze_states_and_actions():
     env = DummyEnvironment(
         core_env=CustomDummyCoreEnv(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
     # serialize_renderer set to True as test explicitly checks if the renderer has been saved
     env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=True)
@@ -127,7 +130,9 @@ def test_records_maze_states_and_actions():
         for _ in range(10):
             maze_state = env.get_maze_state()
             states.append(deepcopy(maze_state))
-            obs, _, _, _, _ = env.step(policy.compute_action(observation=obs, maze_state=maze_state, deterministic=True))
+            obs, _, _, _, _ = env.step(
+                policy.compute_action(observation=obs, maze_state=maze_state, deterministic=True)
+            )
 
     # final env reset required
     env.reset()
@@ -150,7 +155,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
     maze_env = DummyEnvironment(
         core_env=DummyCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
     env = DummyStructuredEnvironment(maze_env)
 
@@ -173,7 +178,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
     env = TrajectoryRecordingWrapper.wrap(env, serialize_renderer=True)
     for _ in range(5):
         env.reset()
-        for i in range(10):
+        for _ in range(10):
             env.step(env.action_space.sample())
 
     # final env reset required
@@ -193,7 +198,7 @@ def _assert_recording_two_steps(env: TrajectoryRecordingWrapper) -> None:
     # Step the env twice
     maze_actions = []
     env.reset()
-    for i in range(2):
+    for _ in range(2):
         action = env.action_space.sample()
         maze_actions.append(action)
         env.step(action)

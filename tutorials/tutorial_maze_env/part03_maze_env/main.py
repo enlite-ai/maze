@@ -1,25 +1,26 @@
-""" Test script CoreEnv """
+"""Test script CoreEnv"""
+
+from __future__ import annotations
+
 from tutorial_maze_env.part03_maze_env.env.maze_env import maze_env_factory
 
 
 def main():
     # init maze environment including observation and action interfaces
-    env = maze_env_factory(max_pieces_in_inventory=10,
-                           raw_piece_size=[100, 100],
-                           static_demand=(30, 15))
+    env = maze_env_factory(max_pieces_in_inventory=10, raw_piece_size=[100, 100], static_demand=(30, 15))
 
     # reset environment
     obs, _ = env.reset()
     # run interaction loop
-    for i in range(15):
+    for _ in range(15):
         # sample random action
         action = env.action_space.sample()
 
         # take actual environment step
         maze_state, reward, terminated, truncated, info = env.step(action)
-        print(f"reward {reward} | terminated {terminated} | truncated {truncated}| info {info}")
+        print(f'reward {reward} | terminated {terminated} | truncated {truncated}| info {info}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """ main """
     main()

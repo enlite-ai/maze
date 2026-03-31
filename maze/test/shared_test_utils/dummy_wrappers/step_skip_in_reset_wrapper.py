@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.wrapper import Wrapper
 
@@ -8,6 +10,6 @@ class StepSkipInResetWrapper(Wrapper[MazeEnv]):
     def reset(self):
         """Step the env twice during the reset function"""
         obs, info = self.env.reset()
-        for i in range(2):
+        for _ in range(2):
             obs, _, _, _, info = self.step(self.env.action_space.sample())
         return obs, info

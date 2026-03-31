@@ -1,15 +1,18 @@
 """Contains distribution tests."""
+
+from __future__ import annotations
+
+from maze.distributions.bernoulli import BernoulliProbabilityDistribution
+from maze.distributions.distribution import ProbabilityDistribution
+
 import numpy as np
 import pytest
 import torch
 from gymnasium import spaces
 
-from maze.distributions.bernoulli import BernoulliProbabilityDistribution
-from maze.distributions.distribution import ProbabilityDistribution
-
 
 def test_neg_logprob():
-    """ distribution test """
+    """distribution test"""
     logits = torch.from_numpy(np.random.randn(5))
     dist = BernoulliProbabilityDistribution(logits=logits, action_space=spaces.MultiBinary(5))
     sample = dist.sample()
@@ -34,7 +37,3 @@ def test_not_implemented():
 
     with pytest.raises(NotImplementedError):
         pd.deterministic_sample()
-
-
-
-

@@ -1,4 +1,7 @@
 """Contains an example showing how to add wrappers."""
+
+from __future__ import annotations
+
 from maze.core.wrappers.random_reset_wrapper import RandomResetWrapper
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
 

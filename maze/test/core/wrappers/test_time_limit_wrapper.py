@@ -1,13 +1,19 @@
-""" Contains tests for the time limit wrapper. """
+"""Contains tests for the time limit wrapper."""
+
+from __future__ import annotations
+
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
-from maze.test.shared_test_utils.helper_functions import build_dummy_base_env, build_dummy_maze_env, \
-    build_dummy_base_env_with_fixed_episode_length
+from maze.test.shared_test_utils.helper_functions import (
+    build_dummy_base_env,
+    build_dummy_base_env_with_fixed_episode_length,
+    build_dummy_maze_env,
+)
 from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
 
 def test_time_limit_wrapper():
-    """ time limit wrapper unit tests """
+    """time limit wrapper unit tests"""
     env = build_dummy_maze_env()
     env = TimeLimitWrapper.wrap(env, max_episode_steps=5)
     env.set_max_episode_steps(max_episode_steps=5)
@@ -22,7 +28,7 @@ def test_time_limit_wrapper():
 
 
 def test_time_limit_wrapper_with_spec():
-    """ time limit wrapper unit tests """
+    """time limit wrapper unit tests"""
 
     class Spec:
         def __init__(self):
@@ -31,7 +37,7 @@ def test_time_limit_wrapper_with_spec():
     spec = Spec()
 
     env = build_dummy_maze_env()
-    env.__setattr__("spec", spec)
+    env.__setattr__('spec', spec)
     env = TimeLimitWrapper.wrap(env, max_episode_steps=None)
 
     env.seed(1234)
@@ -44,7 +50,7 @@ def test_time_limit_wrapper_with_spec():
 
 
 def test_time_limit_wrapper_time_env():
-    """ time limit wrapper unit tests """
+    """time limit wrapper unit tests"""
     env = build_dummy_base_env()
     env = TimeLimitWrapper.wrap(env, max_episode_steps=5)
 
@@ -56,8 +62,9 @@ def test_time_limit_wrapper_time_env():
             assert truncated and not terminated
     env.close()
 
+
 def test_time_limit_wrapper_time_env_terminated_on_step():
-    """ time limit wrapper unit tests that check weather time limit respects an original termination flag """
+    """time limit wrapper unit tests that check weather time limit respects an original termination flag"""
     env = build_dummy_base_env_with_fixed_episode_length(episode_length=10)
     env = TimeLimitWrapper.wrap(env, max_episode_steps=10)
 
@@ -70,12 +77,13 @@ def test_time_limit_wrapper_time_env_terminated_on_step():
             assert terminated and not truncated
     env.close()
 
+
 def test_time_limit_wrapper_clone_from():
-    """ time limit wrapper unit tests """
+    """time limit wrapper unit tests"""
 
     def make_env():
-        env = GymMazeEnv("CartPole-v1", render_mode=None)
+        env = GymMazeEnv('CartPole-v1', render_mode=None)
         env = TimeLimitWrapper.wrap(env, max_episode_steps=5)
         return env
 
-    assert_wrapper_clone_from(make_env, assert_member_list=["_elapsed_steps"])
+    assert_wrapper_clone_from(make_env, assert_member_list=['_elapsed_steps'])

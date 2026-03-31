@@ -1,15 +1,17 @@
 """Dummy implementation of a value net for the dummy env"""
 
-from typing import Dict, Sequence
+from __future__ import annotations
 
-import torch
-from torch import nn as nn
+from collections.abc import Sequence
 
 from maze.perception.blocks.feed_forward.dense import DenseBlock
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.blocks.output.linear import LinearOutputBlock
 from maze.perception.weight_init import make_module_init_normc
 from maze.test.shared_test_utils.dummy_models.base_model import DummyBaseNet
+
+import torch
+from torch import nn as nn
 
 
 class DummyValueNet(DummyBaseNet):
@@ -19,28 +21,37 @@ class DummyValueNet(DummyBaseNet):
     :param non_lin: The nonlinear activation to be used.
     """
 
-    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: type(nn.Module)):
+    def __init__(self, obs_shapes: dict[str, Sequence[int]], non_lin: type(nn.Module)):
         super().__init__(obs_shapes, non_lin)
 
         self.perception_dict['value_head_net'] = DenseBlock(
-            in_keys='hidden_out', in_shapes=self.perception_dict['hidden_out'].out_shapes(),
-            out_keys='value_head_net', hidden_units=[5, 2], non_lin=non_lin)
+            in_keys='hidden_out',
+            in_shapes=self.perception_dict['hidden_out'].out_shapes(),
+            out_keys='value_head_net',
+            hidden_units=[5, 2],
+            non_lin=non_lin,
+        )
 
         self.perception_dict['value'] = LinearOutputBlock(
-            in_keys='value_head_net', in_shapes=self.perception_dict['value_head_net'].out_shapes(),
-            out_keys='value', output_units=1)
+            in_keys='value_head_net',
+            in_shapes=self.perception_dict['value_head_net'].out_shapes(),
+            out_keys='value',
+            output_units=1,
+        )
 
         # Set up inference block
         self.perception_net = InferenceBlock(
-            in_keys=list(self.obs_shapes.keys()), out_keys='value',
+            in_keys=list(self.obs_shapes.keys()),
+            out_keys='value',
             in_shapes=[self.obs_shapes[key] for key in self.obs_shapes.keys()],
-            perception_blocks=self.perception_dict)
+            perception_blocks=self.perception_dict,
+        )
 
         # initialize model weights
         self.perception_net.apply(make_module_init_normc(1.0))
         self.perception_dict['value'].apply(make_module_init_normc(0.01))
 
-    def forward(self, xx: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, xx: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Compute forward pass through the network.
 
         :param xx: Input dict.

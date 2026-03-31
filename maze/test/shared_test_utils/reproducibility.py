@@ -2,15 +2,17 @@
 Auxiliary routines for reproducibility tests.
 """
 
+from __future__ import annotations
+
 import base64
 import hashlib
-from typing import Any, Tuple, Callable, List, Optional
-
-import numpy as np
-from maze.core.agent.policy import Policy
+from collections.abc import Callable
+from typing import Any
 
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
+
+import numpy as np
 
 
 def hash_deterministically(obj: Any) -> str:
@@ -26,7 +28,7 @@ def hash_deterministically(obj: Any) -> str:
     return base64.b64encode(hasher.digest()).decode()
 
 
-def make_hashable(obj: Any) -> Tuple:
+def make_hashable(obj: Any) -> tuple:
     """
     Converts object (also nested dicts) into tuples to make them hashable.
     Source: https://stackoverflow.com/a/42151923.
@@ -35,7 +37,7 @@ def make_hashable(obj: Any) -> Tuple:
     """
 
     if isinstance(obj, (tuple, list)):
-        return tuple((make_hashable(e) for e in obj))
+        return tuple(make_hashable(e) for e in obj)
 
     if isinstance(obj, dict):
         return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
@@ -69,7 +71,7 @@ def conduct_env_reproducibility_test(env: MazeEnv, pick_action: Callable, n_step
     return observation_hashes[0] == observation_hashes[1]
 
 
-def run_reproducible_rollout(env: MazeEnv, pick_action: Callable, n_steps: int = 100) -> List[ObservationType]:
+def run_reproducible_rollout(env: MazeEnv, pick_action: Callable, n_steps: int = 100) -> list[ObservationType]:
     """
     Runs specified environment with specified callback to pick action.
 
@@ -91,16 +93,16 @@ def run_reproducible_rollout(env: MazeEnv, pick_action: Callable, n_steps: int =
         act_conv_spaces[policy_id] = policy_space
 
     # Store hashed step states.
-    observations: List[ObservationType] = []
+    observations: list[ObservationType] = []
 
     env.reset()
-    for step in range(n_steps):
+    for _ in range(n_steps):
         policy_id, actor_id = env.actor_id()
 
         # Select next action.
         action = pick_action(
             observation=env.observation_conversion.maze_to_space(env.core_env.get_maze_state()),
-            action_space=act_conv_spaces[policy_id]
+            action_space=act_conv_spaces[policy_id],
         )
 
         # Execute action, collect state information.

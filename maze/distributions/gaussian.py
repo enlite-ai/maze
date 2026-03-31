@@ -1,12 +1,15 @@
 """Contains a diagonal Gaussian distributions"""
-from typing import Sequence
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from maze.core.annotations import override
+from maze.distributions.torch_dist import TorchProbabilityDistribution
 
 import torch
 from gymnasium import spaces
 from torch.distributions import Normal, kl_divergence
-
-from maze.core.annotations import override
-from maze.distributions.torch_dist import TorchProbabilityDistribution
 
 
 class DiagonalGaussianProbabilityDistribution(TorchProbabilityDistribution[Normal]):
@@ -18,8 +21,7 @@ class DiagonalGaussianProbabilityDistribution(TorchProbabilityDistribution[Norma
     @classmethod
     @override(TorchProbabilityDistribution)
     def required_logits_shape(cls, action_space: spaces.Space) -> Sequence[int]:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         required_shape = [2 * v for v in action_space.shape]
         return required_shape
 
@@ -34,26 +36,22 @@ class DiagonalGaussianProbabilityDistribution(TorchProbabilityDistribution[Norma
 
     @override(TorchProbabilityDistribution)
     def log_prob(self, actions: torch.Tensor) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         log_prob = self.dist.log_prob(actions).mean(-1)
         assert self.dist.mean.shape[:-1] == log_prob.shape
         return log_prob
 
     @override(TorchProbabilityDistribution)
     def deterministic_sample(self) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return self.dist.mean
 
     @override(TorchProbabilityDistribution)
     def entropy(self) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return self.dist.entropy().mean(dim=-1)
 
     @override(TorchProbabilityDistribution)
-    def kl(self, other: 'TorchProbabilityDistribution') -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def kl(self, other: TorchProbabilityDistribution) -> torch.Tensor:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return kl_divergence(self.dist, other.dist).mean(dim=-1)

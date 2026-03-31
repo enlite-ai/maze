@@ -1,10 +1,10 @@
-""" Contains tests for the observation stacking wrappers. """
+"""Contains tests for the observation stacking wrappers."""
+
 from __future__ import annotations
 
 from copy import deepcopy
 
 import maze.test.core.wrappers as wrapper_module
-import pytest
 from maze.core.wrappers.observation_stack_wrapper import ObservationStackWrapper
 from maze.test.shared_test_utils.config_testing_utils import load_env_config
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -14,6 +14,8 @@ from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.di
     DictDiscreteActionConversion,
 )
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
+
+import pytest
 
 
 def build_dummy_maze_environment() -> DummyEnvironment:

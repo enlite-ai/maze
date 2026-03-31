@@ -1,4 +1,7 @@
 """Contains reward normalization unit tests."""
+
+from __future__ import annotations
+
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.return_normalization_reward_wrapper import ReturnNormalizationRewardWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -9,13 +12,14 @@ from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
 
 def test_return_normalization_wrapper():
-    """ Unit tests """
+    """Unit tests"""
     observation_conversion = ObservationConversion()
 
     env = DummyEnvironment(
         core_env=DummyCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion])
+        observation_conversion=[observation_conversion],
+    )
 
     env = ReturnNormalizationRewardWrapper(env, gamma=0.99, epsilon=1e-8)
     env.reset()
@@ -25,11 +29,11 @@ def test_return_normalization_wrapper():
 
 
 def test_return_normalization_wrapper_clone_from():
-    """ Unit tests """
+    """Unit tests"""
 
     def make_env():
-        env = GymMazeEnv("CartPole-v1", render_mode=None)
+        env = GymMazeEnv('CartPole-v1', render_mode=None)
         env = ReturnNormalizationRewardWrapper.wrap(env, gamma=0.99, epsilon=1e-8)
         return env
 
-    assert_wrapper_clone_from(make_env, assert_member_list=["_return"])
+    assert_wrapper_clone_from(make_env, assert_member_list=['_return'])

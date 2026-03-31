@@ -1,9 +1,15 @@
 """Custom Hydra launcher distributing the jobs in separate processes on the local machine."""
+
+from __future__ import annotations
+
 import logging
 import multiprocessing
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence, Optional, Any
+from typing import Any
+
+from maze.utils.process import Process
 
 from hydra import TaskFunction
 from hydra.core.config_store import ConfigStore
@@ -11,12 +17,11 @@ from hydra.core.utils import (
     JobReturn,
     configure_log,
     filter_overrides,
-    setup_globals, run_job,
+    run_job,
+    setup_globals,
 )
 from hydra.plugins.launcher import Launcher
 from omegaconf import DictConfig, open_dict
-
-from maze.utils.process import Process
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +29,14 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LauncherConfig:
     """Hardcoded launcher configuration, linking the hydra/launcher=local override to the MazeLocalLauncher class"""
-    _target_: str = "hydra_plugins.maze_local_launcher.MazeLocalLauncher"
+
+    _target_: str = 'hydra_plugins.maze_local_launcher.MazeLocalLauncher'
 
     # maximum number of concurrently running jobs. if -1, all CPUs are used
     n_jobs: int = -1
 
 
-ConfigStore.instance().store(
-    group="hydra/launcher", name="local", node=LauncherConfig
-)
+ConfigStore.instance().store(group='hydra/launcher', name='local', node=LauncherConfig)
 
 
 class MazeLocalLauncher(Launcher):
@@ -81,31 +85,33 @@ class MazeLocalLauncher(Launcher):
         sweep_dir = self.config.hydra.sweep.dir
         Path(str(sweep_dir)).mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"Local Launcher is launching {len(job_overrides)} jobs locally")
-        logger.info(f"Launching jobs, sweep output dir : {sweep_dir}")
+        logger.info(f'Local Launcher is launching {len(job_overrides)} jobs locally')
+        logger.info(f'Launching jobs, sweep output dir : {sweep_dir}')
         for idx, overrides in enumerate(job_overrides):
-            logger.info("\t#{} : {}".format(idx, " ".join(filter_overrides(overrides))))
+            logger.info('\t#{} : {}'.format(idx, ' '.join(filter_overrides(overrides))))
 
         results = []
         workers = []
         for i, overrides in enumerate(job_overrides):
             idx = initial_job_idx + i
-            lst = " ".join(filter_overrides(overrides))
-            logger.info(f"\t#{idx} : {lst}")
+            lst = ' '.join(filter_overrides(overrides))
+            logger.info(f'\t#{idx} : {lst}')
 
-            sweep_config = self.hydra_context.config_loader.load_sweep_config(
-                self.config, list(overrides)
-            )
+            sweep_config = self.hydra_context.config_loader.load_sweep_config(self.config, list(overrides))
             with open_dict(sweep_config):
-                sweep_config.hydra.job.id = f"job_id_for_{idx}"
+                sweep_config.hydra.job.id = f'job_id_for_{idx}'
                 sweep_config.hydra.job.num = idx
 
-            p = Process(target=run_job,
-                        kwargs=dict(config=sweep_config,
-                                    hydra_context=self.hydra_context,
-                                    task_function=self.task_function,
-                                    job_dir_key="hydra.sweep.dir",
-                                    job_subdir_key="hydra.sweep.subdir"))
+            p = Process(
+                target=run_job,
+                kwargs=dict(
+                    config=sweep_config,
+                    hydra_context=self.hydra_context,
+                    task_function=self.task_function,
+                    job_dir_key='hydra.sweep.dir',
+                    job_subdir_key='hydra.sweep.subdir',
+                ),
+            )
             p.start()
             workers.append(p)
 

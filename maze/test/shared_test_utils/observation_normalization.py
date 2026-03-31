@@ -1,17 +1,21 @@
 """
 Tests observation normalization for environments.
 """
-from functools import partial
-from typing import Dict, Callable, Iterable
 
-import gymnasium as gym
-import numpy as np
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable
+from functools import partial
 
 from maze.core.env.maze_env import CoreEnvType
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.utils.factory import ConfigType
-from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
-    ObservationNormalizationWrapper
+from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import (
+    ObservationNormalizationWrapper,
+)
+
+import gymnasium as gym
+import numpy as np
 
 
 def estimate_normalization_statistics(env: ObservationNormalizationWrapper) -> ObservationNormalizationWrapper:
@@ -34,9 +38,9 @@ def estimate_normalization_statistics(env: ObservationNormalizationWrapper) -> O
     return env
 
 
-def conduct_observation_normalization_test(env: ObservationNormalizationWrapper,
-                                           validation_callback: Callable,
-                                           n_steps: int = 100) -> None:
+def conduct_observation_normalization_test(
+    env: ObservationNormalizationWrapper, validation_callback: Callable, n_steps: int = 100
+) -> None:
     """
     Runs environment for n steps and validates collected observation statistics afterwards.
     Asserts that validation_callback returns True.
@@ -47,12 +51,13 @@ def conduct_observation_normalization_test(env: ObservationNormalizationWrapper,
     """
     act_conv_space: gym.spaces.space = env.action_conversion.space()
 
-    for step in range(n_steps):
+    for _ in range(n_steps):
         observation, _, terminated, truncated, _ = env.step(act_conv_space.sample())
         for obs_key in observation:
             if obs_key not in env.exclude:
-                assert validation_callback(observation[obs_key]), \
+                assert validation_callback(observation[obs_key]), (
                     f"validation_callback not True for observation '{obs_key}'"
+                )
 
         if terminated or truncated:
             break
@@ -67,7 +72,7 @@ def match_observation_space_structure(space_a: Iterable, space_b: Iterable) -> b
     """
 
     # Check both spaces are of the same type.
-    if not type(space_a) == type(space_b):
+    if type(space_a) is not type(space_b):
         return False
 
     # If observation space is a Dict: Examine sub-spaces recursively.
@@ -83,7 +88,7 @@ def match_observation_space_structure(space_a: Iterable, space_b: Iterable) -> b
         if not len(space_a) == len(space_b):
             return False
 
-        for subspace_a, subspace_b in zip(space_a, space_b):
+        for subspace_a, subspace_b in zip(space_a, space_b, strict=False):
             if not match_observation_space_structure(subspace_a, subspace_b):
                 return False
 
@@ -98,8 +103,9 @@ def match_observation_space_structure(space_a: Iterable, space_b: Iterable) -> b
     return True
 
 
-def init_env_with_observation_normalization(env_factory: Callable[[], StructuredEnv], normalization_config: Dict) \
-        -> ObservationNormalizationWrapper:
+def init_env_with_observation_normalization(
+    env_factory: Callable[[], StructuredEnv], normalization_config: dict
+) -> ObservationNormalizationWrapper:
     """Instantiates new environment with normalized observations according to provided config.
 
     :param env_factory: A factory instantiating a structured environment.
@@ -117,8 +123,9 @@ def init_env_with_observation_normalization(env_factory: Callable[[], Structured
     return wrapped_env
 
 
-def env_registration_test(environment_type: type, wrapper_factory: Callable[[], ObservationNormalizationWrapper]) \
-        -> None:
+def env_registration_test(
+    environment_type: type, wrapper_factory: Callable[[], ObservationNormalizationWrapper]
+) -> None:
     """Tests initiation of an environment with normalization observation.
 
     :param environment_type: Environment type to assert for.
@@ -133,8 +140,9 @@ def env_registration_test(environment_type: type, wrapper_factory: Callable[[], 
     env.close()
 
 
-def observation_shape_match_test(env_factory: Callable[[], StructuredEnv],
-                                 wrapper_factory: Callable[[], ObservationNormalizationWrapper]) -> None:
+def observation_shape_match_test(
+    env_factory: Callable[[], StructuredEnv], wrapper_factory: Callable[[], ObservationNormalizationWrapper]
+) -> None:
     """Tests if observation space shape(s) match between original observation space and normalized observation space.
 
     :param env_factory: A factory instantiating a structured environment.
@@ -148,8 +156,7 @@ def observation_shape_match_test(env_factory: Callable[[], StructuredEnv],
     env_norm.reset()
 
     assert match_observation_space_structure(
-        env.step(env.action_conversion.space().sample())[0],
-        env_norm.step(env.action_conversion.space().sample())[0]
+        env.step(env.action_conversion.space().sample())[0], env_norm.step(env.action_conversion.space().sample())[0]
     )
 
 
@@ -163,18 +170,14 @@ def range_zero_one_observation_value_range_test(wrapper_factory: Callable[[], Ob
 
     env: ObservationNormalizationWrapper = wrapper_factory()
 
-    conduct_observation_normalization_test(
-        env,
-        lambda obs: np.all(0.0 <= obs) and np.all(obs <= 1.0),
-        n_steps=10
-    )
+    conduct_observation_normalization_test(env, lambda obs: np.all(0.0 <= obs) and np.all(obs <= 1.0), n_steps=10)
 
     env.close()
 
 
-def run_observation_normalization_for_env(environment_type: type,
-                                          env_factory: Callable[[], StructuredEnv],
-                                          norm_config: ConfigType) -> None:
+def run_observation_normalization_for_env(
+    environment_type: type, env_factory: Callable[[], StructuredEnv], norm_config: ConfigType
+) -> None:
     """Runs observation normalization tests for maze environments.
 
     :param environment_type: Environment type to assert for.

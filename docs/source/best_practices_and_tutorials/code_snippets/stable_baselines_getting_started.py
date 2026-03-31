@@ -3,6 +3,8 @@ Getting started example from:
 https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html
 """
 
+from __future__ import annotations
+
 import gymnasium as gym
 from stable_baselines3 import A2C
 
@@ -17,9 +19,9 @@ model = A2C('MlpPolicy', env, verbose=1)
 model.learn(total_timesteps=10000)
 
 obs, _ = env.reset()
-for i in range(1000):
+for _ in range(1000):
     action, _state = model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, info = env.step(action)
     env.render()
     if terminated or truncated:
-      obs, _ = env.reset()
+        obs, _ = env.reset()

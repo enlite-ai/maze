@@ -1,19 +1,21 @@
-""" Contains action recording wrapper unit tests. """
+"""Contains action recording wrapper unit tests."""
+
+from __future__ import annotations
+
 import os
 import pickle
-
-import numpy as np
 
 from maze.core.env.structured_env import ActorID
 from maze.core.trajectory_recording.records.action_record import ActionRecord
 from maze.core.wrappers.action_recording_wrapper import ActionRecordingWrapper
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, build_dummy_structured_env
 
+import numpy as np
+
 
 def test_records_episode_with_correct_data():
     env = build_dummy_maze_env()
-    env = ActionRecordingWrapper.wrap(env, record_maze_actions=True, record_actions=True,
-                                      output_dir="action_records")
+    env = ActionRecordingWrapper.wrap(env, record_maze_actions=True, record_actions=True, output_dir='action_records')
 
     actions = []
 
@@ -27,14 +29,14 @@ def test_records_episode_with_correct_data():
         cum_reward += rew
 
     episode_id = env.get_episode_id()
-    expected_file_path = str(episode_id) + ".pkl"
+    expected_file_path = str(episode_id) + '.pkl'
     assert len(os.listdir()) == 0
 
     # Now dump and load the data
     env.seed(1234)
     env.reset()
-    assert expected_file_path in os.listdir("action_records")
-    with open("action_records/" + expected_file_path, "rb") as in_f:
+    assert expected_file_path in os.listdir('action_records')
+    with open('action_records/' + expected_file_path, 'rb') as in_f:
         action_record = pickle.load(in_f)
 
     assert action_record.cum_action_record_reward == cum_reward
@@ -50,8 +52,7 @@ def test_records_episode_with_correct_data():
 
 def test_records_multiple_episodes():
     env = build_dummy_maze_env()
-    env = ActionRecordingWrapper.wrap(env, record_maze_actions=True, record_actions=True,
-                                      output_dir="action_records")
+    env = ActionRecordingWrapper.wrap(env, record_maze_actions=True, record_actions=True, output_dir='action_records')
 
     env.seed(1234)
     env.reset()
@@ -62,11 +63,11 @@ def test_records_multiple_episodes():
         env.seed(1234)
         env.reset()
 
-    dumped_files = os.listdir("action_records")
+    dumped_files = os.listdir('action_records')
     assert len(dumped_files) == 5
 
     for file_path in dumped_files:
-        with open("action_records/" + file_path, "rb") as in_f:
+        with open('action_records/' + file_path, 'rb') as in_f:
             action_record = pickle.load(in_f)
 
         assert isinstance(action_record, ActionRecord)
@@ -75,8 +76,7 @@ def test_records_multiple_episodes():
 
 def test_handles_multi_step_scenarios():
     env = build_dummy_structured_env()
-    env = ActionRecordingWrapper.wrap(env, record_maze_actions=False, record_actions=True,
-                                      output_dir="action_records")
+    env = ActionRecordingWrapper.wrap(env, record_maze_actions=False, record_actions=True, output_dir='action_records')
 
     env.seed(1234)
     env.reset()

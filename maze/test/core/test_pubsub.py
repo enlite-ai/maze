@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 from abc import ABC
-from typing import List, Type
+
+from maze.core.events.event_record import EventRecord
+from maze.core.events.event_service import EventService
+from maze.core.events.pubsub import Pubsub, Subscriber
 
 import pytest
 
-from maze.core.events.event_service import EventService
-from maze.core.events.event_record import EventRecord
-from maze.core.events.pubsub import Pubsub, Subscriber
+# ruff: noqa: B027, B024
 
 
 class DummyInterface(ABC):
@@ -17,7 +20,7 @@ class DummyInterface(ABC):
 
 
 class DummySubscriber(Subscriber):
-    def get_interfaces(self) -> List[Type[ABC]]:
+    def get_interfaces(self) -> list[type[ABC]]:
         return [DummyInterface]
 
 

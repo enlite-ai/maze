@@ -1,6 +1,8 @@
 # In a core env (which maintains a pubsub broker)
 
 # Create a topic
+from __future__ import annotations
+
 inventory_events = self.pubsub.create_event_topic(InventoryEvents)
 
 # Register a subscriber (can be a reward aggregator

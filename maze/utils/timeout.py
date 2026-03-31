@@ -1,4 +1,7 @@
 """Timeout class to avoid blocking code, especially useful for testing."""
+
+from __future__ import annotations
+
 import signal
 
 
@@ -15,7 +18,7 @@ class Timeout:
         self.seconds = seconds
         self.error_message = error_message
 
-    def _handle_timeout(self, signum, frame):
+    def _handle_timeout(self, signum, frame):  # noqa: ARG002
         raise TimeoutError(self.error_message)
 
     def __enter__(self):

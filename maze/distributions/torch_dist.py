@@ -1,14 +1,19 @@
 """Extends the probability distribution interface for PyTorch distributions."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Sequence, Generic, TypeVar
+from collections.abc import Sequence
+from typing import Generic, TypeVar
+
+from maze.core.annotations import override
+from maze.distributions.distribution import ProbabilityDistribution
 
 import torch
 import torch.distributions as torch_dist
 from gymnasium import spaces
-from maze.core.annotations import override
-from maze.distributions.distribution import ProbabilityDistribution
 
-T = TypeVar("T", bound=torch_dist.Distribution)
+T = TypeVar('T', bound=torch_dist.Distribution)
 
 
 class TorchProbabilityDistribution(ProbabilityDistribution, Generic[T], ABC):
@@ -33,25 +38,21 @@ class TorchProbabilityDistribution(ProbabilityDistribution, Generic[T], ABC):
 
     @override(ProbabilityDistribution)
     def log_prob(self, actions: torch.Tensor) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface"""
         log_prob = self.dist.log_prob(actions)
         return log_prob
 
     @override(ProbabilityDistribution)
     def entropy(self) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface"""
         return self.dist.entropy()
 
     @override(ProbabilityDistribution)
-    def kl(self, other: 'TorchProbabilityDistribution') -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface
-        """
+    def kl(self, other: TorchProbabilityDistribution) -> torch.Tensor:
+        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface"""
         return torch_dist.kl.kl_divergence(self.dist, other.dist)
 
     @override(ProbabilityDistribution)
     def sample(self) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.distribution.ProbabilityDistribution` interface"""
         return self.dist.sample()

@@ -1,12 +1,15 @@
 """Contains utility functions for pre-processor tests."""
-import gymnasium as gym
-import numpy as np
+
+from __future__ import annotations
 
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
+
+import gymnasium as gym
+import numpy as np
 
 
 class PreProcessingObservationConversion(ObservationConversion):
@@ -23,14 +26,17 @@ class PreProcessingObservationConversion(ObservationConversion):
 
         :return: The finished gym observation space
         """
-        return gym.spaces.Dict({
-            "observation_0_feature_series":
-                gym.spaces.Box(low=np.float32(0), high=np.float32(1), shape=(64, 24), dtype=np.float32),
-            "observation_0_image":
-                gym.spaces.Box(low=0.0, high=1.0, shape=(3, 32, 32), dtype=np.float32),
-            "observation_1_categorical_feature":
-                gym.spaces.Box(low=np.float32(0), high=np.float32(11), shape=(), dtype=np.float32),
-        })
+        return gym.spaces.Dict(
+            {
+                'observation_0_feature_series': gym.spaces.Box(
+                    low=np.float32(0), high=np.float32(1), shape=(64, 24), dtype=np.float32
+                ),
+                'observation_0_image': gym.spaces.Box(low=0.0, high=1.0, shape=(3, 32, 32), dtype=np.float32),
+                'observation_1_categorical_feature': gym.spaces.Box(
+                    low=np.float32(0), high=np.float32(11), shape=(), dtype=np.float32
+                ),
+            }
+        )
 
 
 def build_dummy_structured_environment() -> DummyStructuredEnvironment:
@@ -45,7 +51,7 @@ def build_dummy_structured_environment() -> DummyStructuredEnvironment:
     maze_env = DummyEnvironment(
         core_env=DummyCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
 
     return DummyStructuredEnvironment(maze_env=maze_env)

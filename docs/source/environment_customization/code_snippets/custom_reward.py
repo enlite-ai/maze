@@ -1,11 +1,13 @@
 """Assigns negative reward for relying on raw pieces for delivering an order."""
-from typing import List, Optional
+
+from __future__ import annotations
 
 from maze.core.annotations import override
 from maze.core.env.maze_state import MazeStateType
-from maze.core.events.pubsub import Subscriber
-from maze_envs.logistics.cutting_2d.env.events import InventoryEvents
 from maze.core.env.reward import RewardAggregatorInterface
+from maze.core.events.pubsub import Subscriber
+
+from maze_envs.logistics.cutting_2d.env.events import InventoryEvents
 
 
 class RawPieceUsageRewardAggregator(RewardAggregatorInterface):
@@ -14,12 +16,13 @@ class RawPieceUsageRewardAggregator(RewardAggregatorInterface):
 
     :param reward_scale: Reward scaling factor.
     """
+
     def __init__(self, reward_scale: float):
         super().__init__()
         self.reward_scale = reward_scale
 
     @override(Subscriber)
-    def get_interfaces(self) -> List:
+    def get_interfaces(self) -> list:
         """
         Specification of the event interfaces this subscriber wants to receive events from.
         Every subscriber must implement this configuration method.
@@ -29,7 +32,7 @@ class RawPieceUsageRewardAggregator(RewardAggregatorInterface):
         return [InventoryEvents]
 
     @override(RewardAggregatorInterface)
-    def summarize_reward(self, maze_state: MazeStateType | None = None) -> float:
+    def summarize_reward(self, maze_state: MazeStateType | None = None) -> float:  # noqa: ARG002
         """
         Summarize reward based on the orders and pieces to cut, and return it as a scalar.
 

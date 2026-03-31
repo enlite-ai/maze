@@ -1,14 +1,17 @@
 """Test the no dict action wrapper"""
-import numpy as np
-from gymnasium import spaces
+
+from __future__ import annotations
 
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.no_dict_spaces_wrapper import NoDictSpacesWrapper
 
+import numpy as np
+from gymnasium import spaces
+
 
 def test_no_dict_action_wrapper():
-    """ gym env wrapper unit test """
-    base_env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    """gym env wrapper unit test"""
+    base_env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     env = NoDictSpacesWrapper.wrap(base_env)
 
     # test action

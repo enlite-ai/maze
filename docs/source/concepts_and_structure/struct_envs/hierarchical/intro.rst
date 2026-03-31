@@ -41,7 +41,7 @@ A naive approach would present all possible actions, i.e. rotating the arm segme
 The task at hand can be intuitively represented as a hierarchy however: The top-level task is composed of the task sequence of "move", "grasp", "move", "place". This corresponds to a top-level policy choosing one of three sub-policies enacting primitive actions, i.e. arm or gripper movements. This enables the reusability of individual (sub-)policies for other tasks in the same domain.
 
 | To reduce the dimensionality of the action space an HRL approach could omit gripper actions in the "move" action space and arm actions in the "grasp" and "place" action spaces. The total number of actions then amounts to the sum of the numbers of possible actions for all individual policies: :math:`3 + m + n + m`.
-| Depending on the active policy the agent only has to consider up to :math:`max(3, n, m)` actions at once, which is signficantly less than the :math:`n * m` actions in the flat case for any realistic values for :math:`n` and :math:`m`. The complexity of problems with large action spaces can be reduced considerably by a hierarchical decomposition like this.
+| Depending on the active policy the agent only has to consider up to :math:`max(3, n, m)` actions at once, which is significantly less than the :math:`n * m` actions in the flat case for any realistic values for :math:`n` and :math:`m`. The complexity of problems with large action spaces can be reduced considerably by a hierarchical decomposition like this.
 
 Control Flow
 ------------

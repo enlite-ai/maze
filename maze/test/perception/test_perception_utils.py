@@ -1,18 +1,28 @@
 """Test the perception utils"""
+
+from __future__ import annotations
+
+from maze.perception.perception_utils import (
+    convert_to_numpy,
+    convert_to_torch,
+    flatten_spaces,
+    map_nested_structure,
+    observation_spaces_to_in_shapes,
+    stack_and_flatten_spaces,
+)
+
 import numpy as np
 import pytest
 import torch
 from gymnasium import spaces
 
-from maze.perception.perception_utils import flatten_spaces, observation_spaces_to_in_shapes, \
-    map_nested_structure, convert_to_torch, convert_to_numpy, stack_and_flatten_spaces
-
 
 def test_flat_structured_observations():
     """Test the two perception utils methods"""
     obs_space1 = spaces.Dict({'obs1': spaces.Box(low=-1, high=1, shape=(20,))})
-    obs_space2 = spaces.Dict({'obs1': spaces.Box(low=-1, high=1, shape=(20,)),
-                              'obs3': spaces.Box(low=-9999, high=9999, shape=(2,))})
+    obs_space2 = spaces.Dict(
+        {'obs1': spaces.Box(low=-1, high=1, shape=(20,)), 'obs3': spaces.Box(low=-9999, high=9999, shape=(2,))}
+    )
     obs_space = {0: obs_space1, 1: obs_space2}
     structured_obs = {kk: {k: v.sample() for k, v in vv.spaces.items()} for kk, vv in obs_space.items()}
     structured_obs[0]['obs1'] = structured_obs[1]['obs1']
@@ -24,14 +34,21 @@ def test_flat_structured_observations():
 def test_stack_and_flatten_spaces():
     observations = [dict(a=torch.ones(3, 4), b=torch.ones(3, 2)), dict(b=torch.ones(3, 2), c=torch.ones(3))]
     expected_shapes = dict(a=(3, 4), b=(2, 3, 2), c=(3,))
-    observation_spaces = {idx: spaces.Dict({obs_key: spaces.Box(low=np.finfo(np.float32).min,
-                                                                high=np.finfo(np.float32).max,
-                                                                shape=value.shape, dtype=np.float32)
-                                            for obs_key, value in obs_dict.items()}) for idx, obs_dict in
-                          enumerate(observations)}
+    observation_spaces = {
+        idx: spaces.Dict(
+            {
+                obs_key: spaces.Box(
+                    low=np.finfo(np.float32).min, high=np.finfo(np.float32).max, shape=value.shape, dtype=np.float32
+                )
+                for obs_key, value in obs_dict.items()
+            }
+        )
+        for idx, obs_dict in enumerate(observations)
+    }
 
-    for space_name, space_value in stack_and_flatten_spaces(input_tensor_dict=observations,
-                                                            observation_spaces_dict=observation_spaces).items():
+    for space_name, space_value in stack_and_flatten_spaces(
+        input_tensor_dict=observations, observation_spaces_dict=observation_spaces
+    ).items():
         assert space_value.shape == expected_shapes[space_name]
 
 
@@ -62,7 +79,7 @@ def test_map_nested_structure_mutable():
 
 def test_map_nested_structure_inmutable():
     test_value = tuple(torch.rand((2, 4)))
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(Exception):  # noqa: B017
         map_nested_structure(test_value, mapping=lambda x: x * 2, in_place=True)
 
     test_value = list(torch.rand((2, 4)))
@@ -87,7 +104,7 @@ def test_convert_to_torch():
 
     if torch.cuda.is_available():
         test_value = torch.randn((2, 4))
-        with pytest.raises(Exception) as e_info:
+        with pytest.raises(Exception):  # noqa: B017
             convert_to_torch(test_value, device='cuda', cast=None, in_place=True)
 
     if torch.cuda.is_available():
@@ -96,7 +113,7 @@ def test_convert_to_torch():
         assert test_value is not out_value
 
     test_value = torch.randn((2, 4))
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(Exception):  # noqa: B017
         convert_to_torch(test_value, device=None, cast=torch.float64, in_place=True)
 
 
@@ -125,10 +142,10 @@ def test_base_types():
 
 
 def test_convert_to_numpy():
-    """ unit tests """
+    """unit tests"""
     stats = {}
-    stats["key_1"] = torch.from_numpy(np.random.random(10))
+    stats['key_1'] = torch.from_numpy(np.random.random(10))
     convert_to_numpy(stats=stats, cast=None, in_place=False)
     convert_to_numpy(stats=stats, cast=None, in_place=True)
     convert_to_numpy(stats=stats, cast=None, in_place='try')
-    assert isinstance(stats["key_1"], np.ndarray)
+    assert isinstance(stats['key_1'], np.ndarray)

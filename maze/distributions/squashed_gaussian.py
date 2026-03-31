@@ -1,15 +1,18 @@
 """Contains a squashed diagonal Gaussian distributions"""
-from typing import Sequence
 
-import numpy as np
-import gymnasium as gym
-import torch
-from torch.distributions import Normal, kl_divergence
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.distributions.torch_dist import TorchProbabilityDistribution
-from maze.distributions.utils import MIN_LOG_NN_OUTPUT, MAX_LOG_NN_OUTPUT, EPSILON, tensor_clamp, atanh
+from maze.distributions.utils import EPSILON, MAX_LOG_NN_OUTPUT, MIN_LOG_NN_OUTPUT, atanh, tensor_clamp
 from maze.perception.perception_utils import convert_to_torch
+
+import gymnasium as gym
+import numpy as np
+import torch
+from torch.distributions import Normal, kl_divergence
 
 
 class SquashedGaussianProbabilityDistribution(TorchProbabilityDistribution[Normal]):
@@ -22,13 +25,11 @@ class SquashedGaussianProbabilityDistribution(TorchProbabilityDistribution[Norma
     @classmethod
     @override(TorchProbabilityDistribution)
     def required_logits_shape(cls, action_space: gym.spaces.Space) -> Sequence[int]:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         required_shape = [2 * v for v in action_space.shape]
         return required_shape
 
     def __init__(self, logits: torch.Tensor, action_space: gym.spaces.Box, temperature: float):
-
         # make sure space bounds are set properly
         assert np.all(action_space.low > -np.inf) and np.all(action_space.low < np.inf)
 
@@ -50,40 +51,35 @@ class SquashedGaussianProbabilityDistribution(TorchProbabilityDistribution[Norma
 
     @override(TorchProbabilityDistribution)
     def log_prob(self, actions: torch.Tensor) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         un_squashed_values = self._un_squash(actions)
         log_prob_gaussian = self.dist.log_prob(un_squashed_values)
         log_prob_gaussian = torch.clamp(log_prob_gaussian, -100, 100)
         log_prob_gaussian = log_prob_gaussian.mean(-1)
         un_squashed_values_tanh = torch.tanh(un_squashed_values)
-        log_prob = log_prob_gaussian - torch.log(1 - un_squashed_values_tanh ** 2 + EPSILON).mean(-1)
+        log_prob = log_prob_gaussian - torch.log(1 - un_squashed_values_tanh**2 + EPSILON).mean(-1)
         assert self.dist.mean.shape[:-1] == log_prob.shape
         return log_prob
 
     @override(TorchProbabilityDistribution)
     def deterministic_sample(self):
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return self._squash(self.dist.mean)
 
     @override(TorchProbabilityDistribution)
     def sample(self):
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         normal_sample = self.dist.rsample()
         return self._squash(normal_sample)
 
     @override(TorchProbabilityDistribution)
     def entropy(self) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return self.dist.entropy().mean(dim=-1)
 
     @override(TorchProbabilityDistribution)
-    def kl(self, other: 'TorchProbabilityDistribution') -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def kl(self, other: TorchProbabilityDistribution) -> torch.Tensor:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return kl_divergence(self.dist, other.dist).mean(dim=-1)
 
     def _squash(self, raw_values: torch.Tensor) -> torch.Tensor:

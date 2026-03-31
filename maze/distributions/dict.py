@@ -1,10 +1,11 @@
 """Contains a dictionary (collection) distributions enclosing multiple actual sub-distributions."""
-from typing import Dict
 
-import torch
+from __future__ import annotations
 
 from maze.core.annotations import override
 from maze.distributions.distribution import ProbabilityDistribution
+
+import torch
 
 
 class DictProbabilityDistribution(ProbabilityDistribution):
@@ -17,23 +18,21 @@ class DictProbabilityDistribution(ProbabilityDistribution):
     :param distribution_dict: dictionary holding sub-probability distributions.
     """
 
-    def __init__(self, distribution_dict: Dict[str, ProbabilityDistribution]):
+    def __init__(self, distribution_dict: dict[str, ProbabilityDistribution]):
         super().__init__()
         self.distribution_dict = distribution_dict
 
     @override(ProbabilityDistribution)
-    def neg_log_prob(self, actions: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def neg_log_prob(self, actions: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         neg_log_prob = self.log_prob(actions)
-        for k, lp in neg_log_prob.items():
+        for k, _ in neg_log_prob.items():
             neg_log_prob[k] *= -1
         return neg_log_prob
 
     @override(ProbabilityDistribution)
-    def log_prob(self, actions: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def log_prob(self, actions: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         log_prob = {}
         for k, dist in self.distribution_dict.items():
             log_prob[k] = dist.log_prob(actions[k])
@@ -41,11 +40,10 @@ class DictProbabilityDistribution(ProbabilityDistribution):
 
     @override(ProbabilityDistribution)
     def entropy(self, reduce_fun: callable = torch.mean) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         # collect and stack entropy of individual distributions
         entropy_list = []
-        for k, dist in self.distribution_dict.items():
+        for _, dist in self.distribution_dict.items():
             entropy_list.append(dist.entropy())
         entropy_list = torch.stack(entropy_list)
         assert entropy_list.shape[0] == len(self.distribution_dict)
@@ -53,9 +51,8 @@ class DictProbabilityDistribution(ProbabilityDistribution):
         return reduce_fun(entropy_list, dim=0)
 
     @override(ProbabilityDistribution)
-    def kl(self, other: 'DictProbabilityDistribution', reduce_fun: callable = torch.mean) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def kl(self, other: DictProbabilityDistribution, reduce_fun: callable = torch.mean) -> torch.Tensor:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         # collect and stack kls of individual distributions
         kl_list = []
         for k in self.distribution_dict.keys():
@@ -66,18 +63,16 @@ class DictProbabilityDistribution(ProbabilityDistribution):
         return reduce_fun(entropy_list, dim=0)
 
     @override(ProbabilityDistribution)
-    def sample(self) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def sample(self) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         sample = {}
         for k, dist in self.distribution_dict.items():
             sample[k] = dist.sample()
         return sample
 
     @override(ProbabilityDistribution)
-    def deterministic_sample(self) -> Dict[str, torch.Tensor]:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def deterministic_sample(self) -> dict[str, torch.Tensor]:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         sample = {}
         for k, dist in self.distribution_dict.items():
             sample[k] = dist.deterministic_sample()

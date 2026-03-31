@@ -2,12 +2,17 @@
 Auxiliary routines for tests related to observation statistics.
 """
 
-from typing import Any, Callable, Iterable
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable
+from typing import Any
+
+from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import (
+    ObservationNormalizationWrapper,
+)
 
 import gymnasium as gym
 import numpy as np
-from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
-    ObservationNormalizationWrapper
 
 
 def append_observation_to_statistics(observation: Iterable, statistics: dict):
@@ -25,9 +30,9 @@ def append_observation_to_statistics(observation: Iterable, statistics: dict):
         """
         if _key in statistics:
             if type(observation[_key]) in (np.ndarray, list):
-                if "values" not in statistics[_key]:
-                    statistics[_key]["values"] = []
-                statistics[_key]["values"].append(observation[_key])
+                if 'values' not in statistics[_key]:
+                    statistics[_key]['values'] = []
+                statistics[_key]['values'].append(observation[_key])
             else:
                 append_observation_to_statistics(observation[_key], statistics[_key])
 
@@ -53,15 +58,15 @@ def validate_observation_statistics(statistics: dict, validation_callback: Calla
         :param _key: Key to current observation subspace.
         """
         # Check whether we are in the last leaf.
-        if "min" in statistics[_key] and isinstance(statistics[_key]["min"], np.ndarray):
+        if 'min' in statistics[_key] and isinstance(statistics[_key]['min'], np.ndarray):
             # Compute statistics.
-            statistics[_key]["min"] = np.min(np.asarray(statistics[_key]["values"]))
-            statistics[_key]["max"] = np.max(np.asarray(statistics[_key]["values"]))
-            statistics[_key]["interval"] = statistics[_key]["max"] - statistics[_key]["min"]
-            statistics[_key].pop("values")
+            statistics[_key]['min'] = np.min(np.asarray(statistics[_key]['values']))
+            statistics[_key]['max'] = np.max(np.asarray(statistics[_key]['values']))
+            statistics[_key]['interval'] = statistics[_key]['max'] - statistics[_key]['min']
+            statistics[_key].pop('values')
 
             # Execute validation callbacks.
-            assert validation_callback(statistics[_key]), "Validation callback failed."
+            assert validation_callback(statistics[_key]), 'Validation callback failed.'
         else:
             validate_observation_statistics(statistics[_key], validation_callback)
 
@@ -88,7 +93,7 @@ def conduct_observation_statistics_validation_test(
     act_conv_space: gym.spaces.space = env.action_conversion.space()
     stats: dict = env.fetch_statistics()
 
-    for step in range(n_steps):
+    for _ in range(n_steps):
         append_observation_to_statistics(env.step(act_conv_space.sample())[0], stats)
 
     # Perform check to ensure values are not too far outside statisticsal bounds.

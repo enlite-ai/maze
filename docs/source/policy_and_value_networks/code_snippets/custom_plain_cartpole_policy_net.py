@@ -1,5 +1,8 @@
 """Shows how to create a custom cartpole model using no maze perception components."""
-from typing import Dict, Sequence
+
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 import torch
 import torch.nn as nn
@@ -15,8 +18,15 @@ class CustomPlainCartpolePolicyNet(nn.Module):
     :param hidden_layer_1: The number of units in layer 1.
     :param use_bias: Specify whether to use a bias in the linear layers.
     """
-    def __init__(self, obs_shapes: Dict[str, Sequence[int]], action_logits_shapes: Dict[str, Sequence[int]],
-                 hidden_layer_0: int, hidden_layer_1: int, use_bias: bool):
+
+    def __init__(
+        self,
+        obs_shapes: dict[str, Sequence[int]],
+        action_logits_shapes: dict[str, Sequence[int]],
+        hidden_layer_0: int,
+        hidden_layer_1: int,
+        use_bias: bool,
+    ):
         nn.Module.__init__(self)
 
         self.observation_name = list(obs_shapes.keys())[0]
@@ -33,7 +43,7 @@ class CustomPlainCartpolePolicyNet(nn.Module):
         self.l1.reset_parameters()
         self.l1.reset_parameters()
 
-    def forward(self, in_tensor_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, in_tensor_dict: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Compute forward pass through the network.
 
         :param in_tensor_dict: Input tensor dict.

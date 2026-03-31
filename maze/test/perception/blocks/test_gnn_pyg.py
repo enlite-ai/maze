@@ -1,15 +1,22 @@
 """Contains tests for the PyG gnn based block"""
+
+from __future__ import annotations
+
+from maze.perception.blocks.feed_forward.gnn_pyg import (
+    SUPPORTED_GNNS,
+    GNNBlockPyG,
+    GNNLayerPyG,
+    _dummy_edge_index_factory,
+)
+
 import pytest
 import torch
-
-from maze.perception.blocks.feed_forward.gnn_pyg import SUPPORTED_GNNS, GNNLayerPyG, _dummy_edge_index_factory, \
-    GNNBlockPyG
 
 
 def test_gnn_layer_init_unsupported_type():
     """Test that initialising GNNLayerPyG with an unsupported type raises ValueError."""
-    with pytest.raises(ValueError, match="Unsupported GNN type"):
-        GNNLayerPyG(in_features=16, out_features=32, gnn_type="invalid", gnn_kwargs=None)
+    with pytest.raises(ValueError, match='Unsupported GNN type'):
+        GNNLayerPyG(in_features=16, out_features=32, gnn_type='invalid', gnn_kwargs=None)
 
 
 def test_dummy_edge_index_factory():
@@ -28,9 +35,10 @@ def test_dummy_edge_index_factory():
     # All values should be in [0, n_nodes-1]
     assert (edge_index >= 0).all() and (edge_index < n_nodes).all()
 
-@pytest.mark.parametrize("gnn_type", SUPPORTED_GNNS)
-@pytest.mark.parametrize("batch_size", [None, 4])
-@pytest.mark.parametrize("bias", [False, True])
+
+@pytest.mark.parametrize('gnn_type', SUPPORTED_GNNS)
+@pytest.mark.parametrize('batch_size', [None, 4])
+@pytest.mark.parametrize('bias', [False, True])
 def test_gnn_layer_forward(gnn_type, batch_size, bias):
     """
     Test forward pass.
@@ -39,7 +47,9 @@ def test_gnn_layer_forward(gnn_type, batch_size, bias):
     out_features = 16
     n_nodes = 5
 
-    layer = GNNLayerPyG(in_features=in_features, out_features=out_features, gnn_type=gnn_type, gnn_kwargs={'bias': bias})
+    layer = GNNLayerPyG(
+        in_features=in_features, out_features=out_features, gnn_type=gnn_type, gnn_kwargs={'bias': bias}
+    )
 
     # Construct inputs
     if batch_size is None:
@@ -67,7 +77,7 @@ def test_gnn_layer_forward(gnn_type, batch_size, bias):
         assert out.shape == (batch_size, n_nodes, out_features)
 
 
-@pytest.mark.parametrize("gnn_type", SUPPORTED_GNNS)
+@pytest.mark.parametrize('gnn_type', SUPPORTED_GNNS)
 def test_gnn_block_forward(gnn_type: str):
     """
     Test the forward pass of GNNBlockPyG.
@@ -80,13 +90,13 @@ def test_gnn_block_forward(gnn_type: str):
     hidden_features = [16, 16]
 
     block = GNNBlockPyG(
-        in_keys=["node_feats", "edge_index", "edge_attr"],
-        out_keys=["out"],
-        in_shapes=[(n_nodes, in_features), (2, n_edges), (n_edges, )],
+        in_keys=['node_feats', 'edge_index', 'edge_attr'],
+        out_keys=['out'],
+        in_shapes=[(n_nodes, in_features), (2, n_edges), (n_edges,)],
         hidden_features=hidden_features,
-        non_lin="torch.nn.ReLU",
+        non_lin='torch.nn.ReLU',
         gnn_type=gnn_type,
-        gnn_kwargs=None
+        gnn_kwargs=None,
     )
 
     node_feats = torch.randn(batch_size, n_nodes, in_features)
@@ -103,28 +113,27 @@ def test_gnn_block_forward(gnn_type: str):
     edge_attr = torch.stack(edge_attr, dim=0)
 
     block_input = {
-        "node_feats": node_feats,
-        "edge_index": edge_index,
-        "edge_attr": edge_attr,
+        'node_feats': node_feats,
+        'edge_index': edge_index,
+        'edge_attr': edge_attr,
     }
 
     output_dict = block(block_input)
-    out = output_dict["out"]
+    out = output_dict['out']
 
     assert out.shape == (batch_size, n_nodes, hidden_features[-1])
 
     assert not torch.isnan(out).any()
 
 
-@pytest.mark.parametrize("batch_size", [None, 3])
-@pytest.mark.parametrize("edge_dim", [None, 1, 5])
-@pytest.mark.parametrize("n_heads", [1, 2, 4])
-
+@pytest.mark.parametrize('batch_size', [None, 3])
+@pytest.mark.parametrize('edge_dim', [None, 1, 5])
+@pytest.mark.parametrize('n_heads', [1, 2, 4])
 def test_gnn_layer_forward_gat_with_edge_attrs(batch_size, edge_dim, n_heads):
     """
     Test GNNLayerPyG layer with gnn_type='gat'.
     """
-    gnn_type = "gat"
+    gnn_type = 'gat'
     in_features = 6
     out_features = 8
     n_nodes = 5
@@ -134,7 +143,7 @@ def test_gnn_layer_forward_gat_with_edge_attrs(batch_size, edge_dim, n_heads):
         in_features=in_features,
         out_features=out_features,
         gnn_type=gnn_type,
-        gnn_kwargs={"edge_dim": edge_dim, "heads": n_heads}
+        gnn_kwargs={'edge_dim': edge_dim, 'heads': n_heads},
     )
 
     if edge_dim is None:
@@ -162,11 +171,12 @@ def test_gnn_layer_forward_gat_with_edge_attrs(batch_size, edge_dim, n_heads):
         assert out.shape == (n_nodes, out_features * n_heads)
     else:
         assert out.shape == (batch_size, n_nodes, out_features * n_heads)
-    assert not torch.isnan(out).any(), "Output contains NaNs!"
+    assert not torch.isnan(out).any(), 'Output contains NaNs!'
 
-@pytest.mark.parametrize("n_heads", [1, 2, 4])
-@pytest.mark.parametrize("edge_dim", [2, 3])
-@pytest.mark.parametrize("concat", [True, False])
+
+@pytest.mark.parametrize('n_heads', [1, 2, 4])
+@pytest.mark.parametrize('edge_dim', [2, 3])
+@pytest.mark.parametrize('concat', [True, False])
 def test_gnn_block_forward_gat_with_edge_attrs(n_heads: int, edge_dim: int, concat: bool):
     """
     Test GNNBlockPyG with gnn_type='gat'.
@@ -178,13 +188,13 @@ def test_gnn_block_forward_gat_with_edge_attrs(n_heads: int, edge_dim: int, conc
     hidden_features = [16, 16]
 
     block = GNNBlockPyG(
-        in_keys=["node_feats", "edge_index", "edge_attr"],
-        out_keys=["out"],
+        in_keys=['node_feats', 'edge_index', 'edge_attr'],
+        out_keys=['out'],
         in_shapes=[(n_nodes, in_features), (2, n_edges), (n_edges, edge_dim)],
         hidden_features=hidden_features,
-        non_lin="torch.nn.ReLU",
-        gnn_type="gat",
-        gnn_kwargs={"edge_dim": edge_dim, "heads": n_heads, "concat": concat}
+        non_lin='torch.nn.ReLU',
+        gnn_type='gat',
+        gnn_kwargs={'edge_dim': edge_dim, 'heads': n_heads, 'concat': concat},
     )
 
     node_feats = torch.randn(batch_size, n_nodes, in_features)
@@ -200,21 +210,22 @@ def test_gnn_block_forward_gat_with_edge_attrs(n_heads: int, edge_dim: int, conc
     edge_attr = torch.stack(edge_attr_list, dim=0)
 
     block_input = {
-        "node_feats": node_feats,
-        "edge_index": edge_index,
-        "edge_attr": edge_attr,
+        'node_feats': node_feats,
+        'edge_index': edge_index,
+        'edge_attr': edge_attr,
     }
 
     output_dict = block(block_input)
-    out = output_dict["out"]
+    out = output_dict['out']
 
     if 'heads' in block.gnn_kwargs and ('concat' not in block.gnn_kwargs or block.gnn_kwargs['concat']):
         expected_output_features = hidden_features[-1] * block.gnn_kwargs['heads']
     else:
         expected_output_features = hidden_features[-1]
 
-    assert out.shape == (batch_size, n_nodes, expected_output_features), \
-        f"Expected shape (B={batch_size}, N={n_nodes}, out_feats={expected_output_features}) but got {out.shape}"
+    assert out.shape == (batch_size, n_nodes, expected_output_features), (
+        f'Expected shape (B={batch_size}, N={n_nodes}, out_feats={expected_output_features}) but got {out.shape}'
+    )
 
     # Check for NaNs
-    assert not torch.isnan(out).any(), "Output contains NaNs!"
+    assert not torch.isnan(out).any(), 'Output contains NaNs!'

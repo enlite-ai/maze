@@ -2,11 +2,14 @@
 An empty reward aggregator which just passes the reward through
 """
 
+from __future__ import annotations
+
 from abc import ABC
-from typing import List, Type, Optional
 
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
+
+# ruff: noqa: B027, B024
 
 
 class DummyEnvEvents(ABC):
@@ -17,16 +20,15 @@ class DummyEnvEvents(ABC):
 
 
 class RewardAggregator(RewardAggregatorInterface):
-    """Event aggregation object dealing with cutting rewards.
-    """
+    """Event aggregation object dealing with cutting rewards."""
 
-    def get_interfaces(self) -> List[Type[ABC]]:
+    def get_interfaces(self) -> list[type[ABC]]:
         """
-        A emtpy get_interfaces function
+        A empty get_interfaces function
         """
         return [DummyEnvEvents]
 
-    def summarize_reward(self, maze_state: MazeStateType | None = None) -> float:
+    def summarize_reward(self, maze_state: MazeStateType | None = None) -> float:  # noqa: ARG002
         """Summarize reward based on the orders and pieces to cut.
 
         :return: the summarized scalar reward.

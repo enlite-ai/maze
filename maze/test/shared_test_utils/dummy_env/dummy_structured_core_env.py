@@ -1,13 +1,16 @@
 """Dummy structured (multi-agent, with two agents) core environment."""
-import pickle
-from typing import Tuple, Dict, Any, Optional
 
-import gymnasium as gym
-import numpy as np
+from __future__ import annotations
+
+import pickle
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.core_env import CoreEnv
-from maze.core.env.structured_env import StepKeyType, ActorID
+from maze.core.env.structured_env import ActorID, StepKeyType
+
+import gymnasium as gym
+import numpy as np
 
 
 class DummyStructuredCoreEnvironment(CoreEnv):
@@ -27,11 +30,11 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         self._current_seed = None
 
     @override(CoreEnv)
-    def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, bool, Dict | None]:
+    def step(self, maze_action: dict) -> tuple[dict[str, np.ndarray], float, bool, bool, dict | None]:
         """Switch agents, increment env step after the second agent"""
         self.current_agent += 1
         action_hash = hash(tuple([tt if isinstance(tt, (int, np.int64)) else tuple(tt) for tt in maze_action.values()]))
-        self._current_path_id += action_hash if action_hash >= 0 else - action_hash
+        self._current_path_id += action_hash if action_hash >= 0 else -action_hash
 
         if self.current_agent % self.n_agents == 0:
             self.current_agent = 0
@@ -41,14 +44,14 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         return self.get_maze_state(), 0, False, False, {}
 
     @override(CoreEnv)
-    def get_maze_state(self) -> Dict[str, np.ndarray]:
+    def get_maze_state(self) -> dict[str, np.ndarray]:
         """Sample a random observation."""
         # Seed the observation space before sampling with the id of the current path in order to be seeding consistent
         self.observation_space.seed(self._current_path_id)
         return self.observation_space.sample()
 
     @override(CoreEnv)
-    def reset(self) -> Tuple[Dict[str, np.ndarray], dict]:
+    def reset(self) -> tuple[dict[str, np.ndarray], dict]:
         """Reset current agent"""
         self.current_agent = 0
         self._current_path_id = 0
@@ -65,7 +68,7 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         return self._current_seed
 
     @override(CoreEnv)
-    def get_serializable_components(self) -> Dict[str, Any]:
+    def get_serializable_components(self) -> dict[str, Any]:
         """No components required/available"""
         return {}
 
@@ -81,7 +84,7 @@ class DummyStructuredCoreEnvironment(CoreEnv):
 
     @property
     @override(CoreEnv)
-    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+    def agent_counts_dict(self) -> dict[StepKeyType, int]:
         """Single-step, two-agent environment"""
         return {0: self.n_agents}
 
@@ -101,18 +104,30 @@ class DummyStructuredCoreEnvironment(CoreEnv):
         pass
 
     def serialize_state(self) -> Any:
-        """Serialize the current env state and return an object that can be used to deserialize the env again.
-        """
+        """Serialize the current env state and return an object that can be used to deserialize the env again."""
         return pickle.dumps(
-            [self.current_agent, self.n_agents, self.context.step_id, self.context.episode_id, self.observation_space,
-             self._current_path_id])
+            [
+                self.current_agent,
+                self.n_agents,
+                self.context.step_id,
+                self.context.episode_id,
+                self.observation_space,
+                self._current_path_id,
+            ]
+        )
 
     def deserialize_state(self, serialized_state: Any) -> None:
         """Deserialize the current env from the given env state."""
-        self.current_agent, self.n_agents, self.context.step_id, self.context._episode_id, self.observation_space, \
-            self._current_path_id = pickle.loads(serialized_state)
+        (
+            self.current_agent,
+            self.n_agents,
+            self.context.step_id,
+            self.context._episode_id,  # noqa: SLF001
+            self.observation_space,
+            self._current_path_id,
+        ) = pickle.loads(serialized_state)
 
     @override(CoreEnv)
-    def clone_from(self, env: 'CoreEnv') -> None:
+    def clone_from(self, env: CoreEnv) -> None:
         """Clone from the given env."""
         self.deserialize_state(env.serialize_state())

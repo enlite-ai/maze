@@ -1,10 +1,12 @@
 """Runner interface for running Maze from CLI."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
-from omegaconf import DictConfig
-
 from maze.core.utils.seeding import MazeSeeding
+
+from omegaconf import DictConfig
 
 
 class Runner(ABC):
@@ -13,6 +15,7 @@ class Runner(ABC):
     This class will be instantiated from the config obtained from hydra (cfg.runner). Then, the run method
     will be called, being supplied the whole hydra config (cfg).
     """
+
     maze_seeding: MazeSeeding
 
     @abstractmethod

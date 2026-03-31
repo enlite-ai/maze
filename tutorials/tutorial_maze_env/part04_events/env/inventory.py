@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .events import InventoryEvents
 from .maze_action import Cutting2DMazeAction
 
@@ -9,8 +11,7 @@ class Inventory:
     :param inventory_events: Inventory event dispatch proxy.
     """
 
-    def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int),
-                 inventory_events: InventoryEvents):
+    def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int), inventory_events: InventoryEvents):
         self.max_pieces_in_inventory = max_pieces_in_inventory
         self.raw_piece_size = raw_piece_size
         self.inventory_events = inventory_events
@@ -56,8 +57,12 @@ class Inventory:
             return False
 
         # Check whether the cut is possible
-        if any([ordered_piece[dim] > available_size for dim, available_size
-                in enumerate(self.pieces[maze_action.piece_id])]):
+        if any(
+            [
+                ordered_piece[dim] > available_size
+                for dim, available_size in enumerate(self.pieces[maze_action.piece_id])
+            ]
+        ):
             return False
 
         # Perform the cut

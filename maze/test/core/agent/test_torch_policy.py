@@ -1,8 +1,12 @@
 """Torch policy mechanics tests."""
-import pytest
 
-from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
-    flatten_concat_probabilistic_policy_for_env, build_dummy_maze_environment_with_discrete_action_space
+from __future__ import annotations
+
+from maze.test.shared_test_utils.helper_functions import (
+    build_dummy_maze_env,
+    build_dummy_maze_environment_with_discrete_action_space,
+    flatten_concat_probabilistic_policy_for_env,
+)
 
 
 def test_actor_id_is_optional_for_single_network_policies():

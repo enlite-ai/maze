@@ -1,7 +1,6 @@
-""" Contains unit test for the maze gym environment wrapper """
-import gymnasium as gym
-import numpy as np
-import pytest
+"""Contains unit test for the maze gym environment wrapper"""
+
+from __future__ import annotations
 
 from maze.core.agent.dummy_cartpole_policy import DummyCartPolePolicy
 from maze.core.agent.random_policy import RandomPolicy
@@ -9,16 +8,20 @@ from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.test.shared_test_utils.test_seeding import perform_seeding_test
 from maze.test.shared_test_utils.wrappers import assert_wrapper_clone_from
 
+import gymnasium as gym
+import numpy as np
+import pytest
+
 try:
-    gym.make("PongNoFrameskip-v4")
+    gym.make('PongNoFrameskip-v4')
     ATARI_AVAILABLE = True
-except:
+except:  # noqa: E722
     ATARI_AVAILABLE = False
 
 
 def test_maze_gym_env_wrapper():
-    """ gym env wrapper unit test """
-    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    """gym env wrapper unit test"""
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     env.seed(1234)
     obs, _ = env.reset()
     env.observation_conversion.space_to_maze(obs)
@@ -30,29 +33,29 @@ def test_maze_gym_env_wrapper():
 
 
 def test_multi_step_dict_gym_env():
-    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     assert isinstance(env.action_spaces_dict[0], gym.spaces.Dict)
     assert isinstance(env.observation_spaces_dict[0], gym.spaces.Dict)
 
 
 def test_gets_formatted_actions_and_observations():
-    gym_env = gym.make("CartPole-v1")
+    gym_env = gym.make('CartPole-v1')
     gym_obs, _ = gym_env.reset()
     gym_act = gym_env.action_space.sample()
 
-    wrapped_env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    wrapped_env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     wrapped_env.seed(1234)
     assert not wrapped_env.is_actor_done()
     assert wrapped_env.actor_id() == (0, 0)
     obs_dict, act_dict = wrapped_env.get_observation_and_action_dicts(gym_obs, gym_act, False)
-    assert np.all(gym_obs.astype(np.float32) == obs_dict[0]["observation"])
-    assert np.all(gym_act == act_dict[0]["action"])
+    assert np.all(gym_obs.astype(np.float32) == obs_dict[0]['observation'])
+    assert np.all(gym_act == act_dict[0]['action'])
     wrapped_env.close()
 
 
 def test_random_sampling_seeding():
     """Test the seeding with a random env version and random sampling (fully stochastic)"""
-    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     policy = RandomPolicy(env.action_spaces_dict)
 
     perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=False)
@@ -60,21 +63,21 @@ def test_random_sampling_seeding():
 
 def test_heuristic_sampling():
     """Test the seeding with a deterministic env and deterministic heuristic"""
-    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     policy = DummyCartPolePolicy()
 
     perform_seeding_test(env, policy, is_deterministic_env=False, is_deterministic_agent=True)
 
 
 # Environments to be tested
-env_ids = ["CartPole-v1", "Acrobot-v1", "MountainCar-v0", "MountainCarContinuous-v0", "Pendulum-v1"]
+env_ids = ['CartPole-v1', 'Acrobot-v1', 'MountainCar-v0', 'MountainCarContinuous-v0', 'Pendulum-v1']
 if ATARI_AVAILABLE:
-    env_ids.append("PongNoFrameskip-v4")
+    env_ids.append('PongNoFrameskip-v4')
 
 
-@pytest.mark.parametrize("env_id", env_ids)
+@pytest.mark.parametrize('env_id', env_ids)
 def test_maze_gym_env_clone_from(env_id: str):
-    """ time limit wrapper unit tests """
+    """time limit wrapper unit tests"""
 
     def _make_env():
         env = GymMazeEnv(env_id, render_mode=None)

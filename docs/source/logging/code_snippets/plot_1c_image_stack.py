@@ -1,10 +1,10 @@
-from typing import List, Tuple
+from __future__ import annotations
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-def plot_1c_image_stack(value: List[np.ndarray], groups: Tuple[str, str], **kwargs) -> None:
+def plot_1c_image_stack(value: list[np.ndarray], groups: tuple[str, str], **kwargs) -> None:  # noqa: ARG001
     """Plots a stack of single channel images with shape [N_STACK x H x W] using imshow.
 
     :param value: A list of image stacks.
@@ -18,7 +18,6 @@ def plot_1c_image_stack(value: List[np.ndarray], groups: Tuple[str, str], **kwar
     fig = None
     # check which observation of the dict-space to visualize
     if step_key == 'step_key_0' and obs_name == 'observation-rgb2gray-resize_img':
-
         # randomly select one observation
         idx = np.random.random_integers(0, len(value), size=1)[0]
         obs = value[idx]
@@ -29,8 +28,8 @@ def plot_1c_image_stack(value: List[np.ndarray], groups: Tuple[str, str], **kwar
         # plot the observation
         fig = plt.figure(figsize=(max(5, 5 * n_channels), 5))
         for i, img in enumerate(obs):
-            plt.subplot(1, n_channels, i+1)
-            plt.imshow(img, interpolation="nearest", vmin=min_val, vmax=max_val, cmap="magma")
+            plt.subplot(1, n_channels, i + 1)
+            plt.imshow(img, interpolation='nearest', vmin=min_val, vmax=max_val, cmap='magma')
             plt.colorbar()
 
     return fig

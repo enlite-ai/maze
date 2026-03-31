@@ -1,11 +1,10 @@
 """Test event logging."""
+
+from __future__ import annotations
+
 import random
 from abc import ABC
-from typing import Tuple, Optional, Any
-from typing import Union, List, Type, Dict
-
-import gymnasium as gym
-import numpy as np
+from typing import Any
 
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.base_env_events import BaseEnvEvents
@@ -17,7 +16,7 @@ from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.kpi_calculator import KpiCalculator
 from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
-from maze.core.log_stats.event_decorators import define_episode_stats, define_step_stats, define_epoch_stats
+from maze.core.log_stats.event_decorators import define_episode_stats, define_epoch_stats, define_step_stats
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -25,11 +24,18 @@ from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironmen
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
 from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
-from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion as \
-    DummyActionConversion
+from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import (
+    DictActionConversion as DummyActionConversion,
+)
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
-from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion \
-    as DummyObservationConversion
+from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import (
+    ObservationConversion as DummyObservationConversion,
+)
+
+import gymnasium as gym
+import numpy as np
+
+# ruff: noqa: B027, B024
 
 
 def _run_rollout_loop(env: BaseEnv | MazeEnv, n_steps_per_episode: int, n_episodes: int, writer: LogEventsWriter):
@@ -53,23 +59,26 @@ def test_logs_events():
         Dummy KPIs for dummy environment.
         """
 
-        def calculate_kpis(self, episode_event_log: EpisodeEventLog, last_maze_state: MazeStateType) -> Dict[
-            str, float]:
+        def calculate_kpis(
+            self,
+            episode_event_log: EpisodeEventLog,  # noqa: ARG002
+            last_maze_state: MazeStateType,  # noqa: ARG002
+        ) -> dict[str, float]:
             """
             Returns a dummy KPI.
             """
-            return {"dummy_kpi": random.random()}
+            return {'dummy_kpi': random.random()}
 
     class CustomDummyRewardAggregator(RewardAggregator):
         """
         Customized dummy reward aggregator subscribed to BaseEnvEvents.
         """
 
-        def get_interfaces(self) -> List[Type[ABC]]:
+        def get_interfaces(self) -> list[type[ABC]]:
             """
             Return events class is subscribed to.
             """
-            additional_interfaces: List[Type[ABC]] = [BaseEnvEvents]
+            additional_interfaces: list[type[ABC]] = [BaseEnvEvents]
             parent_interfaces = super().get_interfaces()
             return additional_interfaces + parent_interfaces
 
@@ -118,11 +127,12 @@ def test_logs_events():
         env=DummyEnvironment(
             core_env=CustomDummyCoreEnv(observation_conversion.space()),
             action_conversion=[DictActionConversion()],
-            observation_conversion=[observation_conversion]
+            observation_conversion=[observation_conversion],
         ),
         n_episodes=5,
         n_steps_per_episode=10,
-        writer=writer)
+        writer=writer,
+    )
 
     assert writer.episode_count == 5
     assert writer.step_count == 5 * 10
@@ -149,7 +159,8 @@ def test_logs_events_for_generic_gym_envs():
         env=GymMazeEnv(gym.make('CartPole-v1', render_mode=None), render_mode=None),
         n_episodes=5,
         n_steps_per_episode=10,
-        writer=writer)
+        writer=writer,
+    )
 
     assert writer.step_count == 5 * 10
     assert writer.episode_count == 5
@@ -159,7 +170,7 @@ def test_logs_custom_env_time():
     class CustomTimedDummyEnv(DummyCoreEnvironment, TimeEnvMixin):
         """A subclass of the dummy core env that has custom env time."""
 
-        def reset(self) -> Tuple[Any, dict]:
+        def reset(self) -> tuple[Any, dict]:
             """Start counting env time from 1337."""
             obs, info = super().reset()
             self.context.step_id = 1337
@@ -171,7 +182,7 @@ def test_logs_custom_env_time():
     env = DummyEnvironment(
         core_env=core_env,
         action_conversion=[DummyActionConversion()],
-        observation_conversion=[dummy_observation_conversion]
+        observation_conversion=[dummy_observation_conversion],
     )
 
     class TestWriter(LogEventsWriter):
@@ -190,11 +201,7 @@ def test_logs_custom_env_time():
                 assert step_event_log.env_time == 1337 + step_id
 
     writer = TestWriter()
-    _run_rollout_loop(
-        env=env,
-        n_episodes=5,
-        n_steps_per_episode=10,
-        writer=writer)
+    _run_rollout_loop(env=env, n_episodes=5, n_steps_per_episode=10, writer=writer)
 
     assert writer.step_count == 5 * 10
     assert writer.episode_count == 5
@@ -224,7 +231,7 @@ def test_records_once_per_maze_step_in_multistep_envs():
             super().__init__(observation_space)
             self.dummy_events = self.pubsub.create_event_topic(_CoreEnvEvents)
 
-        def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, bool, Dict | None]:
+        def step(self, maze_action: dict) -> tuple[dict[str, np.ndarray], float, bool, bool, dict | None]:
             """Dispatch the step event..."""
             self.dummy_events.core_env_step_event()
             return super().step(maze_action)
@@ -236,11 +243,11 @@ def test_records_once_per_maze_step_in_multistep_envs():
             super().__init__(maze_env)
             self.dummy_events = self.pubsub.create_event_topic(_SubStepEvents)
 
-        def _action0(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
+        def _action0(self, action) -> tuple[dict, float, bool, bool, dict[str, np.ndarray] | None]:  # noqa: ARG002
             self.dummy_events.sub_step_event()
             return {}, 0, False, False, None
 
-        def _action1(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
+        def _action1(self, action) -> tuple[dict, float, bool, bool, dict[str, np.ndarray] | None]:
             self.dummy_events.sub_step_event()
             return self.maze_env.step(action)
 
@@ -259,17 +266,13 @@ def test_records_once_per_maze_step_in_multistep_envs():
     maze_env = DummyEnvironment(
         core_env=EventDummyEnv(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
     env = DummyMultiStepEnv(maze_env)
 
     # Run the rollout
     writer = TestWriter()
-    _run_rollout_loop(
-        env=env,
-        n_episodes=1,
-        n_steps_per_episode=10,
-        writer=writer)
+    _run_rollout_loop(env=env, n_episodes=1, n_steps_per_episode=10, writer=writer)
 
     # There should be one core env step event and two substep events recorded in every step.
     assert writer.episode_record is not None

@@ -1,6 +1,8 @@
-import pytest
+from __future__ import annotations
 
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
+
+import pytest
 
 
 def run_sacfd(env: str, teacher_policy: str, sac_runner: str, sac_wrappers: str, sac_model: str, sac_critic: str):
@@ -13,34 +15,39 @@ def run_sacfd(env: str, teacher_policy: str, sac_runner: str, sac_wrappers: str,
 
     # Heuristics rollout
     rollout_config = dict(
-        configuration="test",
+        configuration='test',
         env=env,
         policy=teacher_policy,
-        runner="sequential",
+        runner='sequential',
     )
-    rollout_config['runner.n_episodes'] = "10"
-    rollout_config['runner.max_episode_steps'] = "10"
-    rollout_config["runner.record_trajectory"] = "true"
-    rollout_config["hydra.run.dir"] = "."
-    run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
+    rollout_config['runner.n_episodes'] = '10'
+    rollout_config['runner.max_episode_steps'] = '10'
+    rollout_config['runner.record_trajectory'] = 'true'
+    rollout_config['hydra.run.dir'] = '.'
+    run_maze_job(rollout_config, config_module='maze.conf', config_name='conf_rollout')
 
     # Behavioral cloning on top of the heuristic rollout trajectories
     train_config = dict(
-        configuration="test",
+        configuration='test',
         env=env,
         wrappers=sac_wrappers,
         model=sac_model,
-        algorithm="sacfd",
+        algorithm='sacfd',
         runner=sac_runner,
         critic=sac_critic,
     )
-    train_config["hydra.run.dir"] = "."
-    run_maze_job(train_config, config_module="maze.conf", config_name="conf_train")
+    train_config['hydra.run.dir'] = '.'
+    run_maze_job(train_config, config_module='maze.conf', config_name='conf_train')
 
 
-@pytest.mark.parametrize("runner", ["dev", "local"])
+@pytest.mark.parametrize('runner', ['dev', 'local'])
 def test_sacfd(runner: str):
     """Tests the soft actor critic from demonstrations."""
-    run_sacfd(env="gym_env", teacher_policy="random_policy",
-               sac_runner=runner, sac_wrappers="vector_obs", sac_model="flatten_concat",
-               sac_critic='flatten_concat_state_action')
+    run_sacfd(
+        env='gym_env',
+        teacher_policy='random_policy',
+        sac_runner=runner,
+        sac_wrappers='vector_obs',
+        sac_model='flatten_concat',
+        sac_critic='flatten_concat_state_action',
+    )

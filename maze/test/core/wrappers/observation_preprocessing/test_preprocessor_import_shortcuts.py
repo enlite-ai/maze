@@ -1,4 +1,7 @@
-""" Contains tests for the pre-processing wrapper. """
+"""Contains tests for the pre-processing wrapper."""
+
+from __future__ import annotations
+
 from maze import preprocessors
 from maze.core.wrappers.observation_preprocessing import preprocessors as preprocessors_module
 from maze.test.shared_test_utils.helper_functions import all_classes_of_module

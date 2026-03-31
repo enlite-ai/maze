@@ -1,11 +1,16 @@
 """
 This script includes unit tests for the dummy environments
 """
-from gymnasium import spaces
+
+from __future__ import annotations
 
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
-from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, \
-    build_dummy_maze_env_with_structured_core_env
+from maze.test.shared_test_utils.helper_functions import (
+    build_dummy_maze_env,
+    build_dummy_maze_env_with_structured_core_env,
+)
+
+from gymnasium import spaces
 
 
 def test_dummy_maze_env():
@@ -36,7 +41,7 @@ def test_dummy_struct_env():
     # check observation space
     assert isinstance(env.observation_space, spaces.Dict)
 
-    for i in range(10):
+    for _ in range(10):
         action = env.action_spaces_dict[env.actor_id()[0]].sample()
         observation, _, _, _, _ = env.step(action)
 

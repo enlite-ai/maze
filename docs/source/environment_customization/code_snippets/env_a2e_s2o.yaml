@@ -15,7 +15,7 @@ core_env:
     _target_: maze_envs.logistics.cutting_2d.reward.default.DefaultRewardAggregator
 
 # defines the conversion of actions to executions
-action_conversion
+action_conversion:
   - _target_: maze_envs.logistics.cutting_2d.space_interfaces.action_conversion.dict.ActionConversion
     max_pieces_in_inventory: 1000
 

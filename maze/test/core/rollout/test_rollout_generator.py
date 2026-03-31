@@ -1,17 +1,22 @@
 """Test rollouts in different settings using the rollout generator component."""
 
-from typing import Dict, Any, Tuple
+from __future__ import annotations
 
-import numpy as np
+from typing import Any
 
-from maze.core.agent.random_policy import RandomPolicy, DistributedRandomPolicy
+from maze.core.agent.random_policy import DistributedRandomPolicy, RandomPolicy
 from maze.core.env.base_env import BaseEnv
 from maze.core.rollout.rollout_generator import RolloutGenerator
 from maze.core.wrappers.time_limit_wrapper import TimeLimitWrapper
-from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env, build_dummy_maze_env, \
-    build_dummy_maze_env_with_structured_core_env
-from maze.test.shared_test_utils.helper_functions import flatten_concat_probabilistic_policy_for_env
+from maze.test.shared_test_utils.helper_functions import (
+    build_dummy_maze_env,
+    build_dummy_maze_env_with_structured_core_env,
+    build_dummy_structured_env,
+    flatten_concat_probabilistic_policy_for_env,
+)
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv
+
+import numpy as np
 
 
 def test_standard_rollout():
@@ -54,7 +59,7 @@ def test_vectorized_rollout():
         assert record.batch_shape == [concurrency]
         # The first dimension of the observations should correspond to the distributed env concurrency
         # (We just check the very first array present in the first observation)
-        first_sub_step_obs: Dict = list(record.observations_dict.values())[0]
+        first_sub_step_obs: dict = list(record.observations_dict.values())[0]
         first_obs_value = list(first_sub_step_obs.values())[0]
         assert first_obs_value.shape[0] == concurrency
 
@@ -101,13 +106,13 @@ class _FiveSubstepsLimitWrapper(TimeLimitWrapper):
         super().__init__(env)
         self.elapsed_sub_steps = 0
 
-    def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
+    def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:
         """Return done after 5 sub-steps"""
         observation, reward, terminated, truncated, info = self.env.step(action)
         self.elapsed_sub_steps += 1
         return observation, reward, terminated, truncated or self.elapsed_sub_steps >= 5, info
 
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Reset substep counter"""
         self.elapsed_sub_steps = 0
         return self.env.reset()

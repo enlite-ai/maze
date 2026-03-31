@@ -1,10 +1,13 @@
-""" This file contains general utility functionality. """
+"""This file contains general utility functionality."""
+
+from __future__ import annotations
 
 
 class BColors:
     """
     Colored command line output formatting
     """
+
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -17,7 +20,7 @@ class BColors:
 
     @staticmethod
     def format_colored(string: str, color: str) -> str:
-        """ Format color of string.
+        """Format color of string.
 
         :param string: the text to print
         :param color: the bash color to use
@@ -27,7 +30,7 @@ class BColors:
 
     @staticmethod
     def print_colored(string: str, color: str) -> None:
-        """ Print color formatted string.
+        """Print color formatted string.
 
         :param string: the text to print
         :param color: the bash color to use

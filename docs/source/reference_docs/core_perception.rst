@@ -54,7 +54,7 @@ These are basic neural network building blocks and interfaces:
 
     ~lstm.LSTMBlock
 
-**General:** these are build-in general purpose building blocks:
+**General:** these are built-in general purpose building blocks:
 
 .. currentmodule:: maze.perception.blocks.general
 

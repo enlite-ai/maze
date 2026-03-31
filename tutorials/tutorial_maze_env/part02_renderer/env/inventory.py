@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .maze_action import Cutting2DMazeAction
 
 
@@ -49,8 +51,12 @@ class Inventory:
             return False
 
         # Check whether the cut is possible
-        if any([ordered_piece[dim] > available_size for dim, available_size
-                in enumerate(self.pieces[maze_action.piece_id])]):
+        if any(
+            [
+                ordered_piece[dim] > available_size
+                for dim, available_size in enumerate(self.pieces[maze_action.piece_id])
+            ]
+        ):
             return False
 
         # Perform the cut

@@ -1,16 +1,17 @@
-""" Contains tests for the perception module. """
+"""Contains tests for the perception module."""
 
-import pytest
+from __future__ import annotations
 
 import maze
 from maze.perception import builders
-from maze.perception.blocks import feed_forward, recurrent, joint_blocks, general
-from maze.perception.models import critics
-from maze.perception.models import policies
+from maze.perception.blocks import feed_forward, general, joint_blocks, recurrent
+from maze.perception.models import critics, policies
 from maze.test.shared_test_utils.helper_functions import all_classes_of_module
 
+import pytest
 
-@pytest.mark.parametrize("module", [feed_forward, recurrent, joint_blocks, general])
+
+@pytest.mark.parametrize('module', [feed_forward, recurrent, joint_blocks, general])
 def test_blocks_import_shortcuts(module):
     """Tests if all blocks have shortcuts in blocks/__init__.py"""
 

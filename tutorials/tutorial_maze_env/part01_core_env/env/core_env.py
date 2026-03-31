@@ -1,13 +1,15 @@
-from typing import Union, Tuple, Dict, Any
+from __future__ import annotations
 
-import numpy as np
+from typing import Any
 
 from maze.core.env.core_env import CoreEnv
 from maze.core.env.structured_env import ActorID
 
-from .maze_state import Cutting2DMazeState
-from .maze_action import Cutting2DMazeAction
+import numpy as np
+
 from .inventory import Inventory
+from .maze_action import Cutting2DMazeAction
+from .maze_state import Cutting2DMazeState
 
 
 class Cutting2DCoreEnvironment(CoreEnv):
@@ -26,8 +28,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
     :param static_demand: Order to issue in each step.
     """
 
-    def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int),
-                 static_demand: (int, int)):
+    def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int), static_demand: (int, int)):
         super().__init__()
 
         self.max_pieces_in_inventory = max_pieces_in_inventory
@@ -42,8 +43,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
         self.inventory = Inventory(self.max_pieces_in_inventory, self.raw_piece_size)
         self.inventory.replenish_piece()
 
-    def step(self, maze_action: Cutting2DMazeAction) \
-            -> Tuple[Cutting2DMazeState, np.array, bool, bool, Dict[Any, Any]]:
+    def step(self, maze_action: Cutting2DMazeAction) -> tuple[Cutting2DMazeState, np.array, bool, bool, dict[Any, Any]]:
         """
         Summary of the step (simplified, not necessarily respecting the actual order in the code):
         1. Check if the selected piece to cut is valid (i.e. in inventory, large enough etc.)
@@ -66,11 +66,11 @@ class Cutting2DCoreEnvironment(CoreEnv):
 
             # attempt the cut
             if self.inventory.cut(maze_action, self.current_demand):
-                info['msg'] = "valid_cut"
+                info['msg'] = 'valid_cut'
                 replenishment_needed = piece_to_cut == self.raw_piece_size
             else:
                 # assign a negative reward for invalid cutting attempts
-                info['error'] = "invalid_cut"
+                info['error'] = 'invalid_cut'
                 reward = -2
 
         # check if replenishment is required
@@ -86,10 +86,11 @@ class Cutting2DCoreEnvironment(CoreEnv):
 
     def get_maze_state(self) -> Cutting2DMazeState:
         """Returns the current Cutting2DMazeState of the environment."""
-        return Cutting2DMazeState(self.inventory.pieces, self.max_pieces_in_inventory,
-                                  self.current_demand, self.raw_piece_size)
+        return Cutting2DMazeState(
+            self.inventory.pieces, self.max_pieces_in_inventory, self.current_demand, self.raw_piece_size
+        )
 
-    def reset(self) -> Tuple[Cutting2DMazeState, dict]:
+    def reset(self) -> tuple[Cutting2DMazeState, dict]:
         """Resets the environment to initial state."""
         self._setup_env()
         return self.get_maze_state(), {}
@@ -107,7 +108,7 @@ class Cutting2DCoreEnvironment(CoreEnv):
     def get_renderer(self) -> Any:
         pass
 
-    def get_serializable_components(self) -> Dict[str, Any]:
+    def get_serializable_components(self) -> dict[str, Any]:
         pass
 
     def is_actor_done(self) -> bool:
@@ -116,5 +117,5 @@ class Cutting2DCoreEnvironment(CoreEnv):
     def actor_id(self) -> ActorID:
         pass
 
-    def agent_counts_dict(self) -> Dict[str | int, int]:
+    def agent_counts_dict(self) -> dict[str | int, int]:
         pass

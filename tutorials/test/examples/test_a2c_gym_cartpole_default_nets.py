@@ -1,12 +1,15 @@
 """Contains unit tests for examples."""
+
+from __future__ import annotations
+
 from examples.a2c_gym_cartpole_default_nets import main
 
 
 def test_a2c_gym_cartpole_ff():
-    """ unit tests """
+    """unit tests"""
     main(n_epochs=1, rnn_steps=0)
 
 
 def test_a2c_gym_cartpole_rnn():
-    """ unit tests """
+    """unit tests"""
     main(n_epochs=1, rnn_steps=5)

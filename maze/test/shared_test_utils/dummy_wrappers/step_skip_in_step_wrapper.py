@@ -1,4 +1,5 @@
 """File holding wrappers to mimic (sub) step skipping."""
+
 from __future__ import annotations
 
 from maze.core.env.action_conversion import ActionType
@@ -36,7 +37,7 @@ class ConfigurableStepSkipInStepWrapper(Wrapper[MazeEnv]):
 
         self._step_events = self.env.context.event_service.create_event_topic(SkipEvent)
 
-    def step(self, action: ActionType):
+    def step(self, action: ActionType):  # noqa: ARG002
         """Step the environment.
 
         :param action: The action to take. Not used.

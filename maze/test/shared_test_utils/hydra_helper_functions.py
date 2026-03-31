@@ -1,24 +1,26 @@
-""" Contains hydra helper functions for testing. """
-from typing import List, Dict
+"""Contains hydra helper functions for testing."""
 
-import pytest
-from hydra.core.global_hydra import GlobalHydra
-from hydra import initialize_config_module, compose
-from omegaconf import DictConfig
-from torch import nn
+from __future__ import annotations
 
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.utils.config_utils import make_env_from_hydra, EnvFactory, get_hydra_version_base
+from maze.core.utils.config_utils import EnvFactory, get_hydra_version_base, make_env_from_hydra
 from maze.core.utils.factory import Factory
 from maze.core.wrappers.observation_normalization.observation_normalization_utils import obtain_normalization_statistics
-from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import \
-    ObservationNormalizationWrapper
+from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import (
+    ObservationNormalizationWrapper,
+)
 from maze.maze_cli import maze_run
 from maze.perception.models.model_composer import BaseModelComposer
 
+import pytest
+from hydra import compose, initialize_config_module
+from hydra.core.global_hydra import GlobalHydra
+from omegaconf import DictConfig
+from torch import nn
 
-def _get_all_overrides_from_hydra() -> List[Dict[str, str]]:
+
+def _get_all_overrides_from_hydra() -> list[dict[str, str]]:
     """Enumerate all environment configurations from Hydra
 
     Note that only configurations from the main config module are returned.
@@ -27,21 +29,21 @@ def _get_all_overrides_from_hydra() -> List[Dict[str, str]]:
     e.g. logistics envs, the other available environments do not get mixed in.)
     """
     config_sources = GlobalHydra.instance().config_loader().get_sources()
-    main_config_source = list(filter(lambda source: source.provider == "main", config_sources))[0]
+    main_config_source = list(filter(lambda source: source.provider == 'main', config_sources))[0]
     overrides = []
 
-    for env in main_config_source.list("env", results_filter=None):
+    for env in main_config_source.list('env', results_filter=None):
         overrides.append(dict(env=env))
 
-    if main_config_source.exists("env_configuration"):
-        for env_configuration in main_config_source.list("env_configuration", results_filter=None):
+    if main_config_source.exists('env_configuration'):
+        for env_configuration in main_config_source.list('env_configuration', results_filter=None):
             env, configuration = env_configuration.split('-')
             overrides.append(dict(env=env, configuration=configuration))
 
     return overrides
 
 
-def get_all_configs_from_hydra(default_conf: str, all_hydra_config_modules: List[str]) -> List[pytest.param]:
+def get_all_configs_from_hydra(default_conf: str, all_hydra_config_modules: list[str]) -> list[pytest.param]:
     """Enumerate all environment configurations from the Hydra options.
 
     :param default_conf: The name of the default config
@@ -57,27 +59,27 @@ def get_all_configs_from_hydra(default_conf: str, all_hydra_config_modules: List
             # query all argument overrides for this config module
             for overrides in _get_all_overrides_from_hydra():
                 # add a single combination of module and hydra arguments to the list
-                config = pytest.param(config_module, default_conf, overrides, id="-".join(overrides.values()))
+                config = pytest.param(config_module, default_conf, overrides, id='-'.join(overrides.values()))
                 configs.append(config)
 
     return configs
 
 
-def check_env_instantiation(config_module: str, config: str, overrides: Dict[str, str]) -> None:
+def check_env_instantiation(config_module: str, config: str, overrides: dict[str, str]) -> None:
     """Check if env instantiation works."""
     env = make_env_from_hydra(config_module, config, **overrides)
     assert env is not None
     assert isinstance(env, StructuredEnv)
 
 
-def check_env_and_model_instantiation(config_module: str, config: str, overrides: Dict[str, str]) -> None:
+def check_env_and_model_instantiation(config_module: str, config: str, overrides: dict[str, str]) -> None:
     """Check if env instantiation works."""
     kwargs = get_hydra_version_base()
     with initialize_config_module(config_module, **kwargs):
         # config is relative to a module
-        cfg = compose(config, overrides=[key + "=" + value for key, value in overrides.items()])
+        cfg = compose(config, overrides=[key + '=' + value for key, value in overrides.items()])
 
-    env_factory = EnvFactory(cfg.env, cfg.wrappers if "wrappers" in cfg else {})
+    env_factory = EnvFactory(cfg.env, cfg.wrappers if 'wrappers' in cfg else {})
     env = env_factory()
     assert env is not None
     assert isinstance(env, (StructuredEnv, StructuredEnvSpacesMixin))
@@ -87,7 +89,7 @@ def check_env_and_model_instantiation(config_module: str, config: str, overrides
             cfg.model,
             action_spaces_dict=env.action_spaces_dict,
             observation_spaces_dict=env.observation_spaces_dict,
-            agent_counts_dict=env.agent_counts_dict
+            agent_counts_dict=env.agent_counts_dict,
         )
         for pp in model_composer.policy.networks.values():
             assert isinstance(pp, nn.Module)
@@ -97,7 +99,7 @@ def check_env_and_model_instantiation(config_module: str, config: str, overrides
                 assert isinstance(cc, nn.Module)
 
 
-def check_random_sampling(config_module: str, config: str, overrides: Dict[str, str]) -> None:
+def check_random_sampling(config_module: str, config: str, overrides: dict[str, str]) -> None:
     """Check if random sampling in instantiated env works."""
     env = make_env_from_hydra(config_module, config, **overrides)
 
@@ -110,7 +112,7 @@ def check_random_sampling(config_module: str, config: str, overrides: Dict[str, 
 
     # run interaction loop
     n_steps = 100
-    for step in range(n_steps):
+    for _ in range(n_steps):
         # sample random action
         action = env.action_space.sample()
 
@@ -120,7 +122,7 @@ def check_random_sampling(config_module: str, config: str, overrides: Dict[str, 
             env.reset()
 
 
-def load_hydra_config(config_module: str, config_name: str, hydra_overrides: Dict[str, str]) -> DictConfig:
+def load_hydra_config(config_module: str, config_name: str, hydra_overrides: dict[str, str]) -> DictConfig:
     """Load a hydra config from a given config module + config name and additional hydra overrides.
 
     :param config_module: The config module that should be used
@@ -132,13 +134,12 @@ def load_hydra_config(config_module: str, config_name: str, hydra_overrides: Dic
     with initialize_config_module(config_module=config_module, **kwargs):
         # Config is relative to a module
         # For the HydraConfig init below, we need the hydra key there as well (=> return_hydra_config=True)
-        cfg = compose(config_name=config_name,
-                      overrides=[key + "=" + str(val) for key, val in hydra_overrides.items()])
+        cfg = compose(config_name=config_name, overrides=[key + '=' + str(val) for key, val in hydra_overrides.items()])
 
     return cfg
 
 
-def run_maze_from_str(config_module: str, config_name: str, hydra_overrides: Dict[str, str]) -> DictConfig:
+def run_maze_from_str(config_module: str, config_name: str, hydra_overrides: dict[str, str]) -> DictConfig:
     """Load a hydra config from a given config module + config name and additional hydra overrides and start the exp
 
     :param config_module: The config module that should be used

@@ -2,19 +2,20 @@
 A simple state observation which does nothing, except defining the observation space
 """
 
-from typing import Dict
+from __future__ import annotations
+
+from maze.core.env.observation_conversion import ObservationConversionInterface
 
 import gymnasium as gym
 import numpy as np
-
-from maze.core.env.observation_conversion import ObservationConversionInterface
 
 
 class ObservationConversion(ObservationConversionInterface):
     """
     An state observation implementation
     """
-    def maze_to_space(self, maze_state: Dict) -> Dict[str, np.ndarray]:
+
+    def maze_to_space(self, maze_state: dict) -> dict[str, np.ndarray]:
         """
         Does nothing
         :param maze_state: The state to pass through
@@ -22,7 +23,7 @@ class ObservationConversion(ObservationConversionInterface):
         """
         return maze_state
 
-    def space_to_maze(self, observation: Dict) -> Dict[str, np.ndarray]:
+    def space_to_maze(self, observation: dict) -> dict[str, np.ndarray]:
         """
         Does nothing
         :param observation: The observation to pass through
@@ -39,10 +40,12 @@ class ObservationConversion(ObservationConversionInterface):
 
         :return: The finished gym observation space
         """
-        return gym.spaces.Dict({
-            "observation_0": gym.spaces.Box(shape=(3, 32, 32), low=0, high=1),
-            "observation_1": gym.spaces.Box(shape=(10,), low=0, high=1),
-            'action_0_0_mask': gym.spaces.Box(shape=(10,), low=0, high=1),
-            'action_1_0_mask': gym.spaces.Box(shape=(10,), low=0, high=1),
-            'action_1_1_mask': gym.spaces.Box(shape=(5, ), low=0, high=1)
-        })
+        return gym.spaces.Dict(
+            {
+                'observation_0': gym.spaces.Box(shape=(3, 32, 32), low=0, high=1),
+                'observation_1': gym.spaces.Box(shape=(10,), low=0, high=1),
+                'action_0_0_mask': gym.spaces.Box(shape=(10,), low=0, high=1),
+                'action_1_0_mask': gym.spaces.Box(shape=(10,), low=0, high=1),
+                'action_1_1_mask': gym.spaces.Box(shape=(5,), low=0, high=1),
+            }
+        )

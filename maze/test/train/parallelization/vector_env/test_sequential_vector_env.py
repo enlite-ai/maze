@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from maze.core.agent.random_policy import DistributedRandomPolicy
 from maze.test.shared_test_utils.helper_functions import build_dummy_structured_env
 from maze.train.parallelization.vector_env.sequential_vector_env import SequentialVectorEnv

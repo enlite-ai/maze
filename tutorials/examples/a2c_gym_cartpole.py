@@ -1,7 +1,7 @@
 """Example of how to train a policy with A2C for the gym CartPole environment."""
-import torch.nn as nn
 
-from examples.cartpole_custom_net import PolicyNet, ValueNet
+from __future__ import annotations
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
@@ -14,21 +14,25 @@ from maze.train.trainers.a2c.a2c_trainer import A2C
 from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvaluator
 from maze.utils.log_stats_utils import setup_logging
 
+import torch.nn as nn
+from examples.cartpole_custom_net import PolicyNet, ValueNet
+
 
 def main(n_epochs: int) -> None:
-    """Trains the cart pole environment with the multi-step a2c implementation.
-    """
+    """Trains the cart pole environment with the multi-step a2c implementation."""
 
     # initialize distributed env
-    envs = SequentialVectorEnv([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(8)],
-                               logging_prefix="train")
+    envs = SequentialVectorEnv(
+        [lambda: GymMazeEnv(env='CartPole-v1', render_mode=None) for _ in range(8)], logging_prefix='train'
+    )
 
     # initialize the env and enable statistics collection
-    eval_env = SequentialVectorEnv([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(8)],
-                                   logging_prefix="eval")
+    eval_env = SequentialVectorEnv(
+        [lambda: GymMazeEnv(env='CartPole-v1', render_mode=None) for _ in range(8)], logging_prefix='eval'
+    )
 
     # init distribution mapper
-    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
 
     # init default distribution mapper
     distribution_mapper = DistributionMapper(action_space=env.action_space, distribution_mapper_config={})
@@ -53,7 +57,7 @@ def main(n_epochs: int) -> None:
         value_loss_coef=0.5,
         entropy_coef=0.0,
         max_grad_norm=0.0,
-        device="cpu",
+        device='cpu',
         rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True),
         n_training_seeds=100,
     )
@@ -61,15 +65,22 @@ def main(n_epochs: int) -> None:
     # initialize actor critic model
     model = TorchActorCritic(
         policy=TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device=algorithm_config.device),
-        critic=TorchSharedStateCritic(networks=critics, obs_spaces_dict=env.observation_spaces_dict,
-                                      device=algorithm_config.device, stack_observations=False),
-        device=algorithm_config.device)
+        critic=TorchSharedStateCritic(
+            networks=critics,
+            obs_spaces_dict=env.observation_spaces_dict,
+            device=algorithm_config.device,
+            stack_observations=False,
+        ),
+        device=algorithm_config.device,
+    )
 
-    a2c = A2C(rollout_generator=RolloutGenerator(envs),
-              evaluator=algorithm_config.rollout_evaluator,
-              algorithm_config=algorithm_config,
-              model=model,
-              model_selection=None)
+    a2c = A2C(
+        rollout_generator=RolloutGenerator(envs),
+        evaluator=algorithm_config.rollout_evaluator,
+        algorithm_config=algorithm_config,
+        model=model,
+        model_selection=None,
+    )
 
     setup_logging(job_config=None)
 
@@ -77,10 +88,10 @@ def main(n_epochs: int) -> None:
     a2c.train()
 
     # final evaluation run
-    print("Final Evaluation Run:")
+    print('Final Evaluation Run:')
     a2c.evaluate()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """ main """
     main(n_epochs=1000)

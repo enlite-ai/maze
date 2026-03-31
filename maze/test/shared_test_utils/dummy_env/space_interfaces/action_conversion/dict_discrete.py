@@ -3,12 +3,14 @@ A simple action conversion which does nothing, except defining the action space 
  discrete action spaces
 """
 
-from typing import Dict, Any
+from __future__ import annotations
 
-import gymnasium as gym
+from typing import Any
 
 from maze.core.env.action_conversion import ActionConversionInterface
 from maze.core.env.maze_state import MazeStateType
+
+import gymnasium as gym
 
 
 class DictDiscreteActionConversion(ActionConversionInterface):
@@ -16,7 +18,7 @@ class DictDiscreteActionConversion(ActionConversionInterface):
     An action conversion interface implementation
     """
 
-    def space_to_maze(self, action: Dict[str, int], maze_state: MazeStateType) -> Dict[str, Any]:
+    def space_to_maze(self, action: dict[str, int], maze_state: MazeStateType) -> dict[str, Any]:  # noqa: ARG002
         """
         Does nothing
         :param action: The action to pass through
@@ -32,15 +34,13 @@ class DictDiscreteActionConversion(ActionConversionInterface):
 
         :return: The finished gym action space
         """
-        return gym.spaces.Dict({
-            "action_0_0": gym.spaces.Discrete(10)
-        })
+        return gym.spaces.Dict({'action_0_0': gym.spaces.Discrete(10)})
 
     def noop_action(self):
         """Return the noop action, represented by 0 in this action space."""
-        return {"action_0_0": 0}
+        return {'action_0_0': 0}
 
-    def create_action_hash(self, action: Dict[str, int]) -> int:
+    def create_action_hash(self, action: dict[str, int]) -> int:
         """Calculate hash of the given action (since we have an only discrete item in the action space, just return
         its value."""
-        return action["action_0_0"]
+        return action['action_0_0']

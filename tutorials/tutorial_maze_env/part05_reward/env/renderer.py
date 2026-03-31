@@ -1,12 +1,13 @@
-from typing import Tuple, Optional
-
-import numpy as np
-import matplotlib.patches as patches
-import matplotlib.pyplot as plt
+from __future__ import annotations
 
 from maze.core.annotations import override
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
+
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+
 from .maze_action import Cutting2DMazeAction
 from .maze_state import Cutting2DMazeState
 
@@ -19,7 +20,9 @@ class Cutting2DRenderer(Renderer):
     """
 
     @override(Renderer)
-    def render(self, maze_state: Cutting2DMazeState, maze_action: Cutting2DMazeAction | None, events: StepEventLog) -> None:
+    def render(
+        self, maze_state: Cutting2DMazeState, maze_action: Cutting2DMazeAction | None, events: StepEventLog
+    ) -> None:
         """
         Render maze_state and maze_action of the cutting 2D env.
 
@@ -28,16 +31,16 @@ class Cutting2DRenderer(Renderer):
         :param events: Events logged during the step (not used)
         """
 
-        plt.figure("Cutting 2D", figsize=(8, 4))
+        plt.figure('Cutting 2D', figsize=(8, 4))
         plt.clf()
 
         # The maze_action taken
 
         plt.subplot(121, aspect='equal')
         if maze_action is not None:
-            self._plot_maze_action(maze_action, "MazeAction", maze_state)
+            self._plot_maze_action(maze_action, 'MazeAction', maze_state)
         else:
-            self._add_title("MazeAction (none)")
+            self._add_title('MazeAction (none)')
 
         # The inventory state
         plt.subplot(122, aspect='equal')
@@ -61,36 +64,33 @@ class Cutting2DRenderer(Renderer):
         self._add_title(title)
 
     def _plot_inventory(self, maze_state: Cutting2DMazeState, maze_action: Cutting2DMazeAction):
-
         # plot inventory pieces
         inventory_piece_dims = np.vstack(maze_state.inventory)
         inventory_piece_dims = np.sort(inventory_piece_dims, axis=1)
-        plt.plot(inventory_piece_dims[:, 0], inventory_piece_dims[:, 1], "ko",
-                 alpha=0.5, label="inventory pieces")
+        plt.plot(inventory_piece_dims[:, 0], inventory_piece_dims[:, 1], 'ko', alpha=0.5, label='inventory pieces')
         # plot current demand
         current_demand = sorted(maze_state.current_demand)
-        plt.plot(current_demand[0], current_demand[1], "o",
-                 color=(0.7, 0.2, 0.2), alpha=0.75, label="current demand")
+        plt.plot(current_demand[0], current_demand[1], 'o', color=(0.7, 0.2, 0.2), alpha=0.75, label='current demand')
         # plot maze_action
         piece_to_cut = inventory_piece_dims[maze_action.piece_id]
-        plt.plot(piece_to_cut[0], piece_to_cut[1], "bo",
-                 alpha=0.75, label="cutting inventory piece")
+        plt.plot(piece_to_cut[0], piece_to_cut[1], 'bo', alpha=0.75, label='cutting inventory piece')
         plt.grid()
         plt.legend()
-        plt.axis("equal")
-        self._add_title("Inventory Pieces")
+        plt.axis('equal')
+        self._add_title('Inventory Pieces')
 
     @staticmethod
-    def _draw_piece(piece: Tuple[int, int], highlight: bool = False):
-        plt.gca().add_patch(patches.Rectangle((0, 0), piece[0], piece[1],
-                                              facecolor=(0.7, 0.2, 0.2) if highlight else (0.8, 0.8, 0.8)))
+    def _draw_piece(piece: tuple[int, int], highlight: bool = False):
+        plt.gca().add_patch(
+            patches.Rectangle((0, 0), piece[0], piece[1], facecolor=(0.7, 0.2, 0.2) if highlight else (0.8, 0.8, 0.8))
+        )
 
     @staticmethod
     def _add_title(title: str):
         plt.title(title, fontdict=dict(fontsize=16, fontweight='bold', horizontalalignment='left'), loc='left')
 
     @staticmethod
-    def _draw_cutting_lines(ordered_piece: Tuple[int, int], piece_to_cut: Tuple[int, int], reverse_cutting_order: bool):
+    def _draw_cutting_lines(ordered_piece: tuple[int, int], piece_to_cut: tuple[int, int], reverse_cutting_order: bool):
         """Draw the cutting lines.
 
         :param ordered_piece: Size of the ordered piece
@@ -109,5 +109,5 @@ class Cutting2DRenderer(Renderer):
             v_x = (ordered_piece[0], ordered_piece[0])
             v_y = (0, piece_to_cut[1])
 
-        plt.plot(h_x, h_y, color='black', linestyle="--")
-        plt.plot(v_x, v_y, color='black', linestyle="--")
+        plt.plot(h_x, h_y, color='black', linestyle='--')
+        plt.plot(v_x, v_y, color='black', linestyle='--')

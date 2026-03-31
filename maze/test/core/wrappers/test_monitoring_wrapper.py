@@ -1,8 +1,8 @@
-""" Contains tests for the observation logging wrapper. """
+"""Contains tests for the observation logging wrapper."""
 
-import numpy as np
+from __future__ import annotations
 
-from maze.core.log_events.monitoring_events import ObservationEvents, RewardEvents, ActionEvents
+from maze.core.log_events.monitoring_events import ActionEvents, ObservationEvents, RewardEvents
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.monitoring_wrapper import MazeEnvMonitoringWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -11,6 +11,8 @@ from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructur
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
 from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env
+
+import numpy as np
 
 
 def build_dummy_structured_environment() -> DummyStructuredEnvironment:
@@ -25,14 +27,14 @@ def build_dummy_structured_environment() -> DummyStructuredEnvironment:
     maze_env = DummyEnvironment(
         core_env=DummyCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
 
     return DummyStructuredEnvironment(maze_env=maze_env)
 
 
 def test_observation_monitoring():
-    """ Observation logging unit test """
+    """Observation logging unit test"""
 
     # instantiate env
     env = build_dummy_maze_env()
@@ -46,20 +48,26 @@ def test_observation_monitoring():
         # Observation will get reported in the next step (when the agent is actually acting on it)
         obs = env.step(env.action_space.sample())[0]
 
-        observation_events = env.get_last_step_events(query=[ObservationEvents.observation_original,
-                                                             ObservationEvents.observation_processed])
+        observation_events = env.get_last_step_events(
+            query=[ObservationEvents.observation_original, ObservationEvents.observation_processed]
+        )
         assert len(observation_events) == 10
         for event in observation_events:
             assert issubclass(event.interface_class, ObservationEvents)
             obs_name = event.attributes['name']
-            assert obs_name in ['observation_0', 'observation_1', 'action_0_0_mask', 'action_1_0_mask',
-                                'action_1_1_mask']
+            assert obs_name in [
+                'observation_0',
+                'observation_1',
+                'action_0_0_mask',
+                'action_1_0_mask',
+                'action_1_1_mask',
+            ]
             if ii > 0:
                 assert np.allclose(np.asarray(obs[obs_name]), np.asarray(event.attributes['value']))
 
 
 def test_reward_monitoring():
-    """ Reward logging unit test """
+    """Reward logging unit test"""
 
     # instantiate env
     env = build_dummy_maze_env()
@@ -70,11 +78,10 @@ def test_reward_monitoring():
     env.step(env.action_space.sample())
 
     # test application of wrapper
-    for ii in range(2):
+    for _ in range(2):
         env.step(env.action_space.sample())
 
-        reward_events = env.get_last_step_events(query=[RewardEvents.reward_original,
-                                                             RewardEvents.reward_processed])
+        reward_events = env.get_last_step_events(query=[RewardEvents.reward_original, RewardEvents.reward_processed])
 
         assert len(reward_events) == 2
         for event in reward_events:
@@ -84,7 +91,7 @@ def test_reward_monitoring():
 
 
 def test_action_monitoring():
-    """ Action logging unit test """
+    """Action logging unit test"""
 
     # instantiate env
     env = build_dummy_maze_env()
@@ -94,12 +101,12 @@ def test_action_monitoring():
     env.reset()
 
     # test application of wrapper
-    for ii in range(2):
+    for _ in range(2):
         env.step(env.action_space.sample())
 
-        action_events = env.get_last_step_events(query=[ActionEvents.discrete_action,
-                                                        ActionEvents.continuous_action,
-                                                        ActionEvents.multi_binary_action])
+        action_events = env.get_last_step_events(
+            query=[ActionEvents.discrete_action, ActionEvents.continuous_action, ActionEvents.multi_binary_action]
+        )
 
         assert len(action_events) == 7
         for event in action_events:
@@ -111,4 +118,3 @@ def test_action_monitoring():
                 assert event.interface_method == ActionEvents.multi_binary_action
             else:
                 raise ValueError
-

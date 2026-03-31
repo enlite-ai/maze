@@ -1,5 +1,7 @@
 """Helper class for reporting exceptions between processes."""
 
+from __future__ import annotations
+
 import traceback
 
 

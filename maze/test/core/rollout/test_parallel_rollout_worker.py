@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import queue
 from collections import deque
-from typing import Any, Type, Optional, Tuple
+from typing import Any
 
 from maze.core.agent.random_policy import RandomPolicy
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.observation_conversion import ObservationType
-from maze.core.rollout.parallel_rollout_runner import ParallelRolloutWorker, EpisodeStatsReport
+from maze.core.rollout.parallel_rollout_runner import EpisodeStatsReport, ParallelRolloutWorker
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
@@ -32,14 +34,14 @@ class MockQueue:
         return len(self.items) == 0
 
 
-def build_test_maze_env(env_type: Type) -> DummyEnvironment:
+def build_test_maze_env(env_type: type) -> DummyEnvironment:
     """Builds a dummy maze env with the given env_type (should be a subclass of DummyEnvironment)"""
     observation_conversion = ObservationConversion()
 
     return env_type(
         core_env=DummyCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
 
 
@@ -50,9 +52,9 @@ class ErrorInResetEnv(DummyEnvironment):
         super().__init__(*args, **kwargs)
         self.n_episodes = 0
 
-    def reset(self) -> Tuple[ObservationType, dict]:
+    def reset(self) -> tuple[ObservationType, dict]:
         if self.n_episodes % 2:
-            raise RuntimeError("Test error in reset")
+            raise RuntimeError('Test error in reset')
         self.n_episodes += 1
         return super().reset()
 
@@ -64,13 +66,13 @@ class ErrorInStepEnv(DummyEnvironment):
         super().__init__(*args, **kwargs)
         self.n_episodes = 0
 
-    def reset(self) -> Tuple[ObservationType, dict]:
+    def reset(self) -> tuple[ObservationType, dict]:
         self.n_episodes += 1
         return super().reset()
 
     def step(self, *args, **kwargs):
         if self.n_episodes % 2:
-            raise RuntimeError("Test error in step")
+            raise RuntimeError('Test error in step')
         return super().step(*args, **kwargs)
 
 
@@ -91,7 +93,7 @@ def _run_test_rollout(env: MazeEnv, n_episodes: int = 5):
         input_directory=None,
         reporting_queue=reporting_queue,
         seeding_queue=seeding_queue,
-        serialize_renderer=True
+        serialize_renderer=True,
     )
 
     assert len(reporting_queue.items) == n_episodes

@@ -27,4 +27,3 @@ critic:
       # specify the parameters of our model
       non_lin: torch.nn.ReLU
       hidden_units: [16, 32]
-

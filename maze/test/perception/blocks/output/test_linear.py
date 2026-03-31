@@ -1,20 +1,21 @@
-""" Unit tests for output head perception blocks. """
-from typing import Dict
+"""Unit tests for output head perception blocks."""
 
-import numpy as np
+from __future__ import annotations
 
 from maze.perception.blocks.output.linear import LinearOutputBlock
 from maze.test.perception.perception_test_utils import build_input_dict
 
+import numpy as np
+
 
 def test_linear_output_block():
-    """ perception test """
+    """perception test"""
     in_dict = build_input_dict(dims=[100, 16])
-    net: LinearOutputBlock = LinearOutputBlock(in_keys="in_key", out_keys="out_key", in_shapes=(16,), output_units=10)
+    net: LinearOutputBlock = LinearOutputBlock(in_keys='in_key', out_keys='out_key', in_shapes=(16,), output_units=10)
     str(net)
     out_dict = net(in_dict)
 
-    assert isinstance(out_dict, Dict)
+    assert isinstance(out_dict, dict)
     assert set(net.out_keys).issubset(set(out_dict.keys()))
     assert net.output_units == 10
     assert out_dict[net.out_keys[0]].shape[-1] == net.output_units

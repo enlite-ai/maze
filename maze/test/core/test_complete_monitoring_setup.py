@@ -1,5 +1,7 @@
 """Tests integration of trajectory data and event logging data together."""
 
+from __future__ import annotations
+
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry

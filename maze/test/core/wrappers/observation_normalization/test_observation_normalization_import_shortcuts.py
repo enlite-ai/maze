@@ -1,4 +1,7 @@
-""" Contains tests for the observation normalization wrapper. """
+"""Contains tests for the observation normalization wrapper."""
+
+from __future__ import annotations
+
 from maze import normalization_strategies
 from maze.core.wrappers.observation_normalization import normalization_strategies as normalization_strategies_module
 from maze.test.shared_test_utils.helper_functions import all_classes_of_module

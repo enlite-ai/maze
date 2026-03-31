@@ -1,14 +1,17 @@
 """Shows how to use the custom model composer to build a custom value network."""
-from collections import OrderedDict
-from typing import Dict, Union, Sequence, List
 
-import torch
-import torch.nn as nn
+from __future__ import annotations
+
+from collections import OrderedDict
+from collections.abc import Sequence
 
 from maze.perception.blocks.feed_forward.dense import DenseBlock
 from maze.perception.blocks.inference import InferenceBlock
 from maze.perception.blocks.output.linear import LinearOutputBlock
 from maze.perception.weight_init import make_module_init_normc
+
+import torch
+import torch.nn as nn
 
 
 class CustomCartpoleCriticNet(nn.Module):
@@ -19,8 +22,7 @@ class CustomCartpoleCriticNet(nn.Module):
     :param hidden_units: A list of units per hidden layer.
     """
 
-    def __init__(self, obs_shapes: Dict[str, Sequence[int]], non_lin: str | type(nn.Module),
-                 hidden_units: List[int]):
+    def __init__(self, obs_shapes: dict[str, Sequence[int]], non_lin: str | type(nn.Module), hidden_units: list[int]):
         super().__init__()
 
         # Maze relies on dictionaries to represent the inference graph
@@ -28,23 +30,31 @@ class CustomCartpoleCriticNet(nn.Module):
 
         # build latent embedding block
         self.perception_dict['latent'] = DenseBlock(
-            in_keys='observation', out_keys='latent', in_shapes=obs_shapes['observation'], hidden_units=hidden_units,
-            non_lin=non_lin)
+            in_keys='observation',
+            out_keys='latent',
+            in_shapes=obs_shapes['observation'],
+            hidden_units=hidden_units,
+            non_lin=non_lin,
+        )
 
         # build action head
         self.perception_dict['value'] = LinearOutputBlock(
-            in_keys='latent', out_keys='value', in_shapes=self.perception_dict['latent'].out_shapes(), output_units=1)
+            in_keys='latent', out_keys='value', in_shapes=self.perception_dict['latent'].out_shapes(), output_units=1
+        )
 
         # build inference block
         self.perception_net = InferenceBlock(
-            in_keys='observation', out_keys='value', in_shapes=obs_shapes['observation'],
-            perception_blocks=self.perception_dict)
+            in_keys='observation',
+            out_keys='value',
+            in_shapes=obs_shapes['observation'],
+            perception_blocks=self.perception_dict,
+        )
 
         # apply weight init
         self.perception_net.apply(make_module_init_normc(1.0))
         self.perception_dict['value'].apply(make_module_init_normc(0.01))
 
-    def forward(self, in_tensor_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, in_tensor_dict: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Compute forward pass through the network.
 
         :param in_tensor_dict: Input tensor dict.

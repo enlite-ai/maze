@@ -3,8 +3,10 @@
 A good place to motivate and provide background to the data structure or algorithm in question, as opposed to
 the more narrow class documentation
 """
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import List, Optional
 
 from maze.core.annotations import override
 
@@ -26,7 +28,7 @@ class Interface(ABC):
         self.typed_instance_variable: str | None = None
 
     @abstractmethod
-    def interface_method(self, param1: List[int]) -> str:
+    def interface_method(self, param1: list[int]) -> str:
         """One-line summary, not using variable names or the function name.
 
         All public functions and methods must provide docstrings with complete
@@ -46,7 +48,7 @@ class DerivedClass(Interface):
     """
 
     @override(Interface)  # override is mandatory
-    def interface_method(self, param1: List[int]) -> str:
+    def interface_method(self, param1: list[int]) -> str:
         """Do not copy the text from the parent class, instead describe what changed with respect to the parent method.
 
         The ``:param`` and/or ``:return:`` blocks can be skipped, if there is no new information to add to the existing

@@ -50,7 +50,7 @@ Running the trainer should print an extended command line output similar to the 
 In addition to base events we now also get a statistics log of *CuttingEvents*, *InventoryEvents* and KPIs.
 
 .. code:: bash
-    
+
      step|path                                                                        |               value
     =====|============================================================================|====================
         6|train     MultiStepActorCritic..time_epoch            ······················|              24.548

@@ -1,10 +1,9 @@
-""" Contains helper functions for unit testing """
+"""Contains helper functions for unit testing"""
+
+from __future__ import annotations
 
 import inspect
-from typing import Tuple, Any, Dict, Type, List, Union
-
-import numpy as np
-from torch import nn
+from typing import Any
 
 from maze.core.annotations import override
 from maze.core.env.base_env import BaseEnv
@@ -19,44 +18,48 @@ from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironmen
 from maze.test.shared_test_utils.dummy_env.dummy_struct_env import DummyStructuredEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_structured_core_env import DummyStructuredCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
-from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict_discrete import \
-    DictDiscreteActionConversion
+from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict_discrete import (
+    DictDiscreteActionConversion,
+)
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
+
+import numpy as np
+from torch import nn
 
 
 def build_dummy_base_env() -> BaseEnv:
-    """ helper function creating a DummyBaseEnv for unit testing.
+    """helper function creating a DummyBaseEnv for unit testing.
     :return: A Dummy Base Env.
     """
 
     class SomeBaseEnv(BaseEnv):
-        """A dummy base env for unit testing.
-        """
+        """A dummy base env for unit testing."""
 
         @override(BaseEnv)
-        def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
-            """ override of BaseEnv """
+        def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:  # noqa: ARG002
+            """override of BaseEnv"""
             return None, None, False, False, {}
 
         @override(BaseEnv)
-        def reset(self) -> Tuple[Any, dict]:
-            """ override of BaseEnv """
+        def reset(self) -> tuple[Any, dict]:
+            """override of BaseEnv"""
             return None, {}
 
         @override(BaseEnv)
         def seed(self, seed: int) -> None:
-            """ override of BaseEnv """
+            """override of BaseEnv"""
             pass
 
         @override(BaseEnv)
         def close(self) -> None:
-            """ override of BaseEnv """
+            """override of BaseEnv"""
             pass
 
     return SomeBaseEnv()
 
+
 def build_dummy_base_env_with_fixed_episode_length(episode_length: int) -> BaseEnv:
-    """ helper function creating a DummyBaseEnv for unit testing with predefined episode length.
+    """helper function creating a DummyBaseEnv for unit testing with predefined episode length.
     When the episode end is reached, a terminated flag is set to True.
     :param episode_length: Maximum length of the episode.
     :return: A Dummy Base Env.
@@ -66,14 +69,15 @@ def build_dummy_base_env_with_fixed_episode_length(episode_length: int) -> BaseE
         """
         A dummy base env for unit testing.
         """
+
         def __init__(self):
             super().__init__()
             self.step_counter = 0
             self.episode_length = episode_length
 
         @override(BaseEnv)
-        def step(self, action: Any) -> Tuple[Any, Any, bool, bool, Dict[Any, Any]]:
-            """ override of BaseEnv """
+        def step(self, action: Any) -> tuple[Any, Any, bool, bool, dict[Any, Any]]:  # noqa: ARG002
+            """override of BaseEnv"""
             self.step_counter += 1
             return None, None, self.step_counter >= self.episode_length, False, {}
 
@@ -85,12 +89,12 @@ def build_dummy_base_env_with_fixed_episode_length(episode_length: int) -> BaseE
 
         @override(BaseEnv)
         def seed(self, seed: int) -> None:
-            """ override of BaseEnv """
+            """override of BaseEnv"""
             pass
 
         @override(BaseEnv)
         def close(self) -> None:
-            """ override of BaseEnv """
+            """override of BaseEnv"""
             pass
 
     return SomeBaseEnvWithFixedEpLength()
@@ -107,7 +111,7 @@ def build_dummy_maze_env() -> DummyEnvironment:
     return DummyEnvironment(
         core_env=DummyCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
 
 
@@ -131,7 +135,7 @@ def build_dummy_maze_env_with_structured_core_env() -> DummyEnvironment:
     return DummyEnvironment(
         core_env=DummyStructuredCoreEnvironment(observation_conversion.space(), 2),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
 
 
@@ -142,11 +146,11 @@ def build_dummy_maze_environment_with_discrete_action_space(n_agents: int) -> Du
     return DummyEnvironment(
         core_env=DummyStructuredCoreEnvironment(observation_conversion.space(), n_agents),
         action_conversion=[DictDiscreteActionConversion()],
-        observation_conversion=[observation_conversion]
+        observation_conversion=[observation_conversion],
     )
 
 
-def all_classes_of_module(module) -> List[Type]:
+def all_classes_of_module(module) -> list[type]:
     """Get all classes that are members of a module.
 
     :param module: the Python module
@@ -173,9 +177,9 @@ def flatten_concat_probabilistic_policy_for_env(env: MazeEnv):
         policy=dict(
             _target_=ProbabilisticPolicyComposer,
             networks=[dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps,
-            substeps_with_separate_agent_nets=[]
+            substeps_with_separate_agent_nets=[],
         ),
-        critic=None
+        critic=None,
     )
 
     return composer.policy
@@ -192,8 +196,11 @@ def flatten_concat_probabilistic_policy_and_critic_for_env(env: MazeEnv, masking
     n_sub_steps = len(env.observation_spaces_dict.keys())
 
     if masking:
-        network = [dict(_target_=FlattenConcatMaskedPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32],
-                        remove_mask_from_obs=True)]
+        network = [
+            dict(
+                _target_=FlattenConcatMaskedPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32], remove_mask_from_obs=True
+            )
+        ]
     else:
         network = [dict(_target_=FlattenConcatPolicyNet, non_lin=nn.Tanh, hidden_units=[32, 32])]
 
@@ -203,20 +210,18 @@ def flatten_concat_probabilistic_policy_and_critic_for_env(env: MazeEnv, masking
         agent_counts_dict=env.agent_counts_dict,
         distribution_mapper_config={},
         policy=dict(
-            _target_=ProbabilisticPolicyComposer,
-            networks=network * n_sub_steps,
-            substeps_with_separate_agent_nets=[]
+            _target_=ProbabilisticPolicyComposer, networks=network * n_sub_steps, substeps_with_separate_agent_nets=[]
         ),
         critic=dict(
             _target_=StateCriticComposer,
             networks=[dict(_target_=FlattenConcatStateValueNet, non_lin=nn.Tanh, hidden_units=[32, 32])] * n_sub_steps,
-        )
+        ),
     )
 
     return composer.policy, composer.critic
 
 
-def convert_np_array_to_tuple(arr: np.ndarray) -> Tuple | np.ndarray:
+def convert_np_array_to_tuple(arr: np.ndarray) -> tuple | np.ndarray:
     """
     Recursive conversion of numpy arrays with an arbitrary number of dimensions to tuples.
     :param arr: numpy array to convert.

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class Cutting2DMazeAction:
     """Environment cutting MazeAction object.
     :param piece_id: ID of the piece to cut.

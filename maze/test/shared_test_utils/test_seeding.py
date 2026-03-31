@@ -1,7 +1,6 @@
 """Helper method to test the seeding behaviour of maze envs"""
-from typing import List, Tuple
 
-import numpy as np
+from __future__ import annotations
 
 from maze.core.agent.policy import Policy
 from maze.core.env.action_conversion import ActionType
@@ -10,9 +9,12 @@ from maze.core.env.observation_conversion import ObservationType
 from maze.core.utils.seeding import MazeSeeding
 from maze.test.shared_test_utils.reproducibility import hash_deterministically
 
+import numpy as np
 
-def get_obs_action_hash_for_env_agent(env: MazeEnv, policy: Policy, env_seed: int, agent_seed: int, n_steps: int) \
-        -> Tuple[str, str]:
+
+def get_obs_action_hash_for_env_agent(
+    env: MazeEnv, policy: Policy, env_seed: int, agent_seed: int, n_steps: int
+) -> tuple[str, str]:
     """Seed the given env and policy with the given seeds and perform a rollout for some steps. Then has the collected
     observations and actions and return the str of the hash keys.
 
@@ -28,19 +30,20 @@ def get_obs_action_hash_for_env_agent(env: MazeEnv, policy: Policy, env_seed: in
     env.seed(env_seed)
     policy.seed(agent_seed)
 
-    observations: List[ObservationType] = []
-    actions: List[ActionType] = []
+    observations: list[ObservationType] = []
+    actions: list[ActionType] = []
 
     obs, info = env.reset()
 
     observations.append(obs)
-    for step in range(n_steps):
+    for _ in range(n_steps):
         actor_id = env.actor_id()
 
         maze_state = env.get_maze_state() if policy.needs_state() else None
         compute_action_env = env if policy.needs_env() else None
-        action = policy.compute_action(obs, actor_id=actor_id, maze_state=maze_state, deterministic=False,
-                                       env=compute_action_env)
+        action = policy.compute_action(
+            obs, actor_id=actor_id, maze_state=maze_state, deterministic=False, env=compute_action_env
+        )
 
         obs, _, terminated, truncated, _ = env.step(action)
         if terminated or truncated:
@@ -52,9 +55,9 @@ def get_obs_action_hash_for_env_agent(env: MazeEnv, policy: Policy, env_seed: in
     return str(hash_deterministically(observations)), str(hash_deterministically(actions))
 
 
-def perform_seeding_test(env: MazeEnv, policy: Policy, is_deterministic_env: bool, is_deterministic_agent: bool,
-                         n_steps: int = 100) \
-        -> None:
+def perform_seeding_test(
+    env: MazeEnv, policy: Policy, is_deterministic_env: bool, is_deterministic_agent: bool, n_steps: int = 100
+) -> None:
     """Perform a test on the seeding capabilities of a given env and agent.
         Within this method a rollout is generated with sampled seeds where the observation and actions are recorded and
         hashed. Then a second rollouts is generated with the SAME seeds to check if the results stay the same. Finally
@@ -85,8 +88,9 @@ def perform_seeding_test(env: MazeEnv, policy: Policy, is_deterministic_env: boo
     # Change the agent seed and check that the values change if the agent is not deterministic and stay the same if it
     #  is
     agent_seed_2 = MazeSeeding.generate_seed_from_random_state(maze_rng)
-    agent_2_obs_hash, agent_2_action_hash = get_obs_action_hash_for_env_agent(env, policy, env_seed, agent_seed_2,
-                                                                              n_steps)
+    agent_2_obs_hash, agent_2_action_hash = get_obs_action_hash_for_env_agent(
+        env, policy, env_seed, agent_seed_2, n_steps
+    )
     if is_deterministic_agent:
         assert base_obs_hash == agent_2_obs_hash
         assert base_action_hash == agent_2_action_hash
@@ -102,8 +106,9 @@ def perform_seeding_test(env: MazeEnv, policy: Policy, is_deterministic_env: boo
     else:
         assert base_obs_hash != env_2_obs_hash
 
-    env_agent_2_obs_hash, env_agent_2_action_hash = get_obs_action_hash_for_env_agent(env, policy, env_seed_2,
-                                                                                      agent_seed_2, n_steps)
+    env_agent_2_obs_hash, env_agent_2_action_hash = get_obs_action_hash_for_env_agent(
+        env, policy, env_seed_2, agent_seed_2, n_steps
+    )
     if is_deterministic_env and is_deterministic_agent:
         assert base_obs_hash == env_agent_2_obs_hash
         assert base_action_hash == env_agent_2_action_hash

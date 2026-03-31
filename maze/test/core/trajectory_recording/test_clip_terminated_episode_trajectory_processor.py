@@ -1,4 +1,7 @@
 """Test the clip terminated episode trajectory processor."""
+
+from __future__ import annotations
+
 import copy
 
 from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
@@ -12,21 +15,21 @@ def test_terminated_trajectory():
     data-loader process reads the files assigned to it.)"""
     # Heuristics rollout
     rollout_config = {
-        "configuration": "test",
-        "env": "gym_env",
-        "env.name": "CartPole-v1",
-        "policy": "random_policy",
-        "runner": "sequential",
-        "runner.n_episodes": 1,
-        "runner.record_trajectory": True,
-        "runner.max_episode_steps": 100,
-        "seeding.env_base_seed": 12345,
-        "seeding.agent_base_seed": 12345,
-        "hydra.run.dir": ".",
+        'configuration': 'test',
+        'env': 'gym_env',
+        'env.name': 'CartPole-v1',
+        'policy': 'random_policy',
+        'runner': 'sequential',
+        'runner.n_episodes': 1,
+        'runner.record_trajectory': True,
+        'runner.max_episode_steps': 100,
+        'seeding.env_base_seed': 12345,
+        'seeding.agent_base_seed': 12345,
+        'hydra.run.dir': '.',
     }
-    run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
+    run_maze_job(rollout_config, config_module='maze.conf', config_name='conf_rollout')
 
-    trajectory_files = InMemoryDataset._read_input_data_to_list('trajectory_data')
+    trajectory_files = InMemoryDataset._read_input_data_to_list('trajectory_data')  # noqa: SLF001
     test_file = trajectory_files[0]
     trajectory_record = list(InMemoryDataset.deserialize_trajectory(test_file))[0]
 
@@ -38,23 +41,28 @@ def test_terminated_trajectory():
     assert not truncated
 
     processed_trajectory = ClipTerminatedEpisodeTrajectoryProcessor(clip_k=2).pre_process(
-        copy.deepcopy(trajectory_record))
+        copy.deepcopy(trajectory_record)
+    )
     assert len(processed_trajectory) == len(trajectory_record) - 2
 
     processed_trajectory = ClipTerminatedEpisodeTrajectoryProcessor(clip_k=5).pre_process(
-        copy.deepcopy(trajectory_record))
+        copy.deepcopy(trajectory_record)
+    )
     assert len(processed_trajectory) == len(trajectory_record) - 5
 
     processed_trajectory = ClipTerminatedEpisodeTrajectoryProcessor(clip_k=0).pre_process(
-        copy.deepcopy(trajectory_record))
+        copy.deepcopy(trajectory_record)
+    )
     assert len(processed_trajectory) == len(trajectory_record) - 0
 
     processed_trajectory = ClipTerminatedEpisodeTrajectoryProcessor(clip_k=1).pre_process(
-        copy.deepcopy(trajectory_record))
+        copy.deepcopy(trajectory_record)
+    )
     assert len(processed_trajectory) == len(trajectory_record) - 1
 
     processed_trajectory = ClipTerminatedEpisodeTrajectoryProcessor(clip_k=100).pre_process(
-        copy.deepcopy(trajectory_record))
+        copy.deepcopy(trajectory_record)
+    )
     assert len(processed_trajectory) == 0
 
 
@@ -63,21 +71,21 @@ def test_clip_terminated_false():
     data-loader process reads the files assigned to it.)"""
     # Heuristics rollout
     rollout_config = {
-        "configuration": "test",
-        "env": "gym_env",
-        "env.name": "CartPole-v1",
-        "policy": "random_policy",
-        "runner": "sequential",
-        "runner.n_episodes": 1,
-        "runner.record_trajectory": True,
-        "runner.max_episode_steps": 9,
-        "seeding.env_base_seed": 12345,
-        "seeding.agent_base_seed": 12345,
-        "hydra.run.dir": ".",
+        'configuration': 'test',
+        'env': 'gym_env',
+        'env.name': 'CartPole-v1',
+        'policy': 'random_policy',
+        'runner': 'sequential',
+        'runner.n_episodes': 1,
+        'runner.record_trajectory': True,
+        'runner.max_episode_steps': 9,
+        'seeding.env_base_seed': 12345,
+        'seeding.agent_base_seed': 12345,
+        'hydra.run.dir': '.',
     }
-    run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
+    run_maze_job(rollout_config, config_module='maze.conf', config_name='conf_rollout')
 
-    trajectory_files = InMemoryDataset._read_input_data_to_list('trajectory_data')
+    trajectory_files = InMemoryDataset._read_input_data_to_list('trajectory_data')  # noqa: SLF001
     test_file = trajectory_files[0]
     trajectory_record = list(InMemoryDataset.deserialize_trajectory(test_file))[0]
 

@@ -1,4 +1,7 @@
 """Contains tests for the export gif wrapper."""
+
+from __future__ import annotations
+
 import glob
 
 from maze.core.env.maze_env import MazeEnv
@@ -15,19 +18,19 @@ def assert_gif_export(env: MazeEnv) -> None:
     env.close()
 
     # check if gif was exported
-    gif_files = glob.glob("*.gif")
+    gif_files = glob.glob('*.gif')
     assert len(gif_files) == 1
 
 
 def test_gym_env_gif_export():
-    """ Gif export unit test """
-    env = GymMazeEnv(env="CartPole-v1", render_mode="rgb_array")
+    """Gif export unit test"""
+    env = GymMazeEnv(env='CartPole-v1', render_mode='rgb_array')
     env = ExportGifWrapper.wrap(env, export=True, duration=0.1)
     assert_gif_export(env)
 
 
 def test_maze_env_gif_export():
-    """ Gif export unit test """
+    """Gif export unit test"""
     env = build_dummy_maze_env()
     env = ExportGifWrapper.wrap(env, export=True, duration=0.1)
     assert_gif_export(env)

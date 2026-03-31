@@ -63,7 +63,7 @@ then pass on to the constructor together with anything from the configuration di
 .. literalinclude:: code_snippets/advanced_factory_example_kwargs.py
   :language: python
 
-If you pass in an already instantiated object instead of a configuation dictionary,
+If you pass in an already instantiated object instead of a configuration dictionary,
 the ``instantiate`` method will only check that it is of the expected type
 and return it back. This allows components in Maze to be easily configurable
 both from YAML/dictionaries and by passing in already instantiated objects.
@@ -128,4 +128,3 @@ After understanding advanced Hydra configuration, you might want to:
 - :ref:`Create custom Hydra configuration files<hydra-custom>` for your project
 - Review the root configurations available in the Maze framework (as they are a good basis
   for your custom configurations)
-

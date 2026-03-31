@@ -1,12 +1,16 @@
 """Contains testing helper functions for wrappers."""
-from typing import List, Callable
 
-import numpy as np
+from __future__ import annotations
+
+from collections.abc import Callable
+
 from maze.core.env.maze_env import MazeEnv
 
+import numpy as np
 
-def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_list: List[str] = None):
-    """ Asserts that the clone_from functions work properly for wrappers.
+
+def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_list: list[str] = None):
+    """Asserts that the clone_from functions work properly for wrappers.
 
     :param make_env: Instantiates a MazeEnv.
     :param assert_member_list: A list of member variables that should be asserted for equality.
@@ -41,7 +45,7 @@ def assert_wrapper_clone_from(make_env: Callable[[], MazeEnv], assert_member_lis
         assert terminated == terminated_sim
         assert truncated == truncated_sim
 
-        assert np.all(obs["observation"] == obs_sim["observation"])
+        assert np.all(obs['observation'] == obs_sim['observation'])
 
         for member in assert_member_list:
             assert getattr(main_env, member) == getattr(cloned_env, member)

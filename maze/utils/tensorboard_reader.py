@@ -1,6 +1,9 @@
 """Provides a function to convert tensorboard logs to a pandas DataFrame.
 Implemented as shown in https://github.com/lanpa/tensorboard-dumper/blob/master/dump.py
 """
+
+from __future__ import annotations
+
 import struct
 
 import pandas as pd
@@ -10,8 +13,8 @@ from tensorboard.compat.proto import event_pb2
 def _read(data):
     header = struct.unpack('Q', data[:8])
 
-    event_str = data[12:12 + int(header[0])]  # 8+4
-    data = data[12 + int(header[0]) + 4:]
+    event_str = data[12 : 12 + int(header[0])]  # 8+4
+    data = data[12 + int(header[0]) + 4 :]
     return data, event_str
 
 
@@ -35,4 +38,4 @@ def tensorboard_to_pandas(file_path: str) -> pd.DataFrame:
                 if value.HasField('simple_value'):
                     events.append((event.step, value.tag, value.simple_value))
 
-    return pd.DataFrame(events, columns=["step", "tag", "value"]).set_index(["tag", "step"])
+    return pd.DataFrame(events, columns=['step', 'tag', 'value']).set_index(['tag', 'step'])

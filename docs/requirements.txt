@@ -1,4 +1,4 @@
-sphinx
-sphinx-theme
-sphinx-copybutton
 furo
+sphinx
+sphinx-copybutton
+sphinx-theme

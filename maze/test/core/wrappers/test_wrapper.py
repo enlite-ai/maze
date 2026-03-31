@@ -1,5 +1,7 @@
 """Test for general wrapper functionality."""
 
+from __future__ import annotations
+
 from maze.core.env.maze_env import MazeEnv
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.wrapper import Wrapper
@@ -32,24 +34,24 @@ def test_assigning_attributes_across_wrapper_stack():
 
     assert env.custom_attribute == 0
     assert env.env.custom_attribute == 0
-    assert not hasattr(env.env.env, "custom_attribute")
+    assert not hasattr(env.env.env, 'custom_attribute')
 
     env.custom_attribute = 1
 
     # The assignment should happen in the nested wrapper
     assert env.custom_attribute == 1
     assert env.env.custom_attribute == 1
-    assert not hasattr(env.env.env, "custom_attribute")
+    assert not hasattr(env.env.env, 'custom_attribute')
 
     # -- General attribute (present already in the top-level wrapper) --
 
     assert env.last_env_time is None
     assert env.env.last_env_time == -1
-    assert not hasattr(env.env.env, "custom_attribute")
+    assert not hasattr(env.env.env, 'custom_attribute')
 
     env.last_env_time = 2
 
     # The assignment should happen in the top-level wrapper and not bubble down anymore
     assert env.last_env_time == 2  # Only this should get set, as the attribute is present also in log_stats_wrapper
     assert env.env.last_env_time == -1  # This should stay the same as it was before
-    assert not hasattr(env.env.env, "custom_attribute")
+    assert not hasattr(env.env.env, 'custom_attribute')

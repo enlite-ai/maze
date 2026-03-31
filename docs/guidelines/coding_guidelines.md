@@ -1,5 +1,5 @@
 # Coding Guidelines
-In general we adhere to the coding style defined in [PEP 8](https://www.python.org/dev/peps/pep-0008/) as implemented in the PyCharm code inspections<sup id="anchor_1">[1](#footnote_1)</sup>. 
+In general we adhere to the coding style defined in [PEP 8](https://www.python.org/dev/peps/pep-0008/) as implemented in the PyCharm code inspections<sup id="anchor_1">[1](#footnote_1)</sup>.
 
 In addition to these basic Python style conventions, we extend this document by best practices, driven by the challenges we face in creating and maintaining a complex codebase for reinforcement learning.
 
@@ -8,10 +8,10 @@ In addition to these basic Python style conventions, we extend this document by 
 ### Package “typing”
 Type hints should be as specific as possible and also specify nested types. In the case of standard collections, this can be done by using the collection types from the typing package (Dict instead of the built-in lowercase dict).
 
-```-> Dict[str, List[int]]```   
+```-> Dict[str, List[int]]```
 (instead of just using “```-> dict```“ or “```-> Dict[str, list]```”)
 
-In the rare cases where the content type of a collection is not known in advance, we prefer to make this explicit by using   
+In the rare cases where the content type of a collection is not known in advance, we prefer to make this explicit by using
 ```-> Dict[Any, List[Any]]``` or even ```-> Dict[Any, Any]```
 
 The built-in collection types should not be used as type hints (lowercase ```list```, ```dict```, ```set```).
@@ -137,7 +137,7 @@ Separation of the reward calculation from the actual simulation logic is highly 
 
 In the simple case of only one event interface, the reward calculation can take place in a class derived from this interface. While this approach is appropriate to learn the basics of environment implementations, it is not suitable for modularized environments or multi-agent settings. Typically we encounter multiple environment components emitting events to multiple reward calculations. Therefore we extend the event interface concept by a publisher-subscriber model, where the environment publishes by invoking the event interface and an arbitrary number of reward aggregators receive and collect those messages in order to calculate the reward at the end of the step function, realizing referential and temporal decoupling<sup id="anchor_2">[2](#footnote_2)</sup>.
 
-[More details on reward collection](https://docs.google.com/presentation/d/1NMEsP1Iu5895axBR3MMcjNyOXbmAgYy3PQuC1tzV87c/edit#slide=id.p). 
+[More details on reward collection](https://docs.google.com/presentation/d/1NMEsP1Iu5895axBR3MMcjNyOXbmAgYy3PQuC1tzV87c/edit#slide=id.p).
 
 <b id="footnote_1">1</b> E.g. PEP 8 defines a max line length of 79, but we set this limit to 120, in line with the PyCharm default settings. [↩](#anchor_1)
 <b id="footnote_2">2</b> https://arothuis.nl/posts/messaging-pub-sub/ [↩](#anchor_2)

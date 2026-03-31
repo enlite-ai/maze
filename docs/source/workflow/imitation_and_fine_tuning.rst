@@ -44,7 +44,7 @@ But first let's check if the policy actually does something meaningful by runnin
 
 Hopefully this looks good and we can continue with actually collecting example trajectories for imitation learning.
 
-The command bellow performs 3 rollouts of the heuristic policy
+The command below performs 3 rollouts of the heuristic policy
 and records them to the output directory.
 
 .. code-block:: bash

@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
-import numpy as np
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
 from maze.core.utils.factory import ConfigType, Factory
@@ -13,6 +12,8 @@ from maze.core.utils.seeding import MazeSeeding
 from maze.core.wrappers.observation_normalization.observation_normalization_wrapper import (
     ObservationNormalizationWrapper,
 )
+
+import numpy as np
 from omegaconf import DictConfig
 
 
@@ -44,7 +45,7 @@ def prepare_simulated_env(
 
     # instantiate env
     simulated_env = Factory(base_type=MazeEnv).instantiate(simulated_env)
-    simulated_env._is_cloned = True
+    simulated_env._is_cloned = True  # noqa: SLF001
     simulated_env.seed(MazeSeeding.generate_seed_from_random_state(policy_rng))
 
     # set normalization statistics

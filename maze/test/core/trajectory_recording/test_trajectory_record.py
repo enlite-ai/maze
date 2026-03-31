@@ -1,11 +1,11 @@
-from typing import List
-
-import numpy as np
+from __future__ import annotations
 
 from maze.core.env.structured_env import ActorID
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
 from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord
+
+import numpy as np
 
 
 def _mock_space_record(value: int):
@@ -21,7 +21,7 @@ def _mock_space_record(value: int):
     return StructuredSpacesRecord(substep_records=[substep_record])
 
 
-def _mock_trajectory_record(id: int, values: List[int]):
+def _mock_trajectory_record(id: int, values: list[int]):
     t = SpacesTrajectoryRecord(id=id)
     t.step_records = [_mock_space_record(val) for val in values]
     return t

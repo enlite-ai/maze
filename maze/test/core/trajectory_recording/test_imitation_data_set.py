@@ -1,28 +1,33 @@
-import pickle
-from typing import Any, Dict, Union, Tuple, List, Optional
+from __future__ import annotations
 
-import gymnasium as gym
-import numpy as np
+import pickle
+from typing import Any
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.structured_env import ActorID
 from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
 from maze.core.log_events.step_event_log import StepEventLog
+from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
 from maze.core.trajectory_recording.datasets.trajectory_processor import IdentityTrajectoryProcessor
 from maze.core.trajectory_recording.records.spaces_record import SpacesRecord
-from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
 from maze.core.trajectory_recording.records.state_record import StateRecord
-from maze.core.trajectory_recording.records.trajectory_record import StateTrajectoryRecord, SpacesTrajectoryRecord
+from maze.core.trajectory_recording.records.structured_spaces_record import StructuredSpacesRecord
+from maze.core.trajectory_recording.records.trajectory_record import SpacesTrajectoryRecord, StateTrajectoryRecord
 from maze.core.wrappers.maze_gym_env_wrapper import make_gym_maze_env
 from maze.core.wrappers.wrapper import ObservationWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
 from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironment
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.double import DoubleActionConversion
-from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double import \
-    DoubleObservationConversion
+from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.double import (
+    DoubleObservationConversion,
+)
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
-from maze.core.trajectory_recording.datasets.in_memory_dataset import InMemoryDataset
+
+import gymnasium as gym
+import numpy as np
+
+# ruff: noqa: SLF001
 
 
 class _MockObservationStackWrapper(ObservationWrapper):
@@ -34,16 +39,15 @@ class _MockObservationStackWrapper(ObservationWrapper):
 
     def observation(self, observation: Any) -> Any:
         """Stacks observation with the last one."""
-        assert list(observation.keys()) == ["observation"]
-        observation_value = observation["observation"]
-        stacked_observation = {"observation": [self.last_observation_value, observation_value]}
+        assert list(observation.keys()) == ['observation']
+        observation_value = observation['observation']
+        stacked_observation = {'observation': [self.last_observation_value, observation_value]}
         self.last_observation_value = observation_value
         return stacked_observation
 
-    def get_observation_and_action_dicts(self, maze_state: MazeStateType | None,
-                                         maze_action: MazeActionType | None,
-                                         first_step_in_episode: bool) \
-            -> Tuple[Dict[int | str, Any] | None, Dict[int | str, Any] | None]:
+    def get_observation_and_action_dicts(
+        self, maze_state: MazeStateType | None, maze_action: MazeActionType | None, first_step_in_episode: bool
+    ) -> tuple[dict[int | str, Any] | None, dict[int | str, Any] | None]:
         """If this is the first step in an episode, reset the observation stack."""
         if first_step_in_episode:
             self.last_observation_value = None
@@ -53,27 +57,29 @@ class _MockObservationStackWrapper(ObservationWrapper):
 
 def _mock_state_trajectory_record(step_count: int):
     """Produce an episode record with maze_states and maze_actions corresponding to the step no."""
-    episode_record = StateTrajectoryRecord("test")
+    episode_record = StateTrajectoryRecord('test')
 
     for i in range(step_count):
-        episode_record.step_records.append(StateRecord(
-            env_time=i,
-            maze_state=i,
-            maze_action=i if i < step_count - 1 else None,  # maze_action is not available in the last step
-            step_event_log=StepEventLog(i),
-            reward=0,
-            terminated=i == step_count - 1,
-            truncated=False,
-            info=None,
-            serializable_components={}
-        ))
+        episode_record.step_records.append(
+            StateRecord(
+                env_time=i,
+                maze_state=i,
+                maze_action=i if i < step_count - 1 else None,  # maze_action is not available in the last step
+                step_event_log=StepEventLog(i),
+                reward=0,
+                terminated=i == step_count - 1,
+                truncated=False,
+                info=None,
+                serializable_components={},
+            )
+        )
 
     return episode_record
 
 
 def _mock_spaces_trajectory_record(step_count: int):
     """Produce an episode record with maze_states and maze_actions corresponding to the step no."""
-    episode_record = SpacesTrajectoryRecord("test")
+    episode_record = SpacesTrajectoryRecord('test')
 
     for i in range(step_count):
         substep_record = SpacesRecord(
@@ -93,12 +99,18 @@ def _env_factory():
     return DummyEnvironment(
         core_env=DummyCoreEnvironment(gym.spaces.Discrete(10)),
         action_conversion=[DoubleActionConversion()],
-        observation_conversion=[DoubleObservationConversion()])
+        observation_conversion=[DoubleObservationConversion()],
+    )
 
 
 def test_state_record_load():
-    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, input_data=None,
-                              trajectory_processor=IdentityTrajectoryProcessor(), deserialize_in_main_thread=False)
+    dataset = InMemoryDataset(
+        n_workers=1,
+        conversion_env_factory=_env_factory,
+        input_data=None,
+        trajectory_processor=IdentityTrajectoryProcessor(),
+        deserialize_in_main_thread=False,
+    )
     trajectories = dataset._trajectory_processor.process(_mock_spaces_trajectory_record(5), dataset._conversion_env)
 
     assert len(trajectories) == 1
@@ -111,16 +123,21 @@ def test_state_record_load():
     expected = [0, 1, 2, 3, 4]
 
     # Wrapping in the structured dict spaces
-    expected_structured_actions = list(map(lambda x: {0: {"action": x}}, expected))
-    expected_structured_observations = list(map(lambda x: {0: {"observation": x}}, expected))
+    expected_structured_actions = list(map(lambda x: {0: {'action': x}}, expected))
+    expected_structured_observations = list(map(lambda x: {0: {'observation': x}}, expected))
 
     assert [rec.actions_dict for rec in step_records] == expected_structured_actions
     assert [rec.observations_dict for rec in step_records] == expected_structured_observations
 
 
 def test_spaces_record_load():
-    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, input_data=None,
-                              trajectory_processor=IdentityTrajectoryProcessor(), deserialize_in_main_thread=False)
+    dataset = InMemoryDataset(
+        n_workers=1,
+        conversion_env_factory=_env_factory,
+        input_data=None,
+        trajectory_processor=IdentityTrajectoryProcessor(),
+        deserialize_in_main_thread=False,
+    )
     trajectories = dataset._trajectory_processor.process(_mock_state_trajectory_record(5), dataset._conversion_env)
 
     assert len(trajectories) == 1
@@ -133,37 +150,45 @@ def test_spaces_record_load():
     expected = [0, 2, 4, 6]
 
     # Wrapping in the structured dict spaces
-    expected_structured_actions = list(map(lambda x: {0: {"action": x}}, expected))
-    expected_structured_observations = list(map(lambda x: {0: {"observation": x}}, expected))
+    expected_structured_actions = list(map(lambda x: {0: {'action': x}}, expected))
+    expected_structured_observations = list(map(lambda x: {0: {'observation': x}}, expected))
 
     assert [rec.actions_dict for rec in step_records] == expected_structured_actions
     assert [rec.observations_dict for rec in step_records] == expected_structured_observations
 
 
 def test_data_load_with_stateful_wrapper():
-    dataset = InMemoryDataset(n_workers=1,
-                              conversion_env_factory=lambda: _MockObservationStackWrapper.wrap(_env_factory()),
-                              input_data=None, trajectory_processor=IdentityTrajectoryProcessor(),
-                              deserialize_in_main_thread=False)
+    dataset = InMemoryDataset(
+        n_workers=1,
+        conversion_env_factory=lambda: _MockObservationStackWrapper.wrap(_env_factory()),
+        input_data=None,
+        trajectory_processor=IdentityTrajectoryProcessor(),
+        deserialize_in_main_thread=False,
+    )
     trajectories = dataset._trajectory_processor.process(_mock_state_trajectory_record(4), dataset._conversion_env)
     assert len(trajectories)
     step_records = trajectories[0]
 
     expected_observations = [
-        {0: {"observation": [None, 0]}},
-        {0: {"observation": [0, 2]}},
-        {0: {"observation": [2, 4]}}
+        {0: {'observation': [None, 0]}},
+        {0: {'observation': [0, 2]}},
+        {0: {'observation': [2, 4]}},
     ]
     assert [rec.observations_dict for rec in step_records] == expected_observations
 
 
 def test_data_split():
-    def _extract_observation_values_from(imitation_samples: List[Tuple[Dict, Dict]]):
+    def _extract_observation_values_from(imitation_samples: list[tuple[dict, dict]]):
         """Extract observation values from array of imitation samples of (obs, act) tuples"""
-        return list(map(lambda sample: sample[0][0]["observation"], imitation_samples))
+        return list(map(lambda sample: sample[0][0]['observation'], imitation_samples))
 
-    dataset = InMemoryDataset(n_workers=1, conversion_env_factory=_env_factory, input_data=None,
-                              trajectory_processor=IdentityTrajectoryProcessor(), deserialize_in_main_thread=False)
+    dataset = InMemoryDataset(
+        n_workers=1,
+        conversion_env_factory=_env_factory,
+        input_data=None,
+        trajectory_processor=IdentityTrajectoryProcessor(),
+        deserialize_in_main_thread=False,
+    )
 
     # Fill dataset with two episodes with 5 usable steps each
     for _ in range(2):
@@ -225,24 +250,24 @@ def test_parallel_data_load_from_directory():
     data-loader process reads the files assigned to it.)"""
     # Heuristics rollout
     rollout_config = {
-        "configuration": "test",
-        "env": "gym_env",
-        "env.name": "CartPole-v1",
-        "policy": "random_policy",
-        "runner": "sequential",
-        "runner.n_episodes": 5,
-        "runner.max_episode_steps": 3,
-        "runner.record_trajectory": True,
-        "hydra.run.dir": ".",
+        'configuration': 'test',
+        'env': 'gym_env',
+        'env.name': 'CartPole-v1',
+        'policy': 'random_policy',
+        'runner': 'sequential',
+        'runner.n_episodes': 5,
+        'runner.max_episode_steps': 3,
+        'runner.record_trajectory': True,
+        'hydra.run.dir': '.',
     }
-    run_maze_job(rollout_config, config_module="maze.conf", config_name="conf_rollout")
+    run_maze_job(rollout_config, config_module='maze.conf', config_name='conf_rollout')
 
     dataset = InMemoryDataset(
         n_workers=2,
-        conversion_env_factory=lambda: make_gym_maze_env("CartPole-v1", render_mode=None),
-        input_data="trajectory_data",
+        conversion_env_factory=lambda: make_gym_maze_env('CartPole-v1', render_mode=None),
+        input_data='trajectory_data',
         trajectory_processor=IdentityTrajectoryProcessor(),
-        deserialize_in_main_thread=False
+        deserialize_in_main_thread=False,
     )
 
     assert len(dataset) == 5 * 3
@@ -250,15 +275,15 @@ def test_parallel_data_load_from_directory():
 
 def test_parallel_data_load_from_file():
     trajectories = [_mock_spaces_trajectory_record(5)] * 10
-    with open("trajectories.pkl", "wb") as out_ts:
+    with open('trajectories.pkl', 'wb') as out_ts:
         pickle.dump(trajectories, out_ts)
 
     dataset = InMemoryDataset(
         n_workers=2,
         conversion_env_factory=None,
-        input_data="trajectories.pkl",
+        input_data='trajectories.pkl',
         trajectory_processor=IdentityTrajectoryProcessor(),
-        deserialize_in_main_thread=False
+        deserialize_in_main_thread=False,
     )
 
     assert len(dataset) == 5 * 10
@@ -266,15 +291,15 @@ def test_parallel_data_load_from_file():
 
 def test_parallel_data_load_from_file_on_main_thread():
     trajectories = [_mock_spaces_trajectory_record(5)] * 10
-    with open("trajectories.pkl", "wb") as out_ts:
+    with open('trajectories.pkl', 'wb') as out_ts:
         pickle.dump(trajectories, out_ts)
 
     dataset = InMemoryDataset(
         n_workers=2,
         conversion_env_factory=None,
-        input_data="trajectories.pkl",
+        input_data='trajectories.pkl',
         trajectory_processor=IdentityTrajectoryProcessor(),
-        deserialize_in_main_thread=True
+        deserialize_in_main_thread=True,
     )
 
     assert len(dataset) == 5 * 10

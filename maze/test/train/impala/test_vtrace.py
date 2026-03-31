@@ -21,16 +21,14 @@ Importance Weighted Actor-Learner Architectures"
 by Espeholt, Soyer, Munos et al.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import gymnasium as gym
-import numpy as np
+from __future__ import annotations
 
 from maze.distributions.distribution_mapper import DistributionMapper
 from maze.perception.perception_utils import convert_to_torch
 from maze.train.trainers.impala import impala_vtrace
+
+import gymnasium as gym
+import numpy as np
 
 
 def _shaped_arange(*shape):
@@ -43,9 +41,9 @@ def _softmax(logits):
     return np.exp(logits) / np.sum(np.exp(np.array(logits)), axis=-1, keepdims=True)
 
 
-def _ground_truth_calculation(discounts, log_rhos, rewards, values,
-                              bootstrap_value, clip_rho_threshold,
-                              clip_pg_rho_threshold):
+def _ground_truth_calculation(
+    discounts, log_rhos, rewards, values, bootstrap_value, clip_rho_threshold, clip_pg_rho_threshold
+):
     """Calculates the ground truth for V-trace in Python/Numpy."""
     vs = []
     seq_len = len(discounts)
@@ -73,14 +71,16 @@ def _ground_truth_calculation(discounts, log_rhos, rewards, values,
         v_s = np.copy(values[s])  # Very important copy.
         for t in range(s, seq_len):
             v_s += (
-                    np.prod(discounts[s:t], axis=0) * np.prod(cs[s:t],
-                                                              axis=0) * clipped_rhos[t] *
-                    (rewards[t] + discounts[t] * values_t_plus_1[t + 1] - values[t]))
+                np.prod(discounts[s:t], axis=0)
+                * np.prod(cs[s:t], axis=0)
+                * clipped_rhos[t]
+                * (rewards[t] + discounts[t] * values_t_plus_1[t + 1] - values[t])
+            )
         vs.append(v_s)
     vs = np.stack(vs, axis=0)
-    pg_advantages = (
-            clipped_pg_rhos * (rewards + discounts * np.concatenate([vs[1:], bootstrap_value[None, :]], axis=0) -
-                               values))
+    pg_advantages = clipped_pg_rhos * (
+        rewards + discounts * np.concatenate([vs[1:], bootstrap_value[None, :]], axis=0) - values
+    )
 
     return impala_vtrace.VTraceReturns(vs=vs, pg_advantages=pg_advantages)
 
@@ -92,16 +92,23 @@ def _log_probs_from_logits_and_actions(batch_size):
 
     action_space = gym.spaces.Dict({'action1': gym.spaces.Discrete(num_actions)})
 
-    policy_logits = convert_to_torch(_shaped_arange(seq_len, batch_size, num_actions) + 10, cast=None,
-                                     device=None, in_place='try')
-    actions = convert_to_torch(np.random.randint(
-        0, num_actions, size=(seq_len, batch_size), dtype=np.int32), cast=None, device=None, in_place='try')
+    policy_logits = convert_to_torch(
+        _shaped_arange(seq_len, batch_size, num_actions) + 10, cast=None, device=None, in_place='try'
+    )
+    actions = convert_to_torch(
+        np.random.randint(0, num_actions, size=(seq_len, batch_size), dtype=np.int32),
+        cast=None,
+        device=None,
+        in_place='try',
+    )
 
     distribution_mapper = DistributionMapper(action_space=action_space, distribution_mapper_config={})
 
     action_log_probs_tensor, _ = impala_vtrace.log_probs_from_logits_and_actions_and_spaces(
-        policy_logits=[{'action1': policy_logits}], actions=[{'action1': actions}],
-        distribution_mapper=distribution_mapper)
+        policy_logits=[{'action1': policy_logits}],
+        actions=[{'action1': actions}],
+        distribution_mapper=distribution_mapper,
+    )
     action_log_probs_tensor = action_log_probs_tensor[0]['action1']
     # Ground Truth
     # Using broadcasting to create a mask that indexes action logits
@@ -112,8 +119,7 @@ def _log_probs_from_logits_and_actions(batch_size):
 
     # Note: Normally log(softmax) is not a good idea because it's not
     # numerically stable. However, in this test we have well-behaved values.
-    ground_truth_v = index_with_mask(
-        np.log(_softmax(np.array(policy_logits))), action_index_mask)
+    ground_truth_v = index_with_mask(np.log(_softmax(np.array(policy_logits))), action_index_mask)
 
     assert np.allclose(ground_truth_v, action_log_probs_tensor)
 
@@ -135,26 +141,18 @@ def _vtrace(batch_size):
     values = {
         'log_rhos': log_rhos,
         # T, B where B_i: [0.9 / (i+1)] * T
-        'discounts':
-            np.array([[0.9 / (b + 1)
-                       for b in range(batch_size)]
-                      for _ in range(seq_len)]),
-        'rewards':
-            _shaped_arange(seq_len, batch_size),
-        'values':
-            _shaped_arange(seq_len, batch_size) / batch_size,
-        'bootstrap_value':
-            _shaped_arange(batch_size) + 1.0,
-        'clip_rho_threshold':
-            3.7,
-        'clip_pg_rho_threshold':
-            2.2,
+        'discounts': np.array([[0.9 / (b + 1) for b in range(batch_size)] for _ in range(seq_len)]),
+        'rewards': _shaped_arange(seq_len, batch_size),
+        'values': _shaped_arange(seq_len, batch_size) / batch_size,
+        'bootstrap_value': _shaped_arange(batch_size) + 1.0,
+        'clip_rho_threshold': 3.7,
+        'clip_pg_rho_threshold': 2.2,
     }
 
     output = impala_vtrace.from_importance_weights(**values)
 
     ground_truth_v = _ground_truth_calculation(**values)
-    for a, b in zip(ground_truth_v, output):
+    for a, b in zip(ground_truth_v, output, strict=False):
         assert np.allclose(a, b)
 
 
@@ -174,27 +172,43 @@ def _vtrace_from_logits(batch_size):
     # deal with that.
 
     values = {
-        'behaviour_policy_logits':
-            [{'action1': convert_to_torch(_shaped_arange(seq_len, batch_size, num_actions), device=None,
-                                          cast=None, in_place='try')}],
-        'target_policy_logits':
-            [{'action1': convert_to_torch(_shaped_arange(seq_len, batch_size, num_actions), device=None,
-                                          cast=None, in_place='try')}],
-        'actions':
-            [{'action1': convert_to_torch(np.random.randint(0, num_actions - 1, size=(seq_len, batch_size)),
-                                          device=None, cast=None, in_place='try')}],
-        'discounts':
-            convert_to_torch(np.array(  # T, B where B_i: [0.9 / (i+1)] * T
-                [[0.9 / (b + 1)
-                  for b in range(batch_size)]
-                 for _ in range(seq_len)]), device=None, cast=None, in_place='try'),
-        'rewards':
-            convert_to_torch(_shaped_arange(seq_len, batch_size), device=None, cast=None, in_place='try'),
-        'values':
-            [convert_to_torch(_shaped_arange(seq_len, batch_size) / batch_size, device=None, cast=None,
-                              in_place='try')],
-        'bootstrap_value':
-            [convert_to_torch(_shaped_arange(batch_size) + 1.0, device=None, cast=None, in_place='try')],
+        'behaviour_policy_logits': [
+            {
+                'action1': convert_to_torch(
+                    _shaped_arange(seq_len, batch_size, num_actions), device=None, cast=None, in_place='try'
+                )
+            }
+        ],
+        'target_policy_logits': [
+            {
+                'action1': convert_to_torch(
+                    _shaped_arange(seq_len, batch_size, num_actions), device=None, cast=None, in_place='try'
+                )
+            }
+        ],
+        'actions': [
+            {
+                'action1': convert_to_torch(
+                    np.random.randint(0, num_actions - 1, size=(seq_len, batch_size)),
+                    device=None,
+                    cast=None,
+                    in_place='try',
+                )
+            }
+        ],
+        'discounts': convert_to_torch(
+            np.array(  # T, B where B_i: [0.9 / (i+1)] * T
+                [[0.9 / (b + 1) for b in range(batch_size)] for _ in range(seq_len)]
+            ),
+            device=None,
+            cast=None,
+            in_place='try',
+        ),
+        'rewards': convert_to_torch(_shaped_arange(seq_len, batch_size), device=None, cast=None, in_place='try'),
+        'values': [
+            convert_to_torch(_shaped_arange(seq_len, batch_size) / batch_size, device=None, cast=None, in_place='try')
+        ],
+        'bootstrap_value': [convert_to_torch(_shaped_arange(batch_size) + 1.0, device=None, cast=None, in_place='try')],
     }
     action_space = {0: gym.spaces.Dict({'action1': gym.spaces.Discrete(num_actions)})}
     # initialize distribution mapper
@@ -202,19 +216,24 @@ def _vtrace_from_logits(batch_size):
 
     from_logits_output = impala_vtrace.from_logits(
         clip_rho_threshold=clip_rho_threshold,
-        clip_pg_rho_threshold=clip_pg_rho_threshold, device=None,
+        clip_pg_rho_threshold=clip_pg_rho_threshold,
+        device=None,
         distribution_mapper=distribution_mapper,
-        **values)
+        **values,
+    )
 
     target_log_probs, _ = impala_vtrace.log_probs_from_logits_and_actions_and_spaces(
-        values['target_policy_logits'], values['actions'],
-        distribution_mapper=distribution_mapper)
+        values['target_policy_logits'], values['actions'], distribution_mapper=distribution_mapper
+    )
     behaviour_log_probs, _ = impala_vtrace.log_probs_from_logits_and_actions_and_spaces(
-        values['behaviour_policy_logits'], values['actions'],
-        distribution_mapper=distribution_mapper)
+        values['behaviour_policy_logits'], values['actions'], distribution_mapper=distribution_mapper
+    )
     log_rhos = impala_vtrace.get_log_rhos(target_log_probs, behaviour_log_probs)
-    ground_truth_log_rhos, ground_truth_behaviour_action_log_probs, ground_truth_target_action_log_probs = \
-        log_rhos, behaviour_log_probs, target_log_probs
+    ground_truth_log_rhos, ground_truth_behaviour_action_log_probs, ground_truth_target_action_log_probs = (
+        log_rhos,
+        behaviour_log_probs,
+        target_log_probs,
+    )
 
     # Calculate V-trace using the ground truth logits.
     from_iw = impala_vtrace.from_importance_weights(
@@ -224,14 +243,18 @@ def _vtrace_from_logits(batch_size):
         values=values['values'][0],
         bootstrap_value=values['bootstrap_value'][0],
         clip_rho_threshold=clip_rho_threshold,
-        clip_pg_rho_threshold=clip_pg_rho_threshold)
+        clip_pg_rho_threshold=clip_pg_rho_threshold,
+    )
 
     assert np.allclose(from_iw.vs, from_logits_output.vs[0])
     assert np.allclose(from_iw.pg_advantages, from_logits_output.pg_advantages[0])
-    assert np.allclose(ground_truth_behaviour_action_log_probs[0]['action1'],
-                       from_logits_output.behaviour_action_log_probs[0]['action1'])
-    assert np.allclose(ground_truth_target_action_log_probs[0]['action1'],
-                       from_logits_output.target_action_log_probs[0]['action1'])
+    assert np.allclose(
+        ground_truth_behaviour_action_log_probs[0]['action1'],
+        from_logits_output.behaviour_action_log_probs[0]['action1'],
+    )
+    assert np.allclose(
+        ground_truth_target_action_log_probs[0]['action1'], from_logits_output.target_action_log_probs[0]['action1']
+    )
     assert np.allclose(ground_truth_log_rhos[0], from_logits_output.log_rhos[0])
 
 

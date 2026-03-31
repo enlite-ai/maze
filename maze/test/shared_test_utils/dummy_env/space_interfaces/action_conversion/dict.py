@@ -2,19 +2,22 @@
 A simple action conversion which does nothing, except defining the action space
 """
 
-from typing import Dict, Any
+from __future__ import annotations
 
-import gymnasium as gym
+from typing import Any
 
 from maze.core.env.action_conversion import ActionConversionInterface
 from maze.core.env.maze_state import MazeStateType
+
+import gymnasium as gym
 
 
 class DictActionConversion(ActionConversionInterface):
     """
     An action conversion interface implementation
     """
-    def space_to_maze(self, action: Dict, maze_state: MazeStateType) -> Dict[str, Any]:
+
+    def space_to_maze(self, action: dict, maze_state: MazeStateType) -> dict[str, Any]:  # noqa: ARG002
         """
         Does nothing
         :param action: The action to pass through
@@ -30,14 +33,16 @@ class DictActionConversion(ActionConversionInterface):
 
         :return: The finished gym action space
         """
-        return gym.spaces.Dict({
-            "action_0_0": gym.spaces.Discrete(10),
-            "action_0_1": gym.spaces.MultiDiscrete([3, 5]),
-            "action_0_2": gym.spaces.Box(low=-1, high=1, shape=(5,)),
-            "action_1_0": gym.spaces.Discrete(10),
-            "action_1_1": gym.spaces.MultiBinary(5),
-            "action_2_0": gym.spaces.Box(low=-5, high=5, shape=(5,)),
-        })
+        return gym.spaces.Dict(
+            {
+                'action_0_0': gym.spaces.Discrete(10),
+                'action_0_1': gym.spaces.MultiDiscrete([3, 5]),
+                'action_0_2': gym.spaces.Box(low=-1, high=1, shape=(5,)),
+                'action_1_0': gym.spaces.Discrete(10),
+                'action_1_1': gym.spaces.MultiBinary(5),
+                'action_2_0': gym.spaces.Box(low=-5, high=5, shape=(5,)),
+            }
+        )
 
     def noop_action(self):
         """Converts environment MazeAction to agent action.

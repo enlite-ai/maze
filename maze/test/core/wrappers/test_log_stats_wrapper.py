@@ -1,7 +1,6 @@
 """Tests related specifically to log_stats_wrapper mechanics (stats and event logging itself is tested separately)"""
-from typing import Tuple
 
-import pytest
+from __future__ import annotations
 
 from maze.core.env.base_env_events import BaseEnvEvents
 from maze.core.env.maze_env import MazeEnv
@@ -12,16 +11,23 @@ from maze.core.log_stats.log_stats import LogStatsLevel
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.wrapper import Wrapper
 from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_reset_wrapper import StepSkipInResetWrapper
-from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import StepSkipInStepWrapper, \
-    ConfigurableStepSkipInStepWrapper
-from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env, build_dummy_structured_env, \
-    build_dummy_maze_env_with_structured_core_env
+from maze.test.shared_test_utils.dummy_wrappers.step_skip_in_step_wrapper import (
+    ConfigurableStepSkipInStepWrapper,
+    StepSkipInStepWrapper,
+)
+from maze.test.shared_test_utils.helper_functions import (
+    build_dummy_maze_env,
+    build_dummy_maze_env_with_structured_core_env,
+    build_dummy_structured_env,
+)
+
+import pytest
 
 
 class _EventsInResetWrapper(Wrapper[MazeEnv]):
     """Mock wrapper that fires test events during reset."""
 
-    def reset(self) -> Tuple[ObservationType, dict]:
+    def reset(self) -> tuple[ObservationType, dict]:
         """Reset the env, then fire the test event (the ordering matters)"""
         obs, info = self.env.reset()
         base_events = self.core_env.context.event_service.create_event_topic(BaseEnvEvents)
@@ -32,11 +38,11 @@ class _EventsInResetWrapper(Wrapper[MazeEnv]):
 class _StepSkippingAndErrorInResetWrapper(Wrapper[MazeEnv]):
     """Performs step skipping and then raises an error in reset function."""
 
-    def reset(self) -> Tuple[ObservationType, dict]:
+    def reset(self) -> tuple[ObservationType, dict]:
         """Skip one step, then raise an error."""
         self.env.reset()
         self.env.step(self.env.noop_action())
-        raise RuntimeError("Test Error")
+        raise RuntimeError('Test Error')
 
 
 def test_records_stats():
@@ -45,23 +51,15 @@ def test_records_stats():
     env = LogStatsWrapper.wrap(env)
 
     env.reset()
-    for i in range(5):
+    for _ in range(5):
         env.step(env.action_space.sample())
 
     # both step counts seen from outside and seen from core env should correspond to 5
 
     env.write_epoch_stats()
-    assert env.get_stats_value(
-        RewardEvents.reward_original,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 5
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 5
 
-    assert env.get_stats_value(
-        BaseEnvEvents.reward,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 5
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 5
 
 
 def test_records_events_in_reset():
@@ -70,14 +68,13 @@ def test_records_events_in_reset():
     env = LogStatsWrapper.wrap(env)
 
     env.reset()
-    for i in range(5):
+    for _ in range(5):
         env.step(env.action_space.sample())
 
     env.write_epoch_stats()
-    assert env.get_stats_value(
-        BaseEnvEvents.test_event,
-        LogStatsLevel.EPOCH
-    ) == 1  # only from the single event fired during env reset
+    assert (
+        env.get_stats_value(BaseEnvEvents.test_event, LogStatsLevel.EPOCH) == 1
+    )  # only from the single event fired during env reset
 
 
 def test_records_policy_events():
@@ -86,15 +83,12 @@ def test_records_policy_events():
 
     base_events = env.core_env.context.event_service.create_event_topic(BaseEnvEvents)
     env.reset()
-    for i in range(5):
+    for _ in range(5):
         base_events.test_event(1)  # Simulate firing event from policy (= outside of env.step)
         env.step(env.action_space.sample())
 
     env.write_epoch_stats()
-    assert env.get_stats_value(
-        BaseEnvEvents.test_event,
-        LogStatsLevel.EPOCH
-    ) == 5  # value of 1 x 5 steps
+    assert env.get_stats_value(BaseEnvEvents.test_event, LogStatsLevel.EPOCH) == 5  # value of 1 x 5 steps
 
 
 def test_handles_multi_step_setup():
@@ -103,7 +97,7 @@ def test_handles_multi_step_setup():
 
     # Step the env four times (should correspond to two core-env steps)
     env.reset()
-    for i in range(4):
+    for _ in range(4):
         env.step(env.action_space.sample())
 
     # => events should be collected for 2 steps in total
@@ -112,17 +106,9 @@ def test_handles_multi_step_setup():
     # The same goes for both reward stats from outside and from core-env perspective
 
     env.write_epoch_stats()
-    assert env.get_stats_value(
-        RewardEvents.reward_original,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 2
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 2
 
-    assert env.get_stats_value(
-        BaseEnvEvents.reward,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 2
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 2
 
 
 def test_handles_step_skipping_in_reset():
@@ -139,18 +125,10 @@ def test_handles_step_skipping_in_reset():
 
     # The same goes for "original reward" stats
     env.write_epoch_stats()
-    assert env.get_stats_value(
-        RewardEvents.reward_original,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 3
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 3
 
     # The step count from outside is still one (as normal reward events should not be fired for "skipped" steps)
-    assert env.get_stats_value(
-        BaseEnvEvents.reward,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 1
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 1
 
 
 def test_handles_step_skipping_in_step():
@@ -160,7 +138,7 @@ def test_handles_step_skipping_in_step():
 
     # Step the env twice (should correspond to four core-env steps)
     env.reset()
-    for i in range(2):
+    for _ in range(2):
         env.step(env.action_space.sample())
 
     # => events should be collected for 4 steps in total
@@ -168,18 +146,10 @@ def test_handles_step_skipping_in_step():
 
     # The same goes for "original reward" stats
     env.write_epoch_stats()
-    assert env.get_stats_value(
-        RewardEvents.reward_original,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 4
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 4
 
     # The step count from outside is still just two (as normal reward events should not be fired for "skipped" steps)
-    assert env.get_stats_value(
-        BaseEnvEvents.reward,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 2
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 2
 
 
 def test_counts_episodes_that_skip_and_error_in_reset():
@@ -199,28 +169,15 @@ def test_counts_episodes_that_skip_and_error_in_reset():
     env.write_epoch_stats()
 
     # The original_reward stats should be recorded for the one skipped step
-    assert env.get_stats_value(
-        RewardEvents.reward_original,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 1
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_step_count') == 1
 
     # Both episode_count and total_episode_count stats for the reward_original event reflect this
-    assert env.get_stats_value(
-        RewardEvents.reward_original,
-        LogStatsLevel.EPOCH,
-        name="episode_count") == 1
-    assert env.get_stats_value(
-        RewardEvents.reward_original,
-        LogStatsLevel.EPOCH,
-        name="total_episode_count") == 1
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='episode_count') == 1
+    assert env.get_stats_value(RewardEvents.reward_original, LogStatsLevel.EPOCH, name='total_episode_count') == 1
 
     # No ordinary "reward" event is counted, as no step was done from the outside
     with pytest.raises(KeyError):
-        env.get_stats_value(
-            BaseEnvEvents.reward,
-            LogStatsLevel.EPOCH,
-            name="total_step_count")
+        env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count')
 
 
 def test_step_skipping_in_step_with_structured_env_and_events():

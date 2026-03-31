@@ -1,12 +1,15 @@
 """Contains a multi-categorical distributions enclosing multiple categorical distributions."""
-from typing import Sequence
 
-import torch
-from gymnasium import spaces
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from maze.core.annotations import override
 from maze.distributions.categorical import CategoricalProbabilityDistribution
 from maze.distributions.distribution import ProbabilityDistribution
+
+import torch
+from gymnasium import spaces
 
 
 class MultiCategoricalProbabilityDistribution(ProbabilityDistribution):
@@ -20,19 +23,19 @@ class MultiCategoricalProbabilityDistribution(ProbabilityDistribution):
 
     @classmethod
     def required_logits_shape(cls, action_space: spaces.MultiDiscrete) -> Sequence[int]:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return [sum(action_space.nvec)]
 
     def __init__(self, logits: torch.Tensor, action_space: spaces.MultiDiscrete, temperature: float):
-
         # instantiate categorical sub-distributions
         self.sub_distributions = []
         i0 = 0
         for i, n in enumerate(action_space.nvec):
-            sub_distribution = CategoricalProbabilityDistribution(logits=logits[..., i0:i0 + n],
-                                                                  action_space=spaces.Discrete(action_space.nvec[i]),
-                                                                  temperature=temperature)
+            sub_distribution = CategoricalProbabilityDistribution(
+                logits=logits[..., i0 : i0 + n],
+                action_space=spaces.Discrete(action_space.nvec[i]),
+                temperature=temperature,
+            )
             self.sub_distributions.append(sub_distribution)
 
             # shift logits starting index
@@ -40,14 +43,12 @@ class MultiCategoricalProbabilityDistribution(ProbabilityDistribution):
 
     @override(ProbabilityDistribution)
     def neg_log_prob(self, actions: torch.Tensor) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return -self.log_prob(actions)
 
     @override(ProbabilityDistribution)
     def log_prob(self, actions: torch.Tensor) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         log_prob = []
         for k, dist in enumerate(self.sub_distributions):
             log_prob.append(dist.log_prob(actions[..., k]))
@@ -55,8 +56,7 @@ class MultiCategoricalProbabilityDistribution(ProbabilityDistribution):
 
     @override(ProbabilityDistribution)
     def entropy(self, reduce_fun: callable = torch.mean) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         # collect and stack entropy of individual distributions
         entropy_list = [d.entropy() for d in self.sub_distributions]
         entropy_list = torch.stack(entropy_list)
@@ -65,12 +65,11 @@ class MultiCategoricalProbabilityDistribution(ProbabilityDistribution):
         return reduce_fun(entropy_list, dim=0)
 
     @override(ProbabilityDistribution)
-    def kl(self, other: 'MultiCategoricalProbabilityDistribution', reduce_fun: callable = torch.mean) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+    def kl(self, other: MultiCategoricalProbabilityDistribution, reduce_fun: callable = torch.mean) -> torch.Tensor:
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         # collect and stack kls of individual distributions
         kl_list = []
-        for i, dist in enumerate(self.sub_distributions):
+        for i, _ in enumerate(self.sub_distributions):
             kl_list.append(self.sub_distributions[i].kl(other.sub_distributions[i]))
         kl_list = torch.stack(kl_list)
         assert kl_list.shape[0] == len(self.sub_distributions)
@@ -79,12 +78,10 @@ class MultiCategoricalProbabilityDistribution(ProbabilityDistribution):
 
     @override(ProbabilityDistribution)
     def sample(self) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return torch.stack([d.sample() for d in self.sub_distributions], dim=-1)
 
     @override(ProbabilityDistribution)
     def deterministic_sample(self) -> torch.Tensor:
-        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface
-        """
+        """implementation of :class:`~maze.distributions.torch_dist.TorchProbabilityDistribution` interface"""
         return torch.stack([d.deterministic_sample() for d in self.sub_distributions], dim=-1)

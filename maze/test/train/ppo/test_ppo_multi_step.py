@@ -1,6 +1,7 @@
 """Contains unit tests for ppo."""
 
-import torch.nn as nn
+from __future__ import annotations
+
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
 from maze.core.agent.torch_state_critic import TorchSharedStateCritic
@@ -14,20 +15,22 @@ from maze.train.trainers.common.evaluators.rollout_evaluator import RolloutEvalu
 from maze.train.trainers.ppo.ppo_algorithm_config import PPOAlgorithmConfig
 from maze.train.trainers.ppo.ppo_trainer import PPO
 
+import torch.nn as nn
+
 
 def train_function(n_epochs: int, distributed_env_cls) -> PPO:
-    """Trains the cart pole environment with the multi-step ppo implementation.
-    """
+    """Trains the cart pole environment with the multi-step ppo implementation."""
 
     # initialize distributed env
-    envs = distributed_env_cls([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(2)])
+    envs = distributed_env_cls([lambda: GymMazeEnv(env='CartPole-v1', render_mode=None) for _ in range(2)])
 
     # initialize the env and enable statistics collection
-    eval_env = distributed_env_cls([lambda: GymMazeEnv(env="CartPole-v1", render_mode=None) for _ in range(2)],
-                                   logging_prefix='eval')
+    eval_env = distributed_env_cls(
+        [lambda: GymMazeEnv(env='CartPole-v1', render_mode=None) for _ in range(2)], logging_prefix='eval'
+    )
 
     # init distribution mapper
-    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     distribution_mapper = DistributionMapper(action_space=env.action_space, distribution_mapper_config={})
 
     # initialize policies
@@ -50,27 +53,33 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
         value_loss_coef=0.5,
         entropy_coef=0.0,
         max_grad_norm=1.0,
-        device="cpu",
+        device='cpu',
         batch_size=10,
         n_optimization_epochs=1,
         clip_range=0.2,
         n_training_seeds=10,
-        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True)
+        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True),
     )
 
     # initialize actor critic model
     model = TorchActorCritic(
         policy=TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device=algorithm_config.device),
-        critic=TorchSharedStateCritic(networks=critics, obs_spaces_dict=env.observation_spaces_dict,
-                                      device=algorithm_config.device,
-                                      stack_observations=False),
-        device=algorithm_config.device)
+        critic=TorchSharedStateCritic(
+            networks=critics,
+            obs_spaces_dict=env.observation_spaces_dict,
+            device=algorithm_config.device,
+            stack_observations=False,
+        ),
+        device=algorithm_config.device,
+    )
 
-    ppo = PPO(rollout_generator=RolloutGenerator(envs),
-              algorithm_config=algorithm_config,
-              evaluator=algorithm_config.rollout_evaluator,
-              model=model,
-              model_selection=None)
+    ppo = PPO(
+        rollout_generator=RolloutGenerator(envs),
+        algorithm_config=algorithm_config,
+        evaluator=algorithm_config.rollout_evaluator,
+        model=model,
+        model_selection=None,
+    )
 
     # train agent
     ppo.train()
@@ -79,7 +88,7 @@ def train_function(n_epochs: int, distributed_env_cls) -> PPO:
 
 
 def test_ppo_multi_step():
-    """ ppo unit tests """
+    """ppo unit tests"""
     ppo = train_function(n_epochs=2, distributed_env_cls=SequentialVectorEnv)
     assert isinstance(ppo, PPO)
 
@@ -88,6 +97,6 @@ def test_ppo_multi_step():
 
 
 def test_ppo_multi_step_distributed():
-    """ ppo unit tests """
+    """ppo unit tests"""
     ppo = train_function(n_epochs=2, distributed_env_cls=SubprocVectorEnv)
     assert isinstance(ppo, PPO)

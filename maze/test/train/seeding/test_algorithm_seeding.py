@@ -1,49 +1,45 @@
 """Test the seeding of the algorithm"""
 
 # Configurations to be tested
+from __future__ import annotations
+
 import glob
 import os
-from typing import Dict
-
-import numpy as np
-import pytest
 
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
 from maze.utils.log_stats_utils import clear_global_state
 from maze.utils.tensorboard_reader import tensorboard_to_pandas
 from maze.utils.timeout import Timeout
 
+import numpy as np
+import pytest
+
 trainings = [
-    {"algorithm": "ppo", "configuration": "test",
-     "env": "gym_env", "env.name": "CartPole-v1"},
-
-    {"algorithm": "a2c", "configuration": "test",
-     "env": "gym_env", "env.name": "CartPole-v1"},
-
+    {'algorithm': 'ppo', 'configuration': 'test', 'env': 'gym_env', 'env.name': 'CartPole-v1'},
+    {'algorithm': 'a2c', 'configuration': 'test', 'env': 'gym_env', 'env.name': 'CartPole-v1'},
     # Only dev ES runner is deterministic.
-    {"algorithm": "es", "configuration": "test", "runner": "dev",
-     "env": "gym_env", "env.name": "CartPole-v1"}
+    {'algorithm': 'es', 'configuration': 'test', 'runner': 'dev', 'env': 'gym_env', 'env.name': 'CartPole-v1'},
 ]
 
 
-@pytest.mark.parametrize("hydra_overrides", trainings)
-def test_algorithm_seeding_trainings(hydra_overrides: Dict[str, str]):
-    hydra_overrides["hydra.run.dir"] = "."
+@pytest.mark.parametrize('hydra_overrides', trainings)
+def test_algorithm_seeding_trainings(hydra_overrides: dict[str, str]):
+    hydra_overrides['hydra.run.dir'] = '.'
     perform_algorithm_seeding_test(hydra_overrides)
 
 
-def perform_algorithm_seeding_test(hydra_overrides: Dict[str, str]):
+def perform_algorithm_seeding_test(hydra_overrides: dict[str, str]):
     # Perform base run for comparison ----------------------------------------------------------------------------------
     base_dir = os.path.abspath('.')
     os.mkdir('./base_exp')
     os.chdir('./base_exp')
     # run training
     with Timeout(seconds=60):
-        cfg = run_maze_job(hydra_overrides, config_module="maze.conf", config_name="conf_train")
+        cfg = run_maze_job(hydra_overrides, config_module='maze.conf', config_name='conf_train')
 
     # load tensorboard log
-    tf_summary_files = glob.glob("*events.out.tfevents*")
-    assert len(tf_summary_files) == 1, f"expected exactly 1 tensorflow summary file {tf_summary_files}"
+    tf_summary_files = glob.glob('*events.out.tfevents*')
+    assert len(tf_summary_files) == 1, f'expected exactly 1 tensorflow summary file {tf_summary_files}'
     events_df = tensorboard_to_pandas(tf_summary_files[0])
     clear_global_state()
 
@@ -56,11 +52,11 @@ def perform_algorithm_seeding_test(hydra_overrides: Dict[str, str]):
     hydra_overrides['seeding.env_base_seed'] = cfg.seeding.env_base_seed
     # run training
     with Timeout(seconds=60):
-        run_maze_job(hydra_overrides, config_module="maze.conf", config_name="conf_train")
+        run_maze_job(hydra_overrides, config_module='maze.conf', config_name='conf_train')
 
     # load tensorboard log
-    tf_summary_files = glob.glob("*events.out.tfevents*")
-    assert len(tf_summary_files) == 1, f"expected exactly 1 tensorflow summary file {tf_summary_files}"
+    tf_summary_files = glob.glob('*events.out.tfevents*')
+    assert len(tf_summary_files) == 1, f'expected exactly 1 tensorflow summary file {tf_summary_files}'
     events_df_2 = tensorboard_to_pandas(tf_summary_files[0])
     clear_global_state()
     del hydra_overrides['seeding.agent_base_seed']
@@ -72,8 +68,9 @@ def perform_algorithm_seeding_test(hydra_overrides: Dict[str, str]):
             continue
         if np.isnan(events_df_2.values[idx]).all() and np.isnan(events_df.values[idx]).all():
             continue
-        assert np.all(np.isclose(events_df_2.values[idx], events_df.values[idx])), \
+        assert np.all(np.isclose(events_df_2.values[idx], events_df.values[idx])), (
             f'Value not equal for key: {key} in epoch: {epoch}'
+        )
 
     # Perform second comparison run with different seeds ---------------------------------------------------------------
     os.chdir(base_dir)
@@ -82,15 +79,15 @@ def perform_algorithm_seeding_test(hydra_overrides: Dict[str, str]):
 
     # run training
     with Timeout(seconds=60):
-        run_maze_job(hydra_overrides, config_module="maze.conf", config_name="conf_train")
+        run_maze_job(hydra_overrides, config_module='maze.conf', config_name='conf_train')
 
     # load tensorboard log
-    tf_summary_files = glob.glob("*events.out.tfevents*")
-    assert len(tf_summary_files) == 1, f"expected exactly 1 tensorflow summary file {tf_summary_files}"
+    tf_summary_files = glob.glob('*events.out.tfevents*')
+    assert len(tf_summary_files) == 1, f'expected exactly 1 tensorflow summary file {tf_summary_files}'
     events_df_2 = tensorboard_to_pandas(tf_summary_files[0])
 
     all_equal = True
-    for idx, (key, epoch) in enumerate(events_df.index):
+    for idx, (key, _) in enumerate(events_df.index):
         if 'time' in key:
             continue
         all_equal = all_equal and events_df.values[idx] == events_df_2.values[idx]

@@ -1,14 +1,16 @@
 """File containing method for calculating the size of a given python object"""
 
+from __future__ import annotations
+
 import sys
 from gc import get_referents
-from types import ModuleType, FunctionType
-from typing import Any, Tuple
+from types import FunctionType, ModuleType
+from typing import Any
 
 BLACKLIST = type, ModuleType, FunctionType
 
 
-def getsize(object: Any) -> Tuple[int, int]:
+def getsize(object: Any) -> tuple[int, int]:
     """Calculate the size of a given python object.
 
     :param object: The object the size of which should be calculated.
@@ -28,5 +30,5 @@ def getsize(object: Any) -> Tuple[int, int]:
                 need_referents.append(obj)
         objects = get_referents(*need_referents)
 
-    size_in_gbyte = size_in_byte * 9.31 * (10 ** -10)
+    size_in_gbyte = size_in_byte * 9.31 * (10**-10)
     return size_in_byte, size_in_gbyte

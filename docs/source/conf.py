@@ -1,18 +1,18 @@
-from datetime import datetime
-
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-
 # -- Path setup --------------------------------------------------------------
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+from __future__ import annotations
+
 import os
 import sys
+from datetime import datetime
+
 sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
@@ -89,16 +89,12 @@ nitpick_ignore = [
     ('py:class', 'gymnasium.spaces.MultiDiscrete'),
     ('py:class', 'gymnasium.spaces.MultiBinary'),
     ('py:class', 'gymnasium.spaces.Discrete'),
-
     # Omegaconf data types
     ('py:class', 'omegaconf.DictConfig'),
-
     # Gymnasium data types
     ('py:class', 'multiprocessing.context.BaseContext.Queue'),
-
     # Generic data types
     ('py:class', 'callable'),
-
     # Special maze data types
     ('py:class', 'maze.core.events.event_service.T'),
     ('py:class', 'maze.core.events.event_topic_factory.T'),
@@ -114,7 +110,6 @@ nitpick_ignore = [
     ('py:class', 'maze.core.wrappers.wrapper.WrapperType'),
     ('py:class', 'maze.distributions.torch_dist.T'),
     ('py:class', 'maze.train.trainers.common.trainer.AlgorithmConfigType'),
-
     # Hydra data types
     ('py:class', 'hydra.core.utils.JobReturn'),
     ('py:class', 'hydra.TaskFunction'),
@@ -139,15 +134,12 @@ autodoc_mock_imports = [
     'pandas',
     'yaml',
     'cloudpickle',
-
     'torch',
     'tensorboard',
     'ray',
-
     'gymnasium',
     'omegaconf',
     'hydra',
-
     'networkx',
     'matplotlib',
     'seaborn',

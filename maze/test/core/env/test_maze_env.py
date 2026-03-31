@@ -1,10 +1,14 @@
 """Maze environment tests."""
 
+from __future__ import annotations
+
 from maze.core.env.base_env_events import BaseEnvEvents
-from maze.core.log_stats.log_stats import increment_log_step, LogStatsLevel
+from maze.core.log_stats.log_stats import LogStatsLevel, increment_log_step
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.test.shared_test_utils.helper_functions import build_dummy_maze_env_with_structured_core_env, \
-    build_dummy_maze_env
+from maze.test.shared_test_utils.helper_functions import (
+    build_dummy_maze_env,
+    build_dummy_maze_env_with_structured_core_env,
+)
 
 
 def test_step_increment_in_single_step_core_env():
@@ -24,11 +28,7 @@ def test_step_increment_in_single_step_core_env():
 
     increment_log_step()
 
-    assert env.get_stats_value(
-        BaseEnvEvents.reward,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 10
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 10
 
 
 def test_step_increment_in_structured_core_environments():
@@ -48,8 +48,4 @@ def test_step_increment_in_structured_core_environments():
 
     increment_log_step()
 
-    assert env.get_stats_value(
-        BaseEnvEvents.reward,
-        LogStatsLevel.EPOCH,
-        name="total_step_count"
-    ) == 5
+    assert env.get_stats_value(BaseEnvEvents.reward, LogStatsLevel.EPOCH, name='total_step_count') == 5

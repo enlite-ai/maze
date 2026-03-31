@@ -1,11 +1,10 @@
 """File contains tests for the step-profiling-wrapper."""
+
+from __future__ import annotations
+
 import os
 import time
-from typing import Dict, Union, Tuple, Any
-
-import gymnasium as gym
-import numpy as np
-import pytest
+from typing import Any
 
 from maze.core.agent.dummy_cartpole_policy import DummyCartPolePolicy
 from maze.core.env.maze_action import MazeActionType
@@ -15,14 +14,25 @@ from maze.core.log_events.env_profiling_events import EnvProfilingEvents
 from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.log_stats.log_stats_writer_logger import LogStatsWriterLogger
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
-from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv, GymCoreEnv, GymActionConversion, \
-    GymObservationConversion
+from maze.core.wrappers.maze_gym_env_wrapper import (
+    GymActionConversion,
+    GymCoreEnv,
+    GymMazeEnv,
+    GymObservationConversion,
+)
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
+
+import gymnasium as gym
+import numpy as np
+import pytest
+
+# ruff: noqa: SLF001
 
 
 class CustomGymCoreEnv(GymCoreEnv):
-
-    def step(self, maze_action: MazeActionType) -> Tuple[MazeStateType, float | np.ndarray | Any, bool, bool, Dict[Any, Any]]:
+    def step(
+        self, maze_action: MazeActionType
+    ) -> tuple[MazeStateType, float | np.ndarray | Any, bool, bool, dict[Any, Any]]:
         """Intercept ``CoreEnv.step``"""
         self._investigate_step_function_parts = {'main_part': 0, 'other_part': 0}
 
@@ -53,11 +63,12 @@ class CustomGymMazeEnv(MazeEnv):
         super().__init__(
             core_env=CustomGymCoreEnv(env),
             action_conversion_dict={0: GymActionConversion(env=env)},
-            observation_conversion_dict={0: GymObservationConversion(env=env)})
+            observation_conversion_dict={0: GymObservationConversion(env=env)},
+        )
 
 
 def test_profiling_events_recorded():
-    env, agent = GymMazeEnv("CartPole-v1", render_mode=None), DummyCartPolePolicy()
+    env, agent = GymMazeEnv('CartPole-v1', render_mode=None), DummyCartPolePolicy()
 
     env.seed(1234)
     agent.seed(1235)
@@ -78,7 +89,7 @@ def test_profiling_events_recorded():
 
 
 def test_profiling_events_recorded_core_env():
-    env, agent = CustomGymMazeEnv("CartPole-v1"), DummyCartPolePolicy()
+    env, agent = CustomGymMazeEnv('CartPole-v1'), DummyCartPolePolicy()
     register_log_stats_writer(LogStatsWriterLogger())
     env = LogStatsWrapper.wrap(env)
 
@@ -109,19 +120,16 @@ def test_profiling_events_recorded_core_env():
     assert env.step_stats.last_stats[(EnvProfilingEvents.investigate_time, 'step_per', ('other_part',))] > 0.99
 
 
-heuristic_rollouts = [
-    {"runner": "sequential"},
-    {"runner": "parallel"}
-]
+heuristic_rollouts = [{'runner': 'sequential'}, {'runner': 'parallel'}]
 
 # Ensure we are running test configuration and no wrappers (as we do not have the stats
 # to initialize observation normalization with)
-heuristic_rollouts_defaults = {"env": "gym_env", "configuration": "test", "hydra.run.dir": "."}
+heuristic_rollouts_defaults = {'env': 'gym_env', 'configuration': 'test', 'hydra.run.dir': '.'}
 heuristic_rollouts = [pytest.param({**heuristic_rollouts_defaults, **r}, id=r['runner']) for r in heuristic_rollouts]
 
 
-@pytest.mark.parametrize("hydra_overrides", heuristic_rollouts)
-def test_heuristic_rollouts(hydra_overrides: Dict):
+@pytest.mark.parametrize('hydra_overrides', heuristic_rollouts)
+def test_heuristic_rollouts(hydra_overrides: dict):
     """Runs rollout of a dummy policy on cartpole using the sequential and parallel runners."""
-    run_maze_job(hydra_overrides, config_module="maze.conf", config_name="conf_rollout")
+    run_maze_job(hydra_overrides, config_module='maze.conf', config_name='conf_rollout')
     assert os.path.exists('env_profiling.png')

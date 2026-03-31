@@ -2,7 +2,7 @@
 Dummy wrappers for generic wrapper configuration's unit tests.
 """
 
-from typing import Union
+from __future__ import annotations
 
 from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_env import MazeEnv
@@ -14,4 +14,4 @@ class DummyWrapperB(Wrapper[BaseEnv | Wrapper]):
         super().__init__(env)
 
     def do_stuff(self) -> str:
-        return "d"
+        return 'd'

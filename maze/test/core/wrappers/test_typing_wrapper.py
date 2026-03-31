@@ -1,12 +1,17 @@
 """File contains tests regarding the typing of wrappers."""
+
+from __future__ import annotations
+
 from abc import ABC
-from typing import Any, Tuple
+from typing import Any
+
+from maze.core.env.base_env import BaseEnv
+from maze.core.wrappers.wrapper import Wrapper
 
 import gymnasium as gym
 import numpy as np
 
-from maze.core.env.base_env import BaseEnv
-from maze.core.wrappers.wrapper import Wrapper
+# ruff: noqa: B027, B024
 
 
 class _EnvInterfaceInner(ABC):
@@ -45,7 +50,7 @@ class _MazeInnerEnv(BaseEnv, _EnvInterfaceInner):
     def close(self) -> None:
         pass
 
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         pass
 
     def step(self, action):
@@ -99,9 +104,9 @@ def test_gym_typing_wrapper():
         env.method_wrapper()
 
     assert (
-        isinstance(env, _EnvInterfaceWrapper) and
-        isinstance(env, _EnvInterfaceInner) and
-        isinstance(env, _WrapperWithInterface)
+        isinstance(env, _EnvInterfaceWrapper)
+        and isinstance(env, _EnvInterfaceInner)
+        and isinstance(env, _WrapperWithInterface)
     )
 
 
@@ -119,9 +124,9 @@ def test_maze_typing_wrapper_is_instance():
     env = Wrapper(env)
 
     assert (
-        isinstance(env, _EnvInterfaceWrapper) and
-        isinstance(env, _EnvInterfaceInner) and
-        isinstance(env, _MazeWrapperWithInterface)
+        isinstance(env, _EnvInterfaceWrapper)
+        and isinstance(env, _EnvInterfaceInner)
+        and isinstance(env, _MazeWrapperWithInterface)
     )
 
     # check if we can still call the inner method
@@ -129,6 +134,7 @@ def test_maze_typing_wrapper_is_instance():
 
     # check if the wrapper works correctly
     assert env.method_wrapper() == 42
+
 
 def test_maze_typing_wrapper_idempotency():
     #
@@ -148,9 +154,9 @@ def test_maze_typing_wrapper_idempotency():
     env = Wrapper(env)
 
     assert (
-        isinstance(env, _EnvInterfaceWrapper) and
-        isinstance(env, _EnvInterfaceInner) and
-        isinstance(env, _MazeWrapperWithInterface)
+        isinstance(env, _EnvInterfaceWrapper)
+        and isinstance(env, _EnvInterfaceInner)
+        and isinstance(env, _MazeWrapperWithInterface)
     )
 
     # check if we can still call the inner method

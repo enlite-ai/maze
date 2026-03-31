@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from .renderer import Cutting2DRenderer
+
 ...
 
 
 class Cutting2DCoreEnvironment(CoreEnv):
-
     def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int), static_demand: (int, int)):
         super().__init__()
 

@@ -1,5 +1,8 @@
-""" Utils used in perception block unit testing. """
-from typing import Sequence, Dict
+"""Utils used in perception block unit testing."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 import numpy as np
 import torch
@@ -12,14 +15,14 @@ def build_input_tensor(dims: Sequence[int]) -> torch.Tensor:
     return tensor
 
 
-def build_input_dict(dims: Sequence[int]) -> Dict[str, torch.Tensor]:
+def build_input_dict(dims: Sequence[int]) -> dict[str, torch.Tensor]:
     """build input dictionary"""
-    return {"in_key": build_input_tensor(dims)}
+    return {'in_key': build_input_tensor(dims)}
 
 
-def build_multi_input_dict(dims: Sequence[Sequence[int]]) -> Dict[str, torch.Tensor]:
+def build_multi_input_dict(dims: Sequence[Sequence[int]]) -> dict[str, torch.Tensor]:
     """build multi input dictionary"""
     input_dict = {}
     for i, d in enumerate(dims):
-        input_dict["in_key_{}".format(i)] = build_input_tensor(d)
+        input_dict[f'in_key_{i}'] = build_input_tensor(d)
     return input_dict

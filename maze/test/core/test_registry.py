@@ -1,10 +1,13 @@
-import pytest
-from hydra.errors import InstantiationException
+from __future__ import annotations
 
 from maze.core.utils.factory import Factory
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
-from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion \
-    as DummyObservationConversion
+from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import (
+    ObservationConversion as DummyObservationConversion,
+)
+
+import pytest
+from hydra.errors import InstantiationException
 
 
 class CustomDummyObservationConversion(DummyObservationConversion):
@@ -32,4 +35,4 @@ def test_raises_exception_on_invalid_type():
 def test_raises_exception_on_invalid_registry_value():
     with pytest.raises((ImportError, InstantiationException)):
         registry = Factory(base_type=DummyObservationConversion)
-        registry.instantiate(config={"_target_": "wrong_key"})
+        registry.instantiate(config={'_target_': 'wrong_key'})

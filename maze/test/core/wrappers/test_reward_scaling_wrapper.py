@@ -1,5 +1,6 @@
 """Contains reward scaling unit tests."""
-import numpy as np
+
+from __future__ import annotations
 
 from maze.core.wrappers.reward_scaling_wrapper import RewardScalingWrapper
 from maze.test.shared_test_utils.dummy_env.dummy_core_env import DummyCoreEnvironment
@@ -7,15 +8,18 @@ from maze.test.shared_test_utils.dummy_env.dummy_maze_env import DummyEnvironmen
 from maze.test.shared_test_utils.dummy_env.space_interfaces.action_conversion.dict import DictActionConversion
 from maze.test.shared_test_utils.dummy_env.space_interfaces.observation_conversion.dict import ObservationConversion
 
+import numpy as np
+
 
 def test_reward_scaling_wrapper():
-    """ Unit tests """
+    """Unit tests"""
     observation_conversion = ObservationConversion()
 
     env = DummyEnvironment(
         core_env=DummyCoreEnvironment(observation_conversion.space()),
         action_conversion=[DictActionConversion()],
-        observation_conversion=[observation_conversion])
+        observation_conversion=[observation_conversion],
+    )
 
     env.reset()
     action = env.action_space.sample()

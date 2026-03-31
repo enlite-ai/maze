@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 ...
+
 
 class Cutting2DCoreEnvironment(CoreEnv):
     """Environment for cutting 2D pieces based on the customer demand. Works as follows:
@@ -6,8 +9,13 @@ class Cutting2DCoreEnvironment(CoreEnv):
     :param reward_aggregator: Either an instantiated aggregator or a configuration dictionary.
     """
 
-    def __init__(self, max_pieces_in_inventory: int, raw_piece_size: (int, int), static_demand: (int, int),
-                 reward_aggregator: RewardAggregatorInterface):
+    def __init__(
+        self,
+        max_pieces_in_inventory: int,
+        raw_piece_size: (int, int),
+        static_demand: (int, int),
+        reward_aggregator: RewardAggregatorInterface,
+    ):
         super().__init__()
 
         ...
@@ -38,13 +46,15 @@ class Cutting2DCoreEnvironment(CoreEnv):
 
             # attempt the cut
             if self.inventory.cut(maze_action, self.current_demand):
-                self.cutting_events.valid_cut(current_demand=self.current_demand, piece_to_cut=piece_to_cut,
-                                              raw_piece_size=self.raw_piece_size)
+                self.cutting_events.valid_cut(
+                    current_demand=self.current_demand, piece_to_cut=piece_to_cut, raw_piece_size=self.raw_piece_size
+                )
                 replenishment_needed = piece_to_cut == self.raw_piece_size
             else:
                 # assign a negative reward for invalid cutting attempts
-                self.cutting_events.invalid_cut(current_demand=self.current_demand, piece_to_cut=piece_to_cut,
-                                                raw_piece_size=self.raw_piece_size)
+                self.cutting_events.invalid_cut(
+                    current_demand=self.current_demand, piece_to_cut=piece_to_cut, raw_piece_size=self.raw_piece_size
+                )
 
         # check if replenishment is required
         if replenishment_needed:

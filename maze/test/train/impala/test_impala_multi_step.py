@@ -1,5 +1,6 @@
 """Test impala multi step."""
-import torch.nn as nn
+
+from __future__ import annotations
 
 from maze.core.agent.torch_actor_critic import TorchActorCritic
 from maze.core.agent.torch_policy import TorchPolicy
@@ -16,9 +17,11 @@ from maze.train.trainers.impala.impala_algorithm_config import ImpalaAlgorithmCo
 from maze.train.trainers.impala.impala_trainer import IMPALA
 from maze.utils.timeout import Timeout
 
+import torch.nn as nn
+
 
 def _env_factory():
-    return GymMazeEnv("CartPole-v1", render_mode=None)
+    return GymMazeEnv('CartPole-v1', render_mode=None)
 
 
 def _policy(env: GymMazeEnv):
@@ -26,12 +29,13 @@ def _policy(env: GymMazeEnv):
     policies = {0: FlattenConcatPolicyNet({'observation': (4,)}, {'action': (2,)}, hidden_units=[16], non_lin=nn.Tanh)}
     critics = {0: FlattenConcatStateValueNet({'observation': (4,)}, hidden_units=[16], non_lin=nn.Tanh)}
 
-    policy = TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device="cpu")
+    policy = TorchPolicy(networks=policies, distribution_mapper=distribution_mapper, device='cpu')
 
-    critic = TorchSharedStateCritic(networks=critics, obs_spaces_dict=env.observation_spaces_dict,
-                                    device="cpu", stack_observations=False)
+    critic = TorchSharedStateCritic(
+        networks=critics, obs_spaces_dict=env.observation_spaces_dict, device='cpu', stack_observations=False
+    )
 
-    return TorchActorCritic(policy=policy, critic=critic, device="cpu")
+    return TorchActorCritic(policy=policy, critic=critic, device='cpu')
 
 
 def _algorithm_config():
@@ -49,24 +53,25 @@ def _algorithm_config():
         value_loss_coef=0.5,
         entropy_coef=0.0,
         max_grad_norm=0.0,
-        device="cpu",
+        device='cpu',
         vtrace_clip_pg_rho_threshold=1,
         vtrace_clip_rho_threshold=1,
         num_actors=1,
         actors_batch_size=5,
         critic_burn_in_epochs=0,
-        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1,
-                                           model_selection=None, deterministic=True),
+        rollout_evaluator=RolloutEvaluator(eval_env=eval_env, n_episodes=1, model_selection=None, deterministic=True),
         n_training_seeds=10,
     )
 
 
 def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlgorithmConfig) -> IMPALA:
-    impala = IMPALA(model=_policy(train_actors.env_factory()),
-                    rollout_generator=train_actors,
-                    evaluator=algorithm_config.rollout_evaluator,
-                    algorithm_config=algorithm_config,
-                    model_selection=None)
+    impala = IMPALA(
+        model=_policy(train_actors.env_factory()),
+        rollout_generator=train_actors,
+        evaluator=algorithm_config.rollout_evaluator,
+        algorithm_config=algorithm_config,
+        model_selection=None,
+    )
 
     impala.train(n_epochs=algorithm_config.n_epochs)
 
@@ -75,25 +80,31 @@ def _train_function(train_actors: DistributedActors, algorithm_config: ImpalaAlg
 
 def test_impala_multi_step_dummy():
     algorithm_config = _algorithm_config()
-    train_actors = SequentialDistributedActors(_env_factory, _policy(_env_factory()).policy,
-                                               n_rollout_steps=algorithm_config.n_rollout_steps,
-                                               n_actors=algorithm_config.num_actors,
-                                               batch_size=algorithm_config.actors_batch_size,
-                                               actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)])
+    train_actors = SequentialDistributedActors(
+        _env_factory,
+        _policy(_env_factory()).policy,
+        n_rollout_steps=algorithm_config.n_rollout_steps,
+        n_actors=algorithm_config.num_actors,
+        batch_size=algorithm_config.actors_batch_size,
+        actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)],
+    )
     impala = _train_function(train_actors, algorithm_config)
     assert isinstance(impala, IMPALA)
 
 
 def test_impala_multi_step_distributed():
     algorithm_config = _algorithm_config()
-    train_actors = SubprocDistributedActors(_env_factory, _policy(_env_factory()).policy,
-                                            n_rollout_steps=algorithm_config.n_rollout_steps,
-                                            n_actors=algorithm_config.num_actors,
-                                            batch_size=algorithm_config.actors_batch_size,
-                                            queue_out_of_sync_factor=algorithm_config.queue_out_of_sync_factor,
-                                            start_method="forkserver",
-                                            actor_agent_seeds=[4321 for _ in range(algorithm_config.num_actors)],
-                                            actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)])
+    train_actors = SubprocDistributedActors(
+        _env_factory,
+        _policy(_env_factory()).policy,
+        n_rollout_steps=algorithm_config.n_rollout_steps,
+        n_actors=algorithm_config.num_actors,
+        batch_size=algorithm_config.actors_batch_size,
+        queue_out_of_sync_factor=algorithm_config.queue_out_of_sync_factor,
+        start_method='forkserver',
+        actor_agent_seeds=[4321 for _ in range(algorithm_config.num_actors)],
+        actor_env_seeds=[1234 for _ in range(algorithm_config.num_actors)],
+    )
     with Timeout(seconds=30):
         impala = _train_function(train_actors, algorithm_config)
     assert isinstance(impala, IMPALA)

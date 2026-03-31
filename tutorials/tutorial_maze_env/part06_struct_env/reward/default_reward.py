@@ -1,8 +1,9 @@
-from typing import List, Optional
+from __future__ import annotations
 
 from maze.core.annotations import override
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.reward import RewardAggregatorInterface
+
 from ..env.events import CuttingEvents, InventoryEvents
 
 
@@ -33,7 +34,7 @@ class DefaultRewardAggregator(RewardAggregatorInterface):
         :return: List of individual event rewards.
         """
 
-        rewards: List[float] = []
+        rewards: list[float] = []
 
         # penalty for starting a new raw inventory piece
         for _ in self.query_events(InventoryEvents.piece_replenished):

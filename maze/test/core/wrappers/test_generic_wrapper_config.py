@@ -2,6 +2,8 @@
 Tests for wrapper configuration in .yaml config file.
 """
 
+from __future__ import annotations
+
 from typing import TypeVar
 
 import maze.test.core.wrappers.dummy_wrappers as dummy_wrappers_module
@@ -27,13 +29,10 @@ def test_instantiation_with_wrapper_factory():
     # Register dummy wrappers.
     registry = WrapperFactory()
 
-    default_config = load_env_config(dummy_wrappers_module, "dummy_env_config_with_dummy_wrappers.yml")
+    default_config = load_env_config(dummy_wrappers_module, 'dummy_env_config_with_dummy_wrappers.yml')
     env_config = default_config['env']
-    env_config["core_env"] = {"_target_": DummyCoreEnvironment, "observation_space": ObservationConversion().space()}
-    env: Wrapper[MazeEnv] = registry.wrap_from_config(
-        DummyEnvironment(**env_config),
-        default_config['wrappers']
-    )
+    env_config['core_env'] = {'_target_': DummyCoreEnvironment, 'observation_space': ObservationConversion().space()}
+    env: Wrapper[MazeEnv] = registry.wrap_from_config(DummyEnvironment(**env_config), default_config['wrappers'])
 
     # Make sure types are correctly inferred.
     assert isinstance(env, Wrapper)
@@ -43,11 +42,11 @@ def test_instantiation_with_wrapper_factory():
     assert isinstance(env, DummyEnvironment)
 
     # Check if arguments are set correctly and methods are available.
-    assert getattr(env, "do_stuff")
-    assert getattr(env, "arg_a")
-    assert getattr(env, "arg_b")
-    assert getattr(env, "arg_c")
-    assert env.do_stuff() == "b"
+    assert env.do_stuff
+    assert env.arg_a
+    assert env.arg_b
+    assert env.arg_c
+    assert env.do_stuff() == 'b'
 
 
 def test_wrap_method():
@@ -55,9 +54,9 @@ def test_wrap_method():
     Tests .wrap() method.
     """
 
-    default_config: dict = load_env_config(dummy_wrappers_module, "dummy_env_config_with_dummy_wrappers.yml")
+    default_config: dict = load_env_config(dummy_wrappers_module, 'dummy_env_config_with_dummy_wrappers.yml')
     env_config: dict = default_config['env']
-    env_config["core_env"] = {"_target_": DummyCoreEnvironment, "observation_space": ObservationConversion().space()}
+    env_config['core_env'] = {'_target_': DummyCoreEnvironment, 'observation_space': ObservationConversion().space()}
     env = DummyEnvironment(**env_config)
 
     env_a: DummyWrapperA = DummyWrapperA.wrap(env, arg_a=1)

@@ -1,6 +1,6 @@
-from typing import Dict, Sequence, Tuple, Union, Optional
+from __future__ import annotations
 
-import numpy as np
+from collections.abc import Sequence
 
 from maze.core.agent.policy import Policy
 from maze.core.annotations import override
@@ -9,7 +9,9 @@ from maze.core.env.base_env import BaseEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.env.observation_conversion import ObservationType
 from maze.core.env.structured_env import ActorID
-from maze.core.utils.factory import Factory, ConfigType
+from maze.core.utils.factory import ConfigType, Factory
+
+import numpy as np
 from maze_envs.logistics.cutting_2d.env.maze_action import Cutting2DMazeAction
 from maze_envs.logistics.cutting_2d.space_interfaces.action_conversion.base import BaseActionConversion
 
@@ -30,7 +32,7 @@ class GreedyPolicy(Policy):
         """Not applicable since heuristic is deterministic"""
         pass
 
-    def get_candidate_pieces(self, observation: Dict) -> Sequence[Cutting2DMazeAction]:
+    def get_candidate_pieces(self, observation: dict) -> Sequence[Cutting2DMazeAction]:
         """
         Go through all of the pieces in inventory and select all possible candidates,
         ranked from the best (= smallest piece).
@@ -69,25 +71,32 @@ class GreedyPolicy(Policy):
         return False
 
     @override(Policy)
-    def compute_top_action_candidates(self, observation: ObservationType, num_candidates: int | None,
-                                      maze_state: MazeStateType | None, env: BaseEnv | None,
-                                      actor_id: ActorID | None = None) \
-            -> Tuple[Sequence[ActionType], Sequence[float]]:
-        """implementation of :class:`~maze.core.agent.policy.Policy` interface
-        """
+    def compute_top_action_candidates(
+        self,
+        observation: ObservationType,
+        num_candidates: int | None,
+        maze_state: MazeStateType | None,
+        env: BaseEnv | None,
+        actor_id: ActorID | None = None,
+    ) -> tuple[Sequence[ActionType], Sequence[float]]:
+        """implementation of :class:`~maze.core.agent.policy.Policy` interface"""
         raise NotImplementedError
 
     @override(Policy)
-    def compute_action(self, observation: ObservationType, maze_state: MazeStateType | None = None,
-                       env: BaseEnv | None = None, actor_id: ActorID | None = None,
-                       deterministic: bool = False) -> ActionType:
-        """implementation of :class:`~maze.core.agent.policy.Policy` interface
-        """
+    def compute_action(
+        self,
+        observation: ObservationType,
+        maze_state: MazeStateType | None = None,
+        env: BaseEnv | None = None,
+        actor_id: ActorID | None = None,
+        deterministic: bool = False,
+    ) -> ActionType:
+        """implementation of :class:`~maze.core.agent.policy.Policy` interface"""
         candidates = self.get_candidate_pieces(observation)
 
         if len(candidates) == 0:
             # No piece fits => this should not happen (we should always have the full-size raw piece in stock)
-            raise ValueError("No piece in inventory fits the given order.")
+            raise ValueError('No piece in inventory fits the given order.')
 
         # convert MazeAction to agent action
         return self.action_conversion.maze_to_space(candidates[0])

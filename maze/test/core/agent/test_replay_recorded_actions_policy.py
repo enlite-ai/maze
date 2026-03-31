@@ -1,4 +1,7 @@
 """Contains a unit tests for the replay recorded actions policy."""
+
+from __future__ import annotations
+
 from maze.core.agent.heuristic_lunar_lander_policy import HeuristicLunarLanderPolicy
 from maze.core.agent.replay_recorded_actions_policy import ReplayRecordedActionsPolicy
 from maze.core.wrappers.action_recording_wrapper import ActionRecordingWrapper
@@ -10,9 +13,8 @@ def test_replay_recorded_actions_policy():
 
     teacher_policy = HeuristicLunarLanderPolicy()
 
-    env = GymMazeEnv("LunarLander-v3", render_mode=None)
-    env = ActionRecordingWrapper.wrap(env, record_maze_actions=False, record_actions=True,
-                                      output_dir="action_records")
+    env = GymMazeEnv('LunarLander-v3', render_mode=None)
+    env = ActionRecordingWrapper.wrap(env, record_maze_actions=False, record_actions=True, output_dir='action_records')
 
     env.seed(1234)
     obs, _ = env.reset()
@@ -26,7 +28,7 @@ def test_replay_recorded_actions_policy():
     env.dump()
 
     episode_id = env.get_episode_id()
-    expected_file_path = "action_records/" + str(episode_id) + ".pkl"
+    expected_file_path = 'action_records/' + str(episode_id) + '.pkl'
     replay_policy = ReplayRecordedActionsPolicy(action_record_path=expected_file_path, with_agent_actions=True)
 
     env.seed(1234)

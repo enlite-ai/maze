@@ -1,17 +1,20 @@
 """
 Includes the implementation of the dummy core environment.
 """
-from typing import Tuple, Dict, Any, Optional
 
-import gymnasium as gym
-import numpy as np
+from __future__ import annotations
+
+from typing import Any
 
 from maze.core.env.core_env import CoreEnv
-from maze.core.env.structured_env import StepKeyType, ActorID
+from maze.core.env.structured_env import ActorID, StepKeyType
 from maze.core.events.pubsub import Pubsub
 from maze.core.rendering.renderer import Renderer
 from maze.test.shared_test_utils.dummy_env.dummy_renderer import DummyMatplotlibRenderer
-from maze.test.shared_test_utils.dummy_env.reward.base import RewardAggregator, DummyEnvEvents
+from maze.test.shared_test_utils.dummy_env.reward.base import DummyEnvEvents, RewardAggregator
+
+import gymnasium as gym
+import numpy as np
 
 
 class DummyCoreEnvironment(CoreEnv):
@@ -35,7 +38,7 @@ class DummyCoreEnvironment(CoreEnv):
         # initialize rendering
         self.renderer = DummyMatplotlibRenderer()
 
-    def step(self, maze_action: Dict) -> Tuple[Dict[str, np.ndarray], float, bool, bool, Dict | None]:
+    def step(self, maze_action: dict) -> tuple[dict[str, np.ndarray], float, bool, bool, dict | None]:  # noqa: ARG002
         """
         :param maze_action: Environment MazeAction to take.
         :return: state, reward, terminated, truncated, info
@@ -46,13 +49,13 @@ class DummyCoreEnvironment(CoreEnv):
 
         return self.get_maze_state(), self.reward_aggregator.summarize_reward(), False, False, {}
 
-    def get_maze_state(self) -> Dict[str, np.ndarray]:
+    def get_maze_state(self) -> dict[str, np.ndarray]:
         """
         :returns Random observation
         """
         return self.observation_space.sample()
 
-    def reset(self) -> Tuple[Dict[str, np.ndarray], dict]:
+    def reset(self) -> tuple[dict[str, np.ndarray], dict]:
         """
         Does nothing
         :return: The environment state and empty info dict
@@ -79,7 +82,7 @@ class DummyCoreEnvironment(CoreEnv):
         # No randomness in the env
         pass
 
-    def get_serializable_components(self) -> Dict[str, Any]:
+    def get_serializable_components(self) -> dict[str, Any]:
         """
         Not implemented
         :return: An empty dict
@@ -105,10 +108,10 @@ class DummyCoreEnvironment(CoreEnv):
         return False
 
     @property
-    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+    def agent_counts_dict(self) -> dict[StepKeyType, int]:
         """Single-step, single agent env."""
         return {0: 1}
 
-    def clone_from(self, env: 'CoreEnv') -> None:
+    def clone_from(self, env: CoreEnv) -> None:
         """Nothing needs to be done here, as we are anyway just sampling the observation space for "states"""
         pass

@@ -23,7 +23,7 @@ Policies (Actors)
 -----------------
 
 An agent holds one or more policies and acts (selects actions) according to these policies.
-Each policy consists of one ore more policy networks.
+Each policy consists of one or more policy networks.
 This might be for example required in
 (1) multi-agent RL settings where each agents acts according to its distinct policy network or
 (2) when working with auto-regressive action spaces or :ref:`multi-step environments <struct_env_tutorial>`.

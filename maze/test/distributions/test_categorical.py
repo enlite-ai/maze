@@ -1,13 +1,16 @@
 """Contains distribution tests."""
+
+from __future__ import annotations
+
+from maze.distributions.categorical import CategoricalProbabilityDistribution
+
 import numpy as np
 import torch
 from gymnasium import spaces
 
-from maze.distributions.categorical import CategoricalProbabilityDistribution
-
 
 def test_categorical_sample():
-    """ distribution test """
+    """distribution test"""
     logits = torch.from_numpy(np.random.randn(5))
     dist = CategoricalProbabilityDistribution(logits=logits, action_space=spaces.Discrete(5), temperature=1.0)
     assert dist.sample().numpy().ndim == 0
@@ -29,7 +32,7 @@ def test_categorical_sample():
 
 
 def test_categorical_entropy():
-    """ distribution test """
+    """distribution test"""
     logits = torch.from_numpy(np.random.randn(5))
     dist = CategoricalProbabilityDistribution(logits=logits, action_space=spaces.Discrete(5), temperature=1.0)
     assert dist.entropy().numpy().ndim == 0
@@ -46,7 +49,7 @@ def test_categorical_entropy():
 
 
 def test_categorical_logprob():
-    """ distribution test """
+    """distribution test"""
     logits = torch.from_numpy(np.random.randn(5))
     dist = CategoricalProbabilityDistribution(logits=logits, action_space=spaces.Discrete(5), temperature=1.0)
     assert dist.log_prob(actions=dist.sample()).numpy().ndim == 0
@@ -63,7 +66,7 @@ def test_categorical_logprob():
 
 
 def test_bernoulli_kl():
-    """ distribution test """
+    """distribution test"""
     logits_0 = torch.from_numpy(np.random.randn(100, 8, 5))
     logits_1 = torch.from_numpy(np.random.randn(100, 8, 5))
 
@@ -75,6 +78,6 @@ def test_bernoulli_kl():
 
 
 def test_categorical_required_logits_shape():
-    """ distribution test """
+    """distribution test"""
     shape = CategoricalProbabilityDistribution.required_logits_shape(action_space=spaces.Discrete(5))
     assert shape == [5]

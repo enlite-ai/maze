@@ -2,6 +2,8 @@
 Utils for example notebooks.
 """
 
+from __future__ import annotations
+
 import contextlib
 import os
 import subprocess
@@ -19,21 +21,19 @@ def fix_gym_syspath() -> None:
 
     try:
         # Try to import gym to see if messing with sys.path is necessary.
-        import gymnasium as gym
+        import gymnasium as gym  # noqa: F401
     except ModuleNotFoundError:
         try:
             # Get info on gym installation path.
-            pip_show_output = str(subprocess.check_output(['pip', "show", 'gym']))
+            pip_show_output = str(subprocess.check_output(['pip', 'show', 'gym']))
             # Extract gym path and append to sys.path.
-            sys.path.append(pip_show_output.split("\\n")[-4].split(": ")[1])
+            sys.path.append(pip_show_output.split('\\n')[-4].split(': ')[1])
         # gym is actually not installed.
         except subprocess.CalledProcessError:
-            print("gym is not installed. Please install with: pip install gym.")
+            print('gym is not installed. Please install with: pip install gym.')
 
 
-def rollout(
-        env: MazeEnv, agent: Policy, n_max_steps: int, render: bool = False, log_dir: str = "."
-) -> float:
+def rollout(env: MazeEnv, agent: Policy, n_max_steps: int, render: bool = False, log_dir: str = '.') -> float:
     """
     Rolls out environment and collects total reward for one epoch.
 
@@ -57,9 +57,9 @@ def rollout(
                 terminated, truncated = False
 
                 while not (terminated or truncated) and i < n_max_steps:
-                    action = agent.compute_action(obs,
-                                                  maze_state=monitored_env.get_maze_state(),
-                                                  actor_id=monitored_env.actor_id())
+                    action = agent.compute_action(
+                        obs, maze_state=monitored_env.get_maze_state(), actor_id=monitored_env.actor_id()
+                    )
                     obs, reward, terminated, truncated, _ = monitored_env.step(action)
                     cumulative_reward += reward
 

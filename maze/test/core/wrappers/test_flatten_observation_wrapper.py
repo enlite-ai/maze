@@ -1,13 +1,19 @@
 """Tests for FlattenDictObservationWrapper"""
+
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
+from maze.core.wrappers.flatten_observation_wrapper import FlattenDictObservationWrapper
+from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
+
 import numpy as np
 import pytest
 from gymnasium import spaces
-from gymnasium.spaces import utils as space_utils, flatten_space
+from gymnasium.spaces import flatten_space
+from gymnasium.spaces import utils as space_utils
 
-from maze.core.env.simulated_env_mixin import SimulatedEnvMixin
-from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
-from maze.core.wrappers.flatten_observation_wrapper import FlattenDictObservationWrapper
-from unittest.mock import MagicMock
 
 def _expected_flat_dim(obs_space: spaces.Space) -> int:
     """
@@ -21,9 +27,10 @@ def _expected_flat_dim(obs_space: spaces.Space) -> int:
 
 # CartPole: Box obs space (trivial case — should pass through unchanged in shape)
 
+
 def test_flat_obs_space_is_box():
     """Output observation space must always be a flat Box."""
-    base_env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    base_env = GymMazeEnv(env='CartPole-v1', render_mode=None)
     env = FlattenDictObservationWrapper(base_env)
 
     assert isinstance(env.observation_space, spaces.Box)
@@ -33,17 +40,18 @@ def test_flat_obs_space_is_box():
     assert env.observation_space.dtype == np.float32
 
     obs, _ = env.reset()
-    assert env.observation_space.contains(obs), \
-        f"reset obs {obs} not contained in {env.observation_space}"
+    assert env.observation_space.contains(obs), f'reset obs {obs} not contained in {env.observation_space}'
 
     action = env.action_space.sample()
     obs, reward, terminated, truncated, info = env.step(action)
 
     assert env.observation_space.contains(obs)
 
+
 # ---------------------------------------------------------------------------
 # Dict observation space
 # ---------------------------------------------------------------------------
+
 
 def _make_mock_dict_env(obs_space: spaces.Space) -> SimulatedEnvMixin:
     """
@@ -61,16 +69,19 @@ def _make_mock_dict_env(obs_space: spaces.Space) -> SimulatedEnvMixin:
 
 def test_dict_obs_flat_dim():
     """Flattened dim must equal sum of individual sub-space flatdims."""
-    obs_space = spaces.Dict({
-        "z_last": spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
-        "a_first": spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
-    })
+    obs_space = spaces.Dict(
+        {
+            'z_last': spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
+            'a_first': spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
+        }
+    )
     base_env = FlattenDictObservationWrapper(_make_mock_dict_env(obs_space))
     env = FlattenDictObservationWrapper(base_env)
 
     expected_dim = _expected_flat_dim(base_env.observation_space)  # 2 + 3 + 4 = 9
-    assert env.observation_space.shape == (expected_dim,), \
-        f"Expected shape ({expected_dim},), got {env.observation_space.shape}"
+    assert env.observation_space.shape == (expected_dim,), (
+        f'Expected shape ({expected_dim},), got {env.observation_space.shape}'
+    )
 
     expected_space = flatten_space(base_env.observation_space)
 
@@ -94,27 +105,31 @@ def test_observation_spaces_dict_values_are_flat_boxes():
     """
     Test if the observation spaces in the observation_spaces_dict are flat Boxes.
     """
-    obs_space = spaces.Dict({
-        "z_last": spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
-        "a_first": spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
-    })
+    obs_space = spaces.Dict(
+        {
+            'z_last': spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
+            'a_first': spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
+        }
+    )
     base_env = FlattenDictObservationWrapper(_make_mock_dict_env(obs_space))
     env = FlattenDictObservationWrapper(base_env)
 
     for k, sp in env.observation_spaces_dict.items():
-        assert isinstance(sp, spaces.Box), f"Key {k!r} has space {type(sp)}, expected Box"
-        assert sp.shape[0] == _expected_flat_dim(base_env.observation_spaces_dict[k]), \
-            f"Flatdim mismatch for key {k!r}"
+        assert isinstance(sp, spaces.Box), f'Key {k!r} has space {type(sp)}, expected Box'
+        assert sp.shape[0] == _expected_flat_dim(base_env.observation_spaces_dict[k]), f'Flatdim mismatch for key {k!r}'
 
 
 # Determinism: sorted keys guarantee stable flattening order
 
+
 def test_flattening_is_deterministic_across_calls():
     """Two calls to observation() on the same input must yield bit-identical arrays."""
-    obs_space = spaces.Dict({
-        "z_last": spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
-        "a_first": spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
-    })
+    obs_space = spaces.Dict(
+        {
+            'z_last': spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
+            'a_first': spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
+        }
+    )
     base_env = FlattenDictObservationWrapper(_make_mock_dict_env(obs_space))
     env = FlattenDictObservationWrapper(base_env)
 
@@ -129,22 +144,25 @@ def test_flattening_is_deterministic_across_calls():
 
 def test_sorted_keys_determine_flat_order():
     """Values from alphabetically earlier keys must appear first in the flat array."""
-    obs_space = spaces.Dict({
-        "z_last": spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
-        "a_first": spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
-    })
+    obs_space = spaces.Dict(
+        {
+            'z_last': spaces.Box(low=99.0, high=100.0, shape=(1,), dtype=np.float32),
+            'a_first': spaces.Box(low=-100.0, high=-99.0, shape=(1,), dtype=np.float32),
+        }
+    )
     env = FlattenDictObservationWrapper(_make_mock_dict_env(obs_space))
 
-    obs = {"a_first": np.array([-99.5], dtype=np.float32),
-           "z_last": np.array([99.5], dtype=np.float32)}
+    obs = {'a_first': np.array([-99.5], dtype=np.float32), 'z_last': np.array([99.5], dtype=np.float32)}
 
     flat = env.observation(obs)
 
     assert flat[0] == pytest.approx(-99.5)
     assert flat[1] == pytest.approx(99.5)
 
-    obs = {"z_last": np.array([99.5], dtype=np.float32),
-           "a_first": np.array([-99.5], dtype=np.float32),}
+    obs = {
+        'z_last': np.array([99.5], dtype=np.float32),
+        'a_first': np.array([-99.5], dtype=np.float32),
+    }
 
     flat = env.observation(obs)
 
@@ -158,29 +176,35 @@ def test_nested_dict_obs_flattening_correctness():
     Total expected flat dim: 4 + 2 + 3 + 3 + 1 = 13
     """
 
-    obs_space = spaces.Dict({
-        "timestep": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-        "sensor": spaces.Dict({
-            "reading": spaces.MultiBinary(3),
-            "depth": spaces.Box(low=0.0, high=10.0, shape=(3,), dtype=np.float32),
-        }),
-        "agent": spaces.Dict({
-            "position": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
-            "orientation": spaces.Discrete(4),
-        }),
-    })
+    obs_space = spaces.Dict(
+        {
+            'timestep': spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
+            'sensor': spaces.Dict(
+                {
+                    'reading': spaces.MultiBinary(3),
+                    'depth': spaces.Box(low=0.0, high=10.0, shape=(3,), dtype=np.float32),
+                }
+            ),
+            'agent': spaces.Dict(
+                {
+                    'position': spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
+                    'orientation': spaces.Discrete(4),
+                }
+            ),
+        }
+    )
 
     env = FlattenDictObservationWrapper(_make_mock_dict_env(obs_space))
 
     obs = {
-        "timestep": np.array([0.5], dtype=np.float32),
-        "sensor": {
-            "reading": np.array([1, 0, 1], dtype=np.int8),
-            "depth": np.array([1.0, 2.0, 3.0], dtype=np.float32),
+        'timestep': np.array([0.5], dtype=np.float32),
+        'sensor': {
+            'reading': np.array([1, 0, 1], dtype=np.int8),
+            'depth': np.array([1.0, 2.0, 3.0], dtype=np.float32),
         },
-        "agent": {
-            "position": np.array([0.3, -0.7], dtype=np.float32),
-            "orientation": 2,  # one-hot -> [0, 0, 1, 0]
+        'agent': {
+            'position': np.array([0.3, -0.7], dtype=np.float32),
+            'orientation': 2,  # one-hot -> [0, 0, 1, 0]
         },
     }
 
@@ -188,7 +212,7 @@ def test_nested_dict_obs_flattening_correctness():
 
     assert flat.ndim == 1
     assert flat.dtype == np.float32
-    assert flat.shape == (13,), f"Expected (13,), got {flat.shape}"
+    assert flat.shape == (13,), f'Expected (13,), got {flat.shape}'
     assert env.observation_space.contains(flat)
 
     # --- sorted key order: agent < sensor < timestep ---

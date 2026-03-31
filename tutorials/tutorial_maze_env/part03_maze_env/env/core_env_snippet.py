@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 from maze.core.env.structured_env import ActorID
 
 
 class Cutting2DCoreEnvironment(CoreEnv):
-
     ...
 
     def is_actor_done(self) -> bool:

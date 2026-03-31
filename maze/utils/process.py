@@ -1,10 +1,12 @@
 """A wrapper for multiprocessing.Process that supports exception handling and return objects."""
+
+from __future__ import annotations
+
 import multiprocessing as mp
-from typing import Optional, Any
-from maze.utils.log_stats_utils import clear_global_state
 import os
-import re
-import subprocess
+from typing import Any
+
+from maze.utils.log_stats_utils import clear_global_state
 
 
 class Process(mp.Process):
@@ -63,7 +65,7 @@ def query_cpu() -> int:
     """
 
     # Use single CPU if this runs within a gitlab pipeline
-    if 'TEST_LEVEL' in os.environ and os.environ["TEST_LEVEL"] == "GITLAB":
+    if 'TEST_LEVEL' in os.environ and os.environ['TEST_LEVEL'] == 'GITLAB':
         return 1
 
     cpu_quota = -1
@@ -78,8 +80,8 @@ def query_cpu() -> int:
     elif os.path.isfile('/sys/fs/cgroup/cpuset/cpuset.cpus'):
         # Has potentially repeating, comma-separated groups of CPU_idx-CPU_idx or just CPU_idx.
         avail_cpu = 0
-        for cpu_group in open('/sys/fs/cgroup/cpuset/cpuset.cpus').read().rstrip().split(","):
-            cpu_range = cpu_group.split("-")
+        for cpu_group in open('/sys/fs/cgroup/cpuset/cpuset.cpus').read().rstrip().split(','):
+            cpu_range = cpu_group.split('-')
             avail_cpu += int(cpu_range[1] if len(cpu_range) == 2 else cpu_range[0]) - int(cpu_range[0]) + 1
     else:
         avail_cpu = os.cpu_count()

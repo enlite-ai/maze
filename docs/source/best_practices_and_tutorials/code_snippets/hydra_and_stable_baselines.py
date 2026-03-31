@@ -3,16 +3,17 @@ Contains an example showing how to train an observation normalized maze environm
 instantiated from a hydra config with stable-baselines.
 """
 
+from __future__ import annotations
+
 from maze.core.utils.config_utils import make_env_from_hydra
 from maze.core.wrappers.no_dict_spaces_wrapper import NoDictSpacesWrapper
-from maze.core.wrappers.observation_normalization.observation_normalization_utils import \
-    obtain_normalization_statistics
+from maze.core.wrappers.observation_normalization.observation_normalization_utils import obtain_normalization_statistics
 
 from stable_baselines3 import A2C
 
 # ENV INSTANTIATION: from hydra config file
 # -----------------------------------------
-env = make_env_from_hydra("conf")
+env = make_env_from_hydra('conf')
 
 # OBSERVATION NORMALIZATION
 # -------------------------
@@ -33,7 +34,7 @@ model = A2C('MlpPolicy', env, verbose=1)
 model.learn(total_timesteps=10000)
 
 obs, _ = env.reset()
-for i in range(1000):
+for _ in range(1000):
     action, _state = model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, info = env.step(action)
     env.render()

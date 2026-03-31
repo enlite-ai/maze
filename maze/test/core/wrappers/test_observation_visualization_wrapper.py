@@ -1,4 +1,7 @@
-""" Test observation visualization wrapper """
+"""Test observation visualization wrapper"""
+
+from __future__ import annotations
+
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
 from maze.core.wrappers.maze_gym_env_wrapper import GymMazeEnv
 from maze.core.wrappers.observation_visualization_wrapper import ObservationVisualizationWrapper
@@ -6,14 +9,14 @@ from maze.utils.log_stats_utils import SimpleStatsLoggingSetup
 
 
 def test_observation_monitoring():
-    """ Observation logging unit test """
-    env = GymMazeEnv(env="CartPole-v1", render_mode=None)
+    """Observation logging unit test"""
+    env = GymMazeEnv(env='CartPole-v1', render_mode=None)
 
     env = ObservationVisualizationWrapper.wrap(env, plot_function=None)
-    env = LogStatsWrapper.wrap(env, logging_prefix="train")
+    env = LogStatsWrapper.wrap(env, logging_prefix='train')
 
     terminated, truncated = False, False
-    with SimpleStatsLoggingSetup(env, log_dir="."):
+    with SimpleStatsLoggingSetup(env, log_dir='.'):
         env.reset()
         while not (terminated or truncated):
             obs, rew, terminated, truncated, info = env.step(env.action_space.sample())

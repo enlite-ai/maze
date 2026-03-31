@@ -2,15 +2,15 @@
 Implements dummy renderer for dummy environment.
 """
 
-from typing import Optional
-
-import numpy as np
-import matplotlib.pyplot as plt
+from __future__ import annotations
 
 from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_state import MazeStateType
 from maze.core.log_events.step_event_log import StepEventLog
 from maze.core.rendering.renderer import Renderer
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class DummyRenderer(Renderer):
@@ -18,8 +18,9 @@ class DummyRenderer(Renderer):
     Dummy renderer for dummy environment. Doesn't render anything.
     """
 
-    def render(self, maze_state: MazeStateType, maze_action: MazeActionType | None, events: StepEventLog, **kwargs) \
-            -> None:
+    def render(
+        self, maze_state: MazeStateType, maze_action: MazeActionType | None, events: StepEventLog, **kwargs
+    ) -> None:
         """
         Doesn't render anything.
         """
@@ -27,11 +28,15 @@ class DummyRenderer(Renderer):
 
 
 class DummyMatplotlibRenderer(Renderer):
-    """Dummy matplotlib based rendering class.
-    """
+    """Dummy matplotlib based rendering class."""
 
-    def render(self, maze_state: MazeStateType, maze_action: MazeActionType | None, events: StepEventLog, **kwargs) \
-            -> None:
+    def render(
+        self,
+        maze_state: MazeStateType,  # noqa: ARG002
+        maze_action: MazeActionType | None,  # noqa: ARG002
+        events: StepEventLog,  # noqa: ARG002
+        **kwargs,  # noqa: ARG002
+    ) -> None:
         """
         Renders a random integer array with matplotlib.
         """

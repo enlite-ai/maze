@@ -2,18 +2,21 @@
 Includes the implementation of the dummy structured environment.
 """
 
-from typing import Any, Dict, Union, Tuple, Callable, Optional, List
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+from maze.core.env.maze_env import MazeEnv
+from maze.core.env.structured_env import ActorID, StepKeyType, StructuredEnv
+from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
+from maze.core.wrappers.wrapper import Wrapper
 
 import gymnasium as gym
 import numpy as np
 
-from maze.core.env.maze_env import MazeEnv
-from maze.core.env.structured_env import StructuredEnv, StepKeyType, ActorID
-from maze.core.env.structured_env_spaces_mixin import StructuredEnvSpacesMixin
-from maze.core.wrappers.wrapper import Wrapper
 
-
-def filter_dict(el: Dict, callback: Callable[[str], bool]) -> Dict:
+def filter_dict(el: dict, callback: Callable[[str], bool]) -> dict:
     """
     Filters dicts by key using a callback
 
@@ -29,7 +32,7 @@ def filter_dict(el: Dict, callback: Callable[[str], bool]) -> Dict:
     return {key: el[key] for key in keys}
 
 
-def filter_dict_starts_with(el: Dict, start_with: str | List[str]) -> Dict:
+def filter_dict_starts_with(el: dict, start_with: str | list[str]) -> dict:
     """
     Filters a dict by key using the startswith command
 
@@ -45,7 +48,7 @@ def filter_dict_starts_with(el: Dict, start_with: str | List[str]) -> Dict:
     return filter_dict(el, lambda key: any([key.startswith(sw) for sw in start_with]))
 
 
-def filter_spaces_start_with(spaces: Dict, start_with: str) -> gym.spaces.Dict:
+def filter_spaces_start_with(spaces: dict, start_with: str) -> gym.spaces.Dict:
     """
     Filters a dict and returns the filtered dict as new gym space
 
@@ -66,14 +69,18 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
 
         # initialize action space
         self._action_spaces_dict = {
-            0: filter_spaces_start_with(maze_env.action_space.spaces, "action_0"),
-            1: filter_spaces_start_with(maze_env.action_space.spaces, "action_1")
+            0: filter_spaces_start_with(maze_env.action_space.spaces, 'action_0'),
+            1: filter_spaces_start_with(maze_env.action_space.spaces, 'action_1'),
         }
         self._observation_spaces_dict = {
-            0: gym.spaces.Dict(**filter_spaces_start_with(maze_env.observation_space.spaces, "observation_0").spaces,
-                **filter_spaces_start_with(maze_env.observation_space.spaces, "action_0").spaces),
-            1: gym.spaces.Dict(**filter_spaces_start_with(maze_env.observation_space.spaces, "observation_1").spaces,
-                **filter_spaces_start_with(maze_env.observation_space.spaces, "action_1").spaces),
+            0: gym.spaces.Dict(
+                **filter_spaces_start_with(maze_env.observation_space.spaces, 'observation_0').spaces,
+                **filter_spaces_start_with(maze_env.observation_space.spaces, 'action_0').spaces,
+            ),
+            1: gym.spaces.Dict(
+                **filter_spaces_start_with(maze_env.observation_space.spaces, 'observation_1').spaces,
+                **filter_spaces_start_with(maze_env.observation_space.spaces, 'action_1').spaces,
+            ),
         }
 
         StructuredEnv.__init__(self)
@@ -83,7 +90,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
 
         self.last_obs = None
 
-    def reset(self) -> Tuple[Any, dict]:
+    def reset(self) -> tuple[Any, dict]:
         """Resets the environment and returns the initial state.
 
         :return: the initial state after resetting.
@@ -92,7 +99,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         self._sub_step_index = 0
         return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0']), info
 
-    def step(self, action) -> Tuple[Dict, float, bool, bool, Dict | None]:
+    def step(self, action) -> tuple[dict, float, bool, bool, dict | None]:
         """Generic sub-step function.
 
         :return: state, reward, terminated, truncated, info
@@ -125,38 +132,35 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         return False
 
     @property
-    def agent_counts_dict(self) -> Dict[StepKeyType, int]:
+    def agent_counts_dict(self) -> dict[StepKeyType, int]:
         """Two-step, single agent env."""
         return {0: 1, 1: 1}
 
     def close(self) -> None:
-        """Performs any necessary cleanup.
-        """
+        """Performs any necessary cleanup."""
         self.env.close()
 
     @property
     def action_space(self) -> gym.spaces.Dict:
-        """The currently active gym action space.
-        """
+        """The currently active gym action space."""
         return self._action_spaces_dict[self._sub_step_index]
 
     @property
     def observation_space(self) -> gym.spaces.Dict:
-        """The currently active gym observation space.
-        """
+        """The currently active gym observation space."""
         return self._observation_spaces_dict[self._sub_step_index]
 
     @property
-    def action_spaces_dict(self) -> Dict[int | str, gym.spaces.Dict]:
+    def action_spaces_dict(self) -> dict[int | str, gym.spaces.Dict]:
         """Override the action spaces according to the introduced sub steps."""
         return self._action_spaces_dict
 
     @property
-    def observation_spaces_dict(self) -> Dict[int | str, gym.spaces.Dict]:
+    def observation_spaces_dict(self) -> dict[int | str, gym.spaces.Dict]:
         """Override the observation spaces according to the introduced sub steps."""
         return self._observation_spaces_dict
 
-    def _action0(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
+    def _action0(self, action) -> tuple[dict, float, bool, bool, dict[str, np.ndarray] | None]:  # noqa: ARG002
         """
         Returns the first action
 
@@ -165,7 +169,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         # Only the second sub step actually steps the underlying core env
         return filter_dict_starts_with(self.last_obs, ['action_1', 'observation_1']), 1, False, False, {}
 
-    def _action1(self, action) -> Tuple[Dict, float, bool, bool, Dict[str, np.ndarray] | None]:
+    def _action1(self, action) -> tuple[dict, float, bool, bool, dict[str, np.ndarray] | None]:
         """
         Returns the second action
 
@@ -175,7 +179,7 @@ class DummyStructuredEnvironment(Wrapper[MazeEnv], StructuredEnv, StructuredEnvS
         self.last_obs, _, _, _, _ = self.maze_env.step(action)
         return filter_dict_starts_with(self.last_obs, ['observation_0', 'action_0']), 2, False, False, {}
 
-    def clone_from(self, env: 'DummyStructuredEnvironment') -> None:
+    def clone_from(self, env: DummyStructuredEnvironment) -> None:
         self.maze_env.clone_from(env.maze_env)
         self.last_obs = env.last_obs
         self._sub_step_index = env._sub_step_index
