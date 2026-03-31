@@ -145,3 +145,7 @@ autodoc_mock_imports = [
     'seaborn',
     'tqdm',
 ]
+
+autosummary_mock_imports = [
+    'hydra_plugins.maze_local_launcher',
+]
