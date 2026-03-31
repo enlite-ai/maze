@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
+import sys
 import logging
 import multiprocessing
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-from maze.utils.process import Process
 
 from hydra import TaskFunction
 from hydra.core.config_store import ConfigStore
@@ -23,7 +22,18 @@ from hydra.core.utils import (
 from hydra.plugins.launcher import Launcher
 from omegaconf import DictConfig, open_dict
 
+from maze.utils.process import Process
+
 logger = logging.getLogger(__name__)
+
+# Must be registered before @dataclass runs on Python 3.11+
+if __name__ not in sys.modules:
+    import types
+
+    mod = types.ModuleType(__name__)
+    mod.__file__ = __file__
+    mod.__spec__ = __spec__
+    sys.modules[__name__] = mod
 
 
 @dataclass

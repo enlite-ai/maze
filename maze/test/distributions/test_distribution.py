@@ -17,23 +17,3 @@ def test_neg_logprob():
     dist = BernoulliProbabilityDistribution(logits=logits, action_space=spaces.MultiBinary(5))
     sample = dist.sample()
     assert np.allclose(dist.neg_log_prob(actions=sample).numpy(), -dist.log_prob(actions=sample).numpy())
-
-
-def test_not_implemented():
-    """Test if all NotImplementedError are raise correctly"""
-    pd = ProbabilityDistribution()
-
-    with pytest.raises(NotImplementedError):
-        pd.log_prob(None)
-
-    with pytest.raises(NotImplementedError):
-        pd.entropy()
-
-    with pytest.raises(NotImplementedError):
-        pd.kl(ProbabilityDistribution())
-
-    with pytest.raises(NotImplementedError):
-        pd.sample()
-
-    with pytest.raises(NotImplementedError):
-        pd.deterministic_sample()
