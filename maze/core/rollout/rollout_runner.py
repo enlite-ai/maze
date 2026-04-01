@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import os
 import time
 import traceback
@@ -26,9 +25,6 @@ from maze.utils.bcolors import BColors
 
 import numpy as np
 from omegaconf import DictConfig, OmegaConf
-
-logger = logging.getLogger('SEQUENTIAL RUNNER')
-logger.setLevel(logging.INFO)
 
 
 class RolloutRunner(Runner, ABC):
@@ -241,6 +237,7 @@ class RolloutRunner(Runner, ABC):
         env_seeds: list[Any],
         agent_seeds: list[Any],
         deterministic: bool,
+        logger: Logger,
         render: bool = False,
         after_reset_callback: Callable = None,
     ) -> None:
@@ -252,6 +249,8 @@ class RolloutRunner(Runner, ABC):
         :param n_episodes: Count of episodes to perform.
         :param env_seeds: The env seeds to be used for each episode.
         :param agent_seeds: The agent seeds to be used for each episode.
+        :param deterministic: Argmax policy.
+        :param logger: Logger instance for logging rollout events.
         :param render: Whether to render the environment after every step.
         :param after_reset_callback: If supplied, this will be executed after each episode to notify the observer.
         """

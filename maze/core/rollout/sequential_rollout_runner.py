@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from maze.core.annotations import override
 from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
 from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
@@ -20,6 +22,9 @@ from maze.core.wrappers.trajectory_recording_wrapper import TrajectoryRecordingW
 from maze.utils.bcolors import BColors
 
 from tqdm import tqdm
+
+logger = logging.getLogger('SEQUENTIAL RUNNER')
+logger.setLevel(logging.INFO)
 
 
 class SequentialRolloutRunner(RolloutRunner):
@@ -107,6 +112,7 @@ class SequentialRolloutRunner(RolloutRunner):
             env_seeds=env_seeds,
             agent_seeds=agent_seeds,
             deterministic=self.deterministic,
+            logger=logger,
         )
         self.progress_bar.close()
         env.write_epoch_stats()
