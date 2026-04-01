@@ -83,7 +83,7 @@ class StateCriticStepInput:
     def build(cls, policy_step_output: PolicySubStepOutput, observation: TorchObservationType) -> StateCriticStepInput:
         """Build the critic input for an individual step, by combining the policy step output and the given observation.
 
-        :param policy_step_output: The output of the corresponding policy ot check for shared embedding outputs.
+        :param policy_step_output: The output of the corresponding policy to check for shared embedding outputs.
         :param observation: The observation as the default input to the critic.
 
         :return: The Critic input for this specific step.

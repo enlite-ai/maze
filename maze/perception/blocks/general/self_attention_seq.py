@@ -106,7 +106,7 @@ class SelfAttentionSeqBlock(ShapeNormalizationBlock):
                 attn_mask = attn_mask.repeat([self.num_heads, *[1 for _ in attn_mask.shape[1:]]])
             # Furthermore we have to invert the mask in order to work with the torch.nn.MultiheadAttention
             attn_mask = ~torch.eq(attn_mask, torch.tensor(1).to(attn_mask.device))
-            # Finally the first value of the mask is set to true in oder to circumvent nan values, while still ensuring
+            # Finally the first value of the mask is set to true in order to circumvent nan values, while still ensuring
             #   fast processing of the block.
             attn_mask[..., 0] = False
 

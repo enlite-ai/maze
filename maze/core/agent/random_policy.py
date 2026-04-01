@@ -123,7 +123,7 @@ class BaseRandomPolicy(Policy):
         """Try to compute n samples without replacement from the action spaces. This is only works if there is only
         one discrete action space to sample from.
 
-        :param num_candidates: The number of candidates ot retrieve.
+        :param num_candidates: The number of candidates it retrieves.
         :param actor_id: The current actor id.
         :param observation: The current observation.
         :return: True iff it was possible to sample the actions and the action candidates.

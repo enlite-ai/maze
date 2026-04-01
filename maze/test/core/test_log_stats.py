@@ -315,7 +315,7 @@ def test_multi_group_projection():
 
 
 def test_event_stats_histogram_2():
-    """test histogram loggin on an event level"""
+    """test histogram logging on an event level"""
 
     class _EventInterface(ABC):
         @define_step_stats(histogram, input_name='attr1')

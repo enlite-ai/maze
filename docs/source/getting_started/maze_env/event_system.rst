@@ -58,7 +58,7 @@ For each event we can define which statistics are computed at which stage of the
   This decorator defines that epoch statistics should be the average of the contained episodes:
   :math:`Stats_{Epoch}=(\sum^N Stats_{Episode})/N`
 
-:ref:`Below <env_from_scratch-events-main>` we will see that theses statistics will now be considered by the logging
+:ref:`Below <env_from_scratch-events-main>` we will see that these statistics will now be considered by the logging
 system as *InventoryEvents* and *CuttingEvents*.
 For more details on event decorators and the underlying working principles we refer to
 the dedicated section on :ref:`event and KPI logging <event_kpi_log>`.
