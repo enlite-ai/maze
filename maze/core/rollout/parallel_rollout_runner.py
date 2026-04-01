@@ -10,7 +10,6 @@ from multiprocessing import Process, Queue
 from queue import Empty
 
 from maze.core.annotations import override
-from maze.core.env.maze_env import MazeEnv
 from maze.core.env.structured_env import StructuredEnv
 from maze.core.log_events.episode_event_log import EpisodeEventLog
 from maze.core.log_events.log_events_writer import LogEventsWriter
@@ -132,7 +131,7 @@ class ParallelRolloutWorker:
                         agent.reset()
                     except Exception as e:
                         logger.warning('Exception encountered in collection reset()')
-                        ParallelRolloutWorker._log_exception(e)
+                        RolloutRunner.log_exception(logger, e)
 
                     if ran_rollout:
                         # Keep track if any rollout has been run with this process and only put the event to the queue
@@ -155,10 +154,13 @@ class ParallelRolloutWorker:
                         deterministic=deterministic,
                         render=False,
                     )
-                    ParallelRolloutWorker._log_episode_info(agent_seed=agent_seed, env=env)
+                    RolloutRunner.log_episode_info(logger, agent_seed=agent_seed, env_seed=env_seed)
                 except Exception as e:
-                    ParallelRolloutWorker._log_episode_info(agent_seed=agent_seed, env=env)
-                    ParallelRolloutWorker._log_exception(e)
+                    logger.warning(
+                        f'A error was encountered during rollout on the env_seed: {env_seed} with '
+                        f'agent_seed: {agent_seed}'
+                    )
+                    RolloutRunner.log_exception(logger, e)
                 finally:
                     if not first_episode:
                         reporting_queue.put(episode_recorder.get_last_episode_data())
@@ -169,14 +171,6 @@ class ParallelRolloutWorker:
             exception_report = ExceptionReport(exception, traceback.format_exc(), env_seed, agent_seed)
             reporting_queue.put(exception_report)
             raise
-
-    @staticmethod
-    def _log_episode_info(agent_seed: int, env: MazeEnv) -> None:
-        logger.info(f'agent_seed: {agent_seed} | {str(env.core_env)}')
-
-    @staticmethod
-    def _log_exception(exception: Exception) -> None:
-        logger.warning(f'\nException encountered: {exception}\n{traceback.format_exc()}')
 
     @staticmethod
     def _setup_monitoring(

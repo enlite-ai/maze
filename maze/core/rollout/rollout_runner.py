@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import time
+import traceback
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from logging import Logger
 from typing import Any
 
 from maze.core.agent.policy import Policy
@@ -23,6 +26,9 @@ from maze.utils.bcolors import BColors
 
 import numpy as np
 from omegaconf import DictConfig, OmegaConf
+
+logger = logging.getLogger('SEQUENTIAL RUNNER')
+logger.setLevel(logging.INFO)
 
 
 class RolloutRunner(Runner, ABC):
@@ -258,10 +264,10 @@ class RolloutRunner(Runner, ABC):
                 obs, _ = env.reset()
                 agent.reset()
             except Exception as exception:
-                BColors.print_colored(
-                    f'A error was encountered during reset on the env_seed: {env_seed} with agent_seed: {agent_seed}',
-                    BColors.FAIL,
+                logger.warning(
+                    f'A error was encountered during reset on the env_seed: {env_seed} with agent_seed: {agent_seed}'
                 )
+                RolloutRunner.log_exception(logger, exception=exception)
                 raise exception
 
             if idx > 0:
@@ -275,11 +281,12 @@ class RolloutRunner(Runner, ABC):
                     deterministic=deterministic,
                     render=render,
                 )
+                RolloutRunner.log_episode_info(logger, agent_seed=agent_seed, env_seed=env_seed)
             except Exception as exception:
-                BColors.print_colored(
-                    f'A error was encountered during rollout on the env_seed: {env_seed} with agent_seed: {agent_seed}',
-                    BColors.FAIL,
+                logger.warning(
+                    f'A error was encountered during rollout on the env_seed: {env_seed} with agent_seed: {agent_seed}'
                 )
+                RolloutRunner.log_exception(logger, exception=exception)
                 raise exception
 
         # Reset env and agent at the very end in order to collect the statistics
@@ -287,3 +294,24 @@ class RolloutRunner(Runner, ABC):
         agent.reset()
         if after_reset_callback is not None:
             after_reset_callback()
+
+    @staticmethod
+    def log_episode_info(logger_, agent_seed, env_seed) -> None:
+        """
+        Logs agent seed and environment seed for the current rollout episode.
+
+        :param logger_: The logger to use.
+        :param agent_seed: The agent seed for the current episode.
+        :param env_seed: The environment seed for the current episode.
+        """
+        logger_.info(f'agent_seed: {agent_seed} | environment seed: {env_seed}')
+
+    @staticmethod
+    def log_exception(logger_: Logger, exception: Exception) -> None:
+        """
+        Logs occurred exception.
+
+        :param logger_: The logger to use.
+        :param exception: The exception to log.
+        """
+        logger_.warning(f'\nException encountered: {exception}\n{traceback.format_exc()}')
