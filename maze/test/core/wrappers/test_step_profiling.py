@@ -11,6 +11,8 @@ from maze.core.env.maze_action import MazeActionType
 from maze.core.env.maze_env import MazeEnv
 from maze.core.env.maze_state import MazeStateType
 from maze.core.log_events.env_profiling_events import EnvProfilingEvents
+from maze.core.log_events.log_events_writer_registry import LogEventsWriterRegistry
+from maze.core.log_events.log_events_writer_tsv import LogEventsWriterTSV
 from maze.core.log_stats.log_stats import register_log_stats_writer
 from maze.core.log_stats.log_stats_writer_logger import LogStatsWriterLogger
 from maze.core.wrappers.log_stats_wrapper import LogStatsWrapper
@@ -21,6 +23,7 @@ from maze.core.wrappers.maze_gym_env_wrapper import (
     GymObservationConversion,
 )
 from maze.test.shared_test_utils.run_maze_utils import run_maze_job
+from maze.utils.plot_env_profiling import plot_env_profiling
 
 import gymnasium as gym
 import numpy as np
@@ -90,6 +93,7 @@ def test_profiling_events_recorded():
 
 def test_profiling_events_recorded_core_env():
     env, agent = CustomGymMazeEnv('CartPole-v1'), DummyCartPolePolicy()
+    env.core_env.profile_env = True
     register_log_stats_writer(LogStatsWriterLogger())
     env = LogStatsWrapper.wrap(env)
 
@@ -120,6 +124,49 @@ def test_profiling_events_recorded_core_env():
     assert env.step_stats.last_stats[(EnvProfilingEvents.investigate_time, 'step_per', ('other_part',))] > 0.99
 
 
+def test_profiling_not_recorded_when_disabled():
+    """Verifies that no EnvProfilingEvents are dispatched when profile_env is False (the default)."""
+    env, agent = GymMazeEnv('CartPole-v1', render_mode=None), DummyCartPolePolicy()
+    register_log_stats_writer(LogStatsWriterLogger())
+    env = LogStatsWrapper.wrap(env)
+
+    assert not env.core_env.profile_env
+
+    env.seed(1234)
+    agent.seed(1235)
+    obs, _ = env.reset()
+    act = agent.compute_action(obs)
+    env.step(act)
+
+    assert (EnvProfilingEvents.full_env_step_time, 'len', None) not in env.step_stats.last_stats
+
+
+def test_profiling_plot_created_when_enabled(tmp_path):
+    """When profile_env=True, profiling events are written and a plot is created."""
+    env, agent = GymMazeEnv('CartPole-v1', render_mode=None), DummyCartPolePolicy()
+    env.core_env.profile_env = True
+    env = LogStatsWrapper.wrap(env)
+
+    writer = LogEventsWriterTSV(log_dir=tmp_path / 'event_logs')
+    LogEventsWriterRegistry.register_writer(writer)
+
+    try:
+        env.seed(1234)
+        agent.seed(1235)
+        obs, _ = env.reset()
+        for _ in range(5):
+            act = agent.compute_action(obs)
+            obs, _, terminated, truncated, _ = env.step(act)
+            if terminated or truncated:
+                break
+        env.write_epoch_stats()
+    finally:
+        LogEventsWriterRegistry.writers.remove(writer)
+
+    plot_env_profiling(str(tmp_path))
+    assert (tmp_path / 'env_profiling.png').exists()
+
+
 heuristic_rollouts = [{'runner': 'sequential'}, {'runner': 'parallel'}]
 
 # Ensure we are running test configuration and no wrappers (as we do not have the stats
@@ -132,4 +179,4 @@ heuristic_rollouts = [pytest.param({**heuristic_rollouts_defaults, **r}, id=r['r
 def test_heuristic_rollouts(hydra_overrides: dict):
     """Runs rollout of a dummy policy on cartpole using the sequential and parallel runners."""
     run_maze_job(hydra_overrides, config_module='maze.conf', config_name='conf_rollout')
-    assert os.path.exists('env_profiling.png')
+    assert not os.path.exists('env_profiling.png')

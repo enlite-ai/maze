@@ -35,6 +35,8 @@ class CoreEnv(StructuredEnv, EventEnvMixin, SerializableEnvMixin, TimeEnvMixin, 
     def __init__(self):
         self.context = EnvironmentContext()
         self.reward_aggregator: RewardAggregatorInterface | None = None
+        # set to True if you want to profile the environment metric such as step time, wrapper_step_time, etc.
+        self.profile_env: bool = False
 
     @abstractmethod
     @override(StructuredEnv)
