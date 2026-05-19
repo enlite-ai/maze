@@ -81,7 +81,7 @@ class Wrapper(Generic[EnvType], SimulatedEnvMixin, ABC):
         self.log_profiling_events = True
         if not hasattr(self, 'core_env'):
             self.log_profiling_events = False
-        if not self.core_env.profile_env:
+        if hasattr(self, 'core_env') and not self.core_env.profile_env:
             self.log_profiling_events = False
 
         self.__profiling_events = None
