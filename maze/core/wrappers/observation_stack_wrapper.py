@@ -77,12 +77,15 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         self.max_steps = max([c['stack_steps'] for c in self.stack_config])
 
     @override(ObservationWrapper)
-    def observation(self, observation: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def observation(self, observation: dict[str, np.ndarray] | None) -> dict[str, np.ndarray] | None:
         """Stack observations.
 
         :param observation: The observation to be stacked.
         :return: The sacked observation.
         """
+        # None indicates the absence of an observation; pass through without processing
+        if observation is None:
+            return None
 
         actor_id = self.actor_id()
 

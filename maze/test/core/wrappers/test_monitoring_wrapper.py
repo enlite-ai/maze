@@ -118,3 +118,31 @@ def test_action_monitoring():
                 assert event.interface_method == ActionEvents.multi_binary_action
             else:
                 raise ValueError
+
+
+def test_monitoring_wrapper_skips_logging_for_none_observation():
+    """Observation logging must be skipped when obs is None; no crash should occur."""
+    env = build_dummy_maze_env()
+    monitoring_env = MazeEnvMonitoringWrapper.wrap(
+        env, observation_logging=True, action_logging=False, reward_logging=False
+    )
+    stats_env = LogStatsWrapper.wrap(monitoring_env)
+    stats_env.reset()
+
+    # Patch the inner env's step (the env that MonitoringWrapper wraps) to return None as obs
+    inner_env = monitoring_env.env
+    original_step = inner_env.step
+
+    def patched_step(action):
+        _, reward, terminated, truncated, info = original_step(action)
+        return None, reward, terminated, truncated, info
+
+    inner_env.step = patched_step
+    obs, _, _, _, _ = stats_env.step(stats_env.action_space.sample())
+
+    assert obs is None
+    # No observation events should have been fired because obs was None
+    observation_events = stats_env.get_last_step_events(
+        query=[ObservationEvents.observation_original, ObservationEvents.observation_processed]
+    )
+    assert len(observation_events) == 0

@@ -126,3 +126,20 @@ def test_cascaded_preprocessing():
 
     assert 'observation_0_image-rgb2gray' not in observation_keys
     assert 'observation_0_image-rgb2gray-resize_img' in observation_keys
+
+
+def test_preprocessing_wrapper_none_passthrough():
+    """None observations must be returned as None without raising."""
+    env = build_dummy_structured_environment()
+    config = {
+        'pre_processor_mapping': [
+            {
+                'observation': 'observation_0_feature_series',
+                '_target_': 'maze.preprocessors.FlattenPreProcessor',
+                'keep_original': True,
+                'config': {'num_flatten_dims': 2},
+            }
+        ]
+    }
+    env = PreProcessingWrapper.wrap(env, pre_processor_mapping=config['pre_processor_mapping'])
+    assert env.observation(None) is None

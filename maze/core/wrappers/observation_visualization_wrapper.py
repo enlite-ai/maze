@@ -98,11 +98,12 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
         # take wrapped env step
         obs, rew, terminated, truncated, info = self.env.step(action)
 
-        # log processed observations
-        for observation_name, observation_value in obs.items():
-            self.observation_events.observation_to_visualize(
-                step_key=substep_name, name=observation_name, value=observation_value
-            )
+        # log processed observations; skip if obs is None (absence of observation)
+        if obs is not None:
+            for observation_name, observation_value in obs.items():
+                self.observation_events.observation_to_visualize(
+                    step_key=substep_name, name=observation_name, value=observation_value
+                )
 
         return obs, rew, terminated, truncated, info
 

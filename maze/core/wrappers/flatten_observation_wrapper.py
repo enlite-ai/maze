@@ -50,13 +50,16 @@ class FlattenDictObservationWrapper(ObservationWrapper[EnvType | StructuredEnvSp
         return {k: space_utils.flatten_space(dict_space) for k, dict_space in self.env.observation_spaces_dict.items()}
 
     @override(ObservationWrapper)
-    def observation(self, observation: Any) -> np.ndarray:
+    def observation(self, observation: Any) -> np.ndarray | None:
         """
         Flattens the observation using gymasium flatten utilities.
 
         :param observation: The observation to be flattened
         :return: The flattened observation
         """
+        # None indicates the absence of an observation; pass through without processing
+        if observation is None:
+            return None
         return space_utils.flatten(self._original_obs_space, observation).astype(np.float32)
 
     @override(SimulatedEnvMixin)

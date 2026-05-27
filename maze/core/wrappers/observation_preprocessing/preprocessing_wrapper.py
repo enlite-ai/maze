@@ -44,6 +44,9 @@ class PreProcessingWrapper(ObservationWrapper[MazeEnv]):
         :param observation: The observation to be pre-processed.
         :return: The pre-processed observation.
         """
+        # None indicates the absence of an observation; pass through without processing
+        if observation is None:
+            return None
 
         # iteratively pre-process observations
         for obs_key, processor, keep_original in self._preprocessors:

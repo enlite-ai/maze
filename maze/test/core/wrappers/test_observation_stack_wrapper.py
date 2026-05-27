@@ -163,3 +163,14 @@ def test_stack_reset_on_trajectory_load(stack_mode: str):
     # Loading first step of another episode should reduce the stack back to 1
     env.get_observation_and_action_dicts(deepcopy(maze_state), deepcopy(maze_action), first_step_in_episode=True)
     assert get_n_stacked_obs(stack_mode, env, 'observation_0') == 1
+
+
+@pytest.mark.parametrize('stack_mode', ['flatten_history', 'group_by_actor_id'])
+def test_observation_stack_wrapper_none_passthrough(stack_mode):
+    """None observations must be returned as None without raising."""
+    env = build_dummy_structured_environment()
+    config = [
+        {'observation': 'observation_0', 'keep_original': False, 'tag': None, 'delta': False, 'stack_steps': 2},
+    ]
+    env = ObservationStackWrapper.wrap(env, stack_config=config, stack_mode=stack_mode)
+    assert env.observation(None) is None

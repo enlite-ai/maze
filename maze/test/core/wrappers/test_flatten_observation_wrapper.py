@@ -170,6 +170,13 @@ def test_sorted_keys_determine_flat_order():
     assert flat[1] == pytest.approx(99.5)
 
 
+def test_flatten_observation_wrapper_none_passthrough():
+    """None observations must be returned as None without raising."""
+    base_env = GymMazeEnv(env='CartPole-v1', render_mode=None)
+    env = FlattenDictObservationWrapper(base_env)
+    assert env.observation(None) is None
+
+
 def test_nested_dict_obs_flattening_correctness():
     """
     Verifies correct flattening of a deeply nested mixed observation space.

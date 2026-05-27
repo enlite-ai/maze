@@ -115,6 +115,9 @@ class ObservationNormalizationWrapper(ObservationWrapper[MazeEnv]):
         :param observation: The observation to be normalized.
         :return: The normalized observation.
         """
+        # None indicates the absence of an observation; pass through without processing
+        if observation is None:
+            return None
 
         # collect observations for statistics computation
         if self._collect_observations:

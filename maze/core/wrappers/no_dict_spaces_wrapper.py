@@ -58,6 +58,9 @@ class NoDictSpacesWrapper(Wrapper[EnvType | StructuredEnvSpacesMixin]):
 
     def observation(self, observation: Any) -> Any:
         """Implementation of :class:`~maze.core.wrappers.wrapper.ObservationWrapper` interface."""
+        # None indicates the absence of an observation; pass through without processing
+        if observation is None:
+            return None
         return observation[self.observation_key]
 
     def action(self, action: np.ndarray) -> dict[str, np.ndarray]:

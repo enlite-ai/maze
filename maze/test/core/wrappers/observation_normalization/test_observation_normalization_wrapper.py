@@ -410,3 +410,19 @@ def test_observation_statistics_logging():
                 break
 
         increment_log_step()
+
+
+def test_observation_normalization_wrapper_none_passthrough():
+    """None observations must be returned as None without raising."""
+    base_env = GymMazeEnv(env='CartPole-v1', render_mode=None)
+    env = ObservationNormalizationWrapper(
+        base_env,
+        default_strategy='maze.normalization_strategies.RangeZeroOneObservationNormalizationStrategy',
+        default_strategy_config={'clip_range': (None, None), 'axis': 0},
+        default_statistics=None,
+        statistics_dump='statistics.pkl',
+        sampling_policy=RandomPolicy(base_env.action_spaces_dict),
+        exclude=None,
+        manual_config=None,
+    )
+    assert env.observation(None) is None

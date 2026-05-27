@@ -18,8 +18,11 @@ class DictObservationWrapper(ObservationWrapper[MazeEnv]):
         super().__init__(env)
         self.observation_space = gym.spaces.Dict({'observation': env.observation_space})
 
-    def observation(self, observation: np.ndarray):
+    def observation(self, observation: np.ndarray | None) -> dict[str, np.ndarray] | None:
         """Implementation of :class:`~maze.core.wrappers.wrapper.ObservationWrapper` interface."""
+        # None indicates the absence of an observation; pass through without processing
+        if observation is None:
+            return None
         return {'observation': observation.astype(np.float32)}
 
     @override(SimulatedEnvMixin)

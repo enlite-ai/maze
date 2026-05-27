@@ -74,7 +74,7 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         if self.action_logging:
             self._log_action(substep_name, agent_name, action)
 
-        if self.observation_logging:
+        if self.observation_logging and obs is not None:
             self._log_observation(substep_name, agent_name, obs)
 
         if self.reward_logging:
