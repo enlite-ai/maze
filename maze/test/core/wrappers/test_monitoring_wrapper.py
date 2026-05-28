@@ -120,11 +120,17 @@ def test_action_monitoring():
                 raise ValueError
 
 
-def test_monitoring_wrapper_skips_logging_for_none_observation():
-    """Observation logging must be skipped when obs is None; no crash should occur."""
+def test_monitoring_wrapper_none_obs_skips_obs_events_but_fires_action_and_reward():
+    """When obs is None, observation events are skipped while action and reward events are still fired.
+
+    This intentionally produces a count mismatch between obs/action/reward event series for that step.
+    This is acceptable because each event type is tracked in an independent queue grouped by
+    (step_key, agent_name, name) — there is no positional coupling between them in the stats pipeline.
+    A missing obs event simply means that observation metric has no data point for that step.
+    """
     env = build_dummy_maze_env()
     monitoring_env = MazeEnvMonitoringWrapper.wrap(
-        env, observation_logging=True, action_logging=False, reward_logging=False
+        env, observation_logging=True, action_logging=True, reward_logging=True
     )
     stats_env = LogStatsWrapper.wrap(monitoring_env)
     stats_env.reset()
@@ -141,8 +147,38 @@ def test_monitoring_wrapper_skips_logging_for_none_observation():
     obs, _, _, _, _ = stats_env.step(stats_env.action_space.sample())
 
     assert obs is None
-    # No observation events should have been fired because obs was None
+
+    # Observation events must be absent for this step
     observation_events = stats_env.get_last_step_events(
         query=[ObservationEvents.observation_original, ObservationEvents.observation_processed]
     )
     assert len(observation_events) == 0
+
+    # Action and reward events are still fired normally despite obs being None
+    action_events = stats_env.get_last_step_events(
+        query=[ActionEvents.discrete_action, ActionEvents.continuous_action, ActionEvents.multi_binary_action]
+    )
+    assert len(action_events) > 0
+
+    reward_events = stats_env.get_last_step_events(query=[RewardEvents.reward_processed])
+    assert len(reward_events) > 0
+
+    # Step 2: restore normal obs — observation events must appear again, confirming the stats
+    # pipeline is unaffected by the preceding None step (1 out of 2 obs was None).
+    inner_env.step = original_step
+    obs, _, _, _, _ = stats_env.step(stats_env.action_space.sample())
+
+    assert obs is not None
+
+    observation_events = stats_env.get_last_step_events(
+        query=[ObservationEvents.observation_original, ObservationEvents.observation_processed]
+    )
+    assert len(observation_events) > 0
+
+    action_events = stats_env.get_last_step_events(
+        query=[ActionEvents.discrete_action, ActionEvents.continuous_action, ActionEvents.multi_binary_action]
+    )
+    assert len(action_events) > 0
+
+    reward_events = stats_env.get_last_step_events(query=[RewardEvents.reward_processed])
+    assert len(reward_events) > 0

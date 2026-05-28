@@ -98,7 +98,9 @@ class ObservationVisualizationWrapper(Wrapper[MazeEnv]):
         # take wrapped env step
         obs, rew, terminated, truncated, info = self.env.step(action)
 
-        # log processed observations; skip if obs is None (absence of observation)
+        # Skip visualization events when obs is None. Each event type is tracked independently
+        # by (step_key, name) — a missing entry for one step simply means no data point for
+        # that observation key in that step's stats, with no effect on other event series.
         if obs is not None:
             for observation_name, observation_value in obs.items():
                 self.observation_events.observation_to_visualize(
