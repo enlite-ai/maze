@@ -12,8 +12,6 @@ dependencies:
   - pip
   - pandas
   - numpy
-  # swig is needed for Box2D, box2d-py but does not work with the pip installer
-  - swig
   - pip:
       - fsspec
       - jupyterlab

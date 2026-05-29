@@ -10,6 +10,11 @@ ARG BASE_IMAGE=condaforge/mambaforge:4.11.0-0
 
 FROM ${BUILD_IMAGE} as maze_core_env_build
 
+# Install build dependencies needed for compiled pip packages (e.g. box2d-py).
+RUN apt-get update && \
+    apt-get install -y build-essential g++ swig libbox2d-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install environment.
 COPY maze-core-environment.yml .
 RUN mamba env create -p /env --file maze-core-environment.yml
@@ -25,7 +30,7 @@ FROM ${BASE_IMAGE}
 
 # Install system dependencies and Maze.
 RUN apt-get update && \
-    apt-get install -y xvfb htop redis-server python-opengl build-essential g++ && \
+    apt-get install -y xvfb redis-server python-opengl libbox2d-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy conda environment.
