@@ -74,6 +74,8 @@ class MazeEnvMonitoringWrapper(Wrapper[MazeEnv]):
         if self.action_logging:
             self._log_action(substep_name, agent_name, action)
 
+        # Each event type is tracked independently, so a missing obs entry for one step
+        # does not misalign action or reward stats. It is just missing from observation distribution visualization.
         if self.observation_logging and obs is not None:
             self._log_observation(substep_name, agent_name, obs)
 

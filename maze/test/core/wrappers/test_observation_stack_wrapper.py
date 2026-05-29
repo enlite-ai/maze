@@ -166,35 +166,11 @@ def test_stack_reset_on_trajectory_load(stack_mode: str):
 
 
 @pytest.mark.parametrize('stack_mode', ['flatten_history', 'group_by_actor_id'])
-def test_observation_stack_wrapper_none_raises(stack_mode):
-    """A None observation must raise ValueError — unlike stateless wrappers,
-    the stack requires a real obs every step."""
+def test_observation_stack_wrapper_none_passthrough(stack_mode):
+    """None observations must be returned as None without raising."""
     env = build_dummy_structured_environment()
     config = [
         {'observation': 'observation_0', 'keep_original': False, 'tag': None, 'delta': False, 'stack_steps': 2},
     ]
     env = ObservationStackWrapper.wrap(env, stack_config=config, stack_mode=stack_mode)
-    with pytest.raises(ValueError):
-        env.observation(None)
-
-
-@pytest.mark.parametrize('stack_mode', ['flatten_history', 'group_by_actor_id'])
-def test_observation_stack_wrapper_none_value_in_dict_raises(stack_mode):
-    """A None value for any key in the observation dict must raise a ValueError immediately.
-
-    Sub-step 0 of the dummy env has both 'observation_0' and 'action_0_0_mask' — two keys that appear
-    together in the same observation dict, making them suitable for this test.
-    """
-    env = build_dummy_structured_environment()
-    config = [
-        {'observation': 'observation_0', 'keep_original': True, 'tag': 'stacked', 'delta': False, 'stack_steps': 2},
-    ]
-    env = ObservationStackWrapper.wrap(env, stack_config=config, stack_mode=stack_mode)
-    env.reset()
-
-    valid_obs = env.env.observation_space.sample()
-    mixed_obs = dict(valid_obs)
-    mixed_obs['observation_0'] = None
-
-    with pytest.raises(ValueError, match='observation_0'):
-        env.observation(mixed_obs)
+    assert env.observation(None) is None

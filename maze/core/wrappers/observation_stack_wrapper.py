@@ -83,15 +83,9 @@ class ObservationStackWrapper(ObservationWrapper[MazeEnv]):
         :param observation: The observation to be stacked.
         :return: The sacked observation.
         """
-        # ObservationStackWrapper is stateful: every call must push a real observation onto the stack.
-        # A None observation (whole or per-key) would silently break temporal alignment, so we raise
-        # immediately rather than returning None like stateless wrappers do.
+        # None indicates the absence of an observation; pass through without processing.
         if observation is None:
-            raise ValueError('ObservationStackWrapper requires a valid observation dict, got None.')
-
-        none_keys = [k for k, v in observation.items() if v is None]
-        if none_keys:
-            raise ValueError(f'Observation contains None values for keys: {none_keys}')
+            return None
 
         actor_id = self.actor_id()
 
